@@ -19,10 +19,11 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <label className="language-switcher">
+    <label className="inline-flex items-center gap-2 text-sm text-[#555163]">
       <Languages aria-hidden="true" size={17} strokeWidth={2} />
       <span className="sr-only">{t("select")}</span>
       <select
+        className="cursor-pointer appearance-none border-0 bg-transparent py-1.5 pr-5 font-semibold text-inherit outline-none"
         aria-label={t("select")}
         value={locale}
         onChange={(event) => changeLocale(event.target.value as Locale)}

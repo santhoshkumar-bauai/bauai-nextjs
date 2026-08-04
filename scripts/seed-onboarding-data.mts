@@ -19,16 +19,23 @@ try {
     ...companyDomains.map((item) => ({ ...item, type: "company-domain" })),
     ...services.map((item) => ({ ...item, type: "service" })),
   ];
-  await optionCollection.bulkWrite(optionRecords.map((item) => ({
-    updateOne: {
-      filter: { type: item.type, value: item.value },
-      update: { $set: { ...item, updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
-      upsert: true,
-    },
-  })));
+  await optionCollection.bulkWrite(
+    optionRecords.map((item) => ({
+      updateOne: {
+        filter: { type: item.type, value: item.value },
+        update: {
+          $set: { ...item, updatedAt: new Date() },
+          $setOnInsert: { createdAt: new Date() },
+        },
+        upsert: true,
+      },
+    })),
+  );
   await optionCollection.createIndex({ type: 1, value: 1 }, { unique: true });
 
-  console.log(`Seeded ${companyDomains.length} company domains and ${services.length} services.`);
+  console.log(
+    `Seeded ${companyDomains.length} company domains and ${services.length} services.`,
+  );
 } finally {
   await client.close();
 }

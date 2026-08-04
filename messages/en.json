@@ -172,5 +172,128 @@
       "reviewError": "Unable to review this request. Please try again."
     },
     "description": "Your BAU AI workspace is ready. The migrated dashboard will appear here next."
+  },
+  "Workspace": {
+    "kanban": {
+      "title": "Tender Pipeline",
+      "tenderCount": "0 tenders",
+      "previewTitle": "We're currently building it",
+      "previewDescription": "This workspace is a UI preview. Tender movement and collaboration are coming next.",
+      "workspace": "Workspace",
+      "deadZone": "Dead Zone",
+      "noTenders": "No tenders yet",
+      "emptyHint": "Drag tenders here or add from the digest",
+      "columns": {
+        "interested": "Interested",
+        "preparing": "Preparing",
+        "submitted": "Submitted",
+        "won": "Won",
+        "lost": "Lost"
+      }
+    },
+    "comingSoon": {
+      "eyebrow": "BAU AI workspace preview",
+      "title": "We're currently building it",
+      "description": "This area is already connected to the workspace navigation. We're now building the workflows and tools that will live here.",
+      "back": "Back to AI Board"
+    },
+    "sections": {
+      "tenders": "Tenders",
+      "documentFiller": "Document Filler",
+      "tutorial": "AI Tutorial",
+      "settings": "Settings",
+      "notifications": "Notifications",
+      "pricing": "Pricing",
+      "support": "Support",
+      "profile": "Profile Settings"
+    }
+  },
+  "Settings": {
+    "tabs": {
+      "company": "Company Information",
+      "tender": "Tender Information",
+      "employees": "Employee Information",
+      "billing": "Billing",
+      "dora": "Dora-Playbook"
+    },
+    "common": {
+      "preview": "UI preview",
+      "save": "Save changes",
+      "refresh": "Refresh",
+      "optional": "Optional"
+    },
+    "company": {
+      "title": "Settings",
+      "subtitle": "Company knowledge base",
+      "completion": "Profile setup",
+      "profile": "Profile setup",
+      "completeProfile": "Complete your profile",
+      "profileHint": "These fields make your tender matches more relevant.",
+      "tenderInformation": "Tender information",
+      "companyInformation": "Company information",
+      "companyDetails": "Company details",
+      "companyDetailsHint": "Legal form, founding year, and company description.",
+      "legalForm": "Legal form",
+      "foundingYear": "Founding year",
+      "registrationCourt": "Registration court",
+      "description": "Company description",
+      "descriptionPlaceholder": "Brief company description...",
+      "website": "Company website",
+      "services": "Services",
+      "cpv": "CPV codes",
+      "region": "Region",
+      "businessDomain": "Company domain"
+    },
+    "tender": {
+      "title": "Tender information",
+      "subtitle": "The matching preferences currently configured for your company.",
+      "services": "Services",
+      "cpv": "CPV codes",
+      "region": "Region",
+      "emptyValue": "Not configured yet",
+      "matchingTitle": "Tender matching",
+      "matchingDescription": "Your company preferences will be used to prioritise relevant opportunities."
+    },
+    "employees": {
+      "title": "Company employees",
+      "description": "People with active access to this company workspace.",
+      "invite": "Invite employee",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "account": "Account status",
+      "action": "Joined",
+      "active": "Active",
+      "registered": "Registered",
+      "admin": "Administrator",
+      "member": "Member",
+      "pendingTitle": "Access requests",
+      "pendingDescription": "New people are only added after an administrator approves their request.",
+      "noPending": "There are no pending access requests."
+    },
+    "billing": {
+      "title": "Billing",
+      "subtitle": "Subscription and usage overview",
+      "plan": "Current plan",
+      "trial": "Free trial",
+      "trialDescription": "Ends on",
+      "seats": "Team seats",
+      "usage": "Usage overview",
+      "previewTitle": "Billing preview",
+      "previewDescription": "Subscription management and invoices will be available here soon."
+    },
+    "dora": {
+      "title": "Dora-Playbook",
+      "subtitle": "A guided workspace for preparing stronger tender responses.",
+      "cards": {
+        "analysis": "Analyse the tender",
+        "drafting": "Build your response",
+        "review": "Review and submit"
+      },
+      "description": "A focused workflow is being prepared for this step.",
+      "previewTitle": "Playbook preview",
+      "previewDescription": "Dora’s guided tender playbook is currently being built."
+    }
   }
 }

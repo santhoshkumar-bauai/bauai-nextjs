@@ -6,8 +6,7 @@ import { mongoClient, mongoDatabase } from "@/lib/db/mongodb";
 import { sendVerificationEmail } from "@/lib/email/resend";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
-const trustedOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS
-  ?.split(",")
+const trustedOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
 

@@ -13,35 +13,59 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/login");
 
   await connectMongoose();
-  const profile = await AccountProfile.findOne({ userId: session.user.id }).lean();
+  const profile = await AccountProfile.findOne({
+    userId: session.user.id,
+  }).lean();
   if (!profile?.onboardingCompleted) redirect("/onboarding");
 
-  const [locale, t] = await Promise.all([getLocale(), getTranslations("Dashboard")]);
+  const [locale, t] = await Promise.all([
+    getLocale(),
+    getTranslations("Dashboard"),
+  ]);
 
-  if (profile.membershipStatus === "pending" || profile.membershipStatus === "rejected") {
+  if (
+    profile.membershipStatus === "pending" ||
+    profile.membershipStatus === "rejected"
+  ) {
     const isPending = profile.membershipStatus === "pending";
     return (
-      <main className="dashboard-placeholder membership-status-page">
-        <span>BAU AI</span>
-        <div className={`membership-status-icon ${isPending ? "is-pending" : "is-rejected"}`} aria-hidden="true">
+      <main className="grid min-h-svh place-content-center bg-[#f8f6fa] p-6 text-center">
+        <span className="font-extrabold text-[#5000a8]">BAU AI</span>
+        <div
+          className={`mx-auto mt-[22px] grid size-[70px] place-items-center rounded-[22px] text-[28px] font-bold ${isPending ? "bg-[#f3eafa] text-[#6515b7]" : "bg-red-50 text-[#b42318]"}`}
+          aria-hidden="true"
+        >
           {isPending ? "…" : "×"}
         </div>
-        <h1>{isPending ? t("pendingTitle") : t("rejectedTitle")}</h1>
-        <p>{isPending ? t("pendingDescription") : t("rejectedDescription")}</p>
+        <h1 className="mt-[18px] mb-2 text-[clamp(32px,6vw,56px)] font-bold tracking-[-.055em]">
+          {isPending ? t("pendingTitle") : t("rejectedTitle")}
+        </h1>
+        <p className="mx-auto m-0 w-[min(100%,560px)] leading-[1.65] text-[#746e79]">
+          {isPending ? t("pendingDescription") : t("rejectedDescription")}
+        </p>
       </main>
     );
   }
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? t("goodMorning") : hour < 18 ? t("goodAfternoon") : t("goodEvening");
-  const fullName = session.user.name?.trim() || session.user.email.split("@")[0];
+  const greeting =
+    hour < 12
+      ? t("goodMorning")
+      : hour < 18
+        ? t("goodAfternoon")
+        : t("goodEvening");
+  const fullName =
+    session.user.name?.trim() || session.user.email.split("@")[0];
   const firstName = fullName.split(/\s+/)[0];
-  const dateLabel = new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(now);
+  const dateLabel = new Intl.DateTimeFormat(
+    locale === "de" ? "de-DE" : "en-GB",
+    {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    },
+  ).format(now);
   const remaining = t("sevenLeft");
   const agents = [
     {

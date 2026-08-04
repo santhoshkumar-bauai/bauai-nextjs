@@ -18,8 +18,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
 
   return (
-    <html lang={locale}>
-      <body>
+    <html lang={locale} className="min-h-full scheme-light">
+      <body className="min-h-full bg-[#f8f8f8] font-sans text-foreground">
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
         </NextIntlClientProvider>

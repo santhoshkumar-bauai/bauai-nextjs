@@ -15,8 +15,14 @@ export default async function OnboardingPage() {
   if (!session.user.emailVerified) redirect("/sign-up");
 
   await connectMongoose();
-  const profile = await AccountProfile.findOne({ userId: session.user.id }).lean();
+  const profile = await AccountProfile.findOne({
+    userId: session.user.id,
+  }).lean();
   if (profile?.onboardingCompleted) redirect("/dashboard");
 
-  return <main className="onboarding-shell"><OnboardingForm /></main>;
+  return (
+    <main className="grid min-h-svh place-items-center bg-[radial-gradient(circle_at_18%_0%,#f1e7fb_0,transparent_32%),#f7f6f8] px-5 py-12">
+      <OnboardingForm />
+    </main>
+  );
 }

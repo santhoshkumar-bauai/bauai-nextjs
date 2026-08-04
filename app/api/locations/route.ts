@@ -34,20 +34,31 @@ async function geocodeFallback(input: string, language: string) {
   url.searchParams.set("language", language);
   url.searchParams.set("key", apiKey);
   const response = await fetch(url, { cache: "no-store" });
-  const data = await response.json() as GoogleGeocodeResponse;
+  const data = (await response.json()) as GoogleGeocodeResponse;
   if (!response.ok || data.status !== "OK") return [];
-  return (data.results || []).flatMap((result) => {
-    if (!result.place_id || !result.formatted_address) return [];
-    const locality = result.address_components?.find((part) =>
-      part.types?.some((type) => ["locality", "administrative_area_level_1", "administrative_area_level_2", "country"].includes(type)),
-    )?.long_name;
-    return [{
-      placeId: result.place_id,
-      label: result.formatted_address,
-      primary: locality || result.formatted_address.split(",")[0],
-      secondary: result.formatted_address,
-    }];
-  }).slice(0, 6);
+  return (data.results || [])
+    .flatMap((result) => {
+      if (!result.place_id || !result.formatted_address) return [];
+      const locality = result.address_components?.find((part) =>
+        part.types?.some((type) =>
+          [
+            "locality",
+            "administrative_area_level_1",
+            "administrative_area_level_2",
+            "country",
+          ].includes(type),
+        ),
+      )?.long_name;
+      return [
+        {
+          placeId: result.place_id,
+          label: result.formatted_address,
+          primary: locality || result.formatted_address.split(",")[0],
+          secondary: result.formatted_address,
+        },
+      ];
+    })
+    .slice(0, 6);
 }
 
 export async function GET(request: Request) {
@@ -61,30 +72,46 @@ export async function GET(request: Request) {
   const languageCode = searchParams.get("locale") === "de" ? "de" : "en";
   if (input.length < 3) return NextResponse.json({ items: [] });
 
-  const placesEnabled = process.env.GOOGLE_PLACES_ENABLED === "true";
+  const apiKey =
+    process.env.GOOGLE_PLACES_API || process.env.GOOGLE_MAPS_API_KEY;
+  const placesEnabled =
+    Boolean(process.env.GOOGLE_PLACES_API) ||
+    process.env.GOOGLE_PLACES_ENABLED === "true";
   if (!placesEnabled) {
     const items = await geocodeFallback(input, languageCode);
     return NextResponse.json({ items, source: "geocoding" });
   }
 
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: "Google Places is not configured." }, { status: 503 });
+  if (!apiKey)
+    return NextResponse.json(
+      { error: "Google Places is not configured." },
+      { status: 503 },
+    );
 
-  const response = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text,suggestions.placePrediction.structuredFormat",
+  const response = await fetch(
+    "https://places.googleapis.com/v1/places:autocomplete",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask":
+          "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text,suggestions.placePrediction.structuredFormat",
+      },
+      body: JSON.stringify({
+        input,
+        languageCode,
+        includedPrimaryTypes: [
+          "locality",
+          "administrative_area_level_1",
+          "administrative_area_level_2",
+          "country",
+        ],
+      }),
+      cache: "no-store",
     },
-    body: JSON.stringify({
-      input,
-      languageCode,
-      includedPrimaryTypes: ["locality", "administrative_area_level_1", "administrative_area_level_2", "country"],
-    }),
-    cache: "no-store",
-  });
-  const data = await response.json() as GoogleAutocompleteResponse;
+  );
+  const data = (await response.json()) as GoogleAutocompleteResponse;
   if (!response.ok) {
     const fallbackItems = await geocodeFallback(input, languageCode);
     return NextResponse.json({
@@ -94,16 +121,21 @@ export async function GET(request: Request) {
     });
   }
 
-  const items = (data.suggestions || []).flatMap((suggestion) => {
-    const prediction = suggestion.placePrediction;
-    if (!prediction?.placeId || !prediction.text?.text) return [];
-    return [{
-      placeId: prediction.placeId,
-      label: prediction.text.text,
-      primary: prediction.structuredFormat?.mainText?.text || prediction.text.text,
-      secondary: prediction.structuredFormat?.secondaryText?.text || "",
-    }];
-  }).slice(0, 6);
+  const items = (data.suggestions || [])
+    .flatMap((suggestion) => {
+      const prediction = suggestion.placePrediction;
+      if (!prediction?.placeId || !prediction.text?.text) return [];
+      return [
+        {
+          placeId: prediction.placeId,
+          label: prediction.text.text,
+          primary:
+            prediction.structuredFormat?.mainText?.text || prediction.text.text,
+          secondary: prediction.structuredFormat?.secondaryText?.text || "",
+        },
+      ];
+    })
+    .slice(0, 6);
   if (!items.length) {
     const fallbackItems = await geocodeFallback(input, languageCode);
     return NextResponse.json({ items: fallbackItems, source: "geocoding" });

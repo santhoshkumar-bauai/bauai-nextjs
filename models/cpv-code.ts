@@ -35,5 +35,6 @@ const cpvCodeSchema = new Schema<CpvCodeDocument>(
 cpvCodeSchema.index({ "name.en": "text", "name.de": "text", keywords: "text" });
 cpvCodeSchema.index({ categories: 1, hierarchyLevel: 1 });
 
-export const CpvCode = (models.CpvCode as Model<CpvCodeDocument>) ||
+export const CpvCode =
+  (models.CpvCode as Model<CpvCodeDocument>) ||
   model<CpvCodeDocument>("CpvCode", cpvCodeSchema);

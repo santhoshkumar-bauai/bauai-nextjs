@@ -41,7 +41,13 @@ export interface CompanyDocument {
 const companySchema = new Schema<CompanyDocument>(
   {
     name: { type: String, required: true, trim: true },
-    domain: { type: String, required: true, unique: true, lowercase: true, index: true },
+    domain: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
     website: { type: String, required: true },
     businessDomain: { type: String, required: true },
     region: { type: String, required: true },
@@ -53,23 +59,31 @@ const companySchema = new Schema<CompanyDocument>(
     services: { type: [String], default: [] },
     cpvCodes: { type: [String], default: [] },
     members: {
-      type: [{
-        userId: { type: String, required: true },
-        email: { type: String, required: true, lowercase: true },
-        role: { type: String, enum: ["admin", "member"], required: true },
-        joinedAt: { type: Date, default: Date.now },
-      }],
+      type: [
+        {
+          userId: { type: String, required: true },
+          email: { type: String, required: true, lowercase: true },
+          role: { type: String, enum: ["admin", "member"], required: true },
+          joinedAt: { type: Date, default: Date.now },
+        },
+      ],
       default: [],
     },
     membershipRequests: {
-      type: [{
-        userId: { type: String, required: true },
-        email: { type: String, required: true, lowercase: true },
-        status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
-        requestedAt: { type: Date, default: Date.now },
-        reviewedAt: { type: Date },
-        reviewedBy: { type: String },
-      }],
+      type: [
+        {
+          userId: { type: String, required: true },
+          email: { type: String, required: true, lowercase: true },
+          status: {
+            type: String,
+            enum: ["pending", "approved", "rejected"],
+            default: "pending",
+          },
+          requestedAt: { type: Date, default: Date.now },
+          reviewedAt: { type: Date },
+          reviewedBy: { type: String },
+        },
+      ],
       default: [],
     },
     trial: {
@@ -84,5 +98,6 @@ const companySchema = new Schema<CompanyDocument>(
 
 companySchema.index({ "membershipRequests.userId": 1 });
 
-export const Company = (models.Company as Model<CompanyDocument>) ||
+export const Company =
+  (models.Company as Model<CompanyDocument>) ||
   model<CompanyDocument>("Company", companySchema);

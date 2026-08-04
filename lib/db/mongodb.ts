@@ -10,13 +10,10 @@ declare global {
   var bauaiMongoClient: MongoClient | undefined;
 }
 
-export const mongoClient =
-  global.bauaiMongoClient ?? new MongoClient(uri);
+export const mongoClient = global.bauaiMongoClient ?? new MongoClient(uri);
 
 if (process.env.NODE_ENV !== "production") {
   global.bauaiMongoClient = mongoClient;
 }
 
-export const mongoDatabase = mongoClient.db(
-  process.env.MONGODB_DB || "bauai",
-);
+export const mongoDatabase = mongoClient.db(process.env.MONGODB_DB || "bauai");

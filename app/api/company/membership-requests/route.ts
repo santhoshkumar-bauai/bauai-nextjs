@@ -19,7 +19,10 @@ async function getAdminContext() {
   const profile = await AccountProfile.findOne({
     userId: session.user.id,
     role: "admin",
-    $or: [{ membershipStatus: "active" }, { membershipStatus: { $exists: false } }],
+    $or: [
+      { membershipStatus: "active" },
+      { membershipStatus: { $exists: false } },
+    ],
   }).lean();
   if (!profile) return null;
 
@@ -33,7 +36,8 @@ async function getAdminContext() {
 
 export async function GET() {
   const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!context)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   return NextResponse.json({
     items: context.company.membershipRequests
@@ -48,20 +52,28 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   const context = await getAdminContext();
-  if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!context)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const body = await request.json() as ReviewBody;
+  const body = (await request.json()) as ReviewBody;
   const userId = typeof body.userId === "string" ? body.userId.trim() : "";
-  const action = body.action === "approve" || body.action === "reject" ? body.action : null;
+  const action =
+    body.action === "approve" || body.action === "reject" ? body.action : null;
   if (!userId || !action || userId === context.session.user.id) {
-    return NextResponse.json({ error: "Invalid membership review." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid membership review." },
+      { status: 400 },
+    );
   }
 
-  const pendingRequest = context.company.membershipRequests.find((item) =>
-    item.userId === userId && item.status === "pending",
+  const pendingRequest = context.company.membershipRequests.find(
+    (item) => item.userId === userId && item.status === "pending",
   );
   if (!pendingRequest) {
-    return NextResponse.json({ error: "Pending request not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Pending request not found." },
+      { status: 404 },
+    );
   }
 
   const targetProfile = await AccountProfile.findOne({
@@ -70,7 +82,10 @@ export async function PATCH(request: Request) {
     membershipStatus: "pending",
   }).lean();
   if (!targetProfile) {
-    return NextResponse.json({ error: "Pending user profile not found." }, { status: 404 });
+    return NextResponse.json(
+      { error: "Pending user profile not found." },
+      { status: 404 },
+    );
   }
 
   const now = new Date();
@@ -81,13 +96,24 @@ export async function PATCH(request: Request) {
       $set: {
         "membershipRequests.$[membershipRequest].status": status,
         "membershipRequests.$[membershipRequest].reviewedAt": now,
-        "membershipRequests.$[membershipRequest].reviewedBy": context.session.user.id,
+        "membershipRequests.$[membershipRequest].reviewedBy":
+          context.session.user.id,
       },
     },
-    { arrayFilters: [{ "membershipRequest.userId": userId, "membershipRequest.status": "pending" }] },
+    {
+      arrayFilters: [
+        {
+          "membershipRequest.userId": userId,
+          "membershipRequest.status": "pending",
+        },
+      ],
+    },
   );
   if (reviewResult.modifiedCount !== 1) {
-    return NextResponse.json({ error: "This request has already been reviewed." }, { status: 409 });
+    return NextResponse.json(
+      { error: "This request has already been reviewed." },
+      { status: 409 },
+    );
   }
 
   if (action === "approve") {

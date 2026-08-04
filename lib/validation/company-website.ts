@@ -6,7 +6,9 @@ export function normalizeCompanyWebsite(value: string) {
   if (!companyWebsitePattern.test(input)) return null;
 
   try {
-    const url = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`);
+    const url = new URL(
+      /^https?:\/\//i.test(input) ? input : `https://${input}`,
+    );
     const domain = url.hostname.toLowerCase().replace(/^www\./, "");
     return {
       website: url.toString().replace(/\/$/, ""),

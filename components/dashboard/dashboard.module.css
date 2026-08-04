@@ -97,17 +97,26 @@
   color: #60636c;
   font-size: 13px;
   white-space: nowrap;
-  transition: background 160ms ease, color 160ms ease;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
 }
 
 .navItem:not(.activeNavItem) {
-  cursor: default;
+  cursor: pointer;
+}
+
+.navItem:not(.activeNavItem):hover {
+  background: #f5f6f9;
+  color: #30343d;
 }
 
 .activeNavItem {
   color: #22242a;
   background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 10px 24px rgba(35, 39, 52, 0.065), inset 0 0 0 1px rgba(242, 243, 247, 0.9);
+  box-shadow:
+    0 10px 24px rgba(35, 39, 52, 0.065),
+    inset 0 0 0 1px rgba(242, 243, 247, 0.9);
 }
 
 .betaBadge {
@@ -156,7 +165,9 @@
   border: 1px solid #e1e2e7;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 18px 48px rgba(31, 35, 48, 0.16), 0 3px 10px rgba(31, 35, 48, 0.06);
+  box-shadow:
+    0 18px 48px rgba(31, 35, 48, 0.16),
+    0 3px 10px rgba(31, 35, 48, 0.06);
   backdrop-filter: blur(22px);
   animation: profileMenuIn 150ms ease-out;
 }
@@ -192,7 +203,9 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 140ms ease, color 140ms ease;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
 }
 
 .menuAction:hover {
@@ -216,7 +229,10 @@
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
 }
 
 .languageOptions button:hover {
@@ -329,6 +345,13 @@
   background: #fbfbfd;
 }
 
+.routedContent {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100%;
+}
+
 .dotGrid {
   position: fixed;
   inset: 0 0 0 var(--sidebar-width);
@@ -344,8 +367,16 @@
   inset: 0 0 0 var(--sidebar-width);
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 35%, rgba(238, 240, 255, 0.62), transparent 35%),
-    radial-gradient(circle at 60% 82%, rgba(245, 241, 255, 0.45), transparent 28%);
+    radial-gradient(
+      circle at 50% 35%,
+      rgba(238, 240, 255, 0.62),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 60% 82%,
+      rgba(245, 241, 255, 0.45),
+      transparent 28%
+    );
   transition: left 220ms ease;
 }
 
@@ -424,7 +455,10 @@
   text-align: left;
   box-shadow: 0 18px 42px rgba(38, 43, 65, 0.055);
   backdrop-filter: blur(18px);
-  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .availableAgent {
@@ -578,7 +612,9 @@
   border-radius: 50%;
   background: transparent;
   color: #44474f;
-  transition: background 150ms ease, color 150ms ease;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
 }
 
 .composerIcon:hover,

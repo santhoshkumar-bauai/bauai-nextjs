@@ -18,7 +18,9 @@ export async function sendVerificationEmail({
   const from = process.env.EMAIL_FROM;
 
   if (!apiKey || !from) {
-    throw new Error("RESEND_API_KEY and EMAIL_FROM must be configured to send email.");
+    throw new Error(
+      "RESEND_API_KEY and EMAIL_FROM must be configured to send email.",
+    );
   }
 
   const resend = new Resend(apiKey);

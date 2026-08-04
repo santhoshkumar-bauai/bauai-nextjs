@@ -1,0 +1,341 @@
+.kanbanPage {
+  display: flex;
+  height: 100svh;
+  min-height: 680px;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f8f9fb;
+  color: #25272d;
+}
+
+.kanbanHeader {
+  display: flex;
+  min-height: 57px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #e2e4e9;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.pipelineTitle,
+.headerActions {
+  display: flex;
+  align-items: center;
+}
+
+.pipelineTitle {
+  gap: 8px;
+  font-size: 12px;
+}
+
+.pipelineTitle strong {
+  font-weight: 700;
+}
+
+.pipelineTitle span {
+  color: #8b8e97;
+}
+
+.headerActions {
+  gap: 8px;
+  color: #626671;
+}
+
+.roundAction {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #e1e3e9;
+  border-radius: 50%;
+  background: #fff;
+  color: #626671;
+}
+
+.roundAction:first-child {
+  border-color: #5469f5;
+  color: #4057f0;
+  box-shadow: 0 0 0 3px #eef0ff;
+}
+
+.viewSwitch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline: 4px 12px;
+  padding: 3px;
+  border: 1px solid #dfe1e7;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.viewSwitch span {
+  padding: 6px 13px;
+  border-radius: 7px;
+}
+
+.viewSwitch .activeView {
+  background: linear-gradient(135deg, #7f32e8, #a212ed);
+  color: #fff;
+}
+
+.buildNotice {
+  display: flex;
+  width: calc(100% - 28px);
+  align-items: center;
+  gap: 11px;
+  margin: 12px 14px 0;
+  padding: 10px 13px;
+  border: 1px solid #e5dcff;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f8f4ff, #fbfaff);
+  color: #7131be;
+}
+
+.buildNotice div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.buildNotice strong {
+  font-size: 12px;
+}
+
+.buildNotice span {
+  overflow: hidden;
+  color: #7e748b;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boardScroller {
+  min-height: 0;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 12px 14px 14px;
+}
+
+.board {
+  display: grid;
+  min-width: 1160px;
+  height: 100%;
+  grid-template-columns: repeat(5, minmax(215px, 1fr));
+  gap: 12px;
+}
+
+.column {
+  --column-color: #3148f2;
+  --column-tint: #edf3ff;
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--column-color) 45%, white);
+  border-radius: 13px;
+  background: var(--column-tint);
+  box-shadow: 0 3px 8px rgba(31, 35, 48, 0.06);
+}
+
+.columnHeader {
+  display: flex;
+  min-height: 43px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: var(--column-color);
+  color: #fff;
+}
+
+.columnHeader strong {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.columnHeader span {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.columnBody {
+  min-height: 0;
+  flex: 1;
+  padding: 10px;
+}
+
+.emptyState {
+  display: flex;
+  min-height: 155px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed color-mix(in srgb, var(--column-color) 22%, white);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.57);
+  color: #64708a;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 11px;
+  place-items: center;
+  border: 1px solid #e5e7ed;
+  border-radius: 50%;
+  background: #fff;
+  color: #9ba5bb;
+}
+
+.emptyState strong {
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.emptyState p {
+  margin-top: 7px;
+  color: #9ca4b8;
+  font-size: 9px;
+}
+
+.comingSoonPage {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  overflow: hidden;
+  place-items: center;
+  padding: 32px;
+  background: #fbfbfd;
+}
+
+.comingSoonGrid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.62;
+  background-image: radial-gradient(#d9dce6 0.85px, transparent 0.85px);
+  background-size: 24px 24px;
+}
+
+.comingSoonGlow {
+  position: absolute;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(228, 219, 255, 0.7),
+    rgba(244, 241, 255, 0.25) 45%,
+    transparent 70%
+  );
+  filter: blur(4px);
+}
+
+.comingSoonCard {
+  position: relative;
+  display: flex;
+  width: min(520px, 100%);
+  flex-direction: column;
+  align-items: center;
+  padding: 44px 38px;
+  border: 1px solid rgba(229, 226, 240, 0.9);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 28px 80px rgba(46, 37, 78, 0.12);
+  text-align: center;
+  backdrop-filter: blur(20px);
+}
+
+.constructionIcon {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  border: 1px solid #ddd1ff;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #f4edff, #e8dcff);
+  color: #7130d3;
+  box-shadow: 0 12px 28px rgba(113, 48, 211, 0.13);
+}
+
+.comingSoonCard small {
+  margin-top: 23px;
+  color: #7558a1;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.comingSoonCard h1 {
+  margin-top: 9px;
+  color: #26232c;
+  font-size: clamp(30px, 5vw, 42px);
+  letter-spacing: -0.04em;
+}
+
+.comingSoonCard h2 {
+  margin-top: 15px;
+  color: #7930da;
+  font-size: 18px;
+}
+
+.comingSoonCard p {
+  max-width: 410px;
+  margin-top: 10px;
+  color: #74717b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.comingSoonCard a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 0 17px;
+  border: 1px solid #dcdfea;
+  border-radius: 12px;
+  background: #fff;
+  color: #4b4e58;
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: 0 7px 20px rgba(34, 38, 51, 0.06);
+}
+
+@media (max-width: 700px) {
+  .headerActions .roundAction,
+  .headerActions > svg,
+  .buildNotice span {
+    display: none;
+  }
+
+  .viewSwitch {
+    margin-right: 0;
+  }
+
+  .comingSoonPage {
+    min-height: calc(100svh - 64px);
+    padding: 20px;
+  }
+
+  .comingSoonCard {
+    padding: 36px 24px;
+  }
+}

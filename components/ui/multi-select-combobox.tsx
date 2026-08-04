@@ -4,6 +4,11 @@ import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, LoaderCircle, Plus, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import {
+  popover,
+  popoverMessage,
+  popoverOption,
+} from "@/components/onboarding/onboarding-tailwind";
 
 export type ComboboxOption = { value: string; label: string };
 
@@ -52,38 +57,53 @@ export function MultiSelectCombobox({
   useEffect(() => {
     if (!loadOptions) return;
     let current = true;
-    const timer = window.setTimeout(async () => {
-      setLoading(true);
-      try {
-        const results = await loadOptions(query);
-        if (current) setRemoteOptions(results);
-      } finally {
-        if (current) setLoading(false);
-      }
-    }, query ? 280 : 0);
+    const timer = window.setTimeout(
+      async () => {
+        setLoading(true);
+        try {
+          const results = await loadOptions(query);
+          if (current) setRemoteOptions(results);
+        } finally {
+          if (current) setLoading(false);
+        }
+      },
+      query ? 280 : 0,
+    );
     return () => {
       current = false;
       window.clearTimeout(timer);
     };
   }, [loadOptions, query]);
 
-  const selectedKeys = useMemo(() => new Set(value.map((item) => item.value.toLowerCase())), [value]);
+  const selectedKeys = useMemo(
+    () => new Set(value.map((item) => item.value.toLowerCase())),
+    [value],
+  );
   const visibleOptions = useMemo(() => {
     const source = loadOptions ? remoteOptions : options;
     const normalizedQuery = query.trim().toLowerCase();
-    return source.filter((option) =>
-      !selectedKeys.has(option.value.toLowerCase()) &&
-      (!normalizedQuery || option.label.toLowerCase().includes(normalizedQuery)),
-    ).slice(0, 12);
+    return source
+      .filter(
+        (option) =>
+          !selectedKeys.has(option.value.toLowerCase()) &&
+          (!normalizedQuery ||
+            option.label.toLowerCase().includes(normalizedQuery)),
+      )
+      .slice(0, 12);
   }, [loadOptions, options, query, remoteOptions, selectedKeys]);
 
   const customValue = query.trim();
-  const canAddCustom = allowCustom && customValue.length > 0 &&
+  const canAddCustom =
+    allowCustom &&
+    customValue.length > 0 &&
     !selectedKeys.has(customValue.toLowerCase()) &&
-    !options.some((option) => option.label.toLowerCase() === customValue.toLowerCase());
+    !options.some(
+      (option) => option.label.toLowerCase() === customValue.toLowerCase(),
+    );
 
   const add = (option: ComboboxOption) => {
-    if (!selectedKeys.has(option.value.toLowerCase())) onChange([...value, option]);
+    if (!selectedKeys.has(option.value.toLowerCase()))
+      onChange([...value, option]);
     setQuery("");
     setOpen(true);
     inputRef.current?.focus();
@@ -102,9 +122,12 @@ export function MultiSelectCombobox({
   };
 
   return (
-    <div className="multi-combobox" ref={rootRef}>
+    <div className="relative w-full text-[#25212a]" ref={rootRef}>
       <div
-        className={cn("multi-combobox-control", open && "is-open", disabled && "is-disabled")}
+        className={cn(
+          "flex min-h-[50px] cursor-text flex-wrap items-center gap-[7px] py-[7px] pr-7",
+          disabled && "cursor-not-allowed opacity-65",
+        )}
         onClick={() => {
           if (!disabled) {
             setOpen(true);
@@ -113,19 +136,31 @@ export function MultiSelectCombobox({
         }}
       >
         {value.map((item) => (
-          <span className="selection-chip" key={item.value} title={item.label}>
-            <span>{item.label}</span>
+          <span
+            className="inline-flex max-w-full items-center gap-1 rounded-lg border border-[#ded0ec] bg-[#f3eafa] py-1.5 pr-[7px] pl-2.5 text-xs font-semibold text-[#5c179f]"
+            key={item.value}
+            title={item.label}
+          >
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+              {item.label}
+            </span>
             <button
+              className="grid size-[19px] shrink-0 cursor-pointer place-items-center rounded-[5px] border-0 bg-transparent p-0 text-inherit hover:bg-[rgba(92,23,159,.12)]"
               type="button"
               aria-label={`Remove ${item.label}`}
               onClick={(event) => {
                 event.stopPropagation();
-                onChange(value.filter((selected) => selected.value !== item.value));
+                onChange(
+                  value.filter((selected) => selected.value !== item.value),
+                );
               }}
-            ><X size={13} /></button>
+            >
+              <X size={13} />
+            </button>
           </span>
         ))}
         <input
+          className="h-[34px] min-w-[100px] flex-[1_1_180px] border-0 bg-transparent text-sm text-[#25212a] outline-none placeholder:text-[#a5a9b8]"
           ref={inputRef}
           role="combobox"
           aria-label={ariaLabel}
@@ -133,31 +168,70 @@ export function MultiSelectCombobox({
           aria-controls={`${ariaLabel.replace(/\s+/g, "-").toLowerCase()}-listbox`}
           disabled={disabled}
           value={query}
-          onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           placeholder={value.length ? "" : placeholder}
         />
-        {loading ? <LoaderCircle className="combobox-spinner" size={17} /> : <ChevronDown className="combobox-chevron" size={17} />}
+        {loading ? (
+          <LoaderCircle
+            className="absolute top-[17px] right-[9px] animate-spin text-[#9690a1]"
+            size={17}
+          />
+        ) : (
+          <ChevronDown
+            className="absolute top-[17px] right-[9px] text-[#9690a1]"
+            size={17}
+          />
+        )}
       </div>
 
       {open && !disabled && (
-        <div className="combobox-popover" id={`${ariaLabel.replace(/\s+/g, "-").toLowerCase()}-listbox`} role="listbox">
+        <div
+          className={popover}
+          id={`${ariaLabel.replace(/\s+/g, "-").toLowerCase()}-listbox`}
+          role="listbox"
+        >
           {loading && !visibleOptions.length ? (
-            <p className="combobox-message"><LoaderCircle size={15} />{loadingText}</p>
+            <p className={popoverMessage}>
+              <LoaderCircle className="animate-spin" size={15} />
+              {loadingText}
+            </p>
           ) : (
             <>
               {visibleOptions.map((option) => (
-                <button type="button" role="option" aria-selected="false" key={option.value} onMouseDown={(event) => event.preventDefault()} onClick={() => add(option)}>
-                  <span>{option.label}</span><Check size={15} />
+                <button
+                  className={`${popoverOption} [&>svg]:shrink-0 [&>svg]:opacity-0 hover:[&>svg]:opacity-100`}
+                  type="button"
+                  role="option"
+                  aria-selected="false"
+                  key={option.value}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => add(option)}
+                >
+                  <span>{option.label}</span>
+                  <Check size={15} />
                 </button>
               ))}
               {canAddCustom && (
-                <button type="button" className="combobox-add" onMouseDown={(event) => event.preventDefault()} onClick={() => add({ value: customValue, label: customValue })}>
-                  <Plus size={15} /><span>{addText ? addText(customValue) : customValue}</span>
+                <button
+                  type="button"
+                  className={`${popoverOption} justify-start border-t border-[#f0eaf4] font-semibold text-[#6f1eb9] [&>svg]:opacity-100`}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() =>
+                    add({ value: customValue, label: customValue })
+                  }
+                >
+                  <Plus size={15} />
+                  <span>{addText ? addText(customValue) : customValue}</span>
                 </button>
               )}
-              {!visibleOptions.length && !canAddCustom && !loading && <p className="combobox-message">{emptyText}</p>}
+              {!visibleOptions.length && !canAddCustom && !loading && (
+                <p className={popoverMessage}>{emptyText}</p>
+              )}
             </>
           )}
         </div>

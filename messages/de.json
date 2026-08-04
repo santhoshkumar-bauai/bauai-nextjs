@@ -172,5 +172,128 @@
       "reviewError": "Diese Anfrage konnte nicht bearbeitet werden. Bitte versuchen Sie es erneut."
     },
     "description": "Ihr BAU AI Workspace ist bereit. Das migrierte Dashboard wird hier als Nächstes eingebunden."
+  },
+  "Workspace": {
+    "kanban": {
+      "title": "Ausschreibungspipeline",
+      "tenderCount": "0 Ausschreibungen",
+      "previewTitle": "Wir arbeiten gerade daran",
+      "previewDescription": "Dieser Arbeitsbereich ist eine UI-Vorschau. Ausschreibungsstatus und Zusammenarbeit folgen als Nächstes.",
+      "workspace": "Arbeitsbereich",
+      "deadZone": "Archiv",
+      "noTenders": "Noch keine Ausschreibungen",
+      "emptyHint": "Ausschreibungen hierher ziehen oder aus der Übersicht hinzufügen",
+      "columns": {
+        "interested": "Interessiert",
+        "preparing": "In Vorbereitung",
+        "submitted": "Eingereicht",
+        "won": "Gewonnen",
+        "lost": "Verloren"
+      }
+    },
+    "comingSoon": {
+      "eyebrow": "BAU AI Arbeitsbereich-Vorschau",
+      "title": "Wir arbeiten gerade daran",
+      "description": "Dieser Bereich ist bereits mit der Navigation verbunden. Wir entwickeln jetzt die Arbeitsabläufe und Werkzeuge, die hier verfügbar sein werden.",
+      "back": "Zurück zum KI-Board"
+    },
+    "sections": {
+      "tenders": "Ausschreibungen",
+      "documentFiller": "Dokumentassistent",
+      "tutorial": "KI-Tutorial",
+      "settings": "Einstellungen",
+      "notifications": "Benachrichtigungen",
+      "pricing": "Preise",
+      "support": "Support",
+      "profile": "Profileinstellungen"
+    }
+  },
+  "Settings": {
+    "tabs": {
+      "company": "Unternehmensinformationen",
+      "tender": "Ausschreibungsinformationen",
+      "employees": "Mitarbeiterinformationen",
+      "billing": "Abrechnung",
+      "dora": "Dora-Playbook"
+    },
+    "common": {
+      "preview": "UI-Vorschau",
+      "save": "Änderungen speichern",
+      "refresh": "Aktualisieren",
+      "optional": "Optional"
+    },
+    "company": {
+      "title": "Einstellungen",
+      "subtitle": "Unternehmenswissensdatenbank",
+      "completion": "Profil einrichten",
+      "profile": "Profil einrichten",
+      "completeProfile": "Vervollständigen Sie Ihr Profil",
+      "profileHint": "Diese Angaben verbessern die Relevanz Ihrer Ausschreibungen.",
+      "tenderInformation": "Ausschreibungsinformationen",
+      "companyInformation": "Unternehmensinformationen",
+      "companyDetails": "Unternehmensdetails",
+      "companyDetailsHint": "Rechtsform, Gründungsjahr und Unternehmensbeschreibung.",
+      "legalForm": "Rechtsform",
+      "foundingYear": "Gründungsjahr",
+      "registrationCourt": "Registergericht",
+      "description": "Unternehmensbeschreibung",
+      "descriptionPlaceholder": "Kurze Unternehmensbeschreibung...",
+      "website": "Unternehmenswebsite",
+      "services": "Leistungen",
+      "cpv": "CPV-Codes",
+      "region": "Region",
+      "businessDomain": "Unternehmensbereich"
+    },
+    "tender": {
+      "title": "Ausschreibungsinformationen",
+      "subtitle": "Die aktuell für Ihr Unternehmen hinterlegten Matching-Einstellungen.",
+      "services": "Leistungen",
+      "cpv": "CPV-Codes",
+      "region": "Region",
+      "emptyValue": "Noch nicht eingerichtet",
+      "matchingTitle": "Ausschreibungsabgleich",
+      "matchingDescription": "Ihre Unternehmenspräferenzen werden genutzt, um passende Chancen zu priorisieren."
+    },
+    "employees": {
+      "title": "Unternehmensmitarbeiter",
+      "description": "Personen mit aktivem Zugriff auf diesen Unternehmensarbeitsbereich.",
+      "invite": "Mitarbeiter einladen",
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "status": "Status",
+      "account": "Kontostatus",
+      "action": "Beigetreten",
+      "active": "Aktiv",
+      "registered": "Registriert",
+      "admin": "Administrator",
+      "member": "Mitglied",
+      "pendingTitle": "Zugriffsanfragen",
+      "pendingDescription": "Neue Personen werden erst nach Genehmigung durch einen Administrator hinzugefügt.",
+      "noPending": "Es gibt keine offenen Zugriffsanfragen."
+    },
+    "billing": {
+      "title": "Abrechnung",
+      "subtitle": "Übersicht zu Abo und Nutzung",
+      "plan": "Aktueller Plan",
+      "trial": "Kostenlose Testphase",
+      "trialDescription": "Endet am",
+      "seats": "Teamplätze",
+      "usage": "Nutzungsübersicht",
+      "previewTitle": "Abrechnungsvorschau",
+      "previewDescription": "Abonnementverwaltung und Rechnungen werden hier bald verfügbar sein."
+    },
+    "dora": {
+      "title": "Dora-Playbook",
+      "subtitle": "Ein geführter Arbeitsbereich für bessere Ausschreibungsantworten.",
+      "cards": {
+        "analysis": "Ausschreibung analysieren",
+        "drafting": "Antwort erstellen",
+        "review": "Prüfen und einreichen"
+      },
+      "description": "Für diesen Schritt wird gerade ein fokussierter Workflow vorbereitet.",
+      "previewTitle": "Playbook-Vorschau",
+      "previewDescription": "Doras geführtes Ausschreibungs-Playbook wird derzeit entwickelt."
+    }
   }
 }

@@ -16,9 +16,19 @@ const accountProfileSchema = new Schema<AccountProfileDocument>(
   {
     userId: { type: String, required: true, unique: true, index: true },
     email: { type: String, required: true, lowercase: true },
-    companyId: { type: Schema.Types.ObjectId, ref: "Company", required: true, index: true },
+    companyId: {
+      type: Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+      index: true,
+    },
     role: { type: String, enum: ["admin", "member"], required: true },
-    membershipStatus: { type: String, enum: ["active", "pending", "rejected"], default: "active", index: true },
+    membershipStatus: {
+      type: String,
+      enum: ["active", "pending", "rejected"],
+      default: "active",
+      index: true,
+    },
     onboardingCompleted: { type: Boolean, default: false },
     locale: { type: String, enum: ["en", "de"], default: "en" },
     trialStartsAt: { type: Date, required: true },

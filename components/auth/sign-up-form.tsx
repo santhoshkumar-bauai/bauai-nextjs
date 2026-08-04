@@ -8,6 +8,16 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import {
+  authCard,
+  authError,
+  authField,
+  authHeading,
+  authInputShell,
+  authPrompt,
+  authStatus,
+  authSubmit,
+} from "./auth-tailwind";
 
 export function SignUpForm() {
   const t = useTranslations("SignUp");
@@ -22,10 +32,16 @@ export function SignUpForm() {
 
     const form = new FormData(event.currentTarget);
     const name = String(form.get("name") ?? "").trim();
-    const email = String(form.get("email") ?? "").trim().toLowerCase();
+    const email = String(form.get("email") ?? "")
+      .trim()
+      .toLowerCase();
     const password = String(form.get("password") ?? "");
 
-    if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) {
+    if (
+      name.length < 2 ||
+      !/^\S+@\S+\.\S+$/.test(email) ||
+      password.length < 8
+    ) {
       setError(t("validation"));
       setLoading(false);
       return;
@@ -48,38 +64,83 @@ export function SignUpForm() {
 
   if (sentTo) {
     return (
-      <section className="login-card auth-status-card" aria-live="polite">
-        <span className="status-icon"><Mail size={28} /></span>
+      <section className={`${authCard} ${authStatus}`} aria-live="polite">
+        <span className="mx-auto grid size-[62px] place-items-center rounded-[18px] bg-[#f2e8fb] text-[#6515b7]">
+          <Mail size={28} />
+        </span>
         <h1>{t("checkEmailTitle")}</h1>
         <p>{t("checkEmailDescription", { email: sentTo })}</p>
-        <p className="status-note">{t("checkSpam")}</p>
-        <Link className="status-link" href="/login">{t("backToLogin")}</Link>
+        <p className="mt-3! text-xs! text-[#99929f]!">{t("checkSpam")}</p>
+        <Link
+          className="mt-6 inline-block text-[13px] font-bold text-[#5000a8] no-underline"
+          href="/login"
+        >
+          {t("backToLogin")}
+        </Link>
       </section>
     );
   }
 
   return (
-    <form className="login-card" onSubmit={submit} noValidate>
-      <div className="login-heading">
+    <form className={authCard} onSubmit={submit} noValidate>
+      <div className={authHeading}>
         <h1>{t("title")}</h1>
         <p>{t("description")}</p>
       </div>
-      <label className="field-label">
+      <label className={authField}>
         {t("name")}
-        <span className="input-shell"><UserRound aria-hidden="true" size={18} /><Input name="name" placeholder={t("namePlaceholder")} autoComplete="name" required /></span>
+        <span className={authInputShell}>
+          <UserRound aria-hidden="true" size={18} />
+          <Input
+            name="name"
+            placeholder={t("namePlaceholder")}
+            autoComplete="name"
+            required
+          />
+        </span>
       </label>
-      <label className="field-label">
+      <label className={authField}>
         {t("email")}
-        <span className="input-shell"><Mail aria-hidden="true" size={18} /><Input name="email" type="email" placeholder={t("emailPlaceholder")} autoComplete="email" required /></span>
+        <span className={authInputShell}>
+          <Mail aria-hidden="true" size={18} />
+          <Input
+            name="email"
+            type="email"
+            placeholder={t("emailPlaceholder")}
+            autoComplete="email"
+            required
+          />
+        </span>
       </label>
-      <label className="field-label">
+      <label className={authField}>
         {t("password")}
-        <span className="input-shell"><LockKeyhole aria-hidden="true" size={18} /><Input name="password" type="password" placeholder={t("passwordPlaceholder")} autoComplete="new-password" minLength={8} required /></span>
+        <span className={authInputShell}>
+          <LockKeyhole aria-hidden="true" size={18} />
+          <Input
+            name="password"
+            type="password"
+            placeholder={t("passwordPlaceholder")}
+            autoComplete="new-password"
+            minLength={8}
+            required
+          />
+        </span>
       </label>
-      <p className="password-hint"><CheckCircle2 size={14} />{t("passwordHint")}</p>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <Button type="submit" size="lg" className="sign-in-button" disabled={loading}>{loading ? t("creating") : t("createAccount")}</Button>
-      <p className="register-prompt">{t("haveAccount")} <Link href="/login">{t("signIn")}</Link></p>
+      <p className="mt-2.5 flex items-center gap-1.5 text-xs text-[#87818d] [&_svg]:text-[#6f25bd]">
+        <CheckCircle2 size={14} />
+        {t("passwordHint")}
+      </p>
+      {error && (
+        <p className={authError} role="alert">
+          {error}
+        </p>
+      )}
+      <Button type="submit" size="lg" className={authSubmit} disabled={loading}>
+        {loading ? t("creating") : t("createAccount")}
+      </Button>
+      <p className={authPrompt}>
+        {t("haveAccount")} <Link href="/login">{t("signIn")}</Link>
+      </p>
     </form>
   );
 }

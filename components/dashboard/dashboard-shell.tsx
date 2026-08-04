@@ -21,7 +21,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { localeCookie, type Locale } from "@/i18n/config";
@@ -78,21 +78,27 @@ type DashboardShellProps = {
   fullName: string;
   email: string;
   adminPanel?: ReactNode;
+  workspaceContent?: ReactNode;
 };
 
 const mainNavigation = [
   { key: "aiBoard" as const, icon: LayoutGrid, href: "/dashboard" },
-  { key: "workspace" as const, icon: BriefcaseBusiness },
-  { key: "tenders" as const, icon: FileSearch },
-  { key: "documentFiller" as const, icon: FileText, beta: true },
+  { key: "workspace" as const, icon: BriefcaseBusiness, href: "/kanban" },
+  { key: "tenders" as const, icon: FileSearch, href: "/tenders" },
+  {
+    key: "documentFiller" as const,
+    icon: FileText,
+    href: "/document-filler",
+    beta: true,
+  },
 ];
 
 const secondaryNavigation = [
-  { key: "tutorial" as const, icon: Sparkles },
-  { key: "settings" as const, icon: Settings },
-  { key: "notifications" as const, icon: Bell },
-  { key: "pricing" as const, icon: CreditCard },
-  { key: "support" as const, icon: Headphones },
+  { key: "tutorial" as const, icon: Sparkles, href: "/tutorial" },
+  { key: "settings" as const, icon: Settings, href: "/settings" },
+  { key: "notifications" as const, icon: Bell, href: "/notifications" },
+  { key: "pricing" as const, icon: CreditCard, href: "/pricing" },
+  { key: "support" as const, icon: Headphones, href: "/support" },
 ];
 
 export function DashboardShell({
@@ -102,6 +108,7 @@ export function DashboardShell({
   fullName,
   email,
   adminPanel,
+  workspaceContent,
 }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("Clara");
@@ -112,11 +119,13 @@ export function DashboardShell({
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!profileMenuOpen) return;
     const closeMenu = (event: MouseEvent) => {
-      if (!profileMenuRef.current?.contains(event.target as Node)) setProfileMenuOpen(false);
+      if (!profileMenuRef.current?.contains(event.target as Node))
+        setProfileMenuOpen(false);
     };
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setProfileMenuOpen(false);
@@ -151,7 +160,11 @@ export function DashboardShell({
     <main className={`${styles.shell} ${collapsed ? styles.isCollapsed : ""}`}>
       <aside className={styles.sidebar} aria-label="BAU AI">
         <div className={styles.brandRow}>
-          <Link href="/dashboard" className={styles.brandLink} aria-label="BAU AI dashboard">
+          <Link
+            href="/dashboard"
+            className={styles.brandLink}
+            aria-label="BAU AI dashboard"
+          >
             <Image
               src={collapsed ? "/brand/logo_small.svg" : "/brand/logo_name.svg"}
               width={collapsed ? 36 : 112}
@@ -179,17 +192,19 @@ export function DashboardShell({
                 <>
                   <Icon size={19} strokeWidth={1.7} />
                   <span className={styles.navLabel}>{copy.nav[item.key]}</span>
-                  {item.beta && <small className={styles.betaBadge}>{copy.nav.beta}</small>}
+                  {item.beta && (
+                    <small className={styles.betaBadge}>{copy.nav.beta}</small>
+                  )}
                 </>
               );
-              return item.href ? (
-                <Link key={item.key} href={item.href} className={`${styles.navItem} ${styles.activeNavItem}`}>
+              return (
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className={`${styles.navItem} ${pathname === item.href ? styles.activeNavItem : ""}`}
+                >
                   {content}
                 </Link>
-              ) : (
-                <span key={item.key} className={styles.navItem} aria-disabled="true">
-                  {content}
-                </span>
               );
             })}
           </div>
@@ -198,10 +213,14 @@ export function DashboardShell({
             {secondaryNavigation.map((item) => {
               const Icon = item.icon;
               return (
-                <span key={item.key} className={styles.navItem} aria-disabled="true">
+                <Link
+                  key={item.key}
+                  href={item.href}
+                  className={`${styles.navItem} ${pathname === item.href ? styles.activeNavItem : ""}`}
+                >
                   <Icon size={19} strokeWidth={1.7} />
                   <span className={styles.navLabel}>{copy.nav[item.key]}</span>
-                </span>
+                </Link>
               );
             })}
           </div>
@@ -209,9 +228,15 @@ export function DashboardShell({
 
         <div className={styles.profileArea} ref={profileMenuRef}>
           {profileMenuOpen && (
-            <div className={styles.profileMenu} role="menu" aria-label={copy.profileMenu.open}>
+            <div
+              className={styles.profileMenu}
+              role="menu"
+              aria-label={copy.profileMenu.open}
+            >
               <div className={styles.menuIdentity}>
-                <div className={styles.avatar}>{fullName.trim().charAt(0).toUpperCase() || "U"}</div>
+                <div className={styles.avatar}>
+                  {fullName.trim().charAt(0).toUpperCase() || "U"}
+                </div>
                 <div className={styles.profileText}>
                   <strong>{fullName}</strong>
                   <span>{email}</span>
@@ -219,10 +244,15 @@ export function DashboardShell({
               </div>
 
               <div className={styles.menuSection}>
-                <button type="button" className={styles.menuAction} role="menuitem">
+                <Link
+                  href="/profile"
+                  className={styles.menuAction}
+                  role="menuitem"
+                  onClick={() => setProfileMenuOpen(false)}
+                >
                   <UserRound size={17} />
                   <span>{copy.profileMenu.profileSettings}</span>
-                </button>
+                </Link>
               </div>
 
               <div className={styles.menuSection}>
@@ -230,7 +260,10 @@ export function DashboardShell({
                   <Languages size={17} />
                   <span>{copy.profileMenu.language}</span>
                 </div>
-                <div className={styles.languageOptions} aria-label={copy.profileMenu.language}>
+                <div
+                  className={styles.languageOptions}
+                  aria-label={copy.profileMenu.language}
+                >
                   <button
                     type="button"
                     className={locale === "en" ? styles.activeLanguage : ""}
@@ -257,7 +290,11 @@ export function DashboardShell({
                   role="menuitem"
                 >
                   <LogOut size={17} />
-                  <span>{signingOut ? copy.profileMenu.signingOut : copy.profileMenu.signOut}</span>
+                  <span>
+                    {signingOut
+                      ? copy.profileMenu.signingOut
+                      : copy.profileMenu.signOut}
+                  </span>
                 </button>
               </div>
             </div>
@@ -271,7 +308,9 @@ export function DashboardShell({
             aria-expanded={profileMenuOpen}
             aria-label={copy.profileMenu.open}
           >
-            <div className={styles.avatar}>{fullName.trim().charAt(0).toUpperCase() || "U"}</div>
+            <div className={styles.avatar}>
+              {fullName.trim().charAt(0).toUpperCase() || "U"}
+            </div>
             <div className={styles.profileText}>
               <strong>{fullName}</strong>
               <span>{email}</span>
@@ -281,75 +320,118 @@ export function DashboardShell({
       </aside>
 
       <section className={styles.workspace}>
-        <div className={styles.ambientGlow} aria-hidden="true" />
-        <div className={styles.dotGrid} aria-hidden="true" />
+        {!workspaceContent && (
+          <div className={styles.ambientGlow} aria-hidden="true" />
+        )}
+        {!workspaceContent && (
+          <div className={styles.dotGrid} aria-hidden="true" />
+        )}
 
-        <div className={styles.content}>
-          <header className={styles.hero}>
-            <time className={styles.dateBadge}>{dateLabel}</time>
-            <h1>
-              {copy.greeting}, <span>{firstName}</span>
-            </h1>
-            <p>{copy.chooseAgent}</p>
-          </header>
+        {workspaceContent ? (
+          <div className={styles.routedContent}>{workspaceContent}</div>
+        ) : (
+          <div className={styles.content}>
+            <header className={styles.hero}>
+              <time className={styles.dateBadge}>{dateLabel}</time>
+              <h1>
+                {copy.greeting}, <span>{firstName}</span>
+              </h1>
+              <p>{copy.chooseAgent}</p>
+            </header>
 
-          <div className={styles.agentGrid}>
-            {copy.agents.map((agent) => (
+            <div className={styles.agentGrid}>
+              {copy.agents.map((agent) => (
+                <button
+                  type="button"
+                  key={agent.name}
+                  className={`${styles.agentCard} ${agent.available ? styles.availableAgent : styles.disabledAgent} ${selectedAgent === agent.name ? styles.selectedAgent : ""}`}
+                  onClick={() =>
+                    agent.available && setSelectedAgent(agent.name)
+                  }
+                  disabled={!agent.available}
+                  aria-pressed={
+                    agent.available ? selectedAgent === agent.name : undefined
+                  }
+                >
+                  <div className={styles.agentTopRow}>
+                    <span className={styles.agentAvatar}>
+                      <Image
+                        src={agent.image}
+                        alt=""
+                        width={46}
+                        height={46}
+                        unoptimized
+                      />
+                    </span>
+                    {agent.available ? (
+                      <span
+                        className={styles.onlineDot}
+                        aria-label="Available"
+                      />
+                    ) : (
+                      <span className={styles.comingSoon}>
+                        {copy.comingSoon}
+                      </span>
+                    )}
+                  </div>
+                  <strong>{agent.name}</strong>
+                  <span className={styles.agentRole}>{agent.role}</span>
+                  <p>{agent.description}</p>
+                  {agent.remaining && (
+                    <small className={styles.remainingBadge}>
+                      {agent.remaining}
+                    </small>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {adminPanel && (
+              <div className={styles.adminPanel}>{adminPanel}</div>
+            )}
+
+            <div className={styles.workspaceSpacer} />
+
+            <form
+              className={styles.composer}
+              onSubmit={(event) => event.preventDefault()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                className={styles.visuallyHidden}
+                accept=".pdf,.doc,.docx,.xls,.xlsx"
+                onChange={(event) =>
+                  setFileName(event.target.files?.[0]?.name || "")
+                }
+              />
               <button
                 type="button"
-                key={agent.name}
-                className={`${styles.agentCard} ${agent.available ? styles.availableAgent : styles.disabledAgent} ${selectedAgent === agent.name ? styles.selectedAgent : ""}`}
-                onClick={() => agent.available && setSelectedAgent(agent.name)}
-                disabled={!agent.available}
-                aria-pressed={agent.available ? selectedAgent === agent.name : undefined}
+                className={styles.composerIcon}
+                onClick={() => fileInputRef.current?.click()}
+                aria-label={copy.attachDocument}
+                title={copy.attachDocument}
               >
-                <div className={styles.agentTopRow}>
-                  <span className={styles.agentAvatar}>
-                    <Image src={agent.image} alt="" width={46} height={46} unoptimized />
-                  </span>
-                  {agent.available ? (
-                    <span className={styles.onlineDot} aria-label="Available" />
-                  ) : (
-                    <span className={styles.comingSoon}>{copy.comingSoon}</span>
-                  )}
-                </div>
-                <strong>{agent.name}</strong>
-                <span className={styles.agentRole}>{agent.role}</span>
-                <p>{agent.description}</p>
-                {agent.remaining && <small className={styles.remainingBadge}>{agent.remaining}</small>}
+                <Paperclip size={18} />
               </button>
-            ))}
+              <span
+                className={
+                  fileName ? styles.fileName : styles.composerPlaceholder
+                }
+              >
+                {fileName || copy.composerPlaceholder}
+              </span>
+              <button
+                type="submit"
+                className={styles.sendButton}
+                aria-label={copy.send}
+                title={copy.send}
+              >
+                <ArrowUp size={18} />
+              </button>
+            </form>
           </div>
-
-          {adminPanel && <div className={styles.adminPanel}>{adminPanel}</div>}
-
-          <div className={styles.workspaceSpacer} />
-
-          <form className={styles.composer} onSubmit={(event) => event.preventDefault()}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className={styles.visuallyHidden}
-              accept=".pdf,.doc,.docx,.xls,.xlsx"
-              onChange={(event) => setFileName(event.target.files?.[0]?.name || "")}
-            />
-            <button
-              type="button"
-              className={styles.composerIcon}
-              onClick={() => fileInputRef.current?.click()}
-              aria-label={copy.attachDocument}
-              title={copy.attachDocument}
-            >
-              <Paperclip size={18} />
-            </button>
-            <span className={fileName ? styles.fileName : styles.composerPlaceholder}>
-              {fileName || copy.composerPlaceholder}
-            </span>
-            <button type="submit" className={styles.sendButton} aria-label={copy.send} title={copy.send}>
-              <ArrowUp size={18} />
-            </button>
-          </form>
-        </div>
+        )}
       </section>
     </main>
   );

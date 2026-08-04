@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 import { connectMongoose } from "@/lib/db/mongoose";
 import { CpvCode } from "@/models/cpv-code";
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });

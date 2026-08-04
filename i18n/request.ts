@@ -16,7 +16,9 @@ export default getRequestConfig(async () => {
     ?.trim()
     .split("-")[0];
   const requestedLocale = cookieLocale ?? browserLocale;
-  const locale = hasLocale(locales, requestedLocale) ? requestedLocale : defaultLocale;
+  const locale = hasLocale(locales, requestedLocale)
+    ? requestedLocale
+    : defaultLocale;
 
   return {
     locale,

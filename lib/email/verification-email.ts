@@ -7,7 +7,8 @@ const copy = {
     title: "Verify your email address",
     body: "Thanks for creating your BAU AI account. Confirm your email to continue to company onboarding and start your 7-day free trial.",
     button: "Verify email",
-    expiry: "This verification link expires in one hour. If you didn't create this account, you can safely ignore this email.",
+    expiry:
+      "This verification link expires in one hour. If you didn't create this account, you can safely ignore this email.",
   },
   de: {
     subject: "Bestätigen Sie Ihre BAU AI E-Mail-Adresse",
@@ -15,18 +16,23 @@ const copy = {
     title: "E-Mail-Adresse bestätigen",
     body: "Vielen Dank für die Erstellung Ihres BAU AI Kontos. Bestätigen Sie Ihre E-Mail-Adresse, um mit dem Unternehmens-Onboarding fortzufahren und Ihre kostenlose 7-Tage-Testphase zu starten.",
     button: "E-Mail bestätigen",
-    expiry: "Dieser Bestätigungslink läuft in einer Stunde ab. Falls Sie dieses Konto nicht erstellt haben, können Sie diese E-Mail ignorieren.",
+    expiry:
+      "Dieser Bestätigungslink läuft in einer Stunde ab. Falls Sie dieses Konto nicht erstellt haben, können Sie diese E-Mail ignorieren.",
   },
 } as const;
 
 function escapeHtml(value: string) {
-  return value.replace(/[&<>'"]/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "'": "&#39;",
-    '"': "&quot;",
-  })[character]!);
+  return value.replace(
+    /[&<>'"]/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      })[character]!,
+  );
 }
 
 export function verificationEmail({

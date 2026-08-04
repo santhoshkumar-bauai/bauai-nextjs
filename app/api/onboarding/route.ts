@@ -20,17 +20,32 @@ type OnboardingBody = {
   locale?: unknown;
 };
 
-const cleanList = (value: unknown) => Array.isArray(value)
-  ? [...new Set(value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean))]
-  : [];
+const cleanList = (value: unknown) =>
+  Array.isArray(value)
+    ? [
+        ...new Set(
+          value
+            .filter((item): item is string => typeof item === "string")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        ),
+      ]
+    : [];
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!session.user.emailVerified) return NextResponse.json({ error: "Email verification required" }, { status: 403 });
+  if (!session?.user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session.user.emailVerified)
+    return NextResponse.json(
+      { error: "Email verification required" },
+      { status: 403 },
+    );
 
   await connectMongoose();
-  const existingProfile = await AccountProfile.findOne({ userId: session.user.id }).lean();
+  const existingProfile = await AccountProfile.findOne({
+    userId: session.user.id,
+  }).lean();
   if (existingProfile?.onboardingCompleted) {
     return NextResponse.json({
       ok: true,
@@ -39,24 +54,45 @@ export async function POST(request: Request) {
     });
   }
 
-  const body = await request.json() as OnboardingBody;
-  const normalizedWebsite = typeof body.website === "string"
-    ? normalizeCompanyWebsite(body.website)
-    : null;
-  const businessDomain = typeof body.businessDomain === "string" ? body.businessDomain.trim() : "";
+  const body = (await request.json()) as OnboardingBody;
+  const normalizedWebsite =
+    typeof body.website === "string"
+      ? normalizeCompanyWebsite(body.website)
+      : null;
+  const businessDomain =
+    typeof body.businessDomain === "string" ? body.businessDomain.trim() : "";
   const region = typeof body.region === "string" ? body.region.trim() : "";
-  const regionPlaceId = typeof body.regionPlaceId === "string" ? body.regionPlaceId.trim() : "";
-  const latitude = typeof body.latitude === "number" ? body.latitude : Number.NaN;
-  const longitude = typeof body.longitude === "number" ? body.longitude : Number.NaN;
+  const regionPlaceId =
+    typeof body.regionPlaceId === "string" ? body.regionPlaceId.trim() : "";
+  const latitude =
+    typeof body.latitude === "number" ? body.latitude : Number.NaN;
+  const longitude =
+    typeof body.longitude === "number" ? body.longitude : Number.NaN;
   const services = cleanList(body.services);
   const cpvCodes = cleanList(body.cpvCodes);
-  const locale: Locale = locales.includes(body.locale as Locale) ? body.locale as Locale : "en";
-  const hasValidLocation = Boolean(regionPlaceId) &&
-    Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 &&
-    Number.isFinite(longitude) && longitude >= -180 && longitude <= 180;
+  const locale: Locale = locales.includes(body.locale as Locale)
+    ? (body.locale as Locale)
+    : "en";
+  const hasValidLocation =
+    Boolean(regionPlaceId) &&
+    Number.isFinite(latitude) &&
+    latitude >= -90 &&
+    latitude <= 90 &&
+    Number.isFinite(longitude) &&
+    longitude >= -180 &&
+    longitude <= 180;
 
-  if (!normalizedWebsite || !businessDomain || !region || services.length === 0 || cpvCodes.length === 0) {
-    return NextResponse.json({ error: "Please complete all required onboarding fields." }, { status: 400 });
+  if (
+    !normalizedWebsite ||
+    !businessDomain ||
+    !region ||
+    services.length === 0 ||
+    cpvCodes.length === 0
+  ) {
+    return NextResponse.json(
+      { error: "Please complete all required onboarding fields." },
+      { status: 400 },
+    );
   }
 
   const now = new Date();
@@ -68,7 +104,8 @@ export async function POST(request: Request) {
   if (!company) {
     role = "admin";
     membershipStatus = "active";
-    const companyName = normalizedWebsite.domain.split(".")[0]
+    const companyName = normalizedWebsite.domain
+      .split(".")[0]
       .replace(/[-_]+/g, " ")
       .replace(/\b\w/g, (character) => character.toUpperCase());
 
@@ -79,24 +116,44 @@ export async function POST(request: Request) {
         website: normalizedWebsite.website,
         businessDomain,
         region,
-        ...(hasValidLocation ? { regionLocation: { placeId: regionPlaceId, latitude, longitude } } : {}),
+        ...(hasValidLocation
+          ? { regionLocation: { placeId: regionPlaceId, latitude, longitude } }
+          : {}),
         services,
         cpvCodes,
-        members: [{ userId: session.user.id, email: session.user.email, role, joinedAt: now }],
+        members: [
+          {
+            userId: session.user.id,
+            email: session.user.email,
+            role,
+            joinedAt: now,
+          },
+        ],
         trial: { status: "active", startsAt: now, endsAt: trialEndsAt },
         createdBy: session.user.id,
       });
     } catch (error) {
-      if (!(error instanceof Error) || !("code" in error) || error.code !== 11000) throw error;
+      if (
+        !(error instanceof Error) ||
+        !("code" in error) ||
+        error.code !== 11000
+      )
+        throw error;
       company = await Company.findOne({ domain: normalizedWebsite.domain });
       role = "member";
       membershipStatus = "pending";
     }
   }
 
-  if (!company) return NextResponse.json({ error: "Unable to create company." }, { status: 500 });
+  if (!company)
+    return NextResponse.json(
+      { error: "Unable to create company." },
+      { status: 500 },
+    );
 
-  const existingMember = company.members.find((member) => member.userId === session.user.id);
+  const existingMember = company.members.find(
+    (member) => member.userId === session.user.id,
+  );
   if (existingMember) {
     role = existingMember.role;
     membershipStatus = "active";
@@ -121,7 +178,8 @@ export async function POST(request: Request) {
   }
 
   const effectiveTrialStart = role === "admin" ? now : company.trial.startsAt;
-  const effectiveTrialEnd = role === "admin" ? trialEndsAt : company.trial.endsAt;
+  const effectiveTrialEnd =
+    role === "admin" ? trialEndsAt : company.trial.endsAt;
 
   await AccountProfile.findOneAndUpdate(
     { userId: session.user.id },
