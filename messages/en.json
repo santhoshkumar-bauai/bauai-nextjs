@@ -69,22 +69,108 @@
     },
     "region": "Region",
     "regionPlaceholder": "Enter your city or region",
+    "regionHint": "Choose a Google suggestion for accurate coordinates, or confirm the typed region manually.",
+    "regionSearching": "Searching regions...",
+    "regionEmpty": "No matching region found.",
+    "regionRequired": "Select a suggestion or confirm the typed region.",
+    "useTypedRegion": "Use \"{value}\"",
+    "poweredBy": "Powered by",
     "services": "Services",
-    "servicesPlaceholder": "Civil works, concrete, renovation",
-    "servicesHint": "Separate multiple services with commas.",
+    "servicesPlaceholder": "Type a service or choose from the list...",
+    "servicesHint": "Press Enter to add your own service, or select one from the dropdown.",
+    "servicesEmpty": "No matching service. Press Enter to add it.",
+    "servicesRequired": "Add at least one service.",
+    "addService": "Add \"{value}\"",
     "cpvCodes": "CPV codes",
-    "cpvPlaceholder": "45000000, 45210000",
-    "cpvHint": "Separate multiple CPV codes with commas.",
+    "cpvPlaceholder": "Search CPV code or description...",
+    "cpvHint": "Review the AI suggestions, or search and add CPV codes manually.",
+    "cpvEmpty": "No matching CPV code found.",
+    "cpvRequired": "Add at least one CPV code.",
+    "loading": "Loading...",
+    "loadingCpv": "Searching CPV codes...",
+    "autoMapCpv": "Auto-map with AI",
+    "mappingCpv": "Mapping...",
+    "cpvMapError": "Unable to map CPV codes. Please select them manually.",
     "trialTitle": "Your 7-day free trial starts after onboarding",
     "trialDescription": "No credit card required. The first user in a new company becomes its administrator.",
     "submit": "Complete onboarding",
     "submitting": "Preparing your workspace...",
     "error": "Unable to complete onboarding. Please try again.",
+    "pendingTitle": "Approval request sent",
+    "pendingDescription": "This company already exists. An administrator must approve your request before you can access its workspace.",
     "completeTitle": "Workspace ready",
     "completeDescription": "Your company and seven-day trial have been configured."
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",
+    "goodMorning": "Good morning",
+    "goodAfternoon": "Good afternoon",
+    "goodEvening": "Good evening",
+    "chooseAgent": "Choose your agent. Your workflow partner.",
+    "comingSoon": "Coming soon",
+    "sevenLeft": "7 left",
+    "composerPlaceholder": "Upload your document and get started.",
+    "attachDocument": "Attach a document",
+    "send": "Send",
+    "profileMenu": {
+      "open": "Open profile menu",
+      "profileSettings": "Profile Settings",
+      "language": "Language",
+      "english": "English",
+      "german": "Deutsch",
+      "signOut": "Sign out",
+      "signingOut": "Signing out..."
+    },
+    "nav": {
+      "aiBoard": "AI Board",
+      "workspace": "Work Space",
+      "tenders": "Tenders",
+      "documentFiller": "Document Filler",
+      "beta": "Beta",
+      "tutorial": "AI Tutorial",
+      "settings": "Settings",
+      "notifications": "Notifications",
+      "pricing": "Pricing",
+      "support": "Support",
+      "collapse": "Collapse sidebar",
+      "expand": "Expand sidebar"
+    },
+    "agents": {
+      "patrick": {
+        "role": "Project Agent",
+        "description": "Manage timelines, track progress, and coordinate tasks efficiently."
+      },
+      "dora": {
+        "role": "Contract & Spec Agent",
+        "description": "Review contracts, flag risks, and extract requirements from your documents."
+      },
+      "clara": {
+        "role": "Tender Agent",
+        "description": "Analyze tenders, compare bids, and streamline the procurement process."
+      },
+      "dario": {
+        "role": "Dispatch Agent",
+        "description": "Coordinate logistics, track deliveries, and manage site resources."
+      },
+      "nova": {
+        "role": "Bid Evaluation Agent",
+        "description": "Evaluate every bid automatically, extract key data, and score readiness."
+      }
+    },
+    "pendingTitle": "Waiting for administrator approval",
+    "pendingDescription": "Your request has been sent to the company administrators. You will gain workspace access after one of them approves it.",
+    "rejectedTitle": "Membership request declined",
+    "rejectedDescription": "A company administrator declined your membership request. Contact your company administrator if you believe this was a mistake.",
+    "membershipRequests": {
+      "title": "Membership requests",
+      "description": "Approve only people who should have access to your company workspace.",
+      "requested": "Requested {date}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "loading": "Loading membership requests...",
+      "loadError": "Unable to load membership requests.",
+      "reviewError": "Unable to review this request. Please try again."
+    },
     "description": "Your BAU AI workspace is ready. The migrated dashboard will appear here next."
   }
 }

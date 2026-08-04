@@ -68,23 +68,109 @@
       "other": "Sonstiges"
     },
     "region": "Region",
+    "useTypedRegion": "\"{value}\" verwenden",
     "regionPlaceholder": "Stadt oder Region eingeben",
+    "regionHint": "Wählen Sie einen Google-Vorschlag für genaue Koordinaten oder bestätigen Sie die eingegebene Region manuell.",
+    "regionSearching": "Regionen werden gesucht...",
+    "regionEmpty": "Keine passende Region gefunden.",
+    "regionRequired": "Wählen Sie einen Vorschlag oder bestätigen Sie die eingegebene Region.",
+    "poweredBy": "Bereitgestellt von",
     "services": "Dienstleistungen",
-    "servicesPlaceholder": "Tiefbau, Beton, Renovierung",
-    "servicesHint": "Trennen Sie mehrere Dienstleistungen durch Kommas.",
+    "servicesPlaceholder": "Dienstleistung eingeben oder aus der Liste wählen...",
+    "servicesHint": "Drücken Sie Enter, um eine eigene Dienstleistung hinzuzufügen, oder wählen Sie aus der Liste.",
+    "servicesEmpty": "Keine passende Dienstleistung. Mit Enter hinzufügen.",
+    "servicesRequired": "Fügen Sie mindestens eine Dienstleistung hinzu.",
+    "addService": "\"{value}\" hinzufügen",
     "cpvCodes": "CPV-Codes",
-    "cpvPlaceholder": "45000000, 45210000",
-    "cpvHint": "Trennen Sie mehrere CPV-Codes durch Kommas.",
+    "cpvPlaceholder": "CPV-Code oder Beschreibung suchen...",
+    "cpvHint": "Prüfen Sie die KI-Vorschläge oder suchen Sie CPV-Codes manuell.",
+    "cpvEmpty": "Kein passender CPV-Code gefunden.",
+    "cpvRequired": "Fügen Sie mindestens einen CPV-Code hinzu.",
+    "loading": "Wird geladen...",
+    "loadingCpv": "CPV-Codes werden gesucht...",
+    "autoMapCpv": "Automatisch mit KI zuordnen",
+    "mappingCpv": "Zuordnung läuft...",
+    "cpvMapError": "CPV-Codes konnten nicht zugeordnet werden. Bitte wählen Sie sie manuell aus.",
     "trialTitle": "Ihre kostenlose 7-Tage-Testphase beginnt nach dem Onboarding",
     "trialDescription": "Keine Kreditkarte erforderlich. Der erste Benutzer eines neuen Unternehmens wird Administrator.",
     "submit": "Onboarding abschließen",
     "submitting": "Workspace wird vorbereitet...",
     "error": "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+    "pendingTitle": "Freigabeanfrage gesendet",
+    "pendingDescription": "Dieses Unternehmen existiert bereits. Ein Administrator muss Ihre Anfrage genehmigen, bevor Sie auf den Workspace zugreifen können.",
     "completeTitle": "Workspace bereit",
     "completeDescription": "Ihr Unternehmen und Ihre siebentägige Testphase wurden eingerichtet."
   },
   "Dashboard": {
     "welcome": "Willkommen, {name}",
+    "goodMorning": "Guten Morgen",
+    "goodAfternoon": "Guten Tag",
+    "goodEvening": "Guten Abend",
+    "chooseAgent": "Wählen Sie Ihren Agenten. Ihren Partner im Arbeitsablauf.",
+    "comingSoon": "Demnächst",
+    "sevenLeft": "7 übrig",
+    "composerPlaceholder": "Dokument hochladen und loslegen.",
+    "attachDocument": "Dokument anhängen",
+    "send": "Senden",
+    "profileMenu": {
+      "open": "Profilmenü öffnen",
+      "profileSettings": "Profileinstellungen",
+      "language": "Sprache",
+      "english": "English",
+      "german": "Deutsch",
+      "signOut": "Abmelden",
+      "signingOut": "Abmeldung läuft..."
+    },
+    "nav": {
+      "aiBoard": "KI-Board",
+      "workspace": "Arbeitsbereich",
+      "tenders": "Ausschreibungen",
+      "documentFiller": "Dokumentassistent",
+      "beta": "Beta",
+      "tutorial": "KI-Tutorial",
+      "settings": "Einstellungen",
+      "notifications": "Benachrichtigungen",
+      "pricing": "Preise",
+      "support": "Support",
+      "collapse": "Seitenleiste einklappen",
+      "expand": "Seitenleiste ausklappen"
+    },
+    "agents": {
+      "patrick": {
+        "role": "Projektagent",
+        "description": "Zeitpläne verwalten, Fortschritte verfolgen und Aufgaben effizient koordinieren."
+      },
+      "dora": {
+        "role": "Vertrags- & Spezifikationsagent",
+        "description": "Verträge prüfen, Risiken markieren und Anforderungen aus Dokumenten extrahieren."
+      },
+      "clara": {
+        "role": "Ausschreibungsagentin",
+        "description": "Ausschreibungen analysieren, Angebote vergleichen und Beschaffungsprozesse optimieren."
+      },
+      "dario": {
+        "role": "Dispositionsagent",
+        "description": "Logistik koordinieren, Lieferungen verfolgen und Baustellenressourcen verwalten."
+      },
+      "nova": {
+        "role": "Angebotsbewertungsagentin",
+        "description": "Angebote automatisch bewerten, Kerndaten extrahieren und die Bereitschaft einstufen."
+      }
+    },
+    "pendingTitle": "Warten auf die Freigabe durch einen Administrator",
+    "pendingDescription": "Ihre Anfrage wurde an die Unternehmensadministratoren gesendet. Nach der Genehmigung erhalten Sie Zugriff auf den Workspace.",
+    "rejectedTitle": "Mitgliedschaftsanfrage abgelehnt",
+    "rejectedDescription": "Ein Unternehmensadministrator hat Ihre Anfrage abgelehnt. Wenden Sie sich an Ihren Administrator, falls dies ein Fehler war.",
+    "membershipRequests": {
+      "title": "Mitgliedschaftsanfragen",
+      "description": "Genehmigen Sie nur Personen, die Zugriff auf den Unternehmens-Workspace erhalten sollen.",
+      "requested": "Angefragt am {date}",
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "loading": "Mitgliedschaftsanfragen werden geladen...",
+      "loadError": "Mitgliedschaftsanfragen konnten nicht geladen werden.",
+      "reviewError": "Diese Anfrage konnte nicht bearbeitet werden. Bitte versuchen Sie es erneut."
+    },
     "description": "Ihr BAU AI Workspace ist bereit. Das migrierte Dashboard wird hier als Nächstes eingebunden."
   }
 }

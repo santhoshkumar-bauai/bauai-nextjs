@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed:onboarding": "node --experimental-strip-types scripts/seed-onboarding-data.mts"
+    "db:seed:cpv": "node --experimental-strip-types scripts/seed-cpv-codes.mts",
+    "db:seed:onboarding": "node --experimental-strip-types scripts/seed-onboarding-data.mts",
+    "db:seed:all": "npm run db:seed:cpv && npm run db:seed:onboarding"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
