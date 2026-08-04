@@ -1,0 +1,90 @@
+{
+  "Language": { "select": "Sprache auswählen" },
+  "Auth": {
+    "introLabel": "BAU AI Einführung",
+    "onboardingTitle": "Onboarding-Anruf buchen",
+    "onboardingDescription": "Unser Team führt Sie durch die Plattform, beantwortet Ihre Fragen und hilft Ihnen beim Einstieg in BAU AI.",
+    "schedule": "Jetzt vereinbaren",
+    "tagline": "Die Zukunft des Bauwesens gemeinsam mit unserer Community und KI-Agenten gestalten."
+  },
+  "Login": {
+    "welcome": "Willkommen zurück",
+    "description": "Melden Sie sich an, um zu Ihrem BAU AI Workspace zu gelangen.",
+    "email": "E-Mail-Adresse",
+    "emailPlaceholder": "sie@beispiel.de",
+    "password": "Passwort",
+    "passwordPlaceholder": "Passwort eingeben",
+    "forgotPassword": "Passwort vergessen?",
+    "signIn": "Anmelden",
+    "signingIn": "Anmeldung läuft...",
+    "noAccount": "Noch kein Konto?",
+    "createAccount": "Konto erstellen",
+    "verifyFirst": "Bitte bestätigen Sie Ihre E-Mail-Adresse. Wir haben Ihnen einen neuen Bestätigungslink gesendet.",
+    "error": "Anmeldung nicht möglich. Bitte versuchen Sie es erneut."
+  },
+  "SignUp": {
+    "title": "Konto erstellen",
+    "description": "Erstellen Sie zuerst Ihren Zugang. Nach der E-Mail-Bestätigung fragen wir nach Ihrem Unternehmen.",
+    "name": "Vollständiger Name",
+    "namePlaceholder": "Max Mustermann",
+    "email": "E-Mail-Adresse",
+    "emailPlaceholder": "sie@unternehmen.de",
+    "password": "Passwort",
+    "passwordPlaceholder": "Sicheres Passwort erstellen",
+    "passwordHint": "Verwenden Sie mindestens 8 Zeichen",
+    "createAccount": "Konto erstellen",
+    "creating": "Konto wird erstellt...",
+    "haveAccount": "Sie haben bereits ein Konto?",
+    "signIn": "Anmelden",
+    "validation": "Geben Sie Ihren Namen, eine gültige E-Mail-Adresse und ein Passwort mit mindestens 8 Zeichen ein.",
+    "error": "Das Konto konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "checkEmailTitle": "Prüfen Sie Ihr Postfach",
+    "checkEmailDescription": "Wir haben einen Bestätigungslink an {email} gesendet.",
+    "checkSpam": "Der Link ist eine Stunde gültig. Prüfen Sie Ihren Spam-Ordner, falls er nicht ankommt.",
+    "backToLogin": "Zurück zur Anmeldung"
+  },
+  "VerifyEmail": {
+    "successTitle": "E-Mail bestätigt",
+    "successDescription": "Alles bereit. Wir bereiten jetzt Ihr Unternehmens-Onboarding vor.",
+    "errorTitle": "Bestätigungslink abgelaufen",
+    "errorDescription": "Dieser Bestätigungslink ist ungültig oder abgelaufen. Erstellen Sie Ihr Konto erneut oder fordern Sie einen neuen Link an.",
+    "continue": "Weiter zum Onboarding",
+    "tryAgain": "Zurück zur Registrierung"
+  },
+  "Onboarding": {
+    "title": "Erforderlich für den Ausschreibungsabgleich",
+    "description": "Erzählen Sie uns von Ihrem Unternehmen. Wenn es bereits existiert, werden Sie dem vorhandenen Workspace hinzugefügt.",
+    "website": "Unternehmenswebsite",
+    "websitePlaceholder": "z. B. www.meinefirma.de",
+    "websiteHint": "Wir verwenden die Website-Domain, um Ihren Unternehmens-Workspace zu finden oder zu erstellen.",
+    "websiteError": "Geben Sie eine gültige öffentliche Unternehmenswebsite ein, z. B. www.meinefirma.de.",
+    "businessDomain": "Unternehmensbereich",
+    "businessDomainPlaceholder": "Unternehmensbereich auswählen",
+    "domains": {
+      "construction": "Bauwesen",
+      "engineering": "Ingenieurwesen",
+      "architecture": "Architektur",
+      "supplier": "Material- oder Ausrüstungslieferant",
+      "other": "Sonstiges"
+    },
+    "region": "Region",
+    "regionPlaceholder": "Stadt oder Region eingeben",
+    "services": "Dienstleistungen",
+    "servicesPlaceholder": "Tiefbau, Beton, Renovierung",
+    "servicesHint": "Trennen Sie mehrere Dienstleistungen durch Kommas.",
+    "cpvCodes": "CPV-Codes",
+    "cpvPlaceholder": "45000000, 45210000",
+    "cpvHint": "Trennen Sie mehrere CPV-Codes durch Kommas.",
+    "trialTitle": "Ihre kostenlose 7-Tage-Testphase beginnt nach dem Onboarding",
+    "trialDescription": "Keine Kreditkarte erforderlich. Der erste Benutzer eines neuen Unternehmens wird Administrator.",
+    "submit": "Onboarding abschließen",
+    "submitting": "Workspace wird vorbereitet...",
+    "error": "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+    "completeTitle": "Workspace bereit",
+    "completeDescription": "Ihr Unternehmen und Ihre siebentägige Testphase wurden eingerichtet."
+  },
+  "Dashboard": {
+    "welcome": "Willkommen, {name}",
+    "description": "Ihr BAU AI Workspace ist bereit. Das migrierte Dashboard wird hier als Nächstes eingebunden."
+  }
+}

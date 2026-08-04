@@ -1,0 +1,90 @@
+{
+  "Language": { "select": "Select language" },
+  "Auth": {
+    "introLabel": "BAU AI introduction",
+    "onboardingTitle": "Book your onboarding call",
+    "onboardingDescription": "Our team will guide you through the platform, answer your questions, and help you get started with BAU AI.",
+    "schedule": "Schedule now",
+    "tagline": "Shaping the future of construction together with our community and AI agents."
+  },
+  "Login": {
+    "welcome": "Welcome back",
+    "description": "Sign in to continue to your BAU AI workspace.",
+    "email": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create an account",
+    "verifyFirst": "Please verify your email. We have sent you a new verification link.",
+    "error": "Unable to sign in. Please try again."
+  },
+  "SignUp": {
+    "title": "Create your account",
+    "description": "Create your login first. We will ask about your company after your email is verified.",
+    "name": "Full name",
+    "namePlaceholder": "John Doe",
+    "email": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "password": "Password",
+    "passwordPlaceholder": "Create a secure password",
+    "passwordHint": "Use at least 8 characters",
+    "createAccount": "Create account",
+    "creating": "Creating account...",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "validation": "Enter your name, a valid email, and a password with at least 8 characters.",
+    "error": "Unable to create your account. Please try again.",
+    "checkEmailTitle": "Check your inbox",
+    "checkEmailDescription": "We sent a verification link to {email}.",
+    "checkSpam": "The link is valid for one hour. Check your spam folder if it doesn't arrive shortly.",
+    "backToLogin": "Back to login"
+  },
+  "VerifyEmail": {
+    "successTitle": "Email verified",
+    "successDescription": "You're all set. We're preparing your company onboarding now.",
+    "errorTitle": "Verification link expired",
+    "errorDescription": "This verification link is invalid or has expired. Create your account again or request a new link.",
+    "continue": "Continue to onboarding",
+    "tryAgain": "Return to sign up"
+  },
+  "Onboarding": {
+    "title": "Required for tender matching",
+    "description": "Tell us about your company so we can prepare relevant tender matches. If the company already exists, you'll be added to its workspace.",
+    "website": "Company website",
+    "websitePlaceholder": "e.g. www.mycompany.eu",
+    "websiteHint": "We use the website domain to find or create your company workspace.",
+    "websiteError": "Enter a valid public company website, such as www.mycompany.eu.",
+    "businessDomain": "Company domain",
+    "businessDomainPlaceholder": "Select your company domain",
+    "domains": {
+      "construction": "Construction",
+      "engineering": "Engineering",
+      "architecture": "Architecture",
+      "supplier": "Material or equipment supplier",
+      "other": "Other"
+    },
+    "region": "Region",
+    "regionPlaceholder": "Enter your city or region",
+    "services": "Services",
+    "servicesPlaceholder": "Civil works, concrete, renovation",
+    "servicesHint": "Separate multiple services with commas.",
+    "cpvCodes": "CPV codes",
+    "cpvPlaceholder": "45000000, 45210000",
+    "cpvHint": "Separate multiple CPV codes with commas.",
+    "trialTitle": "Your 7-day free trial starts after onboarding",
+    "trialDescription": "No credit card required. The first user in a new company becomes its administrator.",
+    "submit": "Complete onboarding",
+    "submitting": "Preparing your workspace...",
+    "error": "Unable to complete onboarding. Please try again.",
+    "completeTitle": "Workspace ready",
+    "completeDescription": "Your company and seven-day trial have been configured."
+  },
+  "Dashboard": {
+    "welcome": "Welcome, {name}",
+    "description": "Your BAU AI workspace is ready. The migrated dashboard will appear here next."
+  }
+}
