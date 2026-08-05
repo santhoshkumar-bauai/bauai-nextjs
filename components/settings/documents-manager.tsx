@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, FileText, Loader2, Trash2, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -12,18 +13,8 @@ import {
   getCompanyFileUrl,
   uploadCompanyFile,
 } from "@/lib/company/upload-client";
+import { DOCUMENT_CATEGORIES } from "@/lib/company/settings-sections";
 import type { CompanyFileCategory } from "@/models/company-file";
-
-const DOCUMENT_CATEGORIES: Array<{
-  key: Exclude<CompanyFileCategory, "logo">;
-  label: string;
-  description: string;
-}> = [
-  { key: "general", label: "General documents", description: "Company profiles, brochures, and anything used to auto-fill your profile." },
-  { key: "insurance", label: "Insurance", description: "Certificates of insurance and coverage documents." },
-  { key: "certification", label: "Certifications", description: "Business and quality certifications." },
-  { key: "reference-project", label: "Reference projects", description: "Past project references and case studies." },
-];
 
 function formatBytes(size: number) {
   if (size < 1024) return `${size} B`;
@@ -40,6 +31,7 @@ export function DocumentsManager({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const [files, setFiles] = useState<SerializedCompanyFile[]>(initialFiles);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -52,24 +44,30 @@ export function DocumentsManager({
       {error && (
         <p className="text-[11px] font-semibold text-[#c02626]">{error}</p>
       )}
-      {DOCUMENT_CATEGORIES.map((category) => (
+      {DOCUMENT_CATEGORIES.map((key) => (
         <CategoryCard
-          key={category.key}
-          category={category}
-          files={files.filter((file) => file.category === category.key)}
+          key={key}
+          categoryKey={key}
+          label={t(`documents.categories.${key}.label`)}
+          description={t(`documents.categories.${key}.description`)}
+          files={files.filter((file) => file.category === key)}
           canEdit={canEdit}
           busy={busy}
           onUpload={async (file) => {
-            setBusy(`upload:${category.key}`);
+            setBusy(`upload:${key}`);
             setError("");
             try {
-              const result = await uploadCompanyFile(file, category.key);
+              const result = await uploadCompanyFile(file, key);
               if (result.category !== "logo") {
                 update((prev) => [result.file, ...prev]);
               }
               router.refresh();
             } catch (uploadError) {
-              setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
+              setError(
+                uploadError instanceof Error
+                  ? uploadError.message
+                  : t("feedback.uploadFailed"),
+              );
             } finally {
               setBusy(null);
             }
@@ -80,7 +78,11 @@ export function DocumentsManager({
               const url = await getCompanyFileUrl(id);
               window.open(url, "_blank", "noopener,noreferrer");
             } catch (viewError) {
-              setError(viewError instanceof Error ? viewError.message : "Could not open file.");
+              setError(
+                viewError instanceof Error
+                  ? viewError.message
+                  : t("feedback.openFailed"),
+              );
             } finally {
               setBusy(null);
             }
@@ -93,7 +95,11 @@ export function DocumentsManager({
               update((prev) => prev.filter((file) => file.id !== id));
               router.refresh();
             } catch (deleteError) {
-              setError(deleteError instanceof Error ? deleteError.message : "Delete failed.");
+              setError(
+                deleteError instanceof Error
+                  ? deleteError.message
+                  : t("feedback.deleteFailed"),
+              );
             } finally {
               setBusy(null);
             }
@@ -105,7 +111,9 @@ export function DocumentsManager({
 }
 
 function CategoryCard({
-  category,
+  categoryKey,
+  label,
+  description,
   files,
   canEdit,
   busy,
@@ -113,7 +121,9 @@ function CategoryCard({
   onView,
   onDelete,
 }: {
-  category: { key: string; label: string; description: string };
+  categoryKey: CompanyFileCategory;
+  label: string;
+  description: string;
   files: SerializedCompanyFile[];
   canEdit: boolean;
   busy: string | null;
@@ -121,16 +131,17 @@ function CategoryCard({
   onView: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const t = useTranslations("Settings");
   const inputRef = useRef<HTMLInputElement>(null);
-  const uploading = busy === `upload:${category.key}`;
+  const uploading = busy === `upload:${categoryKey}`;
 
   return (
     <section className={`${card} p-5 sm:p-6`}>
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="m-0 text-sm font-bold">{category.label}</h2>
+          <h2 className="m-0 text-sm font-bold">{label}</h2>
           <p className="mt-0.5 text-xs leading-relaxed text-[#85818c]">
-            {category.description}
+            {description}
           </p>
         </div>
         {canEdit && (
@@ -154,7 +165,7 @@ function CategoryCard({
               onClick={() => inputRef.current?.click()}
             >
               {uploading ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />}
-              Upload
+              {t("actions.upload")}
             </Button>
           </>
         )}
@@ -182,7 +193,7 @@ function CategoryCard({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                title="View"
+                title={t("actions.view")}
                 disabled={busy === `view:${file.id}`}
                 onClick={() => onView(file.id)}
               >
@@ -197,7 +208,7 @@ function CategoryCard({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  title="Delete"
+                  title={t("actions.delete")}
                   disabled={busy === `delete:${file.id}`}
                   onClick={() => onDelete(file.id)}
                   className="text-[#c02626] hover:bg-[#fdeaea]"
@@ -213,7 +224,7 @@ function CategoryCard({
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-xs text-[#a29eaa]">No documents uploaded yet.</p>
+        <p className="mt-4 text-xs text-[#a29eaa]">{t("documents.empty")}</p>
       )}
     </section>
   );

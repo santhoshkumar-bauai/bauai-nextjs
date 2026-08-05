@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -27,6 +28,7 @@ export function CertificationsForm({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const initial = useMemo<CertState>(() => {
     const current =
       (profile.knowledgeBase?.businessCertifications as
@@ -34,7 +36,7 @@ export function CertificationsForm({
         | undefined) ?? {};
     const state: CertState = {};
     for (const flag of CERTIFICATION_FLAGS) {
-      state[flag.key] = current[flag.key] === true;
+      state[flag] = current[flag] === true;
     }
     state.otherCertifications =
       typeof current.otherCertifications === "string"
@@ -71,50 +73,52 @@ export function CertificationsForm({
         const data = (await response.json().catch(() => ({}))) as {
           error?: string;
         };
-        throw new Error(data.error || `Save failed (${response.status}).`);
+        throw new Error(data.error || t("feedback.saveFailed"));
       }
       setStatus("saved");
       router.refresh();
     } catch (saveError) {
       setStatus("error");
-      setError(saveError instanceof Error ? saveError.message : "Save failed.");
+      setError(
+        saveError instanceof Error ? saveError.message : t("feedback.saveFailed"),
+      );
     }
   };
 
   return (
     <section className={`${card} p-5 sm:p-[26px]`}>
       <h2 className="m-0 text-base font-bold tracking-[-.02em]">
-        Certifications
+        {t("sections.certifications.title")}
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-        Business classifications and any other certifications you hold.
+        {t("sections.certifications.description")}
       </p>
       <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
         {CERTIFICATION_FLAGS.map((flag) => (
           <label
-            key={flag.key}
+            key={flag}
             className="flex items-center gap-2.5 rounded-[9px] border border-[#eceaf2] px-3 py-2.5 text-xs text-[#29262e]"
           >
             <input
               type="checkbox"
-              checked={values[flag.key] === true}
+              checked={values[flag] === true}
               disabled={!canEdit}
               onChange={(event) => {
-                setValues((prev) => ({ ...prev, [flag.key]: event.target.checked }));
+                setValues((prev) => ({ ...prev, [flag]: event.target.checked }));
                 setStatus("idle");
               }}
               className="size-4 accent-[#6516dc]"
             />
-            {flag.label}
+            {t(`certificationFlags.${flag}`)}
           </label>
         ))}
       </div>
       <label className={`${fieldLabel} mt-4`}>
-        <span>Other certifications</span>
+        <span>{t("sections.certifications.other")}</span>
         <input
           value={typeof values.otherCertifications === "string" ? values.otherCertifications : ""}
           disabled={!canEdit}
-          placeholder="ISO 9001, ISO 14001, …"
+          placeholder="ISO 9001, ISO 14001"
           onChange={(event) => {
             setValues((prev) => ({ ...prev, otherCertifications: event.target.value }));
             setStatus("idle");
@@ -125,7 +129,9 @@ export function CertificationsForm({
       {canEdit && (
         <div className="mt-5 flex items-center gap-3">
           {status === "saved" && !dirty && (
-            <span className="text-[11px] font-semibold text-[#0b8b4b]">Saved</span>
+            <span className="text-[11px] font-semibold text-[#0b8b4b]">
+              {t("actions.saved")}
+            </span>
           )}
           {status === "error" && (
             <span className="text-[11px] font-semibold text-[#c02626]">{error}</span>
@@ -136,7 +142,7 @@ export function CertificationsForm({
             disabled={!dirty || status === "saving"}
             className={`ml-auto ${primaryButton}`}
           >
-            {status === "saving" ? "Saving…" : "Save changes"}
+            {status === "saving" ? t("actions.saving") : t("actions.save")}
           </Button>
         </div>
       )}

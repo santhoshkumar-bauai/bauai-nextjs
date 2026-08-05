@@ -1,6 +1,7 @@
 "use client";
 
 import { ImagePlus, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
@@ -17,6 +18,7 @@ export function LogoUploader({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const inputRef = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl);
   const [uploading, setUploading] = useState(false);
@@ -33,7 +35,11 @@ export function LogoUploader({
       if (result.category === "logo") setLogoUrl(result.logoUrl);
       router.refresh();
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : t("feedback.uploadFailed"),
+      );
     } finally {
       setUploading(false);
     }
@@ -50,10 +56,8 @@ export function LogoUploader({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <h2 className="m-0 text-sm font-bold">Company logo</h2>
-        <p className="mt-0.5 text-xs text-[#85818c]">
-          PNG, JPG, WebP or SVG. Shown on your profile and submissions.
-        </p>
+        <h2 className="m-0 text-sm font-bold">{t("logo.title")}</h2>
+        <p className="mt-0.5 text-xs text-[#85818c]">{t("logo.description")}</p>
         {error && (
           <p className="mt-1 text-[11px] font-semibold text-[#c02626]">{error}</p>
         )}
@@ -74,7 +78,7 @@ export function LogoUploader({
             onClick={() => inputRef.current?.click()}
           >
             {uploading ? <Loader2 className="animate-spin" size={15} /> : <ImagePlus size={15} />}
-            {logoUrl ? "Replace" : "Upload"}
+            {logoUrl ? t("actions.replace") : t("actions.upload")}
           </Button>
         </>
       )}

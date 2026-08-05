@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,6 +9,7 @@ import { SETTINGS_TABS } from "@/lib/company/settings-sections";
 /** Route-based settings tabs. The Company Information tab stays active for any of its sub-section routes. */
 export function SettingsTabs() {
   const pathname = usePathname();
+  const t = useTranslations("Settings");
 
   const isActive = (tab: (typeof SETTINGS_TABS)[number]) => {
     if (tab.match === "company") {
@@ -39,7 +41,7 @@ export function SettingsTabs() {
                 : "border-transparent text-[#4a4850] hover:text-[#5f13bb]"
             }`}
           >
-            {tab.label}
+            {t(`tabs.${tab.tabKey}`)}
           </Link>
         );
       })}

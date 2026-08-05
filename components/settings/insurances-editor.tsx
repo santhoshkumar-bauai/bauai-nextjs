@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -24,6 +25,7 @@ export function InsurancesEditor({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const initial = useMemo<Insurance[]>(
     () => (profile.insurances ?? []).map((item) => ({ ...item })),
     [profile],
@@ -59,7 +61,9 @@ export function InsurancesEditor({
       router.refresh();
     } catch (saveError) {
       setStatus("error");
-      setError(saveError instanceof Error ? saveError.message : "Save failed.");
+      setError(
+        saveError instanceof Error ? saveError.message : t("feedback.saveFailed"),
+      );
     }
   };
 
@@ -67,9 +71,11 @@ export function InsurancesEditor({
     <section className={`${card} p-5 sm:p-[26px]`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="m-0 text-base font-bold tracking-[-.02em]">Insurance policies</h2>
+          <h2 className="m-0 text-base font-bold tracking-[-.02em]">
+            {t("sections.insurancePolicies.title")}
+          </h2>
           <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-            Coverage types and amounts referenced on tender submissions.
+            {t("sections.insurancePolicies.description")}
           </p>
         </div>
         {canEdit && (
@@ -83,12 +89,14 @@ export function InsurancesEditor({
             }}
           >
             <Plus size={14} />
-            Add
+            {t("actions.add")}
           </Button>
         )}
       </div>
       {rows.length === 0 ? (
-        <p className="mt-4 text-xs text-[#a29eaa]">No insurance policies added yet.</p>
+        <p className="mt-4 text-xs text-[#a29eaa]">
+          {t("sections.insurancePolicies.empty")}
+        </p>
       ) : (
         <div className="mt-4 grid gap-4">
           {rows.map((row, index) => (
@@ -97,7 +105,7 @@ export function InsurancesEditor({
               className="grid gap-3 rounded-[12px] border border-[#eceaf2] p-3.5 sm:grid-cols-[1fr_1fr_auto]"
             >
               <label className={fieldLabel}>
-                <span>Type</span>
+                <span>{t("sections.insurancePolicies.type")}</span>
                 <input
                   value={row.type}
                   disabled={!canEdit}
@@ -107,7 +115,7 @@ export function InsurancesEditor({
                 />
               </label>
               <label className={fieldLabel}>
-                <span>Amount</span>
+                <span>{t("sections.insurancePolicies.amount")}</span>
                 <input
                   value={row.amount}
                   disabled={!canEdit}
@@ -133,11 +141,10 @@ export function InsurancesEditor({
                 </div>
               )}
               <label className={`${fieldLabel} sm:col-span-3`}>
-                <span>Details</span>
+                <span>{t("sections.insurancePolicies.details")}</span>
                 <input
                   value={row.details ?? ""}
                   disabled={!canEdit}
-                  placeholder="Optional notes"
                   onChange={(event) => setRow(index, { details: event.target.value })}
                   className={fieldInput}
                 />
@@ -149,7 +156,9 @@ export function InsurancesEditor({
       {canEdit && (
         <div className="mt-5 flex items-center gap-3">
           {status === "saved" && !dirty && (
-            <span className="text-[11px] font-semibold text-[#0b8b4b]">Saved</span>
+            <span className="text-[11px] font-semibold text-[#0b8b4b]">
+              {t("actions.saved")}
+            </span>
           )}
           {status === "error" && (
             <span className="text-[11px] font-semibold text-[#c02626]">{error}</span>
@@ -160,7 +169,7 @@ export function InsurancesEditor({
             disabled={!dirty || status === "saving"}
             className={`ml-auto ${primaryButton}`}
           >
-            {status === "saving" ? "Saving…" : "Save changes"}
+            {status === "saving" ? t("actions.saving") : t("actions.save")}
           </Button>
         </div>
       )}

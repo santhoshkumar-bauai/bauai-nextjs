@@ -114,10 +114,19 @@ serialized profile + files + `canEdit` + trial date) and renders a client form:
 Only admins (`canEdit`) see save buttons and upload controls; members get a
 read-only view.
 
+## Internationalization
+
+The whole settings surface is bilingual (English + German) via next-intl. All
+copy lives under the `Settings` namespace in `messages/en.json` and
+`messages/de.json`; `lib/company/settings-sections.ts` carries only message ids
+(`sections.<id>.title/description/fields.<key>`, `sidebar.*`,
+`certificationFlags.*`, `documents.categories.*`, `actions.*`, `feedback.*`) and
+the client components resolve them with `useTranslations("Settings")`. Adding a
+field means adding its label key to both locale files. Language-neutral example
+placeholders (e.g. "GmbH", "€5,000,000") stay in the config as `sample` values.
+
 ## Not included / next steps
 
-- The section labels in the company forms are inline English; they can be moved
-  into `messages/{en,de}.json` (next-intl) like the rest of the app.
 - The legacy static settings panel still lives in
   `components/settings/settings-workspace.tsx` and the `[section]` route's
   settings branch; both are now shadowed by the `/settings` route tree and can

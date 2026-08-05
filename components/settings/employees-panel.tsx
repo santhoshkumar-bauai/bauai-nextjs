@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -29,6 +30,7 @@ export function EmployeesPanel({
   requests: SettingsRequest[];
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const [refreshing, setRefreshing] = useState(false);
 
   const refresh = () => {
@@ -43,10 +45,10 @@ export function EmployeesPanel({
         <header className="block sm:flex sm:items-start sm:justify-between sm:gap-5">
           <div>
             <h2 className="m-0 text-base font-bold tracking-[-.02em]">
-              Team members
+              {t("employees.title")}
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-              Everyone with access to this company workspace.
+              {t("employees.description")}
             </p>
           </div>
           <div className="mt-3 flex gap-2 sm:mt-0">
@@ -57,7 +59,7 @@ export function EmployeesPanel({
               disabled={refreshing}
             >
               <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} />
-              Refresh
+              {t("common.refresh")}
             </Button>
           </div>
         </header>
@@ -65,7 +67,13 @@ export function EmployeesPanel({
           <table className="min-w-[640px] w-full border-collapse text-left">
             <thead>
               <tr>
-                {["Name", "Email", "Role", "Status", "Joined"].map((label) => (
+                {[
+                  t("employees.name"),
+                  t("employees.email"),
+                  t("employees.role"),
+                  t("employees.status"),
+                  t("employees.action"),
+                ].map((label) => (
                   <th
                     key={label}
                     className="border-b border-[#e9e8ed] px-3 pb-3 text-[11px] font-bold text-[#66626c]"
@@ -90,11 +98,13 @@ export function EmployeesPanel({
                     {member.email}
                   </td>
                   <td className="border-b border-[#f0eff2] px-3 py-3 text-xs text-[#57535d]">
-                    {member.role === "admin" ? "Admin" : "Member"}
+                    {member.role === "admin"
+                      ? t("employees.admin")
+                      : t("employees.member")}
                   </td>
                   <td className="border-b border-[#f0eff2] px-3 py-3">
                     <span className="rounded-full bg-[#dbf9e9] px-2 py-1 text-[10px] font-bold text-[#0b8b4b]">
-                      Active
+                      {t("employees.active")}
                     </span>
                   </td>
                   <td className="border-b border-[#f0eff2] px-3 py-3 text-[10px] text-[#93909a]">
@@ -109,9 +119,11 @@ export function EmployeesPanel({
       <section className={`${card} p-5 sm:p-6`}>
         <header className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="m-0 text-base font-bold">Pending requests</h2>
+            <h2 className="m-0 text-base font-bold">
+              {t("employees.pendingTitle")}
+            </h2>
             <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-              People who requested to join this company.
+              {t("employees.pendingDescription")}
             </p>
           </div>
           <span className="grid size-7 place-items-center rounded-full bg-[#f1e6ff] text-xs font-extrabold text-[#6f19c8]">
@@ -142,7 +154,7 @@ export function EmployeesPanel({
         ) : (
           <div className="mt-4 flex items-center gap-2 text-xs text-[#4e785e]">
             <Check size={18} className="text-[#1c9a5f]" />
-            No pending requests.
+            {t("employees.noPending")}
           </div>
         )}
       </section>

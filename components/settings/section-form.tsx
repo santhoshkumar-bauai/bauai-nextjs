@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -54,6 +55,7 @@ export function SectionForm({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations("Settings");
   const initial = useMemo(() => {
     const state: Record<string, FieldValue> = {};
     for (const field of config.fields) {
@@ -123,17 +125,19 @@ export function SectionForm({
       router.refresh();
     } catch (saveError) {
       setStatus("error");
-      setError(saveError instanceof Error ? saveError.message : "Save failed.");
+      setError(
+        saveError instanceof Error ? saveError.message : t("feedback.saveFailed"),
+      );
     }
   };
 
   return (
     <section className={`${card} p-5 sm:p-[26px]`}>
       <h2 className="m-0 text-base font-bold tracking-[-.02em]">
-        {config.title}
+        {t(`sections.${config.id}.title`)}
       </h2>
       <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-        {config.description}
+        {t(`sections.${config.id}.description`)}
       </p>
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {config.fields.map((field) => {
@@ -144,19 +148,19 @@ export function SectionForm({
               key={field.key}
               className={`${fieldLabel} ${isWide ? "sm:col-span-2" : ""}`}
             >
-              <span>{field.label}</span>
+              <span>{t(`sections.${config.id}.fields.${field.key}`)}</span>
               {field.type === "tags" ? (
                 <TagInput
                   value={Array.isArray(value) ? value : []}
                   onChange={(next) => setField(field.key, next)}
-                  placeholder={field.placeholder}
+                  placeholder={t("actions.tagHint")}
                   disabled={!canEdit}
                 />
               ) : field.type === "textarea" ? (
                 <textarea
                   value={typeof value === "string" ? value : ""}
                   onChange={(event) => setField(field.key, event.target.value)}
-                  placeholder={field.placeholder}
+                  placeholder={field.sample}
                   disabled={!canEdit}
                   className={`${fieldInput} min-h-[96px] resize-y`}
                 />
@@ -165,7 +169,7 @@ export function SectionForm({
                   type={field.type === "number" ? "number" : field.type === "date" ? "date" : field.type === "email" ? "email" : "text"}
                   value={typeof value === "string" ? value : ""}
                   onChange={(event) => setField(field.key, event.target.value)}
-                  placeholder={field.placeholder}
+                  placeholder={field.sample}
                   disabled={!canEdit}
                   className={fieldInput}
                 />
@@ -178,7 +182,7 @@ export function SectionForm({
         <div className="mt-5 flex items-center gap-3">
           {status === "saved" && !dirty && (
             <span className="text-[11px] font-semibold text-[#0b8b4b]">
-              Saved
+              {t("actions.saved")}
             </span>
           )}
           {status === "error" && (
@@ -192,7 +196,7 @@ export function SectionForm({
             disabled={!dirty || status === "saving"}
             className={`ml-auto ${primaryButton}`}
           >
-            {status === "saving" ? "Saving…" : "Save changes"}
+            {status === "saving" ? t("actions.saving") : t("actions.save")}
           </Button>
         </div>
       )}

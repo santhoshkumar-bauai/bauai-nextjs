@@ -12,6 +12,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -33,11 +34,12 @@ const ICONS: Record<string, LucideIcon> = {
 /** Left-hand navigation for the Company Information sub-sections (each its own route). */
 export function CompanySidebar({ completion }: { completion: number }) {
   const pathname = usePathname();
+  const t = useTranslations("Settings");
 
   return (
     <aside className={`${card} hidden self-start p-[18px] lg:block`}>
       <div className="flex justify-between text-xs font-bold text-[#393641]">
-        <span>Profile setup</span>
+        <span>{t("sidebar.profileSetup")}</span>
         <strong className="text-[#6816c8]">{completion}%</strong>
       </div>
       <div className="my-3 h-1.5 rounded-full bg-[#eceaf2]">
@@ -66,7 +68,7 @@ export function CompanySidebar({ completion }: { completion: number }) {
               >
                 <Icon size={16} />
               </span>
-              {item.label}
+              {t(`sidebar.${item.labelKey}`)}
             </Link>
           );
         })}
