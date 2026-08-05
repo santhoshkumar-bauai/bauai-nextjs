@@ -262,6 +262,29 @@ These were each found by running the code, and are handled in `documents/http.ts
   as a tender document. The runner now rejects HTML responses that lack a document
   extension.
 
+### Auditing failures
+
+Every outcome is persisted; nothing important lives only in the process log.
+
+| Where | What |
+| --- | --- |
+| `tender_documents.status` + `skipReason` | Row outcome: `FETCHED`, `SKIPPED` (with reason), `FAILED` |
+| `tender_documents.error` + `attempts` | Full error text for a failed row |
+| `tender_documents.failedFiles[]` | **Per-file** failures: url, errorClass, message, retryable, timestamp |
+| `tender_documents.files[].textStatus` / `textError` | Text extraction outcome per file |
+| `dead_letter_events` | Permanently failed rows, same surface as notice failures |
+
+`failedFiles` exists because a row with one good file and four failures is still
+`FETCHED` — without it a partial success is indistinguishable from a complete one.
+Every resolved file lands in exactly one of `files` or `failedFiles`.
+
+```bash
+npm run fetch:documents -- --status
+```
+
+reports file-level failures grouped by error class (with how many are retryable) and
+text-extraction gaps, separately from row status.
+
 ### Scope
 
 Documents are fetched only for tenders still worth bidding on
