@@ -2,6 +2,7 @@ import { ingestionEnv } from "../config/env.ts";
 import { IngestionError } from "../http/errors.ts";
 import { describeError, logger } from "../observability/logger.ts";
 import { metrics } from "../observability/metrics.ts";
+import { recordDeadLetter } from "../pipeline/dead-letter.ts";
 import { forEachZipEntry } from "../utils/zip.ts";
 import { exponentialBackoffMs, sleep } from "../utils/time.ts";
 import { parseRetryAfterFallback } from "../worker/retry-policy.ts";
@@ -13,6 +14,7 @@ import { canExtractText, extractText } from "./text-extract.ts";
 import {
   isSkip,
   type DocumentSkipReason,
+  type FailedDocumentFile,
   type ResolvedFile,
   type StoredDocumentFile,
   type TenderDocumentRecord,
@@ -26,13 +28,15 @@ export interface DocumentRunCounters {
   claimed: number;
   fetched: number;
   files: number;
+  /** Individual files that failed even though their row may have succeeded. */
+  filesFailed: number;
   skipped: number;
   failed: number;
   bytes: number;
 }
 
 export function emptyDocumentCounters(): DocumentRunCounters {
-  return { claimed: 0, fetched: 0, files: 0, skipped: 0, failed: 0, bytes: 0 };
+  return { claimed: 0, fetched: 0, files: 0, filesFailed: 0, skipped: 0, failed: 0, bytes: 0 };
 }
 
 export interface DocumentRunOptions {
@@ -143,6 +147,7 @@ async function processRow(
   }
 
   const stored: StoredDocumentFile[] = [];
+  const failed: FailedDocumentFile[] = [];
   let totalBytes = 0;
 
   for (const file of files) {
@@ -152,7 +157,18 @@ async function processRow(
         canonicalKey: row.canonicalKey,
         totalBytes,
       });
-      break;
+      // Recorded rather than dropped, so the audit trail shows the budget stopped
+      // these files rather than the portal refusing them.
+      failed.push({
+        url: file.url,
+        fileName: file.fileName ?? null,
+        label: file.label ?? null,
+        errorClass: "TENDER_BUDGET_EXHAUSTED",
+        error: `Stopped after ${totalBytes} bytes for this tender`,
+        retryable: false,
+        attemptedAt: new Date(),
+      });
+      continue;
     }
 
     try {
@@ -162,18 +178,39 @@ async function processRow(
         totalBytes += result.byteLength;
       }
     } catch (error) {
-      // One bad file does not fail the document; the others are still archived and
-      // the error is recorded against the row.
+      // One bad file must not fail the document — the others are still archived — but
+      // it must still be recorded, or a partial success would look like a full one.
+      const described = describeError(error);
+      failed.push({
+        url: file.url,
+        fileName: file.fileName ?? null,
+        label: file.label ?? null,
+        errorClass: error instanceof IngestionError ? error.failureClass : described.name,
+        error: described.message.slice(0, 600),
+        retryable: error instanceof IngestionError ? error.retryable : true,
+        attemptedAt: new Date(),
+      });
       log.warn("file could not be retrieved", {
         url: file.url,
-        error: String(error).slice(0, 200),
+        error: described.message.slice(0, 200),
       });
-      metrics.increment("ingestion_document_file_failures_total", { host: row.host });
+      metrics.increment("ingestion_document_file_failures_total", {
+        host: row.host,
+        errorClass: error instanceof IngestionError ? error.failureClass : described.name,
+      });
     }
   }
 
   if (!stored.length) {
-    await markSkipped(row, "NO_FILES_FOUND", resolver.platform, "all file downloads failed");
+    await markSkipped(
+      row,
+      "NO_FILES_FOUND",
+      resolver.platform,
+      failed.length
+        ? `all ${failed.length} file download(s) failed: ${failed[0].errorClass}`
+        : "resolver returned no files",
+      failed,
+    );
     counters.skipped += 1;
     return;
   }
@@ -187,6 +224,7 @@ async function processRow(
         skipReason: null,
         platform: resolver.platform,
         files: stored,
+        failedFiles: failed,
         error: null,
         resolvedAt: new Date(),
         leaseOwner: null,
@@ -198,6 +236,7 @@ async function processRow(
 
   counters.fetched += 1;
   counters.files += stored.length;
+  counters.filesFailed += failed.length;
   counters.bytes += totalBytes;
 
   metrics.observe("ingestion_document_row_ms", Date.now() - startedAt, {
@@ -207,6 +246,7 @@ async function processRow(
     canonicalKey: row.canonicalKey,
     host: row.host,
     files: stored.length,
+    failedFiles: failed.length,
     bytes: totalBytes,
   });
 }
@@ -436,6 +476,7 @@ async function markSkipped(
   reason: DocumentSkipReason,
   platform: string,
   detail?: string,
+  failedFiles: FailedDocumentFile[] = [],
 ): Promise<void> {
   const store = await documentStore();
   await store.updateOne(
@@ -445,6 +486,7 @@ async function markSkipped(
         status: "SKIPPED",
         skipReason: reason,
         platform,
+        failedFiles,
         error: detail ?? null,
         leaseOwner: null,
         heartbeatAt: null,
@@ -480,6 +522,37 @@ async function recordFailure(
         },
       },
     );
+
+    // Also dead-lettered, so document failures are auditable and replayable through
+    // the same surface as notice failures rather than needing a separate procedure.
+    await recordDeadLetter({
+      job: {
+        kind: "notice",
+        source: row.source,
+        mode: "backfill",
+        jobKey: `document:${row._id}`,
+        notice: {
+          source: row.source,
+          sourceNoticeId: row.sourceNoticeId,
+          sourceVersionId: null,
+          versionKey: null,
+          publicationNumber: null,
+          procedureId: null,
+          url: row.sourceUrl,
+          publishedAt: null,
+          updatedAtSource: null,
+          fetchHint: { host: row.host, platform: row.platform ?? "unknown" },
+        },
+        runId: null,
+        attempt: row.attempts,
+      },
+      error,
+      attempts: row.attempts,
+      parserVersion: `documents/${row.platform ?? "unknown"}`,
+    }).catch((dlqError) =>
+      log.error("failed to dead-letter a document row", describeError(dlqError)),
+    );
+
     log.error("document permanently failed", {
       url: row.sourceUrl,
       attempts: row.attempts,

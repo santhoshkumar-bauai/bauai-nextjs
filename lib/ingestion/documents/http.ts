@@ -211,9 +211,23 @@ export class DocumentHttpClient implements DocumentFetcher {
 
     if (reader) {
       for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        total += value.byteLength;
+        let chunk: ReadableStreamReadResult<Uint8Array>;
+        try {
+          chunk = await reader.read();
+        } catch (error) {
+          // Portals serving large archives drop the connection mid-body, which
+          // surfaces as a bare `TypeError: terminated`. Unclassified it counted as a
+          // permanent failure, so a 90 MB tender pack was abandoned on one blip.
+          // It is transient: the next attempt usually completes.
+          throw transientHttp(
+            `${url} connection dropped after ${total} bytes: ${String(error)}`,
+            0,
+            error,
+          );
+        }
+
+        if (chunk.done) break;
+        total += chunk.value.byteLength;
         if (total > max) {
           await reader.cancel().catch(() => undefined);
           throw new IngestionError(
@@ -222,7 +236,7 @@ export class DocumentHttpClient implements DocumentFetcher {
             { retryable: false },
           );
         }
-        chunks.push(Buffer.from(value));
+        chunks.push(Buffer.from(chunk.value));
       }
     }
 

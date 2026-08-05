@@ -79,6 +79,7 @@ async function run(
   }
 
   if (kind === "pdf") {
+    ensureMathSumPrecise();
     // Imported lazily: pdfjs pulls in a large module graph that a worker handling
     // only ZIPs and spreadsheets should not pay for at startup.
     const { extractText: extractPdfText, getDocumentProxy } = await import("unpdf");
@@ -99,6 +100,35 @@ async function run(
   const mammoth = await import("mammoth");
   const result = await mammoth.extractRawText({ buffer: body });
   return result.value;
+}
+
+/**
+ * Polyfills `Math.sumPrecise`, which pdfjs calls unconditionally.
+ *
+ * It is a TC39 proposal that this Node version does not implement, so affected PDFs
+ * failed extraction with `TypeError: Math.sumPrecise is not a function` — silently
+ * losing their text while the file itself stored fine. Uses Neumaier compensated
+ * summation, which is what the proposal specifies: exact enough that the running
+ * compensation term recovers the low-order bits ordinary addition discards.
+ */
+function ensureMathSumPrecise(): void {
+  const target = Math as unknown as { sumPrecise?: (values: Iterable<number>) => number };
+  if (typeof target.sumPrecise === "function") return;
+
+  target.sumPrecise = (values: Iterable<number>): number => {
+    let sum = 0;
+    let compensation = 0;
+
+    for (const value of values) {
+      const next = sum + value;
+      compensation +=
+        Math.abs(sum) >= Math.abs(value)
+          ? sum - next + value
+          : value - next + sum;
+      sum = next;
+    }
+    return sum + compensation;
+  };
 }
 
 function stripHtml(html: string): string {

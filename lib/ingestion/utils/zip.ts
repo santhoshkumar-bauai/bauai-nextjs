@@ -14,6 +14,41 @@ export interface ZipEntry {
   body: Buffer;
 }
 
+/**
+ * CP437 high range, for ZIP entry names that are not UTF-8.
+ *
+ * ZIP only guarantees UTF-8 when general-purpose flag bit 11 is set. Plenty of tools
+ * still write the legacy OEM code page, so `Eigenerklärung.pdf` arrives as bytes that
+ * are invalid UTF-8. Decoding those as UTF-8 yields U+FFFD and **destroys** the
+ * original byte, so the name cannot be repaired afterwards — it has to be decoded
+ * correctly from the raw bytes in the first place.
+ */
+const CP437_HIGH =
+  "ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»" +
+  "░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀" +
+  "αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ";
+
+/**
+ * Decodes a ZIP entry name from its raw bytes, honouring the UTF-8 flag.
+ * Falls back to the already-decoded string when the raw bytes are unavailable.
+ */
+export function decodeZipEntryName(
+  pathBuffer: Buffer | undefined,
+  flags: number | undefined,
+  fallback: string,
+): string {
+  if (!pathBuffer?.length) return fallback;
+
+  const isUtf8 = ((flags ?? 0) & 0x800) !== 0;
+  if (isUtf8) return pathBuffer.toString("utf8");
+
+  let decoded = "";
+  for (const byte of pathBuffer) {
+    decoded += byte < 0x80 ? String.fromCharCode(byte) : CP437_HIGH[byte - 0x80] ?? "_";
+  }
+  return decoded;
+}
+
 export interface ZipStreamResult {
   entryCount: number;
   /** SHA-256 of the archive bytes, for the run manifest (§6.4). */
@@ -56,8 +91,15 @@ export async function forEachZipEntry(
 
   try {
     for await (const rawEntry of parser) {
-      const entry = rawEntry as unzipper.Entry;
-      const entryPath = entry.path;
+      const entry = rawEntry as unzipper.Entry & {
+        props?: { pathBuffer?: Buffer };
+      };
+      // Decoded from the raw bytes rather than trusting unzipper's UTF-8 assumption.
+      const entryPath = decodeZipEntryName(
+        entry.props?.pathBuffer,
+        entry.vars?.flags,
+        entry.path,
+      );
 
       if (entry.type === "Directory" || !isSafeEntryPath(entryPath)) {
         if (entry.type !== "Directory") {

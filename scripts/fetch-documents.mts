@@ -125,7 +125,8 @@ async function fetchDocuments(): Promise<void> {
     const elapsed = Math.round((Date.now() - startedAt) / 1000);
     console.log(
       `  [${elapsed}s] claimed ${counters.claimed} · fetched ${counters.fetched} ` +
-        `· files ${counters.files} · skipped ${counters.skipped} · failed ${counters.failed} ` +
+        `· files ${counters.files} · fileFail ${counters.filesFailed} ` +
+        `· skipped ${counters.skipped} · failed ${counters.failed} ` +
         `· ${(counters.bytes / 1_048_576).toFixed(1)} MiB`,
     );
   }, 15_000);
@@ -150,6 +151,7 @@ async function fetchDocuments(): Promise<void> {
   console.log(`  claimed  ${counters.claimed.toLocaleString()}`);
   console.log(`  fetched  ${counters.fetched.toLocaleString()}`);
   console.log(`  files    ${counters.files.toLocaleString()}`);
+  console.log(`  fileFail ${counters.filesFailed.toLocaleString()}  (individual files that failed)`);
   console.log(`  skipped  ${counters.skipped.toLocaleString()}`);
   console.log(`  failed   ${counters.failed.toLocaleString()}`);
   console.log(`  stored   ${(counters.bytes / 1_048_576).toFixed(1)} MiB`);
@@ -217,6 +219,49 @@ async function showStatus(): Promise<void> {
     console.log(
       `  skips       ${skips.map((row) => `${row._id}=${row.count.toLocaleString()}`).join(" ")}`,
     );
+  }
+
+  // Per-file failures, which are invisible in the row status: a row with one good
+  // file and four failures still reads FETCHED.
+  const fileFailures = await store
+    .aggregate<{ _id: string; count: number; retryable: number }>([
+      { $unwind: "$failedFiles" },
+      {
+        $group: {
+          _id: "$failedFiles.errorClass",
+          count: { $sum: 1 },
+          retryable: { $sum: { $cond: ["$failedFiles.retryable", 1, 0] } },
+        },
+      },
+      { $sort: { count: -1 } },
+    ])
+    .toArray();
+
+  if (fileFailures.length) {
+    const total = fileFailures.reduce((sum, row) => sum + row.count, 0);
+    console.log(`\n  File-level failures (${total} total, not visible in row status):`);
+    for (const row of fileFailures) {
+      console.log(
+        `    ${String(row.count).padStart(5)}  ${row._id.padEnd(22)} ${row.retryable} retryable`,
+      );
+    }
+  }
+
+  const textFailures = await store
+    .aggregate<{ _id: string; count: number }>([
+      { $unwind: "$files" },
+      { $match: { "files.textStatus": { $in: ["FAILED", "UNSUPPORTED"] } } },
+      { $group: { _id: { $concat: ["$files.textStatus", ": ", { $ifNull: ["$files.textError", "no extractor"] }] }, count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 6 },
+    ])
+    .toArray();
+
+  if (textFailures.length) {
+    console.log("\n  Text extraction gaps (file is stored; only its text is missing):");
+    for (const row of textFailures) {
+      console.log(`    ${String(row.count).padStart(5)}  ${row._id.slice(0, 70)}`);
+    }
   }
 
   const hosts = await store

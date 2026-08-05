@@ -65,6 +65,19 @@ export interface StoredDocumentFile {
   textError?: string;
 }
 
+/** One resolved file that could not be stored, with enough detail to act on it. */
+export interface FailedDocumentFile {
+  url: string;
+  fileName: string | null;
+  label: string | null;
+  /** `IngestionError` failure class, or the thrown error's name. */
+  errorClass: string;
+  error: string;
+  /** False for a permanent refusal such as 404 or an over-size file. */
+  retryable: boolean;
+  attemptedAt: Date;
+}
+
 export interface TenderDocumentRecord {
   _id: string;
   tenderId: ObjectId;
@@ -80,6 +93,15 @@ export interface TenderDocumentRecord {
   status: DocumentStatus;
   skipReason: DocumentSkipReason | null;
   files: StoredDocumentFile[];
+  /**
+   * Files that were resolved but could not be retrieved.
+   *
+   * Kept because a row with one good file and four failures is still `FETCHED`, and
+   * without this the failures would exist only in the process log — which is not an
+   * audit trail. Every resolved file therefore ends up in exactly one of `files` or
+   * `failedFiles`.
+   */
+  failedFiles: FailedDocumentFile[];
   attempts: number;
   leaseOwner: string | null;
   heartbeatAt: Date | null;
