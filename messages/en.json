@@ -1,5 +1,7 @@
 {
-  "Language": { "select": "Select language" },
+  "Language": {
+    "select": "Select language"
+  },
   "Auth": {
     "introLabel": "BAU AI introduction",
     "onboardingTitle": "Book your onboarding call",
@@ -294,6 +296,202 @@
       "description": "A focused workflow is being prepared for this step.",
       "previewTitle": "Playbook preview",
       "previewDescription": "Dora’s guided tender playbook is currently being built."
+    },
+    "sidebar": {
+      "profileSetup": "Profile setup",
+      "companyInfo": "Company info",
+      "companyDetails": "Company details",
+      "principalOffice": "Principal office",
+      "mailingAddress": "Mailing address",
+      "primaryContact": "Primary contact",
+      "financialInformation": "Financial information",
+      "insurance": "Insurance",
+      "certifications": "Certifications",
+      "documents": "Documents"
+    },
+    "actions": {
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "upload": "Upload",
+      "replace": "Replace",
+      "view": "View",
+      "delete": "Delete",
+      "add": "Add",
+      "tagHint": "Type and press Enter"
+    },
+    "feedback": {
+      "saveFailed": "Save failed.",
+      "uploadFailed": "Upload failed.",
+      "deleteFailed": "Delete failed.",
+      "openFailed": "Could not open the file."
+    },
+    "sections": {
+      "companyInfo": {
+        "title": "Company information",
+        "description": "The core details other companies and tenders see first.",
+        "fields": {
+          "name": "Company name",
+          "email": "Company email",
+          "website": "Website",
+          "phone": "Phone",
+          "employeeCount": "Number of employees",
+          "registrationNumber": "Registration number",
+          "vatNumber": "VAT number",
+          "address": "Address"
+        }
+      },
+      "companyDetails": {
+        "title": "Company details",
+        "description": "Legal form, founding year, and company description.",
+        "fields": {
+          "legalForm": "Legal form",
+          "foundingYear": "Founding year",
+          "registrationCourt": "Registration court",
+          "description": "Company description"
+        }
+      },
+      "principalOffice": {
+        "title": "Principal office",
+        "description": "The company's primary registered address.",
+        "fields": {
+          "streetAddress": "Street address",
+          "city": "City",
+          "state": "State",
+          "zipCode": "ZIP code",
+          "county": "County",
+          "country": "Country"
+        }
+      },
+      "mailingAddress": {
+        "title": "Mailing address",
+        "description": "Where post should be sent, if different from the office.",
+        "fields": {
+          "address": "Address",
+          "city": "City",
+          "state": "State",
+          "zipCode": "ZIP code"
+        }
+      },
+      "primaryContact": {
+        "title": "Primary contact",
+        "description": "The main point of contact for tenders and correspondence.",
+        "fields": {
+          "firstName": "First name",
+          "lastName": "Last name",
+          "title": "Title",
+          "role": "Role",
+          "email": "Email",
+          "phone": "Phone"
+        }
+      },
+      "financialInfo": {
+        "title": "Financial information",
+        "description": "Recent annual revenue figures.",
+        "fields": {
+          "revenueCurrent": "Current revenue",
+          "revenueYear1": "Revenue (last year)",
+          "revenueYear2": "Revenue (2 years ago)",
+          "revenueYear3": "Revenue (3 years ago)"
+        }
+      },
+      "bankDetails": {
+        "title": "Bank details",
+        "description": "Account information used on tender submissions.",
+        "fields": {
+          "bankName": "Bank name",
+          "accountHolder": "Account holder",
+          "iban": "IBAN",
+          "bic": "BIC",
+          "accountNumber": "Account number"
+        }
+      },
+      "insuranceDetails": {
+        "title": "Insurance details",
+        "description": "General liability and workers' compensation coverage.",
+        "fields": {
+          "glCarrier": "GL carrier",
+          "glPolicyNumber": "GL policy number",
+          "glCoverageLimit": "GL coverage limit",
+          "glExpiration": "GL expiration",
+          "wcCarrier": "WC carrier",
+          "wcPolicyNumber": "WC policy number",
+          "wcExpiration": "WC expiration",
+          "emr": "EMR",
+          "emrEffectiveDate": "EMR effective date"
+        }
+      },
+      "tenderInfo": {
+        "title": "Tender information",
+        "description": "What you do and where — this drives your tender matches.",
+        "fields": {
+          "region": "Region",
+          "businessDomain": "Business domain",
+          "trade": "Trades & services",
+          "specializations": "Specializations",
+          "services": "Services",
+          "cpvCodes": "CPV codes",
+          "certifications": "Certifications"
+        }
+      },
+      "projectSize": {
+        "title": "Project size range",
+        "description": "Typical project value you bid on.",
+        "fields": {
+          "min": "Minimum",
+          "max": "Maximum"
+        }
+      },
+      "certifications": {
+        "title": "Certifications",
+        "description": "Business classifications and any other certifications you hold.",
+        "other": "Other certifications"
+      },
+      "insurancePolicies": {
+        "title": "Insurance policies",
+        "description": "Coverage types and amounts referenced on tender submissions.",
+        "type": "Type",
+        "amount": "Amount",
+        "details": "Details",
+        "empty": "No insurance policies added yet."
+      }
+    },
+    "certificationFlags": {
+      "sbe": "SBE — Small Business Enterprise",
+      "lbe": "LBE — Local Business Enterprise",
+      "dbe": "DBE — Disadvantaged Business Enterprise",
+      "mbe": "MBE — Minority Business Enterprise",
+      "wbe": "WBE — Women Business Enterprise",
+      "wosb": "WOSB — Women-Owned Small Business",
+      "hubzone": "HUBZone",
+      "sdvosb": "SDVOSB — Service-Disabled Veteran-Owned",
+      "vosb": "VOSB — Veteran-Owned Small Business",
+      "eightA": "8(a) Business Development"
+    },
+    "documents": {
+      "empty": "No documents uploaded yet.",
+      "categories": {
+        "general": {
+          "label": "General documents",
+          "description": "Company profiles, brochures, and anything used to auto-fill your profile."
+        },
+        "insurance": {
+          "label": "Insurance",
+          "description": "Certificates of insurance and coverage documents."
+        },
+        "certification": {
+          "label": "Certifications",
+          "description": "Business and quality certifications."
+        },
+        "reference-project": {
+          "label": "Reference projects",
+          "description": "Past project references and case studies."
+        }
+      }
+    },
+    "logo": {
+      "title": "Company logo",
+      "description": "PNG, JPG, WebP or SVG. Shown on your profile and submissions."
     }
   }
 }

@@ -1,5 +1,7 @@
 {
-  "Language": { "select": "Sprache auswählen" },
+  "Language": {
+    "select": "Sprache auswählen"
+  },
   "Auth": {
     "introLabel": "BAU AI Einführung",
     "onboardingTitle": "Onboarding-Anruf buchen",
@@ -294,6 +296,202 @@
       "description": "Für diesen Schritt wird gerade ein fokussierter Workflow vorbereitet.",
       "previewTitle": "Playbook-Vorschau",
       "previewDescription": "Doras geführtes Ausschreibungs-Playbook wird derzeit entwickelt."
+    },
+    "sidebar": {
+      "profileSetup": "Profil einrichten",
+      "companyInfo": "Unternehmensinfo",
+      "companyDetails": "Unternehmensdetails",
+      "principalOffice": "Hauptsitz",
+      "mailingAddress": "Postanschrift",
+      "primaryContact": "Hauptansprechpartner",
+      "financialInformation": "Finanzinformationen",
+      "insurance": "Versicherung",
+      "certifications": "Zertifizierungen",
+      "documents": "Dokumente"
+    },
+    "actions": {
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert",
+      "upload": "Hochladen",
+      "replace": "Ersetzen",
+      "view": "Ansehen",
+      "delete": "Löschen",
+      "add": "Hinzufügen",
+      "tagHint": "Eingeben und Enter drücken"
+    },
+    "feedback": {
+      "saveFailed": "Speichern fehlgeschlagen.",
+      "uploadFailed": "Hochladen fehlgeschlagen.",
+      "deleteFailed": "Löschen fehlgeschlagen.",
+      "openFailed": "Datei konnte nicht geöffnet werden."
+    },
+    "sections": {
+      "companyInfo": {
+        "title": "Unternehmensinformationen",
+        "description": "Die wichtigsten Angaben, die andere Unternehmen und Ausschreibungen zuerst sehen.",
+        "fields": {
+          "name": "Firmenname",
+          "email": "Firmen-E-Mail",
+          "website": "Website",
+          "phone": "Telefon",
+          "employeeCount": "Anzahl der Mitarbeiter",
+          "registrationNumber": "Registernummer",
+          "vatNumber": "USt-IdNr.",
+          "address": "Adresse"
+        }
+      },
+      "companyDetails": {
+        "title": "Unternehmensdetails",
+        "description": "Rechtsform, Gründungsjahr und Unternehmensbeschreibung.",
+        "fields": {
+          "legalForm": "Rechtsform",
+          "foundingYear": "Gründungsjahr",
+          "registrationCourt": "Registergericht",
+          "description": "Unternehmensbeschreibung"
+        }
+      },
+      "principalOffice": {
+        "title": "Hauptsitz",
+        "description": "Die primäre eingetragene Adresse des Unternehmens.",
+        "fields": {
+          "streetAddress": "Straße und Hausnummer",
+          "city": "Stadt",
+          "state": "Bundesland",
+          "zipCode": "Postleitzahl",
+          "county": "Landkreis",
+          "country": "Land"
+        }
+      },
+      "mailingAddress": {
+        "title": "Postanschrift",
+        "description": "Wohin Post gesendet werden soll, falls abweichend vom Hauptsitz.",
+        "fields": {
+          "address": "Adresse",
+          "city": "Stadt",
+          "state": "Bundesland",
+          "zipCode": "Postleitzahl"
+        }
+      },
+      "primaryContact": {
+        "title": "Hauptansprechpartner",
+        "description": "Der Hauptansprechpartner für Ausschreibungen und Korrespondenz.",
+        "fields": {
+          "firstName": "Vorname",
+          "lastName": "Nachname",
+          "title": "Titel",
+          "role": "Funktion",
+          "email": "E-Mail",
+          "phone": "Telefon"
+        }
+      },
+      "financialInfo": {
+        "title": "Finanzinformationen",
+        "description": "Aktuelle Jahresumsatzzahlen.",
+        "fields": {
+          "revenueCurrent": "Aktueller Umsatz",
+          "revenueYear1": "Umsatz (Vorjahr)",
+          "revenueYear2": "Umsatz (vor 2 Jahren)",
+          "revenueYear3": "Umsatz (vor 3 Jahren)"
+        }
+      },
+      "bankDetails": {
+        "title": "Bankverbindung",
+        "description": "Kontodaten für Ausschreibungsunterlagen.",
+        "fields": {
+          "bankName": "Name der Bank",
+          "accountHolder": "Kontoinhaber",
+          "iban": "IBAN",
+          "bic": "BIC",
+          "accountNumber": "Kontonummer"
+        }
+      },
+      "insuranceDetails": {
+        "title": "Versicherungsdetails",
+        "description": "Betriebshaftpflicht und gesetzliche Unfallversicherung.",
+        "fields": {
+          "glCarrier": "Haftpflichtversicherer",
+          "glPolicyNumber": "Haftpflicht-Policennummer",
+          "glCoverageLimit": "Deckungssumme Haftpflicht",
+          "glExpiration": "Ablauf Haftpflicht",
+          "wcCarrier": "Unfallversicherer",
+          "wcPolicyNumber": "Unfall-Policennummer",
+          "wcExpiration": "Ablauf Unfallversicherung",
+          "emr": "EMR",
+          "emrEffectiveDate": "EMR-Stichtag"
+        }
+      },
+      "tenderInfo": {
+        "title": "Ausschreibungsinformationen",
+        "description": "Was Sie tun und wo – das steuert Ihre Ausschreibungstreffer.",
+        "fields": {
+          "region": "Region",
+          "businessDomain": "Unternehmensbereich",
+          "trade": "Gewerke & Leistungen",
+          "specializations": "Spezialisierungen",
+          "services": "Leistungen",
+          "cpvCodes": "CPV-Codes",
+          "certifications": "Zertifizierungen"
+        }
+      },
+      "projectSize": {
+        "title": "Projektgröße",
+        "description": "Typischer Projektwert, für den Sie bieten.",
+        "fields": {
+          "min": "Minimum",
+          "max": "Maximum"
+        }
+      },
+      "certifications": {
+        "title": "Zertifizierungen",
+        "description": "Unternehmensklassifizierungen und weitere Zertifizierungen.",
+        "other": "Weitere Zertifizierungen"
+      },
+      "insurancePolicies": {
+        "title": "Versicherungspolicen",
+        "description": "Deckungsarten und -summen für Ausschreibungsunterlagen.",
+        "type": "Art",
+        "amount": "Betrag",
+        "details": "Details",
+        "empty": "Noch keine Versicherungspolicen hinzugefügt."
+      }
+    },
+    "certificationFlags": {
+      "sbe": "SBE — Kleinunternehmen",
+      "lbe": "LBE — Lokales Unternehmen",
+      "dbe": "DBE — Benachteiligtes Unternehmen",
+      "mbe": "MBE — Unternehmen von Minderheiten",
+      "wbe": "WBE — Unternehmen in Frauenbesitz",
+      "wosb": "WOSB — Kleinunternehmen in Frauenbesitz",
+      "hubzone": "HUBZone",
+      "sdvosb": "SDVOSB — Unternehmen kriegsversehrter Veteranen",
+      "vosb": "VOSB — Unternehmen in Veteranenbesitz",
+      "eightA": "8(a) Unternehmensförderung"
+    },
+    "documents": {
+      "empty": "Noch keine Dokumente hochgeladen.",
+      "categories": {
+        "general": {
+          "label": "Allgemeine Dokumente",
+          "description": "Unternehmensprofile, Broschüren und alles zum automatischen Ausfüllen Ihres Profils."
+        },
+        "insurance": {
+          "label": "Versicherung",
+          "description": "Versicherungsnachweise und Deckungsunterlagen."
+        },
+        "certification": {
+          "label": "Zertifizierungen",
+          "description": "Unternehmens- und Qualitätszertifizierungen."
+        },
+        "reference-project": {
+          "label": "Referenzprojekte",
+          "description": "Referenzen früherer Projekte und Fallstudien."
+        }
+      }
+    },
+    "logo": {
+      "title": "Firmenlogo",
+      "description": "PNG, JPG, WebP oder SVG. Wird in Ihrem Profil und auf Einreichungen angezeigt."
     }
   }
 }
