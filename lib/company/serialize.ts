@@ -1,4 +1,7 @@
-import type { CompanyDocument } from "@/models/company";
+import type {
+  CompanyDocument,
+  CompanyKnowledgeBase,
+} from "@/models/company";
 import type { CompanyFileDocument, CompanyFileCategory } from "@/models/company-file";
 
 /** Common timestamp/_id fields Mongoose adds; typed loosely so hydrated docs and lean objects both fit. */
@@ -38,6 +41,9 @@ export function serializeCompanyFile(
  * (members, requests, trial, createdBy) are omitted — those have their own
  * endpoints — and the raw logo S3 key is replaced by a resolved URL upstream.
  */
+/** Client-facing shape of the company profile (import as a type only). */
+export type SerializedCompanyProfile = ReturnType<typeof serializeCompanyProfile>;
+
 export function serializeCompanyProfile(
   company: WithMeta<CompanyDocument>,
   extras: { logoUrl?: string | null } = {},
@@ -69,7 +75,7 @@ export function serializeCompanyProfile(
     bankDetails: company.bankDetails ?? null,
     insurances: company.insurances ?? [],
     referenceProjects: company.referenceProjects ?? [],
-    knowledgeBase: company.knowledgeBase ?? {},
+    knowledgeBase: (company.knowledgeBase ?? {}) as CompanyKnowledgeBase,
     createdAt: company.createdAt ? company.createdAt.toISOString() : null,
     updatedAt: company.updatedAt ? company.updatedAt.toISOString() : null,
   };

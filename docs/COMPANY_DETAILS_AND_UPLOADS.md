@@ -83,8 +83,44 @@ S3_COMPANY_PREFIX=companies
 Limits live in `lib/storage/s3.ts`: `MAX_UPLOAD_BYTES` (25 MB) and the
 content-type allowlists for logos vs documents.
 
+## Frontend
+
+`/settings` is a nested route tree — each section is its own path (not a
+client-side tab), under `app/(workspace)/settings/`:
+
+- `settings/layout.tsx` — auth guard + dashboard shell + top-tab nav
+  (`SettingsTabs`). Tabs: `/settings`, `/settings/tender-information`,
+  `/settings/employee-information`, `/settings/billing`,
+  `/settings/dora-playbook`.
+- `settings/(company)/` — a route group (no URL segment) that adds the KB
+  sidebar (`CompanySidebar`) around the Company Information sub-sections, each
+  its own path: `/settings/company-info`, `/settings/company-details`,
+  `/settings/principal-office`, `/settings/mailing-address`,
+  `/settings/primary-contact`, `/settings/financial-information`,
+  `/settings/insurance`, `/settings/certifications`, `/settings/documents`.
+  `/settings` redirects to `/settings/company-info`.
+
+Server pages are thin: each loads `getSettingsData()` (cached per request —
+serialized profile + files + `canEdit` + trial date) and renders a client form:
+
+- `SectionForm` — config-driven editable card (`lib/company/settings-sections.ts`)
+  that PATCHes `/api/company/profile`. Handles root fields, `bankDetails`,
+  `projectSizeRange`, and knowledge-base slices (KB sections merge so saving one
+  never wipes another). Tag fields use `TagInput`.
+- `CertificationsForm`, `InsurancesEditor` — the boolean-grid and array sections.
+- `LogoUploader`, `DocumentsManager` — the presigned upload UI, built on
+  `lib/company/upload-client.ts`.
+
+Only admins (`canEdit`) see save buttons and upload controls; members get a
+read-only view.
+
 ## Not included / next steps
 
-- Settings UI wiring (the client helper is ready to consume).
+- The section labels in the company forms are inline English; they can be moved
+  into `messages/{en,de}.json` (next-intl) like the rest of the app.
+- The legacy static settings panel still lives in
+  `components/settings/settings-workspace.tsx` and the `[section]` route's
+  settings branch; both are now shadowed by the `/settings` route tree and can
+  be deleted.
 - Out-of-band sweeping of orphan S3 objects from abandoned uploads (upload URLs
   are minted without a DB row, so an abandoned upload leaves only an S3 object).
