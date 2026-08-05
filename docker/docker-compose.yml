@@ -1,0 +1,183 @@
+# Local and staging deployment for the tender ingestion workers.
+#
+# Run from the repository root:
+#   docker compose -f docker/docker-compose.yml up -d --build
+#   docker compose -f docker/docker-compose.yml logs -f ingest
+#
+# MongoDB runs as a single-member replica set because transactions and change
+# streams require one (§6.1). This is fine for development; production must use a
+# three-member set or Atlas.
+
+name: bauai-ingestion
+
+# Only the two connection URLs are set here, and deliberately so: `environment`
+# takes precedence over `env_file`, so listing S3 or TED variables here would
+# override the real values from .env.local with blanks whenever the host shell does
+# not happen to export them. Everything else — credentials, log level, concurrency,
+# shadow mode — comes from .env.local unchanged.
+#
+# These two must be overridden, because .env.local points at localhost while the
+# workers reach MongoDB and Redis by compose service name.
+x-worker-env: &worker-env
+  MONGODB_URI: mongodb://mongo:27017/?replicaSet=rs0
+  REDIS_URL: redis://redis:6379
+
+x-worker-base: &worker-base
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.worker
+  image: bauai/tender-ingestion:latest
+  restart: unless-stopped
+  env_file:
+    - path: ../.env.local
+      required: false
+  depends_on:
+    mongo-init:
+      condition: service_completed_successfully
+    redis:
+      condition: service_healthy
+  # SIGTERM starts the graceful drain; the grace period must exceed
+  # INGESTION_SHUTDOWN_GRACE_MS so in-flight jobs finish instead of redelivering.
+  stop_signal: SIGTERM
+  stop_grace_period: 45s
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+services:
+  mongo:
+    image: mongo:8
+    command:
+      - --replSet
+      - rs0
+      - --bind_ip_all
+      - --wiredTigerCacheSizeGB
+      - "1"
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      # Host access needs directConnection=true, since the set advertises "mongo".
+      - "${MONGO_HOST_PORT:-27017}:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # One-shot: initiates the replica set, then exits. Workers wait for it to
+  # complete, so they never see a standalone mongod and fail their precondition.
+  mongo-init:
+    image: mongo:8
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        if mongosh --host mongo:27017 --quiet --eval 'rs.status().ok' >/dev/null 2>&1; then
+          echo "replica set already initiated"
+        else
+          echo "initiating replica set rs0"
+          mongosh --host mongo:27017 --quiet --eval '
+            rs.initiate({_id: "rs0", members: [{_id: 0, host: "mongo:27017"}]})
+          '
+        fi
+        echo "waiting for primary"
+        mongosh --host mongo:27017 --quiet --eval '
+          for (let i = 0; i < 60; i++) {
+            if (db.hello().isWritablePrimary) { print("primary ready"); quit(0) }
+            sleep(1000)
+          }
+          print("timed out waiting for primary"); quit(1)
+        '
+
+  redis:
+    image: redis:7-alpine
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      # The queue is durable transport, so persistence stays on; a restart must
+      # not lose pending entries that were never acknowledged.
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - redis-data:/data
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # Creates collections, indexes, and source configs, then verifies source access.
+  # Every worker waits for this so nothing writes before the unique indexes exist.
+  bootstrap:
+    <<: *worker-base
+    restart: "no"
+    environment:
+      <<: *worker-env
+    command: ["node", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  # Exactly one replica: leases make more safe, but they add nothing (§4.1).
+  scheduler:
+    <<: *worker-base
+    environment:
+      <<: *worker-env
+    command: ["node", "--experimental-strip-types", "workers/scheduler.mts"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "${SCHEDULER_METRICS_PORT:-9464}:9464"
+
+  # The horizontally scalable tier: `docker compose up -d --scale ingest=4`.
+  ingest:
+    <<: *worker-base
+    environment:
+      <<: *worker-env
+    command: ["node", "--experimental-strip-types", "workers/ingest.mts"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    deploy:
+      replicas: ${INGEST_REPLICAS:-2}
+
+  # Single replica: a second would duplicate every push without adding durability.
+  outbox:
+    <<: *worker-base
+    environment:
+      <<: *worker-env
+    command: ["node", "--experimental-strip-types", "workers/outbox-relay.mts"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "${OUTBOX_METRICS_PORT:-9465}:9464"
+
+  status:
+    <<: *worker-base
+    environment:
+      <<: *worker-env
+    command: ["node", "--experimental-strip-types", "workers/status-updater.mts"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+
+volumes:
+  mongo-data:
+  redis-data:

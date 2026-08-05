@@ -1,0 +1,443 @@
+<ContractNotice xmlns="urn:oasis:names:specification:ubl:schema:xsd:ContractNotice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:efac="http://data.europa.eu/p27/eforms-ubl-extension-aggregate-components/1" xmlns:efbc="http://data.europa.eu/p27/eforms-ubl-extension-basic-components/1" xmlns:efext="http://data.europa.eu/p27/eforms-ubl-extensions/1" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <ext:UBLExtensions>
+      <ext:UBLExtension>
+         <ext:ExtensionContent>
+            <efext:EformsExtension>
+               <efac:NoticeSubType>
+                  <cbc:SubTypeCode listName="notice-subtype">16</cbc:SubTypeCode>
+               </efac:NoticeSubType>
+               <efac:Organizations>
+                  <efac:Organization>
+                     <efac:Company>
+                        <cac:PartyIdentification>
+                           <cbc:ID schemeName="organization">ORG-0001</cbc:ID>
+                        </cac:PartyIdentification>
+                        <cac:PartyName>
+                           <cbc:Name languageID="DEU">Große Kreisstadt Bad Waldsee</cbc:Name>
+                        </cac:PartyName>
+                        <cac:PostalAddress>
+                           <cbc:StreetName>Hauptstraße 29</cbc:StreetName>
+                           <cbc:CityName>Bad Waldsee</cbc:CityName>
+                           <cbc:PostalZone>88339</cbc:PostalZone>
+                           <cbc:CountrySubentityCode listName="nuts">DE148</cbc:CountrySubentityCode>
+                           <cac:Country>
+                              <cbc:IdentificationCode listName="country">DEU</cbc:IdentificationCode>
+                           </cac:Country>
+                        </cac:PostalAddress>
+                        <cac:PartyLegalEntity>
+                           <cbc:CompanyID>07524 97306-30</cbc:CompanyID>
+                        </cac:PartyLegalEntity>
+                        <cac:Contact>
+                           <cbc:Name>Geschäftsstelle: Stadtentwässerung</cbc:Name>
+                           <cbc:Telephone>+49 75249 401</cbc:Telephone>
+                           <cbc:Telefax>+49 75249 41302</cbc:Telefax>
+                           <cbc:ElectronicMail>info@bad-waldsee.de</cbc:ElectronicMail>
+                        </cac:Contact>
+                     </efac:Company>
+                  </efac:Organization>
+                  <efac:Organization>
+                     <efac:Company>
+                        <cac:PartyIdentification>
+                           <cbc:ID schemeName="organization">ORG-0002</cbc:ID>
+                        </cac:PartyIdentification>
+                        <cac:PartyName>
+                           <cbc:Name languageID="DEU">Regierungspräsidium Tübingen</cbc:Name>
+                        </cac:PartyName>
+                        <cac:PostalAddress>
+                           <cbc:StreetName>Konrad-Adenauer-Straße 20</cbc:StreetName>
+                           <cbc:CityName>Tübingen</cbc:CityName>
+                           <cbc:PostalZone>72072</cbc:PostalZone>
+                           <cbc:CountrySubentityCode listName="nuts">DE142</cbc:CountrySubentityCode>
+                           <cac:Country>
+                              <cbc:IdentificationCode listName="country">DEU</cbc:IdentificationCode>
+                           </cac:Country>
+                        </cac:PostalAddress>
+                        <cac:PartyLegalEntity>
+                           <cbc:CompanyID>07071 757-0</cbc:CompanyID>
+                        </cac:PartyLegalEntity>
+                        <cac:Contact>
+                           <cbc:Telephone>07071 757-0</cbc:Telephone>
+                           <cbc:Telefax>07071 757-3190</cbc:Telefax>
+                           <cbc:ElectronicMail>poststelle@rpt.bwl.de</cbc:ElectronicMail>
+                        </cac:Contact>
+                     </efac:Company>
+                  </efac:Organization>
+               </efac:Organizations>
+            </efext:EformsExtension>
+         </ext:ExtensionContent>
+      </ext:UBLExtension>
+   </ext:UBLExtensions>
+   <cbc:UBLVersionID>2.3</cbc:UBLVersionID>
+   <cbc:CustomizationID>eforms-de-2.1</cbc:CustomizationID>
+   <cbc:ProfileID>eforms-sdk-1.13</cbc:ProfileID>
+   <cbc:ID schemeName="notice-id">019f35f7-91f6-4b9e-a1d4-48a1eedc8bff</cbc:ID>
+   <cbc:ContractFolderID>019f35ee-cbe9-4921-89ed-29fff71f3ae1</cbc:ContractFolderID>
+   <cbc:IssueDate>2026-08-03+02:00</cbc:IssueDate>
+   <cbc:IssueTime>10:14:50+02:00</cbc:IssueTime>
+   <cbc:VersionID>01</cbc:VersionID>
+   <cbc:RequestedPublicationDate>2026-08-03+02:00</cbc:RequestedPublicationDate>
+   <cbc:RegulatoryDomain>32014L0024</cbc:RegulatoryDomain>
+   <cbc:NoticeTypeCode listName="competition">cn-standard</cbc:NoticeTypeCode>
+   <cbc:NoticeLanguageCode listName="language">DEU</cbc:NoticeLanguageCode>
+   <cac:ContractingParty>
+      <cac:ContractingPartyType>
+         <cbc:PartyTypeCode listName="buyer-legal-type">anst-oer-kommun</cbc:PartyTypeCode>
+      </cac:ContractingPartyType>
+      <cac:ContractingActivity>
+         <cbc:ActivityTypeCode listName="authority-activity">gen-pub</cbc:ActivityTypeCode>
+      </cac:ContractingActivity>
+      <cac:Party>
+         <cac:PartyIdentification>
+            <cbc:ID schemeName="organization">ORG-0001</cbc:ID>
+         </cac:PartyIdentification>
+      </cac:Party>
+   </cac:ContractingParty>
+   <cac:TenderingTerms>
+      <cac:ProcurementLegislationDocumentReference>
+         <cbc:ID>vob-a-eu</cbc:ID>
+      </cac:ProcurementLegislationDocumentReference>
+      <cac:ProcurementLegislationDocumentReference>
+         <cbc:ID>CrossBorderLaw</cbc:ID>
+         <cbc:DocumentDescription languageID="DEU">Cross Border Law</cbc:DocumentDescription>
+      </cac:ProcurementLegislationDocumentReference>
+      <cac:TendererQualificationRequest>
+         <cac:SpecificTendererRequirement>
+            <cbc:TendererRequirementTypeCode listName="exclusion-grounds-source">epo-notice</cbc:TendererRequirementTypeCode>
+         </cac:SpecificTendererRequirement>
+      </cac:TendererQualificationRequest>
+      <cac:TendererQualificationRequest>
+         <cac:SpecificTendererRequirement>
+            <cbc:TendererRequirementTypeCode listName="exclusion-ground">labour-law</cbc:TendererRequirementTypeCode>
+            <cbc:Description languageID="DEU">Die durch das eForms-Formular vorgegebenen Begriffe zu den Ausschlussgründen sind nicht maßgeblich. Die Frage eines Ausschlusses von Angeboten richtet sich nach geltendem deutschen Vergaberecht. Bitte beachten Sie zu den vorzulegenden Erklärungen und Unterlagen gemäß den definierten Eignungskriterien dieser Bekanntmachung.</cbc:Description>
+         </cac:SpecificTendererRequirement>
+      </cac:TendererQualificationRequest>
+   </cac:TenderingTerms>
+   <cac:TenderingProcess>
+      <cbc:ProcedureCode listName="procurement-procedure-type">open</cbc:ProcedureCode>
+      <cac:ProcessJustification>
+         <cbc:ProcessReasonCode listName="accelerated-procedure">false</cbc:ProcessReasonCode>
+      </cac:ProcessJustification>
+   </cac:TenderingProcess>
+   <cac:ProcurementProject>
+      <cbc:ID>506-19</cbc:ID>
+      <cbc:Name languageID="DEU">Kläranlage Bad Waldsee - Sanierung und Erweiterung der mechanischen Stufe (Rechenanlage, Sand-/Fettfang, Hebewerk) Elektrotechnische Ausrüstung</cbc:Name>
+      <cbc:Description languageID="DEU">Die Stadt Bad Waldsee plant die Erweiterung der biologischen und mechanischen Stufe der Kläranlage Bad Waldsee.
+Die Erweiterung der biologischen Stufe - Neubau Belebungsbecken, Gebläsestation ist bereits abgeschlossen. 
+Gegenstand dieser Ausschreibung ist die elektrotechnische Ausrüstung der Rechenanlage, des Sand-/Fettfangs und Hebewerks zur Erweiterung der mechanischen Stufe.</cbc:Description>
+      <cbc:ProcurementTypeCode listName="contract-nature">works</cbc:ProcurementTypeCode>
+      <cac:MainCommodityClassification>
+         <cbc:ItemClassificationCode listName="cpv">45232421</cbc:ItemClassificationCode>
+      </cac:MainCommodityClassification>
+      <cac:RealizedLocation>
+         <cac:Address>
+            <cbc:StreetName>Im Herrschaftsried 6</cbc:StreetName>
+            <cbc:CityName>Bad Waldsee</cbc:CityName>
+            <cbc:PostalZone>88339</cbc:PostalZone>
+            <cbc:CountrySubentityCode listName="nuts">DE148</cbc:CountrySubentityCode>
+            <cac:Country>
+               <cbc:IdentificationCode listName="country">DEU</cbc:IdentificationCode>
+            </cac:Country>
+         </cac:Address>
+      </cac:RealizedLocation>
+   </cac:ProcurementProject>
+   <cac:ProcurementProjectLot>
+      <cbc:ID schemeName="Lot">LOT-0001</cbc:ID>
+      <cac:TenderingTerms>
+         <ext:UBLExtensions>
+            <ext:UBLExtension>
+               <ext:ExtensionContent>
+                  <efext:EformsExtension>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">Die durch das eForms-Formular vorgegebenen Begriffe geben keine Möglichkeit eine Vorbemerkung zu definieren.  Die Vorbemerkung zu den Eignungskriterien bzw. die Festlegung zur Form des Nachweises wird folgendermaßen definiert:
+Soweit möglich führen präqualifizierte Unternehmen den Nachweis der folgenden Anforderungen durch den Eintrag in die Liste des Vereins für die Präqualifikation von Bauunternehmen e. V. (Präqualifikationsverzeichnis). Nichtpräqualifizierte Unternehmen haben als vorläufigen Nachweis mit dem Angebot das in diesem Punkt ausgefüllte Formblatt KEV 179 „Eigenerklärung zur Eignung“ vorzulegen. Soweit Präqualifikation und/oder Formblatt KEV 179 die erforderliche Erklärung bzw. den erforderlichen Nachweis nicht beinhalten, führt der Bieter die Erklärung mit dem angegebenen Formblatt. Diese Festlegung gilt für alle Anforderungen, die unter Eignungskriterien in der Auftragsbekanntmachung benannt sind, soweit bei der jeweiligen Anforderung nicht eine andere Form des Nachweises angegeben ist.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">A)	Erklärung, dass Ausschlussgründe nach § 6e EU VOB/A nicht vorliegen. Soweit Ausschlussgründe gem. § 6e EU VOB/A vorliegen, ist dies vom Bieter anzuzeigen. Auf Anforderung sind vom Bieter die Unterlagen hinsichtlich der Maßnahmen vorzulegen, die der Bieter zur Herstellung seiner Zuverlässigkeit vorgenommen hat (z. B. Unterlagen zur Selbstreinigung).</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">B)	Eigenerklärung des Bieters, dass die in § 21 AEntG, § 98c AEntG, § 98c AufenthG, § 19 MiLoG, § 21 SchwarzArbG und § 22 LkSG genannten Ausschlussgründe nicht vorliegen bzw. Eigenerklärung für ausländische Bieter, dass keine Ausschlussgründe vorliegen, die nach den Rechtsvorschriften des jeweiligen Landes § 21 AEntG, § 98c AufenthG, § 19 MiLoG, § 21 SchwarzArbG und § 22 LkSG vergleichbar sind (Formblatt Nichtvorliegen weiterer Ausschlussgründe ).</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-suit-reg-prof</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">C)	Erklärung, dass keine Eintragungen im Wettbewerbsregister gespeichert sind.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-suit-reg-prof</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">D)	Erklärung zur Registereintragung. Sollte das Angebot in die engere Wahl kommen, sind durch nicht-präqualifizierte Unternehmen als Nachweis auf gesonderte Anforderung zudem folgende Belege vorzulegen:
+
+-	Gewerbeanmeldung,
+-	Handelsregisterauszug, 
+-	Eintragung in die Handwerksrolle bzw. bei der Industrie- und Handelskammer.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-suit-reg-prof</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">E)	Erklärung bezüglich der Mitgliedschaft bei der Berufsgenossenschaft.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">F)	Erklärung (soweit erforderlich) der Bietergemeinschaftsmitglieder einschließlich Benennung desjenigen, der die Bietergemeinschaft (BIGE) vertritt (Formblatt KEV 175). Bei BIGE sind die gem. in dieser Bekanntmachung definierten Eignungskriterien, Buchstabe einzureichenden Erklärungen und Nachweise von jedem Bietergemeinschaftsmitglied gesondert zu erbringen mit Ausnahme der Haftpflichtversicherung (Buchstabe M), die in dieser Höhe nur durch ein Mitglied der Bietergemeinschaft nachgewiesen werden muss. Die Mindestanforderung an die Referenzen (Buchstabe O) muss nicht durch jedes BIGE-Mitglied, sondern durch die Bietergemeinschaft insgesamt erfüllt werden.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">G)	Erklärung zur Eignungsleihe (soweit erforderlich): Eigenerklärung zur Eignungsleihe (Formblatt KEV 177) einschließlich der Verpflichtungserklärung des Unternehmens/sonstigen Dritten (Formblatt KEV 178). 
+Jedes Unternehmen, dessen Kapazitäten der Bieter für die Erfüllung eines oder mehrerer Eignungskriterien in Anspruch nehmen will, muss folgende Erklärungen vorlegen: Verbindliche Verpflichtungserklärung des jeweiligen Unternehmens, dass ihm die Mittel zur Verfügung stehen werden bzw. dass der Dritte die Leistung ausführen wird (§ 6d Abs. 1 Satz 3 EU VOB/A) sowie eine Erklärung der gemeinsamen Haftung des Bieters und des anderen Unternehmens für die Auftragsausführung entsprechend dem Umfang der Eignungsleihe. Jedes Unternehmen, dessen Kapazitäten der Bieter für die Erfüllung eines oder mehrerer Eignungskriterien in Anspruch nehmen will, muss darüber hinaus folgende Erklärungen vorlegen: 
+
+a.	Erklärung, dass Ausschlussgründe nach § 6e EU VOB/A nicht vorliegen. Hinweis: Soweit Ausschlussgründe gem. § 6e EU VOB/A ist dies vom Unternehmen anzuzeigen. Auf Anforderung sind vom Unternehmen, bei dem sich der Bieter die Eignung leihen möchte, die Unterlagen hinsichtlich der Maßnahmen vorzulegen, die das Unternehmen zur Herstellung seiner Zuverlässigkeit vorgenommen hat (z. B. Unterlagen zur Selbstreinigung). 
+
+b.	Erklärung, dass keine Eintragungen im Wettbewerbsregister gespeichert sind.
+
+c.    Eigenerklärung des Bieters, dass die in § 21 AEntG, § 98c AEntG, § 98c AufenthG, § 19 MiLoG, § 21 SchwarzArbG und § 22 LkSG genannten Ausschlussgründe nicht vorliegen bzw. Eigenerklärung für ausländische Bieter, dass keine Ausschlussgründe vorliegen, die nach den Rechtsvorschriften des jeweiligen Landes § 21 AEntG, § 98c AufenthG, § 19 MiLoG, § 21 SchwarzArbG und § 22 LkSG vergleichbar sind (Formblatt weitere Ausschlussgründe). 
+
+d.	Erklärung zur Registereintragung: Sollte das Angebot in die engere Wahl kommen, sind durch nicht-präqualifizierte Unternehmen als Nachweis auf Anforderung folgende Belege vorzulegen: - Gewerbeanmeldung, - Handelsregisterauszug, - Eintragung in die Handwerksrolle bzw. bei der Industrie- und Handelskammer. 
+
+e.	Erklärung bezüglich der Mitgliedschaft bei der Berufsgenossenschaft. 
+
+f.	Nachweis der Eignung des Unternehmens, dessen Kapazitäten der Bieter für die Erfüllung eines oder mehrerer Eignungskriterien in Anspruch nehmen will, in Bezug auf die Eignungskriterien entsprechend dem Umfang der Eignungsleihe (Verwendung des entsprechenden Formblatts (soweit vorhanden) oder durch Präqualifikationsnummer je nachdem, welche Eignung in Anspruch genommen werden soll). Nicht- präqualifizierte Unternehmen haben zum Nachweis der Eignung – soweit nicht anders benannt auf Anforderung - die entsprechend in dieser Auftragsbekanntmachung genannten Nachweise vorzulegen.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-subc</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">H)	Verzeichnis derjenigen Leistungen (Art und Umfang), die der Bieter im Wege von Unteraufträgen an Dritte zu vergeben gedenkt (Formblätter KEV 176.1 und 176.2). Sollte das Angebot in die engere Wahl kommen, sind auf gesonderte Anforderung die Namen der Nachunternehmer einschl. ggf. vorh. PQ-Nummer zu nennen bzw. das Formblatt KEV 179 für Unterauftragnehmer einzureichen, die nicht präqualifiziert sind. Sowohl präqualifizierte als auch nicht präqualifizierte Unterauftragnehmer haben auf gesonderte Anforderung zudem das Formblatt zu den weiteren Ausschlussgründen einzureichen.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-stand-to-gen</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">I)	Erklärung über den Umsatz des Unternehmens in den letzten 3 abgeschlossenen Geschäftsjahren in Euro, soweit er Bauleistungen und andere Leistungen betrifft, die mit der zu vergebenden Leistung vergleichbar sind unter Einschluss des Anteils bei gemeinsam mit anderen Unternehmen ausgeführten Leistungen.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-stand-other</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">J)	Erklärung, dass in Bezug auf das Unternehmen ein Insolvenzverfahren oder ein vergleichbares gesetzlich geregeltes Verfahren weder beantragt noch eröffnet wurde, ein Antrag auf Eröffnung nicht mangels Masse abgelehnt wurde und sich das Unternehmen nicht in Liquidation befindet oder ein Insolvenzplan rechtskräftig bestätigt wurde. Soweit ein Insolvenzplan rechtskräftig bestätigt worden ist, ist der Bieter verpflichtet, dies gesondert mitzuteilen und hat den Insolvenzplan auf Verlangen vorzulegen.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-stand-other</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">K)	Erklärung, dass das Unternehmen seine Verpflichtung zur Zahlung von Steuern und Abgaben sowie der Beiträge zur Sozialversicherung, soweit sie der Pflicht zur Beitragszahlung unterfallen, ordnungsgemäß erfüllt hat.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-stand-other</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">L)	Falls das Angebot in die engere Wahl kommt, sind durch nicht-präqualifizierte Unternehmen zusätzlich auf gesonderte Anforderung folgende Nachweise vorzulegen: 
+
+-	eine Unbedenklichkeitsbescheinigung der tariflichen Sozialkasse, 
+-	eine Unbedenklichkeitsbescheinigung des Finanzamtes bzw. eine Bescheinigung in Steuersachen, 
+-	Unbedenklichkeitsbescheinigung der Berufsgenossenschaft.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-stand-ins</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">M)	Haftpflichtversicherung: Sowohl präqualifizierte Unternehmen als auch nicht-präqualifizierte Unternehmen müssen einen Nachweis einer Haftpflichtversicherung mit mindestens folgenden Deckungssummen je Versicherungsfall vorlegen: 5 Mio. € für Personenschäden und 5 Mio. € für sonstige Schäden (Sach- und Vermögensschäden), jeweils einschließlich Umweltdeckung, mit mindestens zweifacher Maximierung pro Versicherungsjahr.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">N)	Bei Abgabe des Angebotes ist der Bieter verpflichtet, die Verpflichtungserklärung zur Tariftreue und Mindestentlohnung für die Vergabe von öffentlichen Bau-, Liefer- und Dienstleistungen zu übergeben (Formblatt KEV 179.3).</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-ref-work</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">O)	Erklärung, dass das Unternehmen in den letzten drei Kalenderjahren vergleichbare Leistungen ausgeführt hat. Vergleichbare Leistungen sind Bauleistungen betreffend elektrotechnischer Ausrüstung.
+
+MINDESTANFORDERUNG: Die Mindestanforderung an die Referenzen ist darüber hinaus mit dem Angebot nachzuweisen: 
+Der Bieter muss mindestens drei abgeschlossene Referenzprojekte betreffend die Lieferung, Montage und Inbetriebnahme aus den letzten fünf Kalenderjahren vorlegen.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-staff-yrly-avg-mp</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">P)	Erklärung, dass dem Unternehmen die für die Ausführung der Leistungen notwendigen Arbeitskräfte zur Verfügung stehen. Falls das Angebot in die engere Wahl gelangt, ist durch nicht-präqualifizierte Unternehmen zusätzlich als Nachweis auf Anforderung vorzulegen: 
+Erklärung über die Zahl der in den letzten 3 abgeschlossenen Geschäftsjahren jahresdurchschnittlich beschäftigten Arbeitskräfte, gegliedert nach Lohngruppen mit extra ausgewiesenem Leitungspersonal.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:SelectionCriteria>
+                        <cbc:TendererRequirementTypeCode listName="selection-criterion">slc-abil-mgmt-qual</cbc:TendererRequirementTypeCode>
+                        <cbc:Description languageID="DEU">Die durch das eForms-Formular vorgegebenen Begriffe geben keine Möglichkeit eine  Bedingungen für die Ausführung des Auftrags  einzutragen.
+Bei Bedingungen für die Ausführung des Auftrags ist einzutragen:  
+Öffentliche Aufträge und Konzessionen dürfen nach dem 9. April 2022 nicht an Personen oder Unternehmen vergeben werden, die einen Bezug zu Russland im Sinne von Artikel 5k der Verordnung (EU) Nr. 833 /2014 aufweisen. Jeder Bieter muss daher die Erklärung zum Nichtvorliegen eines entsprechenden Russlandbezugs abgeben (Formblatt Eigenerklärung Russland). Sollte es sich bei dem Bieter um eine Bietergemeinschaft handeln, so muss die Erklärung für jedes Mitglied der Bietergemeinschaft gesondert abgegeben werden.</cbc:Description>
+                     </efac:SelectionCriteria>
+                     <efac:StrategicProcurement>
+                        <efbc:ApplicableLegalBasis listName="cvd-scope">false</efbc:ApplicableLegalBasis>
+                     </efac:StrategicProcurement>
+                  </efext:EformsExtension>
+               </ext:ExtensionContent>
+            </ext:UBLExtension>
+         </ext:UBLExtensions>
+         <cbc:VariantConstraintCode listName="permission">not-allowed</cbc:VariantConstraintCode>
+         <cbc:FundingProgramCode listName="eu-funded">no-eu-funds</cbc:FundingProgramCode>
+         <cbc:RequiredCurriculaCode listName="requirement-stage">not-requ</cbc:RequiredCurriculaCode>
+         <cbc:RecurringProcurementIndicator>false</cbc:RecurringProcurementIndicator>
+         <cbc:MultipleTendersCode listName="permission">not-allowed</cbc:MultipleTendersCode>
+         <cac:CallForTendersDocumentReference>
+            <ext:UBLExtensions>
+               <ext:UBLExtension>
+                  <ext:ExtensionContent>
+                     <efext:EformsExtension>
+                        <efac:OfficialLanguages>
+                           <cac:Language>
+                              <cbc:ID>DEU</cbc:ID>
+                           </cac:Language>
+                        </efac:OfficialLanguages>
+                     </efext:EformsExtension>
+                  </ext:ExtensionContent>
+               </ext:UBLExtension>
+            </ext:UBLExtensions>
+            <cbc:ID>n/a</cbc:ID>
+            <cbc:DocumentType>non-restricted-document</cbc:DocumentType>
+            <cac:Attachment>
+               <cac:ExternalReference>
+                  <cbc:URI>https://evoportal.vergabe.staatsanzeiger.de/ui/awardProcedure/019f35ee-cbe9-4921-89ed-29fff71f3ae1</cbc:URI>
+               </cac:ExternalReference>
+            </cac:Attachment>
+         </cac:CallForTendersDocumentReference>
+         <cac:TendererQualificationRequest>
+            <cac:SpecificTendererRequirement>
+               <cbc:TendererRequirementTypeCode listName="selection-criteria-source">epo-notice</cbc:TendererRequirementTypeCode>
+            </cac:SpecificTendererRequirement>
+         </cac:TendererQualificationRequest>
+         <cac:TendererQualificationRequest>
+            <cbc:CompanyLegalFormCode listName="required">false</cbc:CompanyLegalFormCode>
+         </cac:TendererQualificationRequest>
+         <cac:TendererQualificationRequest>
+            <cac:SpecificTendererRequirement>
+               <cbc:TendererRequirementTypeCode listName="missing-info-submission">late-all</cbc:TendererRequirementTypeCode>
+               <cbc:Description languageID="DEU">Die Nachforderung von Erklärungen, Unterlagen und Nachweisen ist nicht ausgeschlossen und erfolgt gemäß den vergaberechtlichen Vorschriften. Fehlende Preise werden nicht nachgefordert.</cbc:Description>
+            </cac:SpecificTendererRequirement>
+         </cac:TendererQualificationRequest>
+         <cac:TendererQualificationRequest>
+            <cac:SpecificTendererRequirement>
+               <cbc:TendererRequirementTypeCode listName="reserved-procurement">none</cbc:TendererRequirementTypeCode>
+            </cac:SpecificTendererRequirement>
+         </cac:TendererQualificationRequest>
+         <cac:ContractExecutionRequirement>
+            <cbc:ExecutionRequirementCode listName="reserved-execution">no</cbc:ExecutionRequirementCode>
+         </cac:ContractExecutionRequirement>
+         <cac:ContractExecutionRequirement>
+            <cbc:ExecutionRequirementCode listName="einvoicing">allowed</cbc:ExecutionRequirementCode>
+         </cac:ContractExecutionRequirement>
+         <cac:ContractExecutionRequirement>
+            <cbc:ExecutionRequirementCode listName="nda">false</cbc:ExecutionRequirementCode>
+         </cac:ContractExecutionRequirement>
+         <cac:ContractExecutionRequirement>
+            <cbc:ExecutionRequirementCode listName="ecatalog-submission">not-allowed</cbc:ExecutionRequirementCode>
+         </cac:ContractExecutionRequirement>
+         <cac:ContractExecutionRequirement>
+            <cbc:ExecutionRequirementCode listName="esignature-submission">false</cbc:ExecutionRequirementCode>
+         </cac:ContractExecutionRequirement>
+         <cac:AwardingTerms>
+            <cac:AwardingCriterion>
+               <cac:SubordinateAwardingCriterion>
+                  <ext:UBLExtensions>
+                     <ext:UBLExtension>
+                        <ext:ExtensionContent>
+                           <efext:EformsExtension>
+                              <efac:AwardCriterionParameter>
+                                 <efbc:ParameterCode listName="number-weight">per-exa</efbc:ParameterCode>
+                                 <efbc:ParameterNumeric>100</efbc:ParameterNumeric>
+                              </efac:AwardCriterionParameter>
+                           </efext:EformsExtension>
+                        </ext:ExtensionContent>
+                     </ext:UBLExtension>
+                  </ext:UBLExtensions>
+                  <cbc:AwardingCriterionTypeCode listName="award-criterion-type">price</cbc:AwardingCriterionTypeCode>
+                  <cbc:Name languageID="DEU">100% Gewichtung</cbc:Name>
+                  <cbc:Description languageID="DEU">Zuschlagskriterium ist der Preis.</cbc:Description>
+               </cac:SubordinateAwardingCriterion>
+            </cac:AwardingCriterion>
+         </cac:AwardingTerms>
+         <cac:AdditionalInformationParty>
+            <cac:PartyIdentification>
+               <cbc:ID schemeName="organization">ORG-0001</cbc:ID>
+            </cac:PartyIdentification>
+         </cac:AdditionalInformationParty>
+         <cac:DocumentProviderParty>
+            <cac:PartyIdentification>
+               <cbc:ID schemeName="organization">ORG-0001</cbc:ID>
+            </cac:PartyIdentification>
+         </cac:DocumentProviderParty>
+         <cac:TenderRecipientParty>
+            <cbc:EndpointID>https://evoportal.vergabe.staatsanzeiger.de/ui/awardProcedure/019f35ee-cbe9-4921-89ed-29fff71f3ae1</cbc:EndpointID>
+         </cac:TenderRecipientParty>
+         <cac:TenderValidityPeriod>
+            <cbc:DurationMeasure unitCode="DAY">60</cbc:DurationMeasure>
+         </cac:TenderValidityPeriod>
+         <cac:AppealTerms>
+            <cac:PresentationPeriod>
+               <cbc:Description languageID="DEU">Ein Nachprüfungsantrag ist unzulässig, soweit: 
+1) der Antragsteller den gerügten Verstoß gegen Vergabevorschriften im Vergabeverfahren erkannt und gegenüber dem Auftraggeber nicht innerhalb einer Frist von 10 Kalendertagen gerügt hat, 
+2) Verstöße gegen Vergabevorschriften, die aufgrund der Bekanntmachung erkennbar sind, nicht spätestens bis Ablauf der in der Bekanntmachung benannten Frist zur Angebotsabgabe gegenüber dem Auftraggeber gerügt werden, 
+3) Verstöße gegen Vergabevorschriften, die erst in den Vergabeunterlagen erkennbar sind, nicht spätestens zum Ablauf der Frist zur Angebotsabgabe gegenüber dem Auftraggeber gerügt werden, 
+4) mehr als 15 Kalendertage nach Eingang der Mitteilung des Auftraggebers, einer Rüge nicht abhelfen zu wollen, vergangen sind.</cbc:Description>
+            </cac:PresentationPeriod>
+            <cac:AppealInformationParty>
+               <cac:PartyIdentification>
+                  <cbc:ID schemeName="organization">ORG-0002</cbc:ID>
+               </cac:PartyIdentification>
+            </cac:AppealInformationParty>
+            <cac:AppealReceiverParty>
+               <cac:PartyIdentification>
+                  <cbc:ID schemeName="organization">ORG-0002</cbc:ID>
+               </cac:PartyIdentification>
+            </cac:AppealReceiverParty>
+         </cac:AppealTerms>
+         <cac:Language>
+            <cbc:ID>DEU</cbc:ID>
+         </cac:Language>
+         <cac:PostAwardProcess>
+            <cbc:ElectronicOrderUsageIndicator>true</cbc:ElectronicOrderUsageIndicator>
+            <cbc:ElectronicPaymentUsageIndicator>true</cbc:ElectronicPaymentUsageIndicator>
+         </cac:PostAwardProcess>
+         <cac:SecurityClearanceTerm>
+            <cbc:Code listName="required">false</cbc:Code>
+         </cac:SecurityClearanceTerm>
+      </cac:TenderingTerms>
+      <cac:TenderingProcess>
+         <cbc:SubmissionMethodCode listName="esubmission">required</cbc:SubmissionMethodCode>
+         <cbc:GovernmentAgreementConstraintIndicator>true</cbc:GovernmentAgreementConstraintIndicator>
+         <cac:TenderSubmissionDeadlinePeriod>
+            <cbc:EndDate>2026-10-01+02:00</cbc:EndDate>
+            <cbc:EndTime>11:00:00+02:00</cbc:EndTime>
+         </cac:TenderSubmissionDeadlinePeriod>
+         <cac:OpenTenderEvent>
+            <cbc:OccurrenceDate>2026-10-01+02:00</cbc:OccurrenceDate>
+            <cbc:OccurrenceTime>11:00:00+02:00</cbc:OccurrenceTime>
+            <cac:OccurenceLocation>
+               <cbc:Description languageID="DEU">Online</cbc:Description>
+            </cac:OccurenceLocation>
+         </cac:OpenTenderEvent>
+         <cac:AuctionTerms>
+            <cbc:AuctionConstraintIndicator>false</cbc:AuctionConstraintIndicator>
+         </cac:AuctionTerms>
+         <cac:ContractingSystem>
+            <cbc:ContractingSystemTypeCode listName="framework-agreement">none</cbc:ContractingSystemTypeCode>
+         </cac:ContractingSystem>
+         <cac:ContractingSystem>
+            <cbc:ContractingSystemTypeCode listName="dps-usage">none</cbc:ContractingSystemTypeCode>
+         </cac:ContractingSystem>
+      </cac:TenderingProcess>
+      <cac:ProcurementProject>
+         <cbc:ID>LOT-0001</cbc:ID>
+         <cbc:Name languageID="DEU">LOT-0001</cbc:Name>
+         <cbc:Description languageID="DEU">Die Stadt Bad Waldsee plant die Erweiterung der biologischen und mechanischen Stufe der Kläranlage Bad Waldsee.
+Die Erweiterung der biologischen Stufe - Neubau Belebungsbecken, Gebläsestation ist bereits abgeschlossen. 
+Gegenstand dieser Ausschreibung ist die elektrotechnische Ausrüstung der Rechenanlage, des Sand-/Fettfangs und Hebewerks zur Erweiterung der mechanischen Stufe.</cbc:Description>
+         <cbc:ProcurementTypeCode listName="contract-nature">works</cbc:ProcurementTypeCode>
+         <cbc:SMESuitableIndicator>false</cbc:SMESuitableIndicator>
+         <cac:ProcurementAdditionalType>
+            <cbc:ProcurementTypeCode listName="strategic-procurement">none</cbc:ProcurementTypeCode>
+         </cac:ProcurementAdditionalType>
+         <cac:ProcurementAdditionalType>
+            <cbc:ProcurementTypeCode listName="environmental-impact">water-mar</cbc:ProcurementTypeCode>
+         </cac:ProcurementAdditionalType>
+         <cac:MainCommodityClassification>
+            <cbc:ItemClassificationCode listName="cpv">45232421</cbc:ItemClassificationCode>
+         </cac:MainCommodityClassification>
+         <cac:RealizedLocation>
+            <cac:Address>
+               <cbc:StreetName>Im Herrschaftsried 6</cbc:StreetName>
+               <cbc:CityName>Bad Waldsee</cbc:CityName>
+               <cbc:PostalZone>88339</cbc:PostalZone>
+               <cbc:CountrySubentityCode listName="nuts">DE148</cbc:CountrySubentityCode>
+               <cac:Country>
+                  <cbc:IdentificationCode listName="country">DEU</cbc:IdentificationCode>
+               </cac:Country>
+            </cac:Address>
+         </cac:RealizedLocation>
+         <cac:PlannedPeriod>
+            <cbc:StartDate>2026-11-02+01:00</cbc:StartDate>
+            <cbc:DurationMeasure unitCode="MONTH">14</cbc:DurationMeasure>
+         </cac:PlannedPeriod>
+      </cac:ProcurementProject>
+   </cac:ProcurementProjectLot>
+</ContractNotice>
