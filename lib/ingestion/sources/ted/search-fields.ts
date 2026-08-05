@@ -67,6 +67,14 @@ export const tedSearchFields = [
   "title-lot",
   "description-lot",
 
+  // Procurement document links. Verified 2026-08-05 that these come back from the
+  // *anonymous* Search API, so TED document retrieval needs no API key — the earlier
+  // assumption that document links exist only in the key-protected per-notice XML was
+  // wrong. `document-restricted-lot` carries the same non-restricted/restricted flag
+  // the German eForms parser reads, so §16's rule is applied identically for TED.
+  "document-url-lot",
+  "document-restricted-lot",
+
   // Relationships and results, used for safe cross-source linking (§8.2).
   "change-notice-version-identifier",
   "modification-previous-notice-identifier",

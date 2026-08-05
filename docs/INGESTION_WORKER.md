@@ -102,11 +102,23 @@ Both sources were exercised against production endpoints on 2026-08-05.
   There is no `sortField` parameter
 - `paginationMode: "ITERATION"` with `iterationNextToken` is how to page past the
   15,000-result page-number limit
-- `GET /v3/notices/{publicationNumber}` requires an API key, and the
-  `ted.europa.eu/.../xml` web URLs sit behind a bot challenge. Without
-  `TED_API_KEY`, the search response is the raw payload of record; parsed notices
-  carry a `ted-search-projection` warning to make that visible
+- `GET /v3/notices/{publicationNumber}` requires an API key — five path variants all
+  answered `400 Missing Authorization header` — and the `ted.europa.eu/.../xml` web
+  URLs sit behind a bot challenge. Without `TED_API_KEY` the search response is the raw
+  payload of record; parsed notices carry a `ted-search-projection` warning to say so
+- **Document links need no API key.** `document-url-lot` and `document-restricted-lot`
+  are returned by the anonymous Search API. Measured 2026-08-05: **30 of 60 notices
+  (50%)** carried a document URL, across Spanish, Polish, Latvian, Czech and Swedish
+  platforms. An earlier revision of this document claimed document links existed only
+  in the key-protected per-notice XML; that was wrong
 - Licence: EU reuse decision `2011/833/EU`
+
+**What an API key would add** (it is not needed for anything above): the full eForms
+XML per notice, and therefore the richer structured fields the German path already
+enjoys — per-lot document metadata with language and type, complete award detail, and
+the shared `eforms/parse-notice.ts` mapping instead of the search projection. Obtain one
+free from the [TED Developer Portal](https://developer.ted.europa.eu/) with an EU Login;
+one active key per account, valid two years, and it cannot be retrieved after creation.
 
 ## Notice classification
 
@@ -322,8 +334,9 @@ Alert-worthy series, per section 15.3:
 ## Environment
 
 See `.env.example`. Required: `MONGODB_URI` (replica set), `REDIS_URL`, and the
-`S3_*` variables. Optional: `TED_API_KEY` to switch TED onto official per-notice
-XML.
+`S3_*` variables. Optional: `TED_API_KEY` to switch TED onto official per-notice XML
+for richer structured fields — **not** required for document links, which the anonymous
+Search API already provides.
 
 MongoDB **must** be a replica set — transactions and change streams depend on it,
 and every worker asserts this at startup rather than failing on first commit.
@@ -365,6 +378,7 @@ Run against live sources and a real replica set on 2026-08-05.
 | cosinex resolver | Verified on 4 hosts in the family (`brandenburg`, `dtvp`, `niedersachsen`, `giz`), both URL shapes (`/notice/<id>` and `/notice/<id>/documents`) |
 | evergabe-online resolver | Verified: cookie handshake + Referer + ZIP unpack → 28 files from one tender |
 | XML entity decoding | 853/853 notices parse; 0 of 559 document URLs still contain `&amp;` |
+| TED document links | Verified live: `document-url-lot` returns URLs from the anonymous Search API — 30/60 notices (50%), no API key |
 | **Redis queue paths** | **Not yet run.** No Redis was available on this machine |
 
 The Redis-dependent code — `StreamQueue`, scheduler enqueue/dequeue, retry

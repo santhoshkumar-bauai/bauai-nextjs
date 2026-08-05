@@ -10,6 +10,7 @@ import {
 import { classifyNoticeType, isKnownNoticeType } from "../../eforms/notice-types.ts";
 import type {
   CanonicalAddress,
+  CanonicalDocument,
   CanonicalLot,
   DeadlineKind,
   DiscoveredNotice,
@@ -172,9 +173,7 @@ export function parseTedSearchHit(
       deadlineKind,
       procedureType: str(hit["procedure-type"]),
       contractNature: list(hit["contract-nature"])[0] ?? null,
-      // The Search API exposes no structured document list; the official notice
-      // URL is still recorded so users can reach the documents (§4.2).
-      documents: [],
+      documents: readDocuments(hit),
       relatedNoticeIds: readRelatedNoticeIds(hit),
       isCancelled: false,
       isAwarded,
@@ -344,6 +343,31 @@ function readLocations(hit: TedSearchHit): CanonicalAddress[] {
     locations.push(address);
   }
   return locations;
+}
+
+/**
+ * Procurement document links from `document-url-lot`.
+ *
+ * The restriction flags arrive as a parallel array, so they are matched by index and
+ * fall back to the first value when the arrays differ in length — a notice commonly
+ * states one restriction for several lot documents. Anything the source marks
+ * restricted is preserved with the flag set and is never fetched (§16).
+ */
+function readDocuments(hit: TedSearchHit): CanonicalDocument[] {
+  const urls = unique(list(hit["document-url-lot"]));
+  if (!urls.length) return [];
+
+  const restrictions = list(hit["document-restricted-lot"]);
+
+  return urls.map((url, index) => {
+    const flag = restrictions[index] ?? restrictions[0] ?? null;
+    return {
+      url,
+      kind: flag,
+      language: null,
+      restricted: flag === "restricted-document",
+    };
+  });
 }
 
 function readRelatedNoticeIds(hit: TedSearchHit): Array<{ scheme: string; value: string }> {
