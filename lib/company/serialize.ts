@@ -44,6 +44,15 @@ export function serializeCompanyFile(
 /** Client-facing shape of the company profile (import as a type only). */
 export type SerializedCompanyProfile = ReturnType<typeof serializeCompanyProfile>;
 
+/**
+ * Deep-converts a (possibly Mongoose) value to a plain, RSC-serializable clone.
+ * Hydrated documents hand back subdocuments/arrays that carry `toJSON`, which
+ * React refuses to pass to client components — the round-trip strips them.
+ */
+function plain<T>(value: T): T {
+  return value == null ? value : (JSON.parse(JSON.stringify(value)) as T);
+}
+
 export function serializeCompanyProfile(
   company: WithMeta<CompanyDocument>,
   extras: { logoUrl?: string | null } = {},
@@ -64,18 +73,18 @@ export function serializeCompanyProfile(
     vatNumber: company.vatNumber ?? null,
     registrationNumber: company.registrationNumber ?? null,
     address: company.address ?? null,
-    addressCoordinates: company.addressCoordinates ?? null,
-    services: company.services ?? [],
-    cpvCodes: company.cpvCodes ?? [],
-    trade: company.trade ?? [],
-    specializations: company.specializations ?? [],
-    certifications: company.certifications ?? [],
-    projectSizeRange: company.projectSizeRange ?? null,
+    addressCoordinates: plain(company.addressCoordinates) ?? null,
+    services: plain(company.services) ?? [],
+    cpvCodes: plain(company.cpvCodes) ?? [],
+    trade: plain(company.trade) ?? [],
+    specializations: plain(company.specializations) ?? [],
+    certifications: plain(company.certifications) ?? [],
+    projectSizeRange: plain(company.projectSizeRange) ?? null,
     employeeCount: company.employeeCount ?? null,
-    bankDetails: company.bankDetails ?? null,
-    insurances: company.insurances ?? [],
-    referenceProjects: company.referenceProjects ?? [],
-    knowledgeBase: (company.knowledgeBase ?? {}) as CompanyKnowledgeBase,
+    bankDetails: plain(company.bankDetails) ?? null,
+    insurances: plain(company.insurances) ?? [],
+    referenceProjects: plain(company.referenceProjects) ?? [],
+    knowledgeBase: (plain(company.knowledgeBase) ?? {}) as CompanyKnowledgeBase,
     createdAt: company.createdAt ? company.createdAt.toISOString() : null,
     updatedAt: company.updatedAt ? company.updatedAt.toISOString() : null,
   };
