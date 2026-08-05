@@ -126,7 +126,7 @@ services:
     restart: "no"
     environment:
       <<: *worker-env
-    command: ["node", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
     depends_on:
       mongo-init:
         condition: service_completed_successfully
@@ -138,7 +138,7 @@ services:
     <<: *worker-base
     environment:
       <<: *worker-env
-    command: ["node", "--experimental-strip-types", "workers/scheduler.mts"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/scheduler.mts"]
     depends_on:
       bootstrap:
         condition: service_completed_successfully
@@ -150,7 +150,7 @@ services:
     <<: *worker-base
     environment:
       <<: *worker-env
-    command: ["node", "--experimental-strip-types", "workers/ingest.mts"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/ingest.mts"]
     depends_on:
       bootstrap:
         condition: service_completed_successfully
@@ -162,18 +162,32 @@ services:
     <<: *worker-base
     environment:
       <<: *worker-env
-    command: ["node", "--experimental-strip-types", "workers/outbox-relay.mts"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/outbox-relay.mts"]
     depends_on:
       bootstrap:
         condition: service_completed_successfully
     ports:
       - "${OUTBOX_METRICS_PORT:-9465}:9464"
 
+  # Downloads tender documents into S3 and extracts their text. Scales horizontally:
+  # rows are claimed with a lease, so replicas never collide.
+  documents:
+    <<: *worker-base
+    environment:
+      <<: *worker-env
+    command:
+      ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/documents.mts"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    deploy:
+      replicas: ${DOCUMENT_REPLICAS:-1}
+
   status:
     <<: *worker-base
     environment:
       <<: *worker-env
-    command: ["node", "--experimental-strip-types", "workers/status-updater.mts"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/status-updater.mts"]
     depends_on:
       bootstrap:
         condition: service_completed_successfully

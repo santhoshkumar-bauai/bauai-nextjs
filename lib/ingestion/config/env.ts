@@ -91,6 +91,35 @@ export const ingestionEnv = {
     closingSoonHours: integer("INGESTION_CLOSING_SOON_HOURS", 48),
   },
 
+  documents: {
+    enabled: boolean("DOCUMENTS_ENABLED", true),
+    /** S3 prefix for retrieved tender documents, kept apart from raw notices. */
+    prefix: process.env.S3_DOCUMENT_PREFIX || "tenders/documents",
+    concurrency: integer("DOCUMENTS_CONCURRENCY", 4),
+    /**
+     * Requests per minute *per host*. Deliberately modest: the portals are small
+     * public services and an IP ban is the practical failure mode.
+     */
+    requestsPerMinutePerHost: integer("DOCUMENTS_RATE_PER_HOST", 10),
+    maxConcurrentPerHost: integer("DOCUMENTS_CONCURRENCY_PER_HOST", 2),
+    requestTimeoutMs: integer("DOCUMENTS_REQUEST_TIMEOUT_MS", 120_000),
+    maxAttempts: integer("DOCUMENTS_MAX_ATTEMPTS", 4),
+    maxFileBytes: integer("DOCUMENTS_MAX_FILE_BYTES", 100_000_000),
+    maxTotalBytesPerTender: integer("DOCUMENTS_MAX_TOTAL_BYTES", 500_000_000),
+    maxFilesPerTender: integer("DOCUMENTS_MAX_FILES", 100),
+    /** Characters of extracted text mirrored into MongoDB; the rest stays in S3 (§14). */
+    maxTextCharsInMongo: integer("DOCUMENTS_MAX_TEXT_CHARS", 100_000),
+    /**
+     * Only fetch documents for tenders still worth bidding on. Fetching every
+     * historical award's attachments across the seeded corpus would cost terabytes
+     * for no product value. Set false to widen to everything.
+     */
+    biddableOnly: boolean("DOCUMENTS_BIDDABLE_ONLY", true),
+    /** Lease TTL for a document row being worked; stale rows are reclaimed. */
+    leaseTtlMs: integer("DOCUMENTS_LEASE_TTL_MS", 600_000),
+    pollIntervalMs: integer("DOCUMENTS_POLL_INTERVAL_MS", 15_000),
+  },
+
   limits: {
     /** Caps for archive handling; both are anti-zip-bomb guards (§16). */
     maxArchiveBytes: integer("INGESTION_MAX_ARCHIVE_BYTES", 1_500_000_000),

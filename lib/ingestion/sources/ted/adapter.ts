@@ -230,7 +230,16 @@ export class TedAdapter implements TenderSourceAdapter {
       if (!from) {
         throw permanent(`TED ${cursor.mode} requires an explicit window`);
       }
-      const upperBound = to ?? addDays(from, 1);
+
+      // `windowTo` is exclusive everywhere in this codebase, but TED's
+      // `publication-date<=` is inclusive. Passing the exclusive bound straight
+      // through would re-query the first day of the next window on every month
+      // boundary — harmless thanks to idempotency, but a wasted day of paging each
+      // time. Never lets the upper bound fall below the lower one for a 1-day window.
+      const exclusiveTo = to ?? addDays(from, 1);
+      const inclusiveTo = addDays(exclusiveTo, -1);
+      const upperBound = inclusiveTo.getTime() < from.getTime() ? from : inclusiveTo;
+
       return `publication-date>=${compact(from)} AND publication-date<=${compact(upperBound)} ${sort}`;
     }
 

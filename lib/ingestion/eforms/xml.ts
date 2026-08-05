@@ -23,6 +23,49 @@ const parser = new XMLParser({
 
 export type XmlNode = Record<string, unknown>;
 
+/**
+ * The five predefined XML entities plus numeric character references.
+ *
+ * `processEntities: false` above is a security setting — it stops entity expansion
+ * attacks — but it also leaves `&amp;` undecoded in ordinary text. That silently
+ * corrupts every document URL carrying a query string
+ * (`...Servlet?function=Detail&amp;TWOID=...` is not a fetchable URL) and any title
+ * containing an ampersand.
+ *
+ * Decoding is done here instead: only the predefined entities and numeric references,
+ * which are plain characters. Entities declared in a DTD are deliberately still left
+ * alone, so nothing external is ever resolved.
+ */
+const XML_ENTITY = /&(?:#x([0-9a-fA-F]+)|#(\d+)|(amp|lt|gt|quot|apos));/g;
+
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+};
+
+export function decodeXmlEntities(value: string): string {
+  if (!value.includes("&")) return value;
+
+  // A single pass, so `&amp;lt;` decodes to the literal `&lt;` rather than to `<`.
+  return value.replace(XML_ENTITY, (match, hex, dec, name) => {
+    if (hex) return safeCodePoint(Number.parseInt(hex, 16), match);
+    if (dec) return safeCodePoint(Number.parseInt(dec, 10), match);
+    return NAMED_ENTITIES[name as string] ?? match;
+  });
+}
+
+function safeCodePoint(code: number, fallback: string): string {
+  if (!Number.isFinite(code) || code <= 0 || code > 0x10ffff) return fallback;
+  try {
+    return String.fromCodePoint(code);
+  } catch {
+    return fallback;
+  }
+}
+
 export function parseXml(body: Buffer, context: string): XmlNode {
   const text = decode(body);
   try {
@@ -109,7 +152,7 @@ export function asArray<T = unknown>(value: unknown): T[] {
 /** Text content of an element, whether it has attributes or not. */
 export function text(node: unknown): string | null {
   if (node === undefined || node === null) return null;
-  if (typeof node === "string") return node.trim() || null;
+  if (typeof node === "string") return decodeXmlEntities(node.trim()) || null;
   if (typeof node === "number" || typeof node === "boolean") return String(node);
   if (Array.isArray(node)) return text(node[0]);
   if (typeof node === "object") {
@@ -124,7 +167,8 @@ export function attribute(node: unknown, name: string): string | null {
   const target = Array.isArray(node) ? node[0] : node;
   if (!target || typeof target !== "object") return null;
   const value = (target as XmlNode)[`@${name}`];
-  return value === undefined || value === null ? null : String(value).trim() || null;
+  if (value === undefined || value === null) return null;
+  return decodeXmlEntities(String(value).trim()) || null;
 }
 
 export function textAt(node: unknown, ...localNames: string[]): string | null {

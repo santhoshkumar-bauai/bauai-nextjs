@@ -154,6 +154,120 @@ later award converge on one `tenders` document. Only strong identifiers are used
 Title, buyer, and value similarity never merge records. Separate aggregates are
 always preferred over a false merge.
 
+## Seeding historical tenders
+
+`npm run seed:tenders` loads history straight into MongoDB. It needs **no Redis and
+no Docker**: there is no discovery latency to hide and no live traffic to yield to
+during a seed, so the pipeline runs in-process. Everything after discovery is the
+same code the workers use — `processNoticeJob` and the transactional writer — so a
+seeded tender is identical to one live ingestion would have produced.
+
+```bash
+npm run seed:tenders -- --dry-run
+```
+
+```bash
+npm run seed:tenders
+```
+
+Defaults to every notice published in 2026 from every enabled source. Measured on
+2026-08-05: TED holds **543,717** notices for 2026 (~70–85k per month, August
+partial), plus roughly 2,000–5,000 per German monthly archive.
+
+| Flag | Meaning |
+| --- | --- |
+| `--year 2026` | Publication year. Default `2026` |
+| `--from` / `--to` | Explicit `YYYY-MM-DD` window; `--to` is exclusive |
+| `--limit N` | Stop after N notices. `0` or omitted means uncapped |
+| `--source DE_BUND` | One source instead of all enabled |
+| `--concurrency 16` | Notices processed in parallel. Default 8 |
+| `--rate 60` | Override requests/minute for this run only |
+| `--status` | Progress and content breakdown of an earlier run |
+| `--reset` | Clear partition progress. Does **not** delete tenders |
+| `--dry-run` | Plan and measured volumes, nothing written |
+
+**Resumable.** Work is tracked per month partition in `seed_partitions`. Ctrl-C is
+safe: a partition stopped mid-window returns to `PENDING` rather than being marked
+done, so the next run picks it up instead of silently skipping that month. A
+partition abandoned by a killed process is reclaimed after its heartbeat goes stale.
+
+**Idempotent.** Re-running seeds nothing twice — the second pass reports the same
+notices as `unchanged`.
+
+Partitions run newest-first, so an interrupted seed still leaves the most useful
+months populated.
+
+## Tender documents
+
+Tenders carry `documents[].url` pointing at a buyer portal. `tender_documents` is the
+work list, filled by the writer **inside the same transaction** that commits a tender,
+so a committed tender always has its document work recorded. Fetching happens after —
+a portal being down can never delay a tender.
+
+```bash
+npm run fetch:documents                 # seed path: drain the queue, no Redis needed
+npm run worker:documents                # live path: long-running
+npm run fetch:documents -- --status     # coverage per host
+```
+
+| Command | Purpose |
+| --- | --- |
+| `--limit N` / `--concurrency N` | Bound a run |
+| `--host <host>` | One portal, which is how a new resolver is exercised |
+| `--backfill-rows` | Rows for tenders committed before this feature existed |
+| `--retry-failed` | Requeue permanent failures after a resolver fix |
+| `npm run documents:inspect -- <url>` | Run a resolver against a live URL and print what it found |
+| `npm run documents:inspect -- --sample 12` | Same, for the top hosts in the database |
+
+### Why this needs per-platform resolvers
+
+Measured over one German publication day: **86% of document URLs are landing pages,
+not files**, across **68 distinct hosts**. But those hosts are ~10 software families —
+seven of the busiest German portals run cosinex — so resolvers are registered per
+family in `documents/registry.ts`, keyed on a URL signature rather than a host list.
+That way an unseen state portal works without a code change.
+
+Implemented: **cosinex** (matches any `…Satellite/` path — DTVP and the state
+marketplaces) and **evergabe-online** (e-Vergabe Bund). Both portals publish the whole
+tender pack as one public ZIP, which the runner unpacks and stores member by member.
+
+`documents:inspect` is the tool for adding the next family: point it at a real URL,
+see which links are picked up, adjust, repeat.
+
+### Three portal behaviours worth knowing
+
+These were each found by running the code, and are handled in `documents/http.ts`:
+
+- **Cookie handshakes.** `evergabe-online.de` redirects to `?…&cookieCheck` and
+  answers **HTTP 400** unless the session cookie it just issued comes back. Node's
+  `fetch` has no cookie jar and its automatic redirects run before anything can read
+  `Set-Cookie`, so redirects are followed manually with a per-host cookie jar.
+  Without this the whole family is unreachable.
+- **Referer-bound download links.** The same portal's Wicket callbacks 403 without a
+  `Referer`, so a resolver may attach one per file.
+- **Pages that look like files.** A link matching the download heuristics can still
+  serve HTML — an `?detail=` listing did, and 339 KB of navigation markup was archived
+  as a tender document. The runner now rejects HTML responses that lack a document
+  extension.
+
+### Scope
+
+Documents are fetched only for tenders still worth bidding on
+(`OPEN`/`CLOSING_SOON`/`UPCOMING`), since fetching every historical award's
+attachments across the seeded corpus would cost terabytes for no product value. Set
+`DOCUMENTS_BIDDABLE_ONLY=false` to widen. A tender moving `UPCOMING` → `OPEN` has its
+documents promoted automatically. Documents the source flags `restricted-document` are
+never fetched.
+
+**robots.txt is not consulted**, by explicit decision for internal use. Several
+portals (the cosinex family, subreport) send `Disallow: /`. Note that this contradicts
+§4.2 and §16 of `MONGODB_TENDER_SEEDING_AND_INGESTION_ARCHITECTURE.md`, which should be
+amended so the spec and the code agree. Per-host rate limits, backoff and circuit
+breakers are in place regardless — avoiding an IP ban is the practical goal — and the
+User-Agent is honest. UA rotation and proxy pools are deliberately not implemented.
+
+Login-gated portals are skipped and no credentials are handled anywhere.
+
 ## Operating
 
 ```bash
@@ -246,6 +360,11 @@ Run against live sources and a real replica set on 2026-08-05.
 | S3 raw store | Verified: upload, checksum, read-back, delete against the R2 bucket |
 | MongoDB indexes | Verified created, including the split geo indexes |
 | TypeScript | `npm run typecheck` clean |
+| Seeder (`seed:tenders`) | Verified live: Germany 2,090 discovered → 22 written; TED 212 → exactly 10 written; 0 failed; re-run reported 10 unchanged; truncated partitions correctly returned to `PENDING` |
+| Document retrieval | Verified live end to end: 5 tenders resolved → **85 files, 22.7 MiB in R2, 73 with extracted text**, 0 failures. Real packs — *Aufforderung zur Angebotsabgabe*, *Leistungsbeschreibung*, *Vertragsentwurf* — up to 49k characters of text per PDF |
+| cosinex resolver | Verified on 4 hosts in the family (`brandenburg`, `dtvp`, `niedersachsen`, `giz`), both URL shapes (`/notice/<id>` and `/notice/<id>/documents`) |
+| evergabe-online resolver | Verified: cookie handshake + Referer + ZIP unpack → 28 files from one tender |
+| XML entity decoding | 853/853 notices parse; 0 of 559 document URLs still contain `&amp;` |
 | **Redis queue paths** | **Not yet run.** No Redis was available on this machine |
 
 The Redis-dependent code — `StreamQueue`, scheduler enqueue/dequeue, retry

@@ -1,5 +1,6 @@
 import { getIngestionDb } from "./client.ts";
 import { collectionNames, getCollections } from "./collections.ts";
+import { ensureDocumentIndexes } from "../documents/records.ts";
 import { logger } from "../observability/logger.ts";
 
 const log = logger.child("db.indexes");
@@ -85,6 +86,8 @@ export async function ensureIngestionIndexes(): Promise<void> {
     { key: { source: 1, mode: 1 }, name: "ix_source_mode" },
     { key: { leaseUntil: 1 }, name: "ix_lease_until" },
   ]);
+
+  await ensureDocumentIndexes();
 
   log.info("ingestion indexes ensured");
 }

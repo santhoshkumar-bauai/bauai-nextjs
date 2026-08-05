@@ -2,6 +2,7 @@ import { ObjectId, type ClientSession } from "mongodb";
 
 import { getIngestionClient } from "../db/client.ts";
 import { getCollections } from "../db/collections.ts";
+import { upsertDocumentRecords } from "../documents/records.ts";
 import { classifyMongoError, isDuplicateKeyError } from "../http/errors.ts";
 import { logger } from "../observability/logger.ts";
 import { metrics } from "../observability/metrics.ts";
@@ -225,6 +226,20 @@ async function runTransaction(
         },
         { session },
       );
+
+      // Document work is recorded in the same transaction, so a committed tender can
+      // never exist without its document rows queued. Fetching happens later, off the
+      // critical path, where a portal being down cannot delay the tender.
+      await upsertDocumentRecords(session, {
+        tenderId,
+        canonicalKey: projection.canonicalKey,
+        source: notice.source.code,
+        sourceNoticeId: notice.source.noticeId,
+        documents: projection.document.documents,
+        status: projection.document.status,
+        isVisible: projection.document.isVisible,
+        now,
+      });
 
       result = {
         outcome: inserted ? "INSERTED" : "UPDATED",
