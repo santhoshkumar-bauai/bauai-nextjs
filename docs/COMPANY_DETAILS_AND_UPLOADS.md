@@ -127,9 +127,5 @@ placeholders (e.g. "GmbH", "€5,000,000") stay in the config as `sample` values
 
 ## Not included / next steps
 
-- The legacy static settings panel still lives in
-  `components/settings/settings-workspace.tsx` and the `[section]` route's
-  settings branch; both are now shadowed by the `/settings` route tree and can
-  be deleted.
 - Out-of-band sweeping of orphan S3 objects from abandoned uploads (upload URLs
   are minted without a DB row, so an abandoned upload leaves only an S3 object).
