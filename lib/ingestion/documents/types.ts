@@ -136,6 +136,47 @@ export interface DocumentFetcher {
     url: string,
     signal?: AbortSignal,
   ): Promise<{ status: number; mimeType: string; byteLength: number | null }>;
+  /**
+   * Submits a form and returns the resulting page. Optional because most portals hand
+   * out document links on a GET page; a few (e.g. Staatsanzeiger's "Anonym als Zip"
+   * choice) require a POST to reveal the archive URL. Shares the per-host cookie jar,
+   * so a session established by a preceding `html()` GET carries into the POST.
+   */
+  post?(
+    url: string,
+    form: Record<string, string> | string,
+    signal?: AbortSignal,
+  ): Promise<{ body: string; finalUrl: string; status: number }>;
+  /**
+   * Renders a URL in a real (headless) browser and returns the resulting DOM. Optional:
+   * only single-page-app portals that build their document list client-side need it, and
+   * an environment without the browser binary omits it. Resolvers call `http.render?.(…)`
+   * and fall back to a skip when it is absent.
+   */
+  render?(
+    url: string,
+    options?: {
+      waitUntil?: "load" | "domcontentloaded" | "networkidle";
+      waitForSelector?: string;
+      signal?: AbortSignal;
+    },
+  ): Promise<{ body: string; finalUrl: string }>;
+  /**
+   * Renders a URL and returns the bodies of the network responses matching `urlPattern`
+   * — the documents API a portal's SPA fetches — so a resolver can read the listing the
+   * browser already fetched with the live session instead of re-deriving the request.
+   */
+  capture?(
+    url: string,
+    options: {
+      urlPattern: RegExp;
+      waitUntil?: "load" | "domcontentloaded" | "networkidle";
+      signal?: AbortSignal;
+    },
+  ): Promise<{
+    finalUrl: string;
+    responses: Array<{ url: string; status: number; contentType: string; body: string }>;
+  }>;
 }
 
 export interface DocumentResolver {

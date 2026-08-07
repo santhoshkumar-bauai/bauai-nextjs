@@ -4,6 +4,13 @@ import { parseRetryAfter } from "../http/fetch-client.ts";
 import { RateLimiter } from "../http/rate-limiter.ts";
 import { logger } from "../observability/logger.ts";
 import { metrics } from "../observability/metrics.ts";
+import {
+  browserAvailable,
+  capturePage,
+  renderPage,
+  type CaptureOptions,
+  type RenderOptions,
+} from "./browser.ts";
 import type { DocumentFetcher } from "./types.ts";
 
 const log = logger.child("documents.http");
@@ -108,8 +115,11 @@ async function fetchFollowing(
     if (next === currentUrl) return response;
     currentUrl = next;
 
-    // A 303, or a 301/302 after POST, must continue as GET. Only GET and HEAD are
-    // issued here, so the method is simply preserved.
+    // A 303, or a 301/302 after POST, must continue as GET without the body. GET and
+    // HEAD are unaffected; a POST that redirects is downgraded here.
+    if (init.method === "POST") {
+      init = { ...init, method: "GET", body: undefined };
+    }
   }
 
   throw transientHttp(`${initialUrl} exceeded ${MAX_REDIRECTS} redirects`, 310);
@@ -147,6 +157,53 @@ export interface DownloadResult {
 }
 
 export class DocumentHttpClient implements DocumentFetcher {
+  /**
+   * Present only when the headless browser is available, so `http.render?.(…)` in a
+   * resolver is a genuine capability check rather than an always-true one.
+   */
+  render?: DocumentFetcher["render"];
+  capture?: DocumentFetcher["capture"];
+
+  constructor() {
+    if (browserAvailable()) {
+      this.render = (url, options) => this.renderUnderLimit(url, options);
+      this.capture = (url, options) => this.captureUnderLimit(url, options);
+    }
+  }
+
+  /** Runs a browser navigation under the same per-host slot as an HTTP request. */
+  private async renderUnderLimit(
+    url: string,
+    options?: RenderOptions,
+  ): Promise<{ body: string; finalUrl: string }> {
+    return this.withHostSlot(url, options?.signal, () => renderPage(url, options));
+  }
+
+  private async captureUnderLimit(
+    url: string,
+    options: CaptureOptions,
+  ): Promise<Awaited<ReturnType<typeof capturePage>>> {
+    return this.withHostSlot(url, options.signal, () => capturePage(url, options));
+  }
+
+  private async withHostSlot<T>(
+    url: string,
+    signal: AbortSignal | undefined,
+    run: () => Promise<T>,
+  ): Promise<T> {
+    const host = new URL(url).host;
+    const state = hostState(host);
+    if (state.blockedUntil > Date.now()) {
+      throw rateLimited(`${host} is backed off`, state.blockedUntil - Date.now());
+    }
+    const release = await state.limiter.acquire(signal);
+    try {
+      return await run();
+    } finally {
+      release();
+    }
+  }
+
   /** Fetches a page as text, following redirects. */
   async html(url: string, signal?: AbortSignal): Promise<{ body: string; finalUrl: string }> {
     const response = await this.request(url, "GET", signal, {
@@ -254,11 +311,32 @@ export class DocumentHttpClient implements DocumentFetcher {
     };
   }
 
+  /**
+   * Submits a form (default `application/x-www-form-urlencoded`) and returns the page
+   * it produces. Uses the per-host cookie jar, so a session opened by a prior `html()`
+   * GET is present on the POST — which is how a two-step "choose how to download" flow
+   * (Staatsanzeiger) reaches the archive link.
+   */
+  async post(
+    url: string,
+    form: Record<string, string> | string,
+    signal?: AbortSignal,
+  ): Promise<{ body: string; finalUrl: string; status: number }> {
+    const body =
+      typeof form === "string" ? form : new URLSearchParams(form).toString();
+    const response = await this.request(url, "POST", signal, {
+      "content-type": "application/x-www-form-urlencoded",
+      accept: "text/html,application/xhtml+xml",
+    }, body);
+    return { body: await response.text(), finalUrl: response.url, status: response.status };
+  }
+
   private async request(
     url: string,
-    method: "GET" | "HEAD",
+    method: "GET" | "HEAD" | "POST",
     signal: AbortSignal | undefined,
     extraHeaders: Record<string, string>,
+    body?: string,
   ): Promise<Response> {
     const host = new URL(url).host;
     const state = hostState(host);
@@ -281,7 +359,7 @@ export class DocumentHttpClient implements DocumentFetcher {
     try {
       const response = await fetchFollowing(
         url,
-        { method, signal: controller.signal },
+        { method, signal: controller.signal, ...(body !== undefined ? { body } : {}) },
         {
           "user-agent": USER_AGENT,
           "accept-language": "de-DE,de;q=0.9,en;q=0.8",

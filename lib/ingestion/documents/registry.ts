@@ -1,6 +1,10 @@
+import { aumassResolver } from "./resolvers/aumass.ts";
 import { cosinexResolver } from "./resolvers/cosinex.ts";
 import { directFileResolver } from "./resolvers/direct-file.ts";
 import { evergabeOnlineResolver } from "./resolvers/evergabe-online.ts";
+import { netserverResolver } from "./resolvers/netserver.ts";
+import { ribMeinauftragResolver } from "./resolvers/rib-meinauftrag.ts";
+import { staatsanzeigerResolver } from "./resolvers/staatsanzeiger.ts";
 import type { DocumentResolver } from "./types.ts";
 
 /**
@@ -15,6 +19,10 @@ import type { DocumentResolver } from "./types.ts";
 const resolvers: DocumentResolver[] = [
   cosinexResolver,
   evergabeOnlineResolver,
+  netserverResolver,
+  aumassResolver,
+  staatsanzeigerResolver,
+  ribMeinauftragResolver,
   // Platform resolvers are appended here as each family is implemented.
 ];
 

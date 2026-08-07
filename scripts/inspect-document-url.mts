@@ -48,6 +48,8 @@ if (sampleCount) {
   await inspect(target);
 }
 
+const { closeBrowser } = await import("../lib/ingestion/documents/browser.ts");
+await closeBrowser();
 finishProcess(0);
 
 async function inspect(target: string): Promise<void> {
