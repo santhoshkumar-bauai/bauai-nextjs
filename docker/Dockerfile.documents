@@ -1,0 +1,54 @@
+# Documents worker WITH a headless browser.
+#
+# Same code as Dockerfile.worker, but on a Debian base with Chromium installed, so the
+# browser-based resolvers (rib-meinauftrag, and any future SPA portals) work. Kept
+# separate because Chromium + its libraries roughly triple the image size — the other
+# workers do not need it.
+#
+# Node 24 is required for `--experimental-strip-types`; we install Node's matching
+# Chromium via Playwright rather than using the Playwright base image (which pins an
+# older Node). The browser version always matches the `playwright` package in the lock.
+
+FROM node:24-bookworm-slim AS deps
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+# Skip Playwright's own postinstall browser download here; the runtime stage installs
+# Chromium to a shared path instead.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+RUN npm ci --omit=dev && npm cache clean --force
+
+FROM node:24-bookworm-slim AS runtime
+
+ENV NODE_ENV=production \
+    NODE_OPTIONS=--max-old-space-size=1536 \
+    INGESTION_METRICS_PORT=9464 \
+    DOCUMENTS_BROWSER_ENABLED=true \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends dumb-init \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+COPY lib/ingestion ./lib/ingestion
+COPY workers ./workers
+COPY scripts/fetch-documents.mts scripts/inspect-document-url.mts ./scripts/
+
+# Install Chromium + its OS dependencies to the shared PLAYWRIGHT_BROWSERS_PATH, then
+# make it world-readable so the unprivileged `node` user can launch it at runtime.
+RUN npx --yes playwright install --with-deps chromium \
+    && chmod -R a+rX "$PLAYWRIGHT_BROWSERS_PATH"
+
+USER node
+
+EXPOSE 9464
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.INGESTION_METRICS_PORT||9464)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/documents.mts"]

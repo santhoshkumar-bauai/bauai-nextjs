@@ -1,0 +1,19 @@
+# Overlay: run the `documents` worker on the Chromium-enabled image so the
+# headless resolvers (rib-meinauftrag, and future SPA portals) work.
+#
+# Use it ALONGSIDE the base file — the second -f wins for the documents service:
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.documents.yml up -d
+#
+# The base file's `documents` service still supplies command, env_file, restart, etc.;
+# this overlay only swaps the image, forces the browser on, and gives Chromium enough
+# shared memory. Leave DOCUMENTS_BROWSER_ENABLED=false in .env for every other worker —
+# it is overridden to true here only.
+
+services:
+  documents:
+    image: ghcr.io/bau-ai/bauai-nextjs/tender-ingestion-documents:${IMAGE_TAG:-latest}
+    environment:
+      DOCUMENTS_BROWSER_ENABLED: "true"
+    # Chromium maps large pages through /dev/shm; the 64 MB Docker default is too small.
+    shm_size: "1gb"

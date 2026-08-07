@@ -38,7 +38,12 @@ async function getContext(): Promise<BrowserContext> {
   if (!browserPromise) {
     const { chromium } = await import("playwright");
     log.info("launching headless chromium");
-    browserPromise = chromium.launch({ headless: true });
+    browserPromise = chromium.launch({
+      headless: true,
+      // Container-safe flags: the Chromium sandbox needs a SUID helper we do not ship,
+      // and the default 64 MB /dev/shm is too small for large pages under Docker.
+      args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    });
   }
   if (!contextPromise) {
     contextPromise = browserPromise.then((browser) =>
