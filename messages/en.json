@@ -539,7 +539,16 @@
       "loading": "Loading map…",
       "missingKey": "Map is unavailable — the Google Maps key is not configured.",
       "noPoints": "No tenders could be placed on the map yet.",
-      "geocoding": "Locations are resolved on demand and cached, so the map fills in as you browse."
+      "geocoding": "Locations are resolved on demand and cached, so the map fills in as you browse.",
+      "you": "Your company",
+      "viewDetails": "View details",
+      "legend": {
+        "title": "Fit",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "company": "Your company"
+      }
     },
     "why": {
       "label": "Ranked by",
