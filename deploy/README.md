@@ -1,8 +1,15 @@
 # Ingestion deployment (GCP)
 
+> **Two paths.** This file is the **VM / docker-compose** path — the full always-on
+> pipeline (scheduler + ingest + outbox + documents) with Redis. For the **cheapest**
+> setup — scheduled Cloud Run Jobs, no Redis, nothing running while idle — see
+> [`README-cloudrun.md`](README-cloudrun.md). The Cloud Run path is the better fit for
+> "seed once, then a daily job that catches new tenders."
+
 Runs the tender-ingestion workers from the **prebuilt GHCR image** (built by
 [`.github/workflows/build-ingestion-image.yml`](../.github/workflows/build-ingestion-image.yml))
-against your **existing MongoDB** + a **Memorystore Redis**, storing files in **GCS**.
+against your **existing MongoDB** + a **Memorystore Redis** (or the local Redis overlay,
+[`docker-compose.redis.yml`](docker-compose.redis.yml)), storing files in **GCS**.
 
 ```
 deploy/

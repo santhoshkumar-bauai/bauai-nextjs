@@ -256,6 +256,33 @@ export async function resetPartitions(source?: TenderSourceCode): Promise<number
 }
 
 /**
+ * Reopens recently-completed partitions so a scheduled run re-scans them.
+ *
+ * A `DONE` month is skipped forever by `claimPartition`, which is correct for a
+ * historical backfill but wrong for the daily "catch new notices" job: the current
+ * month keeps gaining notices after it was first completed. This flips the partitions
+ * overlapping `[from, ∞)` back to `PENDING` so the next run re-discovers them.
+ * Re-scanning is safe — the writer upserts by version, so an unchanged notice is a
+ * no-op and a new one is inserted; nothing is duplicated. Counters are left intact and
+ * overwritten when the partition completes again.
+ */
+export async function reopenPartitionsSince(
+  from: Date,
+  source?: TenderSourceCode,
+): Promise<number> {
+  const store = await partitionStore();
+  const result = await store.updateMany(
+    {
+      status: { $in: ["DONE", "FAILED"] },
+      windowTo: { $gt: from },
+      ...(source ? { source } : {}),
+    },
+    { $set: { status: "PENDING", worker: null, heartbeatAt: null } },
+  );
+  return result.modifiedCount;
+}
+
+/**
  * Releases partitions left `RUNNING` by a process that died.
  *
  * Selected by heartbeat age rather than worker identity, because a restarted

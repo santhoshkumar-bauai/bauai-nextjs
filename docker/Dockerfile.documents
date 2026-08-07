@@ -16,7 +16,9 @@ COPY package.json package-lock.json ./
 # Skip Playwright's own postinstall browser download here; the runtime stage installs
 # Chromium to a shared path instead.
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-RUN npm ci --omit=dev && npm cache clean --force
+# `npm install` (not `npm ci`): the Windows-generated lock omits Linux-native optional
+# binaries, which makes strict `npm ci` fail in this image.
+RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
 FROM node:24-bookworm-slim AS runtime
 

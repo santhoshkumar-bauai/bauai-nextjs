@@ -1,0 +1,18 @@
+# Builds the worker image straight to Artifact Registry (Cloud Run cannot pull GHCR).
+#
+#   gcloud builds submit --config=deploy/cloudbuild.yaml \
+#     --substitutions=_IMAGE=europe-west3-docker.pkg.dev/quick-elixir-458221-n0/bauai/tender-ingestion:latest .
+#
+# Uses docker/Dockerfile.worker (alpine, no browser) — enough for bootstrap, seed and
+# fetch-documents. Build with docker/Dockerfile.documents instead only if you need the
+# headless rib-meinauftrag resolver (bigger image, more memory per job).
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "docker/Dockerfile.worker", "-t", "${_IMAGE}", "."]
+
+images:
+  - "${_IMAGE}"
+
+options:
+  machineType: E2_HIGHCPU_8

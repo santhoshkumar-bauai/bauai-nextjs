@@ -6,6 +6,7 @@
  * stopped. Idempotent: re-running never creates a duplicate tender.
  *
  *   npm run seed:tenders                        # all of 2026, all sources
+ *   npm run seed:tenders -- --refresh 45        # daily: re-scan the last 45 days for new notices
  *   npm run seed:tenders -- --dry-run           # show the plan and real volumes
  *   npm run seed:tenders -- --limit 2026        # stop after 2026 notices
  *   npm run seed:tenders -- --source DE_BUND    # one source
@@ -62,6 +63,7 @@ const {
   partitionProgress,
   planMonthPartitions,
   resetPartitions,
+  reopenPartitionsSince,
   partitionStore,
 } = await import("../lib/ingestion/seed/partitions.ts");
 const { finishProcess } = await import("../lib/ingestion/utils/exit.ts");
@@ -71,7 +73,15 @@ const { finishProcess } = await import("../lib/ingestion/utils/exit.ts");
 /* -------------------------------------------------------------------------- */
 
 const year = Number.parseInt(flag("year") ?? "2026", 10);
-const from = parseDate(flag("from"), new Date(Date.UTC(year, 0, 1)));
+// `--refresh <days>` is the daily "catch new notices" mode: it re-scans a trailing
+// window instead of a fixed year. It overrides `--from`/`--year` to now-minus-N-days,
+// and reopens the completed partitions in that window so they are re-discovered (see
+// the refresh step in `seed()`).
+const refreshDays = flag("refresh") ? Number.parseInt(flag("refresh")!, 10) : null;
+const from =
+  refreshDays !== null
+    ? new Date(Date.now() - refreshDays * 86_400_000)
+    : parseDate(flag("from"), new Date(Date.UTC(year, 0, 1)));
 // Exclusive upper bound. Defaults to tomorrow so today's partial month is included.
 const to = parseDate(
   flag("to"),
@@ -163,6 +173,15 @@ async function seed(): Promise<void> {
   if (dryRun) {
     console.log("\nDry run; nothing written.");
     return;
+  }
+
+  // Daily mode: reopen the completed partitions inside the trailing window so the run
+  // re-discovers notices published since they were last marked DONE.
+  if (refreshDays !== null) {
+    const reopened = await reopenPartitionsSince(from, sourceArg);
+    console.log(
+      `  refresh     reopened ${reopened} partition(s) since ${from.toISOString().slice(0, 10)}`,
+    );
   }
 
   const controller = new AbortController();
