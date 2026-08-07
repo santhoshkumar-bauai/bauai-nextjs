@@ -493,5 +493,99 @@
       "title": "Company logo",
       "description": "PNG, JPG, WebP or SVG. Shown on your profile and submissions."
     }
+  },
+  "Tenders": {
+    "title": "Relevant tenders",
+    "subtitle": "Opportunities matched to your company's CPV codes and region.",
+    "views": { "list": "List", "map": "Map" },
+    "filters": {
+      "searchPlaceholder": "Search title or description",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "country": "Country",
+      "clear": "Clear filters"
+    },
+    "status": {
+      "OPEN": "Open",
+      "CLOSING_SOON": "Closing soon",
+      "UPCOMING": "Upcoming"
+    },
+    "card": {
+      "deadline": "Deadline",
+      "noDeadline": "No deadline",
+      "published": "Published",
+      "value": "Estimated value",
+      "notProvided": "Not provided",
+      "match": "{percent}% match",
+      "cpvMore": "+{count} more",
+      "viewSource": "View source",
+      "breakdown": { "cpv": "CPV fit", "geo": "Location", "time": "Recency" }
+    },
+    "states": {
+      "loading": "Loading tenders…",
+      "emptyTitle": "No matching tenders",
+      "emptyDescription": "Try widening your filters or updating your company's CPV codes.",
+      "errorTitle": "Couldn't load tenders",
+      "errorDescription": "Something went wrong. Please try again.",
+      "retry": "Retry"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "showing": "Showing {from}–{to} of {total}"
+    },
+    "map": {
+      "attribution": "Map data © Google",
+      "loading": "Loading map…",
+      "missingKey": "Map is unavailable — the Google Maps key is not configured.",
+      "noPoints": "No tenders could be placed on the map yet.",
+      "geocoding": "Locations are resolved on demand and cached, so the map fills in as you browse."
+    },
+    "why": {
+      "label": "Ranked by",
+      "cpv": "CPV codes",
+      "region": "Region"
+    },
+    "detail": {
+      "loading": "Loading…",
+      "tabs": {
+        "about": "About",
+        "documents": "Documents",
+        "schedule": "Schedule",
+        "ai": "AI fit"
+      },
+      "status": "Status",
+      "value": "Estimated value",
+      "procedure": "Procedure",
+      "contractNature": "Contract type",
+      "cpv": "CPV codes",
+      "description": "Description",
+      "buyer": "Contracting authority",
+      "website": "Website",
+      "document": "Document",
+      "noDocuments": "No documents were published for this tender.",
+      "restricted": "Restricted",
+      "sourcePortal": "Source portal",
+      "publication": "Published",
+      "lots": "Lots"
+    },
+    "recommendation": {
+      "intro": "Generate an AI assessment of how well this tender fits your company profile.",
+      "generate": "Generate recommendation",
+      "analyzing": "Analyzing fit…",
+      "error": "Couldn't generate a recommendation.",
+      "retry": "Try again",
+      "fitScore": "Fit score",
+      "strengths": "Strengths",
+      "concerns": "Concerns",
+      "actions": "Suggested actions",
+      "disclaimer": "AI-generated guidance — verify against the official tender documents.",
+      "verdict": {
+        "STRONG_FIT": "Strong fit",
+        "POSSIBLE_FIT": "Possible fit",
+        "WEAK_FIT": "Weak fit",
+        "NOT_RECOMMENDED": "Not recommended"
+      }
+    }
   }
 }

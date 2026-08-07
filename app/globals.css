@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+@keyframes tender-tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @theme {
   --color-background: #ffffff;
   --color-foreground: #191724;
@@ -8,6 +19,8 @@
   --color-border: #e7e1eb;
   --color-input: #e4e0e7;
   --color-ring: #7430c3;
+  --color-muted: #f3f1f6;
   --color-muted-foreground: #8d8797;
+  --color-card: #ffffff;
   --font-sans: "Inter Variable", Inter, Arial, sans-serif;
 }
