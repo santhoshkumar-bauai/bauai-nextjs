@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { RelevantTenders } from "@/components/tenders/relevant-tenders";
@@ -37,7 +38,11 @@ export default async function TendersPage() {
       fullName={fullName}
       email={session.user.email}
       dateLabel=""
-      workspaceContent={<RelevantTenders />}
+      workspaceContent={
+        <Suspense>
+          <RelevantTenders />
+        </Suspense>
+      }
       copy={copy}
     />
   );

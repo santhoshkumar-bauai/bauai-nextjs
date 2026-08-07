@@ -503,7 +503,65 @@
       "status": "Status",
       "allStatuses": "Alle Status",
       "country": "Land",
-      "clear": "Filter zurücksetzen"
+      "clear": "Filter zurücksetzen",
+      "button": "Filter",
+      "clearAll": "Alle zurücksetzen",
+      "sections": {
+        "contract": "Auftragsart",
+        "sector": "Branche",
+        "region": "Region",
+        "deadline": "Frist",
+        "match": "Min. Übereinstimmung"
+      },
+      "deadlineAny": "Beliebig",
+      "deadlineDays": "≤ {days}T",
+      "matchValue": "{percent}%+"
+    },
+    "contract": {
+      "works": "Bauleistungen",
+      "services": "Dienstleistungen",
+      "supplies": "Lieferungen"
+    },
+    "sector": {
+      "45": "Bau",
+      "71": "Architektur & Ingenieurwesen",
+      "72": "IT-Dienstleistungen",
+      "48": "Software",
+      "90": "Umwelt",
+      "79": "Unternehmensdienste",
+      "44": "Materialien",
+      "43": "Maschinen",
+      "34": "Transport",
+      "31": "Elektrotechnik",
+      "39": "Möbel",
+      "77": "Garten- & Landschaftsbau"
+    },
+    "region": {
+      "DE1": "Baden-Württemberg",
+      "DE2": "Bayern",
+      "DE3": "Berlin",
+      "DE4": "Brandenburg",
+      "DE5": "Bremen",
+      "DE6": "Hamburg",
+      "DE7": "Hessen",
+      "DE8": "Mecklenburg-Vorpommern",
+      "DE9": "Niedersachsen",
+      "DEA": "Nordrhein-Westfalen",
+      "DEB": "Rheinland-Pfalz",
+      "DEC": "Saarland",
+      "DED": "Sachsen",
+      "DEE": "Sachsen-Anhalt",
+      "DEF": "Schleswig-Holstein",
+      "DEG": "Thüringen"
+    },
+    "saved": {
+      "button": "Gespeichert",
+      "title": "Gespeicherte Filter",
+      "empty": "Noch keine Voreinstellungen gespeichert.",
+      "save": "Aktuelle speichern",
+      "namePlaceholder": "Name der Voreinstellung",
+      "delete": "Löschen",
+      "saving": "Wird gespeichert…"
     },
     "status": {
       "OPEN": "Offen",

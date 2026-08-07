@@ -3,25 +3,21 @@ import { NextResponse } from "next/server";
 import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
 import type { TenderDocument } from "@/lib/ingestion/types";
+import { parseTenderFilters } from "@/lib/tenders/filters";
 import { resolveCompanyNuts } from "@/lib/tenders/nuts";
 import {
   buildRelevancePipeline,
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
-  OPPORTUNITY_STATUSES,
   RANK_CAP,
   type RankedTenderRaw,
 } from "@/lib/tenders/relevance";
 import { serializeTender } from "@/lib/tenders/serialize";
 
 /**
- * Ranked, most-relevant-first tenders for the authenticated company.
- *
- * Scores on CPV/sector fit + NUTS-tier proximity + recency/urgency. Uses only
- * data already present in the corpus — no geocoding, no Google calls (that lives
- * in the sibling `/geo` route for the map). Route Handlers are uncached by
- * default in this Next.js build, and the response is per-company, so no cache
- * opt-out export is needed.
+ * Ranked, most-relevant-first tenders for the authenticated company, with hard
+ * filters (status, contract type, sector, region, deadline, min match). Uses
+ * only data already present in the corpus — no geocoding, no Google calls.
  */
 
 function parseList(value: string | null): string[] {
@@ -48,12 +44,7 @@ export async function GET(request: Request) {
     ),
   );
   const countries = parseList(searchParams.get("country")).map((c) => c.toUpperCase());
-  const statuses = parseList(searchParams.get("status"))
-    .map((s) => s.toUpperCase())
-    .filter((s) => (OPPORTUNITY_STATUSES as readonly string[]).includes(s));
-  const q = searchParams.get("q")?.trim().slice(0, 120) || undefined;
-  const minScoreParam = searchParams.get("minScore");
-  const minScore = minScoreParam != null ? Number.parseFloat(minScoreParam) : undefined;
+  const filters = parseTenderFilters(searchParams);
 
   const company = context.company;
   const nuts = resolveCompanyNuts({
@@ -72,9 +63,15 @@ export async function GET(request: Request) {
       now: new Date(),
       page,
       pageSize,
-      statuses: statuses.length ? statuses : undefined,
-      q,
-      minScore: Number.isFinite(minScore) ? minScore : undefined,
+      statuses: filters.statuses.length ? filters.statuses : undefined,
+      q: filters.q,
+      minScore: filters.minScore,
+      contractNatures: filters.contractNatures.length
+        ? filters.contractNatures
+        : undefined,
+      sectors: filters.sectors.length ? filters.sectors : undefined,
+      regions: filters.regions.length ? filters.regions : undefined,
+      deadlineInDays: filters.deadlineInDays,
     },
   );
 

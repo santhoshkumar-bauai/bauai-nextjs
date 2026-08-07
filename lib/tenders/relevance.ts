@@ -117,6 +117,14 @@ export interface RelevanceOptions {
   /** Drop results below this composite score. */
   minScore?: number;
   rankCap?: number;
+  /** Hard filter: contract nature (works/services/supplies). */
+  contractNatures?: string[];
+  /** Hard filter: CPV division prefixes, e.g. ["45","71"]. */
+  sectors?: string[];
+  /** Hard filter: NUTS prefixes, e.g. ["DE3","DEA"]. */
+  regions?: string[];
+  /** Hard filter: only tenders with a deadline within this many days. */
+  deadlineInDays?: number;
 }
 
 export interface BuiltRelevanceQuery {
@@ -160,29 +168,55 @@ export function buildRelevancePipeline(
   if (familyRegex) recall.push({ cpvCodes: { $regex: familyRegex } });
   if (nutsCodes.length) recall.push({ regions: { $in: nutsCodes } });
 
-  const match: Record<string, unknown> = {
-    isVisible: true,
-    status: { $in: statuses },
-    businessCategory: { $in: [...OPPORTUNITY_CATEGORIES] },
-    countries: { $in: countries },
-    $and: [
-      { $or: [{ submissionDeadline: null }, { submissionDeadline: { $gte: opts.now } }] },
-    ],
-  };
-  // Only apply the recall $or when we have at least one relevance signal;
-  // otherwise (bare company profile) fall back to all national opportunities.
-  if (recall.length) {
-    (match.$and as Record<string, unknown>[]).push({ $or: recall });
+  // When the user drives with explicit content filters they are exploring beyond
+  // their own profile, so the company-relevance recall must not narrow them out.
+  const explicitContent =
+    Boolean(opts.q) ||
+    (opts.contractNatures?.length ?? 0) > 0 ||
+    (opts.sectors?.length ?? 0) > 0 ||
+    (opts.regions?.length ?? 0) > 0;
+
+  const and: Record<string, unknown>[] = [
+    { $or: [{ submissionDeadline: null }, { submissionDeadline: { $gte: opts.now } }] },
+  ];
+
+  // Recall only when there's no explicit filter; otherwise (bare profile) it
+  // keeps the default "relevant to me" set from scoring the whole corpus.
+  if (!explicitContent && recall.length) {
+    and.push({ $or: recall });
+  }
+  if (opts.contractNatures?.length) {
+    and.push({ contractNature: { $in: opts.contractNatures } });
+  }
+  if (opts.sectors?.length) {
+    const safe = opts.sectors.filter((s) => /^[0-9]{2}$/.test(s));
+    if (safe.length) and.push({ cpvCodes: { $regex: `^(${safe.join("|")})` } });
+  }
+  if (opts.regions?.length) {
+    const safe = opts.regions.filter((r) => /^DE[0-9A-Z]{0,2}$/.test(r));
+    if (safe.length) and.push({ regions: { $regex: `^(${safe.join("|")})` } });
+  }
+  if (opts.deadlineInDays) {
+    const cutoff = new Date(opts.now.getTime() + opts.deadlineInDays * MS_PER_DAY);
+    and.push({ submissionDeadline: { $gte: opts.now, $lte: cutoff } });
   }
   if (opts.q && opts.q.trim()) {
     const rx = escapeRegex(opts.q.trim());
-    (match.$and as Record<string, unknown>[]).push({
+    and.push({
       $or: [
         { title: { $regex: rx, $options: "i" } },
         { description: { $regex: rx, $options: "i" } },
       ],
     });
   }
+
+  const match: Record<string, unknown> = {
+    isVisible: true,
+    status: { $in: statuses },
+    businessCategory: { $in: [...OPPORTUNITY_CATEGORIES] },
+    countries: { $in: countries },
+    $and: and,
+  };
 
   // --- Score expressions -----------------------------------------------------
   const cpvScoreExpr = {
@@ -371,6 +405,10 @@ export interface GeoQueryOptions {
   q?: string;
   minScore?: number;
   markerCap?: number;
+  contractNatures?: string[];
+  sectors?: string[];
+  regions?: string[];
+  deadlineInDays?: number;
 }
 
 /** Projected shape for map markers (pre-geocode fill). */
@@ -406,6 +444,10 @@ export function buildGeoPipeline(
     q: opts.q,
     minScore: opts.minScore,
     rankCap: markerCap,
+    contractNatures: opts.contractNatures,
+    sectors: opts.sectors,
+    regions: opts.regions,
+    deadlineInDays: opts.deadlineInDays,
   });
   // pipeline ends with [$match, $addFields×2, (minScore?), $sort, $limit, $facet].
   // Drop the $facet and project marker fields from the already-scored top set.

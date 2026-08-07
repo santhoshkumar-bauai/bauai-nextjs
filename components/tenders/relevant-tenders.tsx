@@ -1,26 +1,25 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, LayoutList, Loader2, Map as MapIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { SavedFilters } from "@/components/tenders/saved-filters";
 import { TenderCard } from "@/components/tenders/tender-card";
 import { TenderDetailDialog } from "@/components/tenders/tender-detail-dialog";
+import { TenderFilterBar } from "@/components/tenders/tender-filters";
 import {
-  TenderFilters,
-  type StatusOption,
-} from "@/components/tenders/tender-filters";
+  parseTenderFilters,
+  tenderFiltersToParams,
+  type TenderFilters,
+} from "@/lib/tenders/filters";
 import type { NutsResolution } from "@/lib/tenders/nuts";
 import type { SerializedTender } from "@/lib/tenders/serialize";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
-
-export interface TenderFilterState {
-  q: string;
-  statuses: StatusOption[];
-}
 
 const TenderMap = dynamic(
   () => import("@/components/tenders/tender-map").then((m) => m.TenderMap),
@@ -52,11 +51,23 @@ function MapPlaceholder() {
 
 export function RelevantTenders() {
   const t = useTranslations("Tenders");
-  const [view, setView] = useState<"list" | "map">("list");
-  const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
-  const [statuses, setStatuses] = useState<StatusOption[]>([]);
-  const [page, setPage] = useState(0);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // Initialise from the URL so filtered views are shareable / bookmarkable.
+  const [view, setView] = useState<"list" | "map">(() =>
+    searchParams.get("view") === "map" ? "map" : "list",
+  );
+  const [filters, setFilters] = useState<TenderFilters>(() =>
+    parseTenderFilters(new URLSearchParams(searchParams.toString())),
+  );
+  const [debouncedQ, setDebouncedQ] = useState(
+    () => parseTenderFilters(new URLSearchParams(searchParams.toString())).q ?? "",
+  );
+  const [page, setPage] = useState(() => {
+    const parsed = Number.parseInt(searchParams.get("page") ?? "0", 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  });
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [data, setData] = useState<ApiResponse | null>(null);
@@ -64,24 +75,43 @@ export function RelevantTenders() {
   const [error, setError] = useState(false);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
 
-  // Debouncing search also resets to the first page — folding the reset into the
-  // timer keeps every setState here off the synchronous effect-body path.
+  // Debounce only the free-text query; chip changes apply immediately.
   useEffect(() => {
     const id = setTimeout(() => {
-      setDebouncedQ(q);
+      setDebouncedQ(filters.q ?? "");
       setPage(0);
     }, 300);
     return () => clearTimeout(id);
-  }, [q]);
+  }, [filters.q]);
 
-  const queryString = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set("page", String(page));
-    params.set("pageSize", String(PAGE_SIZE));
-    if (debouncedQ) params.set("q", debouncedQ);
-    if (statuses.length) params.set("status", statuses.join(","));
-    return params.toString();
-  }, [page, debouncedQ, statuses]);
+  const effectiveFilters = useMemo<TenderFilters>(
+    () => ({ ...filters, q: debouncedQ || undefined }),
+    [filters, debouncedQ],
+  );
+
+  const queryString = useMemo(
+    () =>
+      tenderFiltersToParams(effectiveFilters, {
+        page: String(page),
+        pageSize: String(PAGE_SIZE),
+      }).toString(),
+    [effectiveFilters, page],
+  );
+
+  // Mirror state into the browser URL (no navigation/refetch) so the current
+  // view can be shared or bookmarked. `history.replaceState` avoids the RSC
+  // round-trip that router.replace would trigger on this dynamic route.
+  useEffect(() => {
+    const params = tenderFiltersToParams(effectiveFilters);
+    if (view === "map") params.set("view", "map");
+    if (page > 0) params.set("page", String(page));
+    const qs = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      "",
+      qs ? `${pathname}?${qs}` : pathname,
+    );
+  }, [effectiveFilters, view, page, pathname]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -108,20 +138,15 @@ export function RelevantTenders() {
     };
   }, [queryString, refreshKey]);
 
-  const toggleStatus = useCallback((status: StatusOption) => {
-    setStatuses((prev) =>
-      prev.includes(status)
-        ? prev.filter((item) => item !== status)
-        : [...prev, status],
-    );
+  const updateFilters = (next: TenderFilters) => {
+    setFilters(next);
     setPage(0);
-  }, []);
-  const clearFilters = useCallback(() => {
-    setQ("");
-    setStatuses([]);
+  };
+  const applyPreset = (preset: TenderFilters) => {
+    setFilters(preset);
+    setDebouncedQ(preset.q ?? "");
     setPage(0);
-  }, []);
-  const hasActiveFilters = q.length > 0 || statuses.length > 0;
+  };
 
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -176,18 +201,17 @@ export function RelevantTenders() {
         </div>
       </header>
 
-      <TenderFilters
-        q={q}
-        onQ={setQ}
-        statuses={statuses}
-        onToggleStatus={toggleStatus}
-        onClear={clearFilters}
-        hasActiveFilters={hasActiveFilters}
+      <TenderFilterBar
+        filters={filters}
+        onChange={updateFilters}
+        savedSlot={
+          <SavedFilters currentFilters={filters} onApply={applyPreset} />
+        }
       />
 
       {view === "map" ? (
         <TenderMap
-          filters={{ q: debouncedQ, statuses }}
+          filters={effectiveFilters}
           onOpenDetail={setSelectedTenderId}
         />
       ) : loading && !data ? (

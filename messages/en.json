@@ -503,7 +503,65 @@
       "status": "Status",
       "allStatuses": "All statuses",
       "country": "Country",
-      "clear": "Clear filters"
+      "clear": "Clear filters",
+      "button": "Filters",
+      "clearAll": "Clear all",
+      "sections": {
+        "contract": "Contract type",
+        "sector": "Sector",
+        "region": "Region",
+        "deadline": "Deadline",
+        "match": "Min. match"
+      },
+      "deadlineAny": "Any",
+      "deadlineDays": "≤ {days}d",
+      "matchValue": "{percent}%+"
+    },
+    "contract": {
+      "works": "Works",
+      "services": "Services",
+      "supplies": "Supplies"
+    },
+    "sector": {
+      "45": "Construction",
+      "71": "Architecture & engineering",
+      "72": "IT services",
+      "48": "Software",
+      "90": "Environmental",
+      "79": "Business services",
+      "44": "Materials",
+      "43": "Machinery",
+      "34": "Transport",
+      "31": "Electrical",
+      "39": "Furniture",
+      "77": "Landscaping"
+    },
+    "region": {
+      "DE1": "Baden-Württemberg",
+      "DE2": "Bavaria",
+      "DE3": "Berlin",
+      "DE4": "Brandenburg",
+      "DE5": "Bremen",
+      "DE6": "Hamburg",
+      "DE7": "Hesse",
+      "DE8": "Mecklenburg-Vorpommern",
+      "DE9": "Lower Saxony",
+      "DEA": "North Rhine-Westphalia",
+      "DEB": "Rhineland-Palatinate",
+      "DEC": "Saarland",
+      "DED": "Saxony",
+      "DEE": "Saxony-Anhalt",
+      "DEF": "Schleswig-Holstein",
+      "DEG": "Thuringia"
+    },
+    "saved": {
+      "button": "Saved",
+      "title": "Saved filters",
+      "empty": "No saved presets yet.",
+      "save": "Save current",
+      "namePlaceholder": "Preset name",
+      "delete": "Delete",
+      "saving": "Saving…"
     },
     "status": {
       "OPEN": "Open",
