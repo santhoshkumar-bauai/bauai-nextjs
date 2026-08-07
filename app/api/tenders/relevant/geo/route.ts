@@ -72,6 +72,15 @@ export async function GET(request: Request) {
 
   const { coordinates, stats } = await resolveMarkerLocations(markerInputs);
 
+  const companyLat =
+    company.regionLocation?.latitude ?? company.addressCoordinates?.lat;
+  const companyLng =
+    company.regionLocation?.longitude ?? company.addressCoordinates?.lng;
+  const companyPoint =
+    typeof companyLat === "number" && typeof companyLng === "number"
+      ? { lat: companyLat, lng: companyLng, label: company.name ?? null }
+      : null;
+
   const points = rows
     .map((row) => {
       const point = coordinates.get(String(row._id));
@@ -91,5 +100,5 @@ export async function GET(request: Request) {
     })
     .filter((point): point is NonNullable<typeof point> => point !== null);
 
-  return NextResponse.json({ points, stats });
+  return NextResponse.json({ points, stats, company: companyPoint });
 }

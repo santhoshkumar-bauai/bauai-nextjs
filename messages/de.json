@@ -539,7 +539,16 @@
       "loading": "Karte wird geladen…",
       "missingKey": "Karte nicht verfügbar – der Google-Maps-Schlüssel ist nicht konfiguriert.",
       "noPoints": "Es konnten noch keine Ausschreibungen auf der Karte platziert werden.",
-      "geocoding": "Standorte werden bei Bedarf ermittelt und zwischengespeichert; die Karte füllt sich beim Durchsuchen."
+      "geocoding": "Standorte werden bei Bedarf ermittelt und zwischengespeichert; die Karte füllt sich beim Durchsuchen.",
+      "you": "Ihr Unternehmen",
+      "viewDetails": "Details ansehen",
+      "legend": {
+        "title": "Eignung",
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig",
+        "company": "Ihr Unternehmen"
+      }
     },
     "why": {
       "label": "Sortiert nach",
