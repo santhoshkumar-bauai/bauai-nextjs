@@ -1,0 +1,32 @@
+# Overlay: run Redis as a local container instead of a managed Memorystore instance.
+# This is the minimal-cost option for the VM path — one small VM hosts the workers AND
+# Redis, so there is no separate managed-Redis bill. Use it alongside the base file:
+#
+#   docker compose -f docker-compose.prod.yml -f docker-compose.redis.yml up -d
+#
+# Set REDIS_URL=redis://redis:6379 in deploy/.env so the workers reach this container
+# by its compose service name.
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      # The queue is durable transport; a restart must not drop unacked entries.
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  redis-data:

@@ -5,9 +5,11 @@ FROM node:24-alpine AS deps
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-# `npm ci` needs the dev dependency tree omitted; the workers run TypeScript
-# directly through Node's type stripping and never invoke tsc at runtime.
-RUN npm ci --omit=dev && npm cache clean --force
+# `npm install` (not `npm ci`) so the Linux-native optional binaries and their
+# transitive deps resolve for this platform — the committed lock is generated on
+# Windows and omits them, which makes strict `npm ci` fail in this image. The workers
+# run TypeScript directly through Node's type stripping and never invoke tsc.
+RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
 FROM node:24-alpine AS runtime
 
