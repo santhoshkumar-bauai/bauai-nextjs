@@ -28,7 +28,7 @@ COPY workers ./workers
 COPY scripts/ingestion-bootstrap.mts scripts/ingestion-backfill.mts ./scripts/
 COPY scripts/ingestion-replay-dlq.mts scripts/ingestion-parse-fixture.mts ./scripts/
 COPY scripts/ingestion-smoke.mts scripts/fetch-documents.mts ./scripts/
-COPY scripts/inspect-document-url.mts ./scripts/
+COPY scripts/inspect-document-url.mts scripts/seed-tenders.mts ./scripts/
 
 # The image ships no .env: secrets come from the orchestrator's secret store (§16).
 USER node

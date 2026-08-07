@@ -1,0 +1,95 @@
+# Production ingestion stack — pulls the prebuilt image from GHCR and runs against
+# EXTERNAL MongoDB + Redis (no bundled databases). See deploy/README.md.
+#
+#   cd deploy
+#   cp .env.example .env && edit .env
+#   docker login ghcr.io                       # read:packages (or make the package public)
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml run --rm bootstrap   # one-shot, run first
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Scale the horizontal tiers:
+#   docker compose -f docker-compose.prod.yml up -d --scale ingest=4 --scale documents=2
+
+name: bauai-ingestion
+
+# One image, many entrypoints — the compose command picks which worker to run, so no
+# two workers can drift apart in dependencies or parser version.
+x-image: &image ghcr.io/bau-ai/bauai-nextjs/tender-ingestion:${IMAGE_TAG:-latest}
+
+x-worker: &worker
+  image: *image
+  pull_policy: always
+  restart: unless-stopped
+  env_file:
+    - ./.env
+  # SIGTERM starts the graceful drain; grace must exceed INGESTION_SHUTDOWN_GRACE_MS.
+  stop_signal: SIGTERM
+  stop_grace_period: 45s
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+services:
+  # ── One-shot: collections, indexes, source configs. Run before anything writes. ──
+  #   docker compose -f docker-compose.prod.yml run --rm bootstrap
+  bootstrap:
+    <<: *worker
+    restart: "no"
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
+
+  # ══════════════ WORKERS — discover & process ══════════════
+  # Exactly one scheduler: leases make more safe but add nothing.
+  scheduler:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/scheduler.mts"]
+    ports:
+      - "${SCHEDULER_METRICS_PORT:-9464}:9464"
+
+  # Horizontally scalable: rows/messages are leased, so replicas never collide.
+  ingest:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/ingest.mts"]
+    deploy:
+      replicas: ${INGEST_REPLICAS:-2}
+
+  # Downloads tender documents into GCS and extracts text. Also scales horizontally.
+  documents:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/documents.mts"]
+    deploy:
+      replicas: ${DOCUMENT_REPLICAS:-1}
+
+  # Single replica: status transitions off change streams.
+  status:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/status-updater.mts"]
+
+  # ══════════════ PUBLISHERS — emit outward ══════════════
+  # Single replica: a second would duplicate every push without adding durability.
+  outbox:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/outbox-relay.mts"]
+    ports:
+      - "${OUTBOX_METRICS_PORT:-9465}:9464"
+
+  # ══════════════ TOOLS — run on demand, never auto-started ══════════════
+  #   docker compose -f docker-compose.prod.yml run --rm seed -- --from 2026-01-01
+  seed:
+    <<: *worker
+    restart: "no"
+    profiles: ["tools"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/seed-tenders.mts"]
+
+  # One-shot document backfill / drain (alternative to the long-running `documents`):
+  #   docker compose -f docker-compose.prod.yml run --rm fetch -- --limit 500
+  fetch:
+    <<: *worker
+    restart: "no"
+    profiles: ["tools"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/fetch-documents.mts"]
+
+  # ── To add a new WORKER or PUBLISHER later: drop a workers/<name>.mts entrypoint,
+  #    then add a service here under the right heading with `<<: *worker` and its command.

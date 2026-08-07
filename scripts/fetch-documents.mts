@@ -36,7 +36,9 @@ const {
 const { runDocumentFetch, emptyDocumentCounters, releaseStaleLeases } = await import(
   "../lib/ingestion/documents/runner.ts"
 );
-const { registeredPlatforms } = await import("../lib/ingestion/documents/registry.ts");
+const { registeredPlatforms, resolverFor, hasPlatformResolver } = await import(
+  "../lib/ingestion/documents/registry.ts"
+);
 const { finishProcess } = await import("../lib/ingestion/utils/exit.ts");
 
 const limitArg = flag("limit");
@@ -52,7 +54,9 @@ let exitCode = 0;
 try {
   await ensureDocumentIndexes();
 
-  if (has("status")) {
+  if (has("coverage")) {
+    await showCoverage();
+  } else if (has("status")) {
     await showStatus();
   } else if (has("retry-failed")) {
     await retryFailed();
@@ -69,6 +73,8 @@ try {
   exitCode = 1;
   console.error(`\nDocument fetch failed: ${String(error)}`);
 } finally {
+  const { closeBrowser } = await import("../lib/ingestion/documents/browser.ts");
+  await closeBrowser();
   await closeIngestionClient();
 }
 
@@ -157,6 +163,88 @@ async function fetchDocuments(): Promise<void> {
   console.log(`  stored   ${(counters.bytes / 1_048_576).toFixed(1)} MiB`);
 
   await showStatus();
+}
+
+/**
+ * Resolver coverage over the whole corpus, independent of fetch progress.
+ *
+ * Classifies every host by running the real registry against a representative URL,
+ * so it answers "how much of the corpus does a platform resolver claim" — the number
+ * that actually moves as resolvers are added, unlike the status report which only
+ * reflects what has been fetched so far.
+ */
+async function showCoverage(): Promise<void> {
+  const store = await documentStore();
+  const rows = await store
+    .aggregate<{ _id: string; total: number; pending: number; url: string }>([
+      {
+        $group: {
+          _id: "$host",
+          total: { $sum: 1 },
+          pending: { $sum: { $cond: [{ $eq: ["$status", "PENDING"] }, 1, 0] } },
+          url: { $first: "$sourceUrl" },
+        },
+      },
+      { $sort: { total: -1 } },
+    ])
+    .toArray();
+
+  const byPlatform = new Map<string, { hosts: number; refs: number; pending: number }>();
+  const uncovered: Array<{ host: string; refs: number; pending: number }> = [];
+  let totalRefs = 0;
+  let coveredRefs = 0;
+
+  for (const row of rows) {
+    totalRefs += row.total;
+    let platform = "(bad-url)";
+    let covered = false;
+    try {
+      const url = new URL(row.url);
+      platform = resolverFor(url).platform;
+      covered = hasPlatformResolver(url);
+    } catch {
+      /* keep bad-url bucket */
+    }
+
+    if (covered) {
+      coveredRefs += row.total;
+      const bucket = byPlatform.get(platform) ?? { hosts: 0, refs: 0, pending: 0 };
+      bucket.hosts += 1;
+      bucket.refs += row.total;
+      bucket.pending += row.pending;
+      byPlatform.set(platform, bucket);
+    } else {
+      uncovered.push({ host: row._id, refs: row.total, pending: row.pending });
+    }
+  }
+
+  const pct = (part: number) => `${((100 * part) / (totalRefs || 1)).toFixed(1)}%`;
+
+  console.log("\nResolver coverage");
+  console.log(`  corpus       ${totalRefs.toLocaleString()} refs across ${rows.length} hosts`);
+  console.log(`  covered      ${coveredRefs.toLocaleString()} (${pct(coveredRefs)}) by a platform resolver`);
+  console.log(
+    `  uncovered    ${(totalRefs - coveredRefs).toLocaleString()} (${pct(totalRefs - coveredRefs)}) fall to the generic fallback`,
+  );
+
+  console.log("\n  By platform resolver (hosts / refs / pending)");
+  for (const [platform, bucket] of [...byPlatform].sort((a, b) => b[1].refs - a[1].refs)) {
+    console.log(
+      `    ${platform.padEnd(20)} ${String(bucket.hosts).padStart(4)} ${String(bucket.refs).padStart(6)} ${String(bucket.pending).padStart(6)}`,
+    );
+  }
+
+  console.log("\n  Top uncovered hosts (refs / pending)");
+  uncovered.sort((a, b) => b.refs - a.refs);
+  for (const row of uncovered.slice(0, 30)) {
+    console.log(
+      `    ${String(row.refs).padStart(6)} ${String(row.pending).padStart(6)}  ${row.host}`,
+    );
+  }
+  const tail = uncovered.slice(30).reduce((sum, row) => sum + row.refs, 0);
+  if (uncovered.length > 30) {
+    console.log(`    ${String(tail).padStart(6)}         … +${uncovered.length - 30} more hosts`);
+  }
 }
 
 async function retryFailed(): Promise<void> {

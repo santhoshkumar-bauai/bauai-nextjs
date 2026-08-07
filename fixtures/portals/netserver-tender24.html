@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <title >AI VERGABEPLATTFORM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="_commonfiles/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="_commonfiles/css/fontawesome.min.css" />
+  <link rel="stylesheet" href="_commonfiles/css/fontawesome-all.min.css" />
+  <link rel="stylesheet" type="text/css" href="_commonfiles/css/jquery-ui/jquery-ui.custom.min.css"/>
+  <link href="_commonfiles/css/style.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/table.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/registrationPrint.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/steps.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/bootstrap-toggle.min.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/registrationPrint.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/slick.css" rel="stylesheet"/>
+  <link href="_commonfiles/css/slick-theme.css" rel="stylesheet"/>
+
+  <link rel="shortcut icon" type="image/x-icon" href="_images/img/favicon.ico"/>
+  <link href="_images/img/favicon.png" rel="shortcut icon" type="image/png"/>
+  <link href="_images/img/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png">
+  <link href="_images/img/favicon-96x96.png" rel="icon" sizes="96x96" type="image/png">
+  <link href="_images/img/apple-touch-icon.png" rel="apple-touch-icon" sizes="140x140">
+
+  <script src="_commonfiles/js/jquery.min.js"></script>
+  <script src="_commonfiles/js/bootstrap.min.js"></script>
+  <script src="_commonfiles/js/bootstrap-select.min.js"></script>
+  <script src="_commonfiles/js/slick.min.js"></script>
+  
+  
+
+  <script src="_commonfiles/js/script_net.js"></script>
+  <script src="_commonfiles/js/script_contrast.js"></script>
+  <script src="_commonfiles/js/jquery.ui.datepicker-de_DE.js" type="text/javascript"></script>
+  <script src="_commonfiles/js/jquery-ui.datepicker.min.js" type="text/javascript"></script>
+  <script src="_commonfiles/js/jquery.maskedinput.min.js" type="text/javascript"></script>
+  <script src="_commonfiles/js/jquery.validate.js" type="text/javascript"></script>
+  <script src="_commonfiles/js/localization/messages_de.min.js" type="text/javascript"></script>
+  <script src="_commonfiles/js/script.js"></script>
+  <script src="_commonfiles/js/table.js"></script>
+  <script src="_commonfiles/js/bootstrap-toggle.min.js"></script>
+
+
+
+  <meta name="keywords" lang="de" content="Ausschreibung, Elektronische Ausschreibung, Vergabe, Elektronische Vergabe, Ausschreibungsplattform, Vergabeplattform, Ausschreibungssoftware, Vergabesoftware, Vergabesystem, Vergabeworkflow, Elektronische Angebote, Elektronische Teilnahmeantr&auml;ge, Digitale Signatur" />
+  <meta name="keywords" lang="en" content="eGovernment, tender, electronic tender, tendering, electronic tendering, public tender, platform solution, signature, tendering management"/>
+  <meta name="page-type" content="Elektronische Vergabe, Elektronische Ausschreibung" />
+  <meta name="page-topic" content="Elektronische Vergabe, Elektronische Ausschreibung" />
+  
+</head>
+<body>
+  <div class="page">
+    
+    
+    <header id="head">
+        <div class="fbo-header-wrapper">
+            <div class="container">
+                <div class="row fbo-row-reverse">
+                    <div class="col-sm-0 col-lg-3 col-xl-4">
+                        <div class="fbo-header-logo">
+                            <a title="home" href="/">
+                                <img alt="logo tender24.de" src="https://tender24.de/wp-content/themes/tender24/assets/img/logo_t24.png"
+                                     width="300"
+                                     height="148">
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-2 col-lg-3  col-xl-4">
+                        <div class="fbo-saar-bubble fbo-show-in-header fbo-color-blue">
+                            <div class="fbo-saar-bubble-innerwrapper">
+                                <h2 style="font-size: 30px"><i>Per Mausklick zum Auftrag</i></h2>
+<!--                                <p th:text="#{Top.Circle.Subtitle}"></p>-->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-12 col-lg-6 col-xl-4 fbo-header-meta">
+                        <div class="fbo-header-meta-nav">
+                            <nav class="navbar grey-links">
+                                <ul class="changefloat nav nav-pills navbar-right">
+                                    <li>
+                                        <a href="https://tender24.de/kontakt/">Kontakt</a>
+                                    </li>
+                                    <li>
+                                        <a href="LoginControllerServlet?function=LoginForm&thContext=participant">Registrieren</a>
+                                    </li>
+                                    <li>
+                                        <a href="LoginControllerServlet?function=LoginForm&thContext=participant">Anmelden</a>
+                                        
+                                    </li>
+                                    <li>
+  <div class="icon-select" id="my-icon-select" tabindex="0">
+    <div class="selected-box">
+      
+      <div class="selected-icon">
+        
+          <img src="_images/img/de_flag.jpg" alt="Deutsch" width="20" height="13"/>
+        
+        
+        
+      </div>
+      
+      <div class="component-icon">
+          <img src="_images/img/arrowdown_white.png" alt="arrowdown" height="10" width="10"/>
+      </div>
+      
+      <div id="my-icon-select-box-scroll" class="box" style="display: none;">
+        <div>
+          
+          
+          
+          <div class="icon">
+              <a class="navElem" title="English" href="LanguageSelectServlet?language=en_US">
+              <img src="_images/img/en_flag.jpg" alt="English" width="20" height="13"/>
+            </a>
+          </div>
+            
+            <!--<div th:ref="isNotLanguageFrench" class="icon">
+              <a class="navElem" th:ref="linkToFrench" th:title="#{language.French}">
+                <img src="_images/img/fr_flag.jpg" th:alt="#{language.French}" width="20" height="13"/>
+              </a>
+            </div> -->
+        </div>
+      </div>
+    </div>
+  </div>
+</li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </header>
+
+    
+
+
+    
+    <nav class="navbar navbar-default" data-spy="affix" data-offset-top="442">
+    <div class="page-wrapper">
+        <div class="container-fluid">
+            
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="displayNone">_</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            </div>
+            <div class="navbar-collapse collapse" id="myNavbar">
+                <ul class="nav navbar-nav nav-pills nav-stacked" role="tablist">
+                    
+                    <li></li>
+                    
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <!--
+                        <a th:href="@{/}" class="dropdown-toggle start navElem" data-toggle="dropdown" th:title="#{navi.Home}" th:utext="#{navi.GoHome}" th:ref="navStartActive"></a>
+                        -->
+                        <a class="dropdown-toggle start navElem" data-toggle="dropdown"
+                           title="Startseite" href="/">Startseite</a>
+                    </li>
+                    
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <span>Vorinformationen</span>
+                            <span class="caret" aria-haspopup="true"></span>
+                        </a>
+                        <ul class="dropdown-menu nav nav-pills nav-stacked">
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=All&amp;Category=PriorInformation&amp;thContext=preinformations">Alle Vorinformationen</a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOL&amp;Category=PriorInformation&amp;thContext=preinformations">Liefer- und Dienstleistungen<br/></a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOB&amp;Category=PriorInformation&amp;thContext=preinformations">Bauleistungen<br/></a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOF&amp;Category=PriorInformation&amp;thContext=preinformations">Architekten- und Ingenieurleistungen<br/></a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <span>Ausschreibungen</span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu nav nav-pills nav-stacked">
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=All&amp;Category=InvitationToTender&amp;thContext=publications">Alle Ausschreibungen</a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOL&amp;Category=InvitationToTender&amp;thContext=publications">
+                                    <span>Liefer- und Dienstleistungen<br/></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOB&amp;Category=InvitationToTender&amp;thContext=publications">
+                                    <span>Bauleistungen<br/></span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOF&amp;Category=InvitationToTender&amp;thContext=publications">
+                                    <span>Architekten- und Ingenieurleistungen<br/></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <span>Vergebene Aufträge</span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu nav nav-pills nav-stacked">
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=All&amp;Category=ContractAward&amp;thContext=awardPublications">Alle vergebenen Auftr&auml;ge</a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOL&amp;Category=ContractAward&amp;thContext=awardPublications">Liefer- und Dienstleistungen<br/></a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOB&amp;Category=ContractAward&amp;thContext=awardPublications">Bauleistungen<br/></a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOF&amp;Category=ContractAward&amp;thContext=awardPublications">Architekten- und Ingenieurleistungen<br/></a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <span>Qualifizierungssysteme</span>
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu nav nav-pills nav-stacked">
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=All&amp;Category=QualificationSystem&amp;thContext=qualificationSystems">Alle Qualifizierungssysteme</a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOL&amp;Category=QualificationSystem&amp;thContext=qualificationSystems">Liefer- und Dienstleistungen<br/></a>
+                            </li>
+                            <li>
+                                <a class="navElem" href="PublicationSearchControllerServlet?function=SearchPublications&amp;Gesetzesgrundlage=VOB&amp;Category=QualificationSystem&amp;thContext=qualificationSystems">Bauleistungen<br/></a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                            <span>Mein Konto</span>
+                            <span class="caret" aria-haspopup="true"></span>
+                        </a>
+                        
+                        <ul class="dropdown-menu nav nav-pills nav-stacked openLeft">
+                            <li>
+                                <a id="bidderInbox" class="navElem" href="LoginControllerServlet?function=LoginForm">
+                                    <span>Registrieren</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a id="bidderInbox" class="navElem" href="LoginControllerServlet?function=LoginForm">
+                                    <span>Anmelden</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="dropdown" role="tab" data-toggle="tab">
+                        <!--
+                        <a th:href="@{/}" class="dropdown-toggle start navElem" data-toggle="dropdown" th:title="#{navi.Home}" th:utext="#{navi.GoHome}" th:ref="navStartActive"></a>
+                        -->
+                        <a class="dropdown-toggle start navElem" data-toggle="dropdown"
+                           title="Service" href="https://tender24.de/service/">Service</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+    
+    <div class="container" role="main" id="pageParticipantDetailsGuest">
+  <div class="content border">
+    <div class="xyz">
+      <h1 class="color-main">Informationen zur Ausschreibung: <small class="spaceTop">FSS-2026-Los20, Fliesen</small></h1>
+      <br/>
+      
+      <a class="color-main" href="PublicationControllerServlet?function=Detail&amp;TOID=54321-NetTender-19fb7e98caf-748b799d28a54b23">
+        <i class='far fa-file-alt color-main' alt="Hier geht es zur Bekanntmachung"></i> Zur Bekanntmachung
+      </a>
+      <br/>
+      <br/>
+      <div class="col-sm-12">
+        <p>Sie haben an dieser Stelle die Möglichkeit, die Unterlagen zur Ansicht herunterzuladen sowie Nachrichten zur Ausschreibung einzusehen, z. B. falls die Vergabestelle auf Bieterfragen geantwortet hat.<br>Bitte beachten Sie, dass Sie sowohl für die elektronische Kommunikation mit der Vergabestelle, als auch für die elektronische Abgabe eines Teilnahmeantrags oder Angebots auf der Vergabeplattform registriert und Teilnehmer des Verfahrens sein müssen. Eine Registrierung können Sie <a href="LoginControllerServlet?function=LoginForm&thContext=participant">hier</a> durchführen.</p><p>Als Teilnehmer des Verfahrens stehen Ihnen folgende Komfortfunktionen zur Verfügung:</p><ul><li>Sie werden aktiv informiert, sobald eine neue Version der Unterlagen von der Vergabestelle veröffentlicht wird</li><li>Sie werden aktiv informiert, sobald die Vergabestelle neue Nachrichten zum Verfahren verschickt</li></ul><p>Sofern Sie bereits registriert sind und an der Ausschreibung teilnehmen möchten, so melden Sie sich bitte zunächst mit Ihrem Benutzernamen und Ihrem Passwort <a href="LoginControllerServlet?function=LoginForm&thContext=participant">hier</a> an.</p>
+      </div>
+      
+      
+      
+      <div class="col-sm-12">
+        <h4 class="color-main" >Vergabeunterlagen</h4>
+        <p >Es gilt immer nur die aktuellste Version der Unterlagen. Diese Version ist immer mit der höchsten Versionsnummer versehen. Alle anderen Versionen verlieren damit ihre Gültigkeit.</p>
+        <div class="col-sm-6">
+          <table class="table table-striped tableQuarter table-hover table-center">
+            <caption >Vergabeunterlagen</caption>
+            <thead>
+              <tr>
+                <th class="background-blue" >Version</th>
+                <th class="background-blue" >Datum</th>
+                <th class="background-blue" >Download</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="lastSpecClassWithData">
+                <td >1</td>
+                <td>
+                  <span>31.07.2026 13:22</span>
+                  
+                </td>
+                <td>
+                  
+                  <a style="cursor: pointer;" class="btn-modal zipFileContents" data-toggle="modal" data-target="#detailModal" title="Unterlagen herunterladen" data-oid="54321-SpecificationVersion-19fb7e99a6a-17167742a3ebfa00" data-token="-6633619326639711343" data-title="[&quot;Bestandteile der Vergabeunterlagen&quot;, &quot;Auswahl herunterladen&quot;, &quot;Alles auswählen&quot;, &quot;Alle abwählen&quot;]">
+                    <i class="fas fa-folder-open downloadIcon color-main"></i>
+                  </a>
+                  
+                  <a class="zipDownload" style="cursor: pointer;" href="TenderingProcedureDetails?function=_DownloadTenderDocuments&amp;documentOID=54321-SpecificationVersion-19fb7e99a6a-17167742a3ebfa00&amp;TenderAuthority=FSS-2026-Los20&amp;TenderDate=1785496961052" title="Unterlagen als ZIP-Datei herunterladen">
+                      <i class="fas fa-file-archive downloadIcon color-main"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="col-md-12 noPaddingLeft noPaddingRight">
+        <h4 class="color-main" >Nachrichten</h4>
+        
+        
+        <p>
+          <i class="fas fa-info color-white background-blue"></i>
+          <span class="information" >Keine Nachrichten vorhanden.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+  
+    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document" id="printarea">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title color-main"></h3>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary float-left" id="btn-print" onclick="printDiv('printarea')" >Drucken</button>
+            <button type="button" class="btn btn-primary" id="buttonModalClose" data-dismiss="modal" >Schließen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+</div>
+    
+    <footer>
+    <div class="page-wrapper" style="width: 100%; font-size: 11.4px;">
+        <div class="container"
+             style="text-align: left; display: block; height: 90px; padding: 27px 30px 0 3px; margin: 25px 15px;">
+            <div style="text-align: right; position: relative; float: right; margin-top: -12px;">
+                <a href="/">
+                    <img src="https://tender24.de/wp-content/themes/tender24/assets/img/logo_t24_small.png" width="150">
+                </a>
+            </div>
+            <h2 class="displayNone">Common.Footer</h2>
+            
+            &copy; 2022 <span>Alle Rechte vorbehalten</span> &nbsp; &nbsp; &nbsp;&nbsp;
+            
+            <a href="https://tender24.de/impressum/">Impressum</a>
+            &nbsp; &nbsp; &nbsp;&nbsp;
+            <a href="https://tender24.de/datenschutz/">Datenschutz</a>
+            
+            &nbsp; &nbsp; &nbsp;&nbsp;
+            
+            <a href="https://tender24.de/teilnahmebedingungen/">Teilnahmebedingungen</a>
+
+            <br>
+            <span class="blackFooter" style="color: #c9c9c9">Zeit der Vergabeplattform</span>
+            <span class="blackFooter" style="color: #c9c9c9">07.08.2026 10:38:57</span>
+
+
+        </div>
+    </div>
+</footer>
+  </div>
+
+  <script type="text/javascript">
+      window.addEventListener('resize', changePagination);
+
+      $(window).on(function(){
+
+          // Je nach Klick wird der TabellenLink aktiv gesetzt
+          $(".activeChange").on("click", function(){
+              console.log("activeChange");
+              $('.activeChange').removeClass("tableActive");
+              $(this).addClass("tableActive");
+          });
+
+      });
+
+      // Tabellenseiten unterhalb der Tabelle (GrÃ¶Ãe verÃ€ndern)
+      function changePagination() {
+          if ($(window).width() < 751) {
+              $('.pagination').addClass("pagination-sm");
+          } else {
+              $('.pagination').removeClass("pagination-sm");
+          }
+      }
+  </script>
+</body>
+
+</html>
