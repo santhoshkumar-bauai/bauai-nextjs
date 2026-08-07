@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
 import type { TenderDocument } from "@/lib/ingestion/types";
+import { parseTenderFilters } from "@/lib/tenders/filters";
 import {
   resolveMarkerLocations,
   type MarkerInput,
@@ -11,7 +12,6 @@ import { resolveCompanyNuts } from "@/lib/tenders/nuts";
 import {
   buildGeoPipeline,
   MARKER_CAP,
-  OPPORTUNITY_STATUSES,
   type RankedGeoRaw,
 } from "@/lib/tenders/relevance";
 
@@ -22,13 +22,6 @@ import {
  * `MARKER_CAP`, then resolves coordinates via the shared postal-key cache.
  */
 
-function parseList(value: string | null): string[] {
-  return (value ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 export async function GET(request: Request) {
   const context = await getCompanyContext();
   if (!context) {
@@ -36,10 +29,7 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const statuses = parseList(searchParams.get("status"))
-    .map((s) => s.toUpperCase())
-    .filter((s) => (OPPORTUNITY_STATUSES as readonly string[]).includes(s));
-  const q = searchParams.get("q")?.trim().slice(0, 120) || undefined;
+  const filters = parseTenderFilters(searchParams);
   const limit = Math.min(
     MARKER_CAP,
     Math.max(1, Number.parseInt(searchParams.get("limit") ?? String(MARKER_CAP), 10) || MARKER_CAP),
@@ -54,7 +44,17 @@ export async function GET(request: Request) {
 
   const { pipeline } = buildGeoPipeline(
     { companyCpvCodes: company.cpvCodes ?? [], nuts },
-    { now: new Date(), statuses: statuses.length ? statuses : undefined, q, markerCap: limit },
+    {
+      now: new Date(),
+      statuses: filters.statuses.length ? filters.statuses : undefined,
+      q: filters.q,
+      minScore: filters.minScore,
+      contractNatures: filters.contractNatures.length ? filters.contractNatures : undefined,
+      sectors: filters.sectors.length ? filters.sectors : undefined,
+      regions: filters.regions.length ? filters.regions : undefined,
+      deadlineInDays: filters.deadlineInDays,
+      markerCap: limit,
+    },
   );
 
   const rows = await mongoDatabase

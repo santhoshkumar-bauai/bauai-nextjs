@@ -11,7 +11,7 @@ import { Building2, Loader2, MapPinOff } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import type { StatusOption } from "@/components/tenders/tender-filters";
+import { tenderFiltersToParams, type TenderFilters } from "@/lib/tenders/filters";
 
 /** Germany centroid — a sensible default before markers load and fit. */
 const GERMANY_CENTER = { lat: 51.1, lng: 10.4 };
@@ -118,7 +118,7 @@ export function TenderMap({
   filters,
   onOpenDetail,
 }: {
-  filters: { q: string; statuses: StatusOption[] };
+  filters: TenderFilters;
   onOpenDetail?: (id: string) => void;
 }) {
   const t = useTranslations("Tenders");
@@ -133,12 +133,10 @@ export function TenderMap({
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const queryString = useMemo(() => {
-    const params = new URLSearchParams();
-    if (filters.q) params.set("q", filters.q);
-    if (filters.statuses.length) params.set("status", filters.statuses.join(","));
-    return params.toString();
-  }, [filters.q, filters.statuses]);
+  const queryString = useMemo(
+    () => tenderFiltersToParams(filters).toString(),
+    [filters],
+  );
 
   useEffect(() => {
     if (!apiKey) return;
