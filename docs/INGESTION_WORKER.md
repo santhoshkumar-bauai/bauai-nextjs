@@ -239,12 +239,23 @@ seven of the busiest German portals run cosinex — so resolvers are registered 
 family in `documents/registry.ts`, keyed on a URL signature rather than a host list.
 That way an unseen state portal works without a code change.
 
-Implemented: **cosinex** (matches any `…Satellite/` path — DTVP and the state
-marketplaces) and **evergabe-online** (e-Vergabe Bund). Both portals publish the whole
-tender pack as one public ZIP, which the runner unpacks and stores member by member.
+**Six platform resolvers** are implemented (plus the generic `directFileResolver`
+fallback), together claiming **~63% of the corpus** (was 39% with the first two). See
+[`DOCUMENT_RESOLVERS.md`](DOCUMENT_RESOLVERS.md) for the full coverage table and the
+per-portal "cannot resolve, and why" list.
+
+| Resolver | Hosts | Mechanism |
+| --- | --- | --- |
+| `cosinex` | 22 | any `…Satellite/` path → public `Vergabeunterlagen_<id>.zip` |
+| `netserver` | 37 | `/NetServer/` → `_DownloadTenderDocuments` bundle ZIP (public subset; gated portals recorded `LOGIN_REQUIRED`) |
+| `evergabe-online` | 1 | e-Vergabe Bund; cookie handshake + Wicket `zipDownloadButton` |
+| `rib-meinauftrag` | 1 | **headless render** → `remote/download.php?k=…` per-file links |
+| `aumass` | 1 | public "ohne Registrierung" `GetDocument?doctype=allfiles` ZIP |
+| `staatsanzeiger` | 2 | GET choice page → **POST** `DownlAsAnonym` → `.zip` link |
 
 `documents:inspect` is the tool for adding the next family: point it at a real URL,
-see which links are picked up, adjust, repeat.
+see which links are picked up, adjust, repeat. Coverage is measured any time with
+`npm run fetch:documents -- --coverage`.
 
 ### Three portal behaviours worth knowing
 
@@ -261,6 +272,14 @@ These were each found by running the code, and are handled in `documents/http.ts
   serve HTML — an `?detail=` listing did, and 339 KB of navigation markup was archived
   as a tender document. The runner now rejects HTML responses that lack a document
   extension.
+- **Two-step form downloads.** Staatsanzeiger offers the pack only after a POST
+  ("Anonym als Zip"), so `DocumentFetcher.post()` submits the form over the same
+  per-host cookie jar the preceding GET opened.
+- **Single-page-app portals.** RIB `meinauftrag` (and others) build the document list
+  in the browser, so `documents/browser.ts` provides an optional headless-Chromium
+  `render()` / `capture()` (gated by `DOCUMENTS_BROWSER_ENABLED`; needs
+  `npx playwright install chromium`). Resolvers call `http.render?.(…)` and degrade to
+  a skip when the browser is unavailable.
 
 ### Auditing failures
 
@@ -397,9 +416,13 @@ Run against live sources and a real replica set on 2026-08-05.
 | MongoDB indexes | Verified created, including the split geo indexes |
 | TypeScript | `npm run typecheck` clean |
 | Seeder (`seed:tenders`) | Verified live: Germany 2,090 discovered → 22 written; TED 212 → exactly 10 written; 0 failed; re-run reported 10 unchanged; truncated partitions correctly returned to `PENDING` |
-| Document retrieval | Verified live end to end: 5 tenders resolved → **85 files, 22.7 MiB in R2, 73 with extracted text**, 0 failures. Real packs — *Aufforderung zur Angebotsabgabe*, *Leistungsbeschreibung*, *Vertragsentwurf* — up to 49k characters of text per PDF |
+| Document retrieval | Verified live end to end (cumulative): **233 tenders `FETCHED` → 3,705 files, 2,115 MiB in R2, 3,209 with extracted text**, 0 file failures on the fetched rows. 6 platform resolvers claim ~63% of the 26,267-doc corpus (up from 39%). ~11,700 rows still `PENDING` (rate-limited drain) |
 | cosinex resolver | Verified on 4 hosts in the family (`brandenburg`, `dtvp`, `niedersachsen`, `giz`), both URL shapes (`/notice/<id>` and `/notice/<id>/documents`) |
 | evergabe-online resolver | Verified: cookie handshake + Referer + ZIP unpack → 28 files from one tender |
+| netserver resolver | Verified 2026-08-07 across 37 hosts: `tender24` (14 MB ZIP → 4 files), `vmstart` (19 MB ZIP); gated portals (`sachsen-vergabe`, `landbw`, `hessen`, `fraunhofer`) correctly `LOGIN_REQUIRED` |
+| aumass resolver | Verified 2026-08-07: public `doctype=allfiles` bundle → 16 files stored |
+| staatsanzeiger resolver | Verified 2026-08-07: GET choice page → POST `DownlAsAnonym` → ZIP → 29 files stored |
+| rib-meinauftrag resolver | Verified 2026-08-07 (headless): rendered SPA → 3 PDFs with extracted text |
 | XML entity decoding | 853/853 notices parse; 0 of 559 document URLs still contain `&amp;` |
 | TED document links | Verified live: `document-url-lot` returns URLs from the anonymous Search API — 30/60 notices (50%), no API key |
 | **Redis queue paths** | **Not yet run.** No Redis was available on this machine |

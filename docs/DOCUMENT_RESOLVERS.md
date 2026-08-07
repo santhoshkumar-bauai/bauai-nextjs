@@ -1,9 +1,30 @@
 # Tender Document Resolvers — Coverage & Status
 
+_Last updated: 2026-08-07._ **6 platform resolvers** (`cosinex`, `evergabe-online`,
+`netserver`, `aumass`, `staatsanzeiger`, `rib-meinauftrag`) + the generic
+`directFileResolver` fallback = **7 total**, registered in
+[`registry.ts`](../lib/ingestion/documents/registry.ts).
+
 Resolvers turn a tender's portal landing-page URL into downloadable files. This documents
 the resolver families, what each one does, and — for the portals we cannot fetch — the
 specific reason. Coverage is measured over the live `tender_documents` corpus with
 `npm run fetch:documents -- --coverage`.
+
+## Ingestion state (2026-08-07)
+
+| `tender_documents` | Count |
+|---|---:|
+| Total rows | 26,267 |
+| `FETCHED` | 233 |
+| `PENDING` (awaiting the rate-limited drain) | 11,658 |
+| `SKIPPED` (13,793 not-biddable · 270 unsupported · 191 restricted · 63 login · 51 no-files) | 14,368 |
+| `FAILED` | 8 |
+| **Stored files** | **3,705 (2,115 MiB, 3,209 with extracted text)** |
+
+Fetched-by-resolver so far: cosinex 157, generic 50, evergabe-online 17, rib 3,
+staatsanzeiger 3, aumass 2, netserver 1. The bulk of `PENDING` is simply un-drained —
+run `npm run worker:documents` (or `npm run fetch:documents`) to keep pulling; each
+portal is capped at 10 requests/min so a full drain takes time.
 
 ## Coverage
 
