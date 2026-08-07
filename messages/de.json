@@ -493,5 +493,99 @@
       "title": "Firmenlogo",
       "description": "PNG, JPG, WebP oder SVG. Wird in Ihrem Profil und auf Einreichungen angezeigt."
     }
+  },
+  "Tenders": {
+    "title": "Relevante Ausschreibungen",
+    "subtitle": "Ausschreibungen passend zu den CPV-Codes und der Region Ihres Unternehmens.",
+    "views": { "list": "Liste", "map": "Karte" },
+    "filters": {
+      "searchPlaceholder": "Titel oder Beschreibung suchen",
+      "status": "Status",
+      "allStatuses": "Alle Status",
+      "country": "Land",
+      "clear": "Filter zurücksetzen"
+    },
+    "status": {
+      "OPEN": "Offen",
+      "CLOSING_SOON": "Endet bald",
+      "UPCOMING": "Demnächst"
+    },
+    "card": {
+      "deadline": "Frist",
+      "noDeadline": "Keine Frist",
+      "published": "Veröffentlicht",
+      "value": "Geschätzter Wert",
+      "notProvided": "Nicht angegeben",
+      "match": "{percent}% Übereinstimmung",
+      "cpvMore": "+{count} weitere",
+      "viewSource": "Quelle ansehen",
+      "breakdown": { "cpv": "CPV-Eignung", "geo": "Standort", "time": "Aktualität" }
+    },
+    "states": {
+      "loading": "Ausschreibungen werden geladen…",
+      "emptyTitle": "Keine passenden Ausschreibungen",
+      "emptyDescription": "Erweitern Sie die Filter oder aktualisieren Sie die CPV-Codes Ihres Unternehmens.",
+      "errorTitle": "Ausschreibungen konnten nicht geladen werden",
+      "errorDescription": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      "retry": "Erneut versuchen"
+    },
+    "pagination": {
+      "previous": "Zurück",
+      "next": "Weiter",
+      "showing": "{from}–{to} von {total}"
+    },
+    "map": {
+      "attribution": "Kartendaten © Google",
+      "loading": "Karte wird geladen…",
+      "missingKey": "Karte nicht verfügbar – der Google-Maps-Schlüssel ist nicht konfiguriert.",
+      "noPoints": "Es konnten noch keine Ausschreibungen auf der Karte platziert werden.",
+      "geocoding": "Standorte werden bei Bedarf ermittelt und zwischengespeichert; die Karte füllt sich beim Durchsuchen."
+    },
+    "why": {
+      "label": "Sortiert nach",
+      "cpv": "CPV-Codes",
+      "region": "Region"
+    },
+    "detail": {
+      "loading": "Wird geladen…",
+      "tabs": {
+        "about": "Übersicht",
+        "documents": "Dokumente",
+        "schedule": "Termine",
+        "ai": "KI-Eignung"
+      },
+      "status": "Status",
+      "value": "Geschätzter Wert",
+      "procedure": "Verfahren",
+      "contractNature": "Auftragsart",
+      "cpv": "CPV-Codes",
+      "description": "Beschreibung",
+      "buyer": "Auftraggeber",
+      "website": "Webseite",
+      "document": "Dokument",
+      "noDocuments": "Für diese Ausschreibung wurden keine Dokumente veröffentlicht.",
+      "restricted": "Zugangsbeschränkt",
+      "sourcePortal": "Quellportal",
+      "publication": "Veröffentlicht",
+      "lots": "Lose"
+    },
+    "recommendation": {
+      "intro": "Erstellen Sie eine KI-Einschätzung, wie gut diese Ausschreibung zu Ihrem Unternehmensprofil passt.",
+      "generate": "Empfehlung erstellen",
+      "analyzing": "Eignung wird analysiert…",
+      "error": "Empfehlung konnte nicht erstellt werden.",
+      "retry": "Erneut versuchen",
+      "fitScore": "Eignungswert",
+      "strengths": "Stärken",
+      "concerns": "Bedenken",
+      "actions": "Empfohlene nächste Schritte",
+      "disclaimer": "KI-generierte Hinweise – bitte anhand der offiziellen Vergabeunterlagen prüfen.",
+      "verdict": {
+        "STRONG_FIT": "Sehr gut geeignet",
+        "POSSIBLE_FIT": "Möglicherweise geeignet",
+        "WEAK_FIT": "Wenig geeignet",
+        "NOT_RECOMMENDED": "Nicht empfohlen"
+      }
+    }
   }
 }
