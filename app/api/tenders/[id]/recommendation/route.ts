@@ -1,6 +1,9 @@
 import { ObjectId } from "mongodb";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
+import { getGateway } from "@/lib/ai/gateway";
+import { RateLimitError, StructuredOutputError } from "@/lib/ai/gateway/types";
 import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
 import type { TenderDocument } from "@/lib/ingestion/types";
@@ -12,15 +15,10 @@ import {
   type CompanyProfileForAI,
 } from "@/lib/tenders/recommendation";
 
-type GeminiResponse = {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  error?: { message?: string };
-};
-
 /**
- * On-demand AI fit analysis for a tender vs. the caller's company (Gemini).
- * Triggered explicitly from the detail modal's recommendation tab — never runs
- * as part of listing. Reuses the Gemini REST pattern from `app/api/cpv-map`.
+ * On-demand AI fit analysis for a tender vs. the caller's company. Triggered
+ * explicitly from the detail modal's recommendation tab — never runs as part
+ * of listing. Model access goes through the AI gateway ("reasoning" role).
  */
 export async function POST(
   request: Request,
@@ -31,8 +29,7 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({ error: "Gemini is not configured." }, { status: 503 });
   }
 
@@ -68,52 +65,41 @@ export async function POST(
   const locale =
     new URL(request.url).searchParams.get("locale") === "de" ? "de" : "en";
   const prompt = buildRecommendationPrompt({ company: profile, tender, locale });
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseJsonSchema: RECOMMENDATION_SCHEMA,
-        },
-      }),
-      cache: "no-store",
-    },
-  );
-
-  const data = (await response.json()) as GeminiResponse;
-  if (!response.ok) {
-    return NextResponse.json(
-      { error: data.error?.message || "AI recommendation failed." },
-      { status: 502 },
-    );
-  }
-
-  const text =
-    data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") ||
-    "";
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(text);
-  } catch {
-    return NextResponse.json(
-      { error: "Gemini returned an invalid recommendation." },
-      { status: 502 },
-    );
-  }
+    const result = await getGateway().generateStructured({
+      role: "reasoning",
+      prompt,
+      schema: RECOMMENDATION_SCHEMA as unknown as Record<string, unknown>,
+      // The battle-tested normalizer below owns semantic validation; zod only
+      // guards the transport shape here.
+      zod: z.record(z.string(), z.unknown()),
+    });
 
-  const recommendation = normalizeRecommendation(parsed);
-  if (!recommendation) {
-    return NextResponse.json(
-      { error: "Gemini returned an incomplete recommendation." },
-      { status: 502 },
-    );
-  }
+    const recommendation = normalizeRecommendation(result.value);
+    if (!recommendation) {
+      return NextResponse.json(
+        { error: "Gemini returned an incomplete recommendation." },
+        { status: 502 },
+      );
+    }
 
-  return NextResponse.json({ recommendation, model });
+    return NextResponse.json({ recommendation, model: result.model });
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json(
+        { error: "AI is rate limited, try again shortly." },
+        { status: 429 },
+      );
+    }
+    if (error instanceof StructuredOutputError) {
+      return NextResponse.json(
+        { error: "Gemini returned an invalid recommendation." },
+        { status: 502 },
+      );
+    }
+    const message =
+      error instanceof Error ? error.message : "AI recommendation failed.";
+    return NextResponse.json({ error: message }, { status: 502 });
+  }
 }

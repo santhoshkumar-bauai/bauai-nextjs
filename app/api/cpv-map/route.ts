@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
+import { getGateway } from "@/lib/ai/gateway";
+import { RateLimitError, StructuredOutputError } from "@/lib/ai/gateway/types";
 import { auth } from "@/lib/auth";
 import { connectMongoose } from "@/lib/db/mongoose";
 import { CpvCode } from "@/models/cpv-code";
@@ -9,11 +12,6 @@ type MappingBody = {
   services?: unknown;
   businessDomain?: unknown;
   locale?: unknown;
-};
-
-type GeminiResponse = {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  error?: { message?: string };
 };
 
 const cleanServices = (value: unknown) =>
@@ -113,60 +111,47 @@ export async function POST(request: Request) {
     "Catalog:",
     candidateText,
   ].join("\n");
-  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseJsonSchema: {
-            type: "object",
-            properties: {
-              codes: {
-                type: "array",
-                minItems: 1,
-                maxItems: 10,
-                items: {
-                  type: "string",
-                  enum: candidates.map((item) => item.code),
-                },
-              },
+  let requestedCodes: string[] = [];
+  let model = "";
+  try {
+    const result = await getGateway().generateStructured({
+      role: "extraction",
+      prompt,
+      schema: {
+        type: "object",
+        properties: {
+          codes: {
+            type: "array",
+            minItems: 1,
+            maxItems: 10,
+            items: {
+              type: "string",
+              enum: candidates.map((item) => item.code),
             },
-            required: ["codes"],
-            additionalProperties: false,
           },
         },
-      }),
-      cache: "no-store",
-    },
-  );
-  const data = (await response.json()) as GeminiResponse;
-  if (!response.ok) {
-    return NextResponse.json(
-      { error: data.error?.message || "AI mapping failed." },
-      { status: 502 },
-    );
-  }
-
-  const text =
-    data.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text || "")
-      .join("") || "";
-  let requestedCodes: string[] = [];
-  try {
-    const parsed = JSON.parse(text) as { codes?: unknown };
-    requestedCodes = Array.isArray(parsed.codes)
-      ? parsed.codes.filter((code): code is string => typeof code === "string")
-      : [];
-  } catch {
-    return NextResponse.json(
-      { error: "Gemini returned an invalid mapping." },
-      { status: 502 },
-    );
+        required: ["codes"],
+        additionalProperties: false,
+      },
+      zod: z.object({ codes: z.array(z.string()) }),
+    });
+    requestedCodes = result.value.codes;
+    model = result.model;
+  } catch (error) {
+    if (error instanceof RateLimitError) {
+      return NextResponse.json(
+        { error: "AI is rate limited, try again shortly." },
+        { status: 429 },
+      );
+    }
+    if (error instanceof StructuredOutputError) {
+      return NextResponse.json(
+        { error: "Gemini returned an invalid mapping." },
+        { status: 502 },
+      );
+    }
+    const message = error instanceof Error ? error.message : "AI mapping failed.";
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 
   const allowed = new Map(candidates.map((item) => [item.code, item]));
