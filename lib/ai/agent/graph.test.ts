@@ -1,4 +1,4 @@
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -47,7 +47,7 @@ vi.mock("@langchain/langgraph/prebuilt", async () => {
   return { ToolNode: FakeToolNode };
 });
 
-const { buildDoraGraph } = await import("./graph.ts");
+const { buildDoraGraph, sanitizeToolPairs } = await import("./graph.ts");
 
 function fakeCtx(): AgentRunContext {
   return {
@@ -95,6 +95,41 @@ function toolCallMessage(): AIMessage {
     tool_calls: [{ id: "call-1", name: "get_tender_notice", args: {} }],
   });
 }
+
+describe("sanitizeToolPairs", () => {
+  const toolMsg = (id: string) =>
+    new ToolMessage({ content: "result", tool_call_id: id, name: "t" });
+
+  it("drops a dangling tool-call turn (the finalize leftover Gemini 400s on)", () => {
+    const messages = [
+      new HumanMessage("q"),
+      toolCallMessage(), // dangling: next message is NOT a tool response
+      new AIMessage("final answer"),
+    ];
+    const cleaned = sanitizeToolPairs(messages);
+    expect(cleaned.map((m) => m.getType())).toEqual(["human", "ai"]);
+    expect(String(cleaned[1].content)).toBe("final answer");
+  });
+
+  it("keeps complete pairs including parallel tool responses", () => {
+    const messages = [
+      new HumanMessage("q"),
+      toolCallMessage(),
+      toolMsg("call-1"),
+      toolMsg("call-2"),
+      new AIMessage("answer"),
+    ];
+    expect(sanitizeToolPairs(messages)).toHaveLength(5);
+  });
+
+  it("drops orphaned leading tool responses (window-slice damage)", () => {
+    const messages = [toolMsg("old"), new HumanMessage("q"), new AIMessage("a")];
+    expect(sanitizeToolPairs(messages).map((m) => m.getType())).toEqual([
+      "human",
+      "ai",
+    ]);
+  });
+});
 
 describe("buildDoraGraph", () => {
   it("runs one tool round then answers", async () => {

@@ -56,6 +56,37 @@ function hasToolCalls(message: BaseMessage | undefined): boolean {
   return Array.isArray(calls) && calls.length > 0;
 }
 
+/**
+ * Drop broken tool-call/response pairings before a model call. The finalize
+ * path leaves the model's DANGLING tool-call request in checkpointed state
+ * (a concat reducer can only append), and Gemini hard-rejects any history
+ * where a function-call turn is not immediately followed by its function
+ * responses ("Please ensure that function call turn comes immediately
+ * after…"). Sanitizing at read time also heals threads poisoned before this
+ * fix existed. Exported for tests.
+ */
+export function sanitizeToolPairs(messages: BaseMessage[]): BaseMessage[] {
+  const out: BaseMessage[] = [];
+  for (let i = 0; i < messages.length; i += 1) {
+    const message = messages[i];
+    if (message.getType() === "tool") {
+      // Keep only tool responses that directly follow their calling AI
+      // message (skipping earlier kept tool siblings of the same call).
+      let j = out.length - 1;
+      while (j >= 0 && out[j].getType() === "tool") j -= 1;
+      if (j >= 0 && hasToolCalls(out[j])) out.push(message);
+      continue;
+    }
+    if (hasToolCalls(message)) {
+      // Keep only tool-call messages whose responses actually follow.
+      if (messages[i + 1]?.getType() === "tool") out.push(message);
+      continue;
+    }
+    out.push(message);
+  }
+  return out;
+}
+
 export async function buildDoraGraph(ctx: AgentRunContext) {
   const env = aiEnv();
   // Global chats chain find_tenders → notice → search and need more hops.
@@ -75,11 +106,9 @@ export async function buildDoraGraph(ctx: AgentRunContext) {
   const contextWindow = (messages: BaseMessage[]): BaseMessage[] => {
     const max = env.agentHistoryMaxMessages;
     const window = messages.length > max ? messages.slice(-max) : messages;
-    // Never start the window on a ToolMessage (orphaned tool result confuses
-    // providers): drop leading tool messages.
-    let start = 0;
-    while (start < window.length && window[start].getType() === "tool") start += 1;
-    return window.slice(start);
+    // Repairs both slice damage (window starting on orphaned tool results)
+    // and dangling tool-call turns left in state by the finalize path.
+    return sanitizeToolPairs(window);
   };
 
   // Attached images are checkpointed as tiny media_ref parts; the base64
