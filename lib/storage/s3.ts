@@ -226,3 +226,11 @@ export async function deleteObject(key: string): Promise<void> {
     new DeleteObjectCommand({ Bucket: s3Config().bucket, Key: key }),
   );
 }
+
+/** Downloads an object's bytes (company-document text extraction). */
+export async function getObjectBuffer(key: string): Promise<Buffer> {
+  const result = await s3().send(
+    new GetObjectCommand({ Bucket: s3Config().bucket, Key: key }),
+  );
+  return Buffer.from(await result.Body!.transformToByteArray());
+}

@@ -634,7 +634,126 @@
       "restricted": "Restricted",
       "sourcePortal": "Source portal",
       "publication": "Published",
-      "lots": "Lots"
+      "lots": "Lots",
+      "countdown": {
+        "daysLeft": "{days, plural, one {# day left} other {# days left}}",
+        "closesToday": "Closes today",
+        "closed": "Closed"
+      },
+      "client": "Client",
+      "legalType": "Legal type",
+      "activityType": "Main activity",
+      "address": "Address",
+      "language": "Language",
+      "regions": "Regions (NUTS)",
+      "countries": "Countries",
+      "lotValue": "Lot value",
+      "lotDeadline": "Lot deadline",
+      "lotLocations": "Locations",
+      "deadlineKind": {
+        "TENDER": "Bid deadline",
+        "PARTICIPATION_REQUEST": "Participation request deadline",
+        "NONE": "No deadline"
+      }
+    },
+    "ai": {
+      "title": "AI information",
+      "intro": "Run the AI analysis to extract deadlines, requirements, penalties and payment terms from the tender documents — every value backed by a verified quote.",
+      "analyze": "Analyze tender",
+      "reanalyze": "Re-analyze",
+      "analyzing": "Analyzing…",
+      "running": "Running",
+      "timeout": "Analysis is taking longer than expected — results will appear once the worker finishes.",
+      "error": "The analysis could not be started.",
+      "noCorpus": "No processed documents are available for this tender yet, so there is nothing to analyze.",
+      "statsFooter": "{verified} of {total} fields verified",
+      "mandatory": "Required",
+      "yes": "Yes",
+      "no": "No",
+      "days": "{days, plural, one {# day} other {# days}}",
+      "status": {
+        "VERIFIED": "Verified",
+        "PARTIAL": "Partially verified",
+        "EMPTY": "Nothing found",
+        "FAILED": "Failed",
+        "NOT_STARTED": "Not analyzed"
+      },
+      "citation": {
+        "VERIFIED": "Quote verified",
+        "UNVERIFIED": "Unverified",
+        "MISSING": "No source",
+        "showQuote": "{count, plural, one {Show quote} other {Show # quotes}}"
+      },
+      "schemas": {
+        "deadlines": "Deadlines",
+        "suitability_criteria": "Suitability criteria",
+        "award_criteria": "Award criteria",
+        "required_proofs": "Required proofs",
+        "contractual_penalties": "Contractual penalties",
+        "payment_terms": "Payment terms",
+        "alternative_bids": "Alternative bids"
+      },
+      "proofKind": {
+        "certificate": "Certificate",
+        "self_declaration": "Self-declaration",
+        "registry_extract": "Registry extract",
+        "insurance": "Insurance",
+        "reference": "Reference",
+        "other": "Other"
+      },
+      "due": {
+        "with_bid": "With bid",
+        "on_request": "On request"
+      },
+      "fields": {
+        "deadlines": {
+          "submissionDeadline": "Submission deadline",
+          "questionDeadline": "Question deadline",
+          "bindingPeriodEnd": "Bid validity until",
+          "bindingPeriodDays": "Bid validity period",
+          "openingDate": "Bid opening",
+          "executionStart": "Execution start",
+          "executionEnd": "Execution end"
+        },
+        "suitability_criteria": {
+          "minReferenceCount": "Minimum references",
+          "referenceRequirements": "Reference requirements",
+          "minAnnualRevenueEur": "Minimum annual revenue",
+          "requiredCertifications": "Required certifications",
+          "requiredStaffQualifications": "Staff qualifications",
+          "registrationRequirements": "Registration requirements",
+          "minLiabilityCoverageEur": "Minimum liability coverage"
+        },
+        "award_criteria": {
+          "criteria": "Criteria and weighting",
+          "priceWeightPercent": "Price weight",
+          "evaluationMethod": "Evaluation method",
+          "priceOnly": "Lowest price only"
+        },
+        "required_proofs": {
+          "proofs": "Proofs to submit",
+          "preQualificationAccepted": "Pre-qualification accepted"
+        },
+        "contractual_penalties": {
+          "delayPenaltyPercentPerDay": "Delay penalty per day",
+          "delayPenaltyPercentPerWeek": "Delay penalty per week",
+          "penaltyCapPercent": "Penalty cap",
+          "penaltyClauses": "Penalty clauses"
+        },
+        "payment_terms": {
+          "paymentDeadlineDays": "Payment deadline",
+          "retentionPercent": "Security retention",
+          "warrantyRetentionPercent": "Warranty retention",
+          "earlyPaymentDiscountPercent": "Early-payment discount",
+          "earlyPaymentDiscountDays": "Discount window",
+          "invoicingRules": "Invoicing rules",
+          "partialPaymentsAllowed": "Progress payments allowed"
+        },
+        "alternative_bids": {
+          "alternativeBidsAllowed": "Alternative bids allowed",
+          "conditions": "Conditions"
+        }
+      }
     },
     "recommendation": {
       "intro": "Generate an AI assessment of how well this tender fits your company profile.",
@@ -647,6 +766,9 @@
       "concerns": "Concerns",
       "actions": "Suggested actions",
       "disclaimer": "AI-generated guidance — verify against the official tender documents.",
+      "staleHint": "Your company data changed since this assessment — regenerate for an up-to-date result.",
+      "regenerate": "Regenerate",
+      "generatedAt": "Generated {date}",
       "verdict": {
         "STRONG_FIT": "Strong fit",
         "POSSIBLE_FIT": "Possible fit",

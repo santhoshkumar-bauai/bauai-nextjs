@@ -3,7 +3,7 @@ import type { Document } from "mongodb";
 import { extractLegalRefs } from "../chunking/legal-refs.ts";
 import { getAiCollections } from "../db/collections.ts";
 import { searchIndexNames } from "../db/search-indexes.ts";
-import type { RetrievalFilters } from "./types.ts";
+import type { CompanyCorpusFilters, RetrievalFilters } from "./types.ts";
 
 /**
  * Keyword arm: Atlas `$search` over the german-analyzed chunk text. When the
@@ -45,6 +45,52 @@ function filterClauses(filters: RetrievalFilters): Document[] {
     clauses.push({ equals: { path: "language", value: filters.language } });
   }
   return clauses;
+}
+
+/**
+ * Company-corpus $search filter clauses: exactly one tenantId equality, NO
+ * null branch, NO tenderId clause. Exported for the tenant-safety unit test.
+ */
+export function companyFilterClauses(filters: CompanyCorpusFilters): Document[] {
+  const clauses: Document[] = [
+    { equals: { path: "tenantId", value: filters.tenantId } },
+  ];
+  if (filters.documentRecordId) {
+    clauses.push({
+      equals: { path: "documentRecordId", value: filters.documentRecordId },
+    });
+  }
+  return clauses;
+}
+
+export async function keywordSearchCompanyChunks(
+  queryText: string,
+  filters: CompanyCorpusFilters,
+  limit: number,
+): Promise<KeywordHit[]> {
+  const { chunks } = await getAiCollections();
+
+  const pipeline: Document[] = [
+    {
+      $search: {
+        index: searchIndexNames.chunkText,
+        compound: {
+          should: [{ text: { query: queryText, path: "text" } }],
+          minimumShouldMatch: 1,
+          filter: companyFilterClauses(filters),
+        },
+      },
+    },
+    { $limit: limit },
+    { $project: { _id: 1, score: { $meta: "searchScore" } } },
+  ];
+
+  const rows = await chunks
+    .aggregate<{ _id: unknown; score: number }>(pipeline, {
+      readConcern: { level: "local" },
+    })
+    .toArray();
+  return rows.map((row) => ({ id: String(row._id), score: row.score }));
 }
 
 export async function keywordSearchChunks(

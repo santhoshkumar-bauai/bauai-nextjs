@@ -53,6 +53,28 @@ export const chunkEmbedJobSchema = z.object({
 });
 export type ChunkEmbedJob = z.infer<typeof chunkEmbedJobSchema>;
 
+export const companyDocEmbedJobSchema = z.object({
+  kind: z.literal("company_doc_embed"),
+  companyFileId: objectIdHexSchema,
+  /** Company._id — MUST be derived from server context by the producer (§10.2). */
+  tenantId: objectIdHexSchema,
+  chunkerVersion: z.string().min(1),
+  embeddingModel: z.string().min(1),
+  embeddingVersion: z.string().min(1),
+  actorId: systemActor,
+  correlationId: z.string().min(1),
+  attempt: z.number().int().min(0).default(0),
+});
+export type CompanyDocEmbedJob = z.infer<typeof companyDocEmbedJobSchema>;
+
+export function companyDocEmbedJobId(
+  job: Pick<CompanyDocEmbedJob, "companyFileId">,
+): string {
+  // Content-level idempotency lives in the ai_index_state ledger (the byte
+  // sha is unknown at enqueue time); per-file dedupe is enough for the queue.
+  return `company-embed:${job.companyFileId}`;
+}
+
 export const extractSchemaJobSchema = z.object({
   kind: z.literal("extract_schema"),
   tenderId: objectIdHexSchema,
@@ -67,13 +89,19 @@ export const extractSchemaJobSchema = z.object({
 });
 export type ExtractSchemaJob = z.infer<typeof extractSchemaJobSchema>;
 
-export type AiJob = NoticeEmbedJob | DocChunkJob | ChunkEmbedJob | ExtractSchemaJob;
+export type AiJob =
+  | NoticeEmbedJob
+  | DocChunkJob
+  | ChunkEmbedJob
+  | ExtractSchemaJob
+  | CompanyDocEmbedJob;
 
 export const aiJobSchema = z.discriminatedUnion("kind", [
   noticeEmbedJobSchema,
   docChunkJobSchema,
   chunkEmbedJobSchema,
   extractSchemaJobSchema,
+  companyDocEmbedJobSchema,
 ]);
 
 export function noticeEmbedJobId(job: Pick<NoticeEmbedJob, "tenderId" | "embeddingModel" | "embeddingVersion">): string {

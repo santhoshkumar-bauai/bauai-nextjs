@@ -214,17 +214,11 @@ const alternativeBidsFields = {
 
 /* ------------------------------- registry -------------------------------- */
 
-export const EXTRACTION_SCHEMA_NAMES = [
-  "deadlines",
-  "suitability_criteria",
-  "award_criteria",
-  "required_proofs",
-  "contractual_penalties",
-  "payment_terms",
-  "alternative_bids",
-] as const;
-
-export type ExtractionSchemaName = (typeof EXTRACTION_SCHEMA_NAMES)[number];
+export {
+  EXTRACTION_SCHEMA_NAMES,
+  type ExtractionSchemaName,
+} from "../schema-names.ts";
+import type { ExtractionSchemaName } from "../schema-names.ts";
 
 export interface ExtractionSchemaEntry {
   name: ExtractionSchemaName;

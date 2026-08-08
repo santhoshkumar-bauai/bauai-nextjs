@@ -78,5 +78,22 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   }
 
   await file.deleteOne();
+
+  // Best-effort removal of the file's AI context (tenant-scoped chunks +
+  // ledger). An orphan here only leaves stale retrieval context until the
+  // next backfill; it must not fail the delete.
+  try {
+    const { deleteCompanyDocArtifacts } = await import(
+      "@/lib/ai/company/doc-embedder"
+    );
+    const { ObjectId } = await import("mongodb");
+    await deleteCompanyDocArtifacts(
+      new ObjectId(context.company.id),
+      documentId,
+    );
+  } catch (error) {
+    console.error("Failed to delete company document AI artifacts", error);
+  }
+
   return NextResponse.json({ ok: true, id: documentId });
 }

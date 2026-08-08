@@ -134,8 +134,43 @@ export async function POST(request: Request) {
     uploadedBy: context.userId,
   });
 
+  // Fire-and-forget: the document becomes tenant-scoped AI context (fit
+  // analysis evidence). Redis being down must not fail the upload — the
+  // ai:embed:company backfill is the recovery path.
+  void enqueueCompanyDocEmbed(String(file._id), context.company.id, context.userId);
+
   return NextResponse.json(
     { file: serializeCompanyFile(file) },
     { status: 201 },
   );
+}
+
+async function enqueueCompanyDocEmbed(
+  companyFileId: string,
+  companyId: string,
+  actorId: string,
+): Promise<void> {
+  try {
+    const { randomUUID } = await import("node:crypto");
+    const { aiEnv } = await import("@/lib/ai/config/env");
+    const { AI_QUEUES, getAiQueue } = await import("@/lib/ai/queue/queues");
+    const { companyDocEmbedJobId } = await import("@/lib/ai/queue/jobs");
+    const env = aiEnv();
+    const job: import("@/lib/ai/queue/jobs").CompanyDocEmbedJob = {
+      kind: "company_doc_embed",
+      companyFileId,
+      tenantId: companyId,
+      chunkerVersion: env.chunkerVersion,
+      embeddingModel: env.embeddingModel,
+      embeddingVersion: env.embeddingVersion,
+      actorId,
+      correlationId: randomUUID(),
+      attempt: 0,
+    };
+    await getAiQueue(AI_QUEUES.embedding).add("company_doc_embed", job, {
+      jobId: companyDocEmbedJobId(job),
+    });
+  } catch (error) {
+    console.error("Failed to enqueue company document embedding", error);
+  }
 }

@@ -634,7 +634,126 @@
       "restricted": "Zugangsbeschränkt",
       "sourcePortal": "Quellportal",
       "publication": "Veröffentlicht",
-      "lots": "Lose"
+      "lots": "Lose",
+      "countdown": {
+        "daysLeft": "{days, plural, one {noch # Tag} other {noch # Tage}}",
+        "closesToday": "Endet heute",
+        "closed": "Beendet"
+      },
+      "client": "Auftraggeber",
+      "legalType": "Rechtsform",
+      "activityType": "Haupttätigkeit",
+      "address": "Adresse",
+      "language": "Sprache",
+      "regions": "Regionen (NUTS)",
+      "countries": "Länder",
+      "lotValue": "Loswert",
+      "lotDeadline": "Losfrist",
+      "lotLocations": "Ausführungsorte",
+      "deadlineKind": {
+        "TENDER": "Angebotsfrist",
+        "PARTICIPATION_REQUEST": "Teilnahmefrist",
+        "NONE": "Keine Frist"
+      }
+    },
+    "ai": {
+      "title": "KI-Informationen",
+      "intro": "Starten Sie die KI-Analyse, um Fristen, Anforderungen, Vertragsstrafen und Zahlungsbedingungen aus den Vergabeunterlagen zu extrahieren — jeder Wert mit geprüftem Zitat belegt.",
+      "analyze": "Ausschreibung analysieren",
+      "reanalyze": "Neu analysieren",
+      "analyzing": "Analysiere…",
+      "running": "Läuft",
+      "timeout": "Die Analyse dauert länger als erwartet — die Ergebnisse erscheinen, sobald der Worker fertig ist.",
+      "error": "Die Analyse konnte nicht gestartet werden.",
+      "noCorpus": "Für diese Ausschreibung liegen noch keine verarbeiteten Dokumente vor, daher gibt es nichts zu analysieren.",
+      "statsFooter": "{verified} von {total} Feldern verifiziert",
+      "mandatory": "Pflicht",
+      "yes": "Ja",
+      "no": "Nein",
+      "days": "{days, plural, one {# Tag} other {# Tage}}",
+      "status": {
+        "VERIFIED": "Verifiziert",
+        "PARTIAL": "Teilweise verifiziert",
+        "EMPTY": "Nichts gefunden",
+        "FAILED": "Fehlgeschlagen",
+        "NOT_STARTED": "Nicht analysiert"
+      },
+      "citation": {
+        "VERIFIED": "Zitat geprüft",
+        "UNVERIFIED": "Ungeprüft",
+        "MISSING": "Keine Quelle",
+        "showQuote": "{count, plural, one {Zitat anzeigen} other {# Zitate anzeigen}}"
+      },
+      "schemas": {
+        "deadlines": "Fristen",
+        "suitability_criteria": "Eignungskriterien",
+        "award_criteria": "Zuschlagskriterien",
+        "required_proofs": "Nachweise",
+        "contractual_penalties": "Vertragsstrafen",
+        "payment_terms": "Zahlungsbedingungen",
+        "alternative_bids": "Nebenangebote"
+      },
+      "proofKind": {
+        "certificate": "Zertifikat",
+        "self_declaration": "Eigenerklärung",
+        "registry_extract": "Registerauszug",
+        "insurance": "Versicherung",
+        "reference": "Referenz",
+        "other": "Sonstiges"
+      },
+      "due": {
+        "with_bid": "Mit dem Angebot",
+        "on_request": "Auf Verlangen"
+      },
+      "fields": {
+        "deadlines": {
+          "submissionDeadline": "Angebotsfrist",
+          "questionDeadline": "Frist für Bieterfragen",
+          "bindingPeriodEnd": "Bindefrist bis",
+          "bindingPeriodDays": "Bindefrist",
+          "openingDate": "Angebotseröffnung",
+          "executionStart": "Ausführungsbeginn",
+          "executionEnd": "Ausführungsende"
+        },
+        "suitability_criteria": {
+          "minReferenceCount": "Mindestanzahl Referenzen",
+          "referenceRequirements": "Anforderungen an Referenzen",
+          "minAnnualRevenueEur": "Mindestjahresumsatz",
+          "requiredCertifications": "Geforderte Zertifikate",
+          "requiredStaffQualifications": "Personalqualifikation",
+          "registrationRequirements": "Registeranforderungen",
+          "minLiabilityCoverageEur": "Mindestdeckungssumme"
+        },
+        "award_criteria": {
+          "criteria": "Kriterien und Gewichtung",
+          "priceWeightPercent": "Gewichtung Preis",
+          "evaluationMethod": "Wertungsmethode",
+          "priceOnly": "Nur niedrigster Preis"
+        },
+        "required_proofs": {
+          "proofs": "Einzureichende Nachweise",
+          "preQualificationAccepted": "Präqualifikation anerkannt"
+        },
+        "contractual_penalties": {
+          "delayPenaltyPercentPerDay": "Vertragsstrafe je Tag",
+          "delayPenaltyPercentPerWeek": "Vertragsstrafe je Woche",
+          "penaltyCapPercent": "Obergrenze der Vertragsstrafe",
+          "penaltyClauses": "Vertragsstrafenklauseln"
+        },
+        "payment_terms": {
+          "paymentDeadlineDays": "Zahlungsziel",
+          "retentionPercent": "Sicherheitseinbehalt",
+          "warrantyRetentionPercent": "Gewährleistungssicherheit",
+          "earlyPaymentDiscountPercent": "Skonto",
+          "earlyPaymentDiscountDays": "Skontofrist",
+          "invoicingRules": "Rechnungsstellung",
+          "partialPaymentsAllowed": "Abschlagszahlungen möglich"
+        },
+        "alternative_bids": {
+          "alternativeBidsAllowed": "Nebenangebote zugelassen",
+          "conditions": "Bedingungen"
+        }
+      }
     },
     "recommendation": {
       "intro": "Erstellen Sie eine KI-Einschätzung, wie gut diese Ausschreibung zu Ihrem Unternehmensprofil passt.",
@@ -647,6 +766,9 @@
       "concerns": "Bedenken",
       "actions": "Empfohlene nächste Schritte",
       "disclaimer": "KI-generierte Hinweise – bitte anhand der offiziellen Vergabeunterlagen prüfen.",
+      "staleHint": "Ihre Unternehmensdaten haben sich seit dieser Bewertung geändert – für ein aktuelles Ergebnis neu generieren.",
+      "regenerate": "Neu generieren",
+      "generatedAt": "Erstellt {date}",
       "verdict": {
         "STRONG_FIT": "Sehr gut geeignet",
         "POSSIBLE_FIT": "Möglicherweise geeignet",

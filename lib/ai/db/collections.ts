@@ -6,6 +6,7 @@ import type {
   ChunkDocument,
   DocumentClassificationDocument,
   ExtractionDocument,
+  TenderFitRecommendationDocument,
   TenderSearchDocument,
 } from "../types.ts";
 
@@ -15,6 +16,7 @@ export const aiCollectionNames = {
   aiIndexState: "ai_index_state",
   documentClassifications: "document_classifications",
   extractions: "extractions",
+  tenderFitRecommendations: "tender_fit_recommendations",
 } as const;
 
 export interface AiCollections {
@@ -23,6 +25,7 @@ export interface AiCollections {
   aiIndexState: Collection<AiIndexStateDocument>;
   documentClassifications: Collection<DocumentClassificationDocument>;
   extractions: Collection<ExtractionDocument>;
+  tenderFitRecommendations: Collection<TenderFitRecommendationDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -34,5 +37,8 @@ export async function getAiCollections(): Promise<AiCollections> {
     aiIndexState: db.collection(aiCollectionNames.aiIndexState),
     documentClassifications: db.collection(aiCollectionNames.documentClassifications),
     extractions: db.collection(aiCollectionNames.extractions),
+    tenderFitRecommendations: db.collection(
+      aiCollectionNames.tenderFitRecommendations,
+    ),
   };
 }
