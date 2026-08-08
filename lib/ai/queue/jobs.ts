@@ -53,12 +53,27 @@ export const chunkEmbedJobSchema = z.object({
 });
 export type ChunkEmbedJob = z.infer<typeof chunkEmbedJobSchema>;
 
-export type AiJob = NoticeEmbedJob | DocChunkJob | ChunkEmbedJob;
+export const extractSchemaJobSchema = z.object({
+  kind: z.literal("extract_schema"),
+  tenderId: objectIdHexSchema,
+  schemaName: z.string().min(1),
+  schemaVersion: z.number().int().positive(),
+  promptVersion: z.string().min(1),
+  /** Identity of the tender's chunked corpus at enqueue time. */
+  corpusHash: sha256Schema,
+  actorId: systemActor,
+  correlationId: z.string().min(1),
+  attempt: z.number().int().min(0).default(0),
+});
+export type ExtractSchemaJob = z.infer<typeof extractSchemaJobSchema>;
+
+export type AiJob = NoticeEmbedJob | DocChunkJob | ChunkEmbedJob | ExtractSchemaJob;
 
 export const aiJobSchema = z.discriminatedUnion("kind", [
   noticeEmbedJobSchema,
   docChunkJobSchema,
   chunkEmbedJobSchema,
+  extractSchemaJobSchema,
 ]);
 
 export function noticeEmbedJobId(job: Pick<NoticeEmbedJob, "tenderId" | "embeddingModel" | "embeddingVersion">): string {
@@ -67,6 +82,15 @@ export function noticeEmbedJobId(job: Pick<NoticeEmbedJob, "tenderId" | "embeddi
 
 export function docChunkJobId(job: Pick<DocChunkJob, "documentRecordId" | "fileSha256" | "chunkerVersion">): string {
   return `chunk:doc:${job.documentRecordId}:${job.fileSha256}:${job.chunkerVersion}`;
+}
+
+export function extractSchemaJobId(
+  job: Pick<
+    ExtractSchemaJob,
+    "tenderId" | "schemaName" | "schemaVersion" | "promptVersion" | "corpusHash"
+  >,
+): string {
+  return `extract:${job.tenderId}:${job.schemaName}:${job.schemaVersion}:${job.promptVersion}:${job.corpusHash.slice(0, 16)}`;
 }
 
 export function chunkEmbedJobId(

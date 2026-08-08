@@ -46,19 +46,36 @@ export class AiIndexer {
         limiter: { max: env.embeddingRpm, duration: 60_000 },
       },
     );
-    embeddingWorker.on("failed", (job, error) => {
-      log.error("job failed", {
-        queue: AI_QUEUES.embedding,
-        jobId: job?.id,
-        attempt: job?.attemptsMade,
-        error: error.message,
+    // Extraction jobs fan out to several generation calls each, so the
+    // limiter and concurrency are deliberately tighter.
+    const extractionWorker = new Worker(
+      AI_QUEUES.extraction,
+      async (job: Job) => this.process(job, signal),
+      {
+        connection: aiRedisOptions(),
+        prefix: env.redisPrefix,
+        concurrency: env.extractionConcurrency,
+        limiter: { max: env.extractionRpm, duration: 60_000 },
+      },
+    );
+    for (const [queue, worker] of [
+      [AI_QUEUES.embedding, embeddingWorker],
+      [AI_QUEUES.extraction, extractionWorker],
+    ] as const) {
+      worker.on("failed", (job, error) => {
+        log.error("job failed", {
+          queue,
+          jobId: job?.id,
+          attempt: job?.attemptsMade,
+          error: error.message,
+        });
       });
-    });
-    this.workers = [embeddingWorker];
+    }
+    this.workers = [embeddingWorker, extractionWorker];
 
     this.healthy = true;
     log.info("ai-indexer started", {
-      queues: [AI_QUEUES.embedding],
+      queues: [AI_QUEUES.embedding, AI_QUEUES.extraction],
       concurrency: env.workerConcurrency,
       rpm: env.embeddingRpm,
       producers: this.producers.length,

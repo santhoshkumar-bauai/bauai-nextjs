@@ -52,6 +52,7 @@ export async function hybridRetrieveChunks(
       chunkId: row._id,
       tenderId: row.tenderId,
       documentRecordId: row.documentRecordId,
+      fileSha256: row.fileSha256,
       fileName: row.fileName,
       sectionPath: row.sectionPath,
       text: row.text,

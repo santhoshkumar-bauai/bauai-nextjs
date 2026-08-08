@@ -45,6 +45,15 @@ const AiEnvSchema = z.object({
   chunkerVersion: z.string().default("v1"),
   chunkTargetTokens: z.coerce.number().int().positive().default(500),
   chunkMaxTokens: z.coerce.number().int().positive().default(1200),
+
+  classifierVersion: z.string().default("v1"),
+
+  /** Context cap for the retrieval-targeted extraction path. */
+  extractionMaxChunks: z.coerce.number().int().positive().default(16),
+  /** Context cap for the full-document extraction path. */
+  extractionMaxDocChars: z.coerce.number().int().positive().default(150_000),
+  extractionRpm: z.coerce.number().int().positive().default(30),
+  extractionConcurrency: z.coerce.number().int().positive().default(2),
 });
 
 export type AiEnv = z.infer<typeof AiEnvSchema>;
@@ -92,6 +101,11 @@ export function aiEnv(): AiEnv {
     chunkerVersion: process.env.CHUNKER_VERSION,
     chunkTargetTokens: process.env.CHUNK_TARGET_TOKENS,
     chunkMaxTokens: process.env.CHUNK_MAX_TOKENS,
+    classifierVersion: process.env.CLASSIFIER_VERSION,
+    extractionMaxChunks: process.env.AI_EXTRACTION_MAX_CHUNKS,
+    extractionMaxDocChars: process.env.AI_EXTRACTION_MAX_DOC_CHARS,
+    extractionRpm: process.env.AI_EXTRACTION_RPM,
+    extractionConcurrency: process.env.AI_EXTRACTION_CONCURRENCY,
   });
   return cached;
 }

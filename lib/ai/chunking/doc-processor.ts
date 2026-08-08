@@ -1,9 +1,6 @@
 import { getIngestionDb } from "../../ingestion/db/client.ts";
-import { loadDocumentFile } from "../../ingestion/documents/store.ts";
-import type {
-  StoredDocumentFile,
-  TenderDocumentRecord,
-} from "../../ingestion/documents/types.ts";
+import type { TenderDocumentRecord } from "../../ingestion/documents/types.ts";
+import { loadFileText } from "../extraction/source-text.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
 import { aiEnv } from "../config/env.ts";
 import { getAiCollections } from "../db/collections.ts";
@@ -151,15 +148,4 @@ export async function processDocumentChunks(
   }
 
   return chunkedFiles;
-}
-
-/** Full text from S3 when the Mongo copy is truncated; Mongo copy otherwise. */
-async function loadFileText(file: StoredDocumentFile): Promise<string> {
-  const truncated = file.text != null && file.text.length < file.textChars;
-  if (!truncated && file.text != null) return file.text;
-  if (file.textS3Key) {
-    const buffer = await loadDocumentFile(file.s3.bucket, file.textS3Key);
-    return buffer.toString("utf8");
-  }
-  return file.text ?? "";
 }

@@ -1,6 +1,7 @@
 import { getIngestionDb } from "../../ingestion/db/client.ts";
 import type { TenderDocumentRecord } from "../../ingestion/documents/types.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
+import { classifyDocumentFile } from "../classification/classifier.ts";
 import { aiEnv } from "../config/env.ts";
 import { processDocumentChunks } from "../chunking/doc-processor.ts";
 import { getAiCollections } from "../db/collections.ts";
@@ -63,6 +64,14 @@ export async function sweepFetchedDocuments(signal: AbortSignal): Promise<void> 
         for (const sha of chunkedFiles) {
           if (signal.aborted) return;
           await embedDocumentChunks(record._id, sha);
+          // Cheap: heuristics resolve the majority without a model call, and
+          // the ledger makes replays a no-op.
+          await classifyDocumentFile(record._id, sha).catch((error) => {
+            log.warn("classification failed in sweep", {
+              documentRecordId: record._id,
+              error: String(error),
+            });
+          });
         }
         processedAny = true;
       }

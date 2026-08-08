@@ -32,6 +32,7 @@ export interface RetrievedChunk {
   chunkId: ObjectId;
   tenderId: ObjectId;
   documentRecordId: string;
+  fileSha256: string;
   fileName: string;
   sectionPath: string[];
   text: string;

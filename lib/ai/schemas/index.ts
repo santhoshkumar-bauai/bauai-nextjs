@@ -78,7 +78,7 @@ export const chunkSchema = embeddingMetaSchema.extend({
 
 export const aiIndexStateSchema = z.object({
   _id: z.string().min(1),
-  kind: z.enum(["doc_chunks", "chunk_embed"]),
+  kind: z.enum(["doc_chunks", "chunk_embed", "doc_class", "extract_schema"]),
   refId: z.string().min(1),
   sourceHash: z.string(),
   status: z.enum(["PENDING", "RUNNING", "DONE", "FAILED"]),
