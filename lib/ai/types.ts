@@ -153,6 +153,96 @@ export interface ExtractionDocument {
 }
 
 /**
+ * Dora's bid/no-bid verdict (roadmap §12.6/§20.3). Tenant-scoped — it
+ * depends on the company's fit. One current verdict per (tenant, tender),
+ * replaced wholesale. `review` follows §12.6; the review UI is future work.
+ */
+export interface TenderVerdictDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  threadId: ObjectId | null;
+  messageId: ObjectId | null;
+  agentRunId: null;
+  recommendation: "bid" | "no_bid" | "conditional";
+  rationale: string;
+  scoreBreakdown: {
+    eligibilityFit: number;
+    strategicFit: number;
+    capacityFit: number;
+    contractRisk: number;
+    deadlineFeasibility: number;
+  };
+  /** citations are ChatCitation[] (lib/ai/agent/citations.ts). */
+  risks: Array<{
+    text: string;
+    severity: "low" | "medium" | "high";
+    citations: Array<Record<string, unknown>>;
+    uncited?: boolean;
+  }>;
+  blockingRequirements: Array<{
+    text: string;
+    citations: Array<Record<string, unknown>>;
+  }>;
+  unresolvedQuestions: string[];
+  inputs: {
+    corpusHash: string | null;
+    companyDataHash: string;
+    extractionStatuses: Record<string, string>;
+    fitGeneratedAt: Date | null;
+  };
+  model: { provider: string; providerModel: string; promptVersion: string };
+  review: {
+    state: "PENDING";
+    reviewerId: null;
+    reviewedAt: null;
+    edits: [];
+  };
+  locale: "en" | "de";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** One Dora chat thread per (tenant, tender) in v1. Tenant-scoped. */
+export interface ChatThreadDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  agent: "dora";
+  createdBy: string;
+  graphVersion: string;
+  lastMessageAt: Date;
+  messageCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** UI-facing chat log (model context lives in the LangGraph checkpointer). */
+export interface ChatMessageDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  threadId: ObjectId;
+  tenderId: ObjectId;
+  role: "user" | "assistant";
+  content: string;
+  status: "complete" | "aborted" | "error";
+  locale: "en" | "de";
+  /** Coarse tool activity for rendering — never model reasoning. */
+  toolEvents: Array<{ name: string; durationMs: number; resultCount: number | null }>;
+  /** ChatCitation[] (lib/ai/agent/citations.ts). */
+  citations: Array<Record<string, unknown>>;
+  verdictId: ObjectId | null;
+  metrics: {
+    llmCalls: number;
+    inputTokens: number;
+    outputTokens: number;
+    durationMs: number;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * Tender-centric AI overview (about / scope / buyer / risks / highlights),
  * generated in BOTH languages with one call — the UI picks by locale.
  * Tender-derived → global. Works from the notice alone; document excerpts

@@ -656,6 +656,53 @@
         "NONE": "Keine Frist"
       }
     },
+    "chat": {
+      "title": "Dora — Ausschreibungsassistentin",
+      "close": "Schließen",
+      "clear": "Verlauf löschen",
+      "loading": "Verlauf wird geladen…",
+      "empty": "Fragen Sie Dora alles zu dieser Ausschreibung — Fristen, Anforderungen, Risiken oder den Abgleich mit Ihren Unternehmensunterlagen.",
+      "placeholder": "Frage zur Ausschreibung…",
+      "send": "Senden",
+      "stop": "Stopp",
+      "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+      "rateLimited": "Die KI ist ausgelastet — bitte gleich erneut versuchen.",
+      "errorMessage": "Diese Antwort konnte nicht erstellt werden.",
+      "aborted": "Gestoppt",
+      "citationSource": "Quelle",
+      "fitQuickAction": "Firmen-Fit-Bewertung",
+      "verdictQuickAction": "Bieten / Nicht bieten?",
+      "tool": {
+        "get_tender_notice": "Lese die Bekanntmachung…",
+        "get_tender_overview": "Lade die Übersicht…",
+        "get_extractions": "Lade geprüfte Fakten…",
+        "search_tender_documents": "Durchsuche Vergabeunterlagen…",
+        "get_company_fit": "Prüfe Firmen-Fit…",
+        "search_company_documents": "Durchsuche Ihre Unterlagen…",
+        "verdict": "Erstelle die Empfehlung…",
+        "generic": "Arbeite…"
+      },
+      "verdict": {
+        "recommendation": {
+          "bid": "Bieten",
+          "conditional": "Bieten mit Vorbehalt",
+          "no_bid": "Nicht bieten"
+        },
+        "stale": "Daten geändert — neu generieren",
+        "scores": {
+          "eligibilityFit": "Eignung",
+          "strategicFit": "Strategischer Fit",
+          "capacityFit": "Kapazität",
+          "contractRisk": "Vertragsrisiko",
+          "deadlineFeasibility": "Fristen-Machbarkeit"
+        },
+        "risks": "Risiken",
+        "severity": { "low": "Niedrig", "medium": "Mittel", "high": "Hoch" },
+        "blocking": "Blockierende Anforderungen",
+        "unresolved": "Offene Fragen",
+        "generatedAt": "Erstellt {date}"
+      }
+    },
     "ai": {
       "title": "KI-Informationen",
       "intro": "Starten Sie die KI-Analyse, um Fristen, Anforderungen, Vertragsstrafen und Zahlungsbedingungen aus den Vergabeunterlagen zu extrahieren — jeder Wert mit geprüftem Zitat belegt.",

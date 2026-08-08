@@ -17,8 +17,8 @@ import type { SerializedTenderDetail } from "@/lib/tenders/detail";
 import type { TenderRecommendation } from "@/lib/tenders/recommendation";
 import { AboutTab } from "./detail/about-tab";
 import { DocumentsTab } from "./detail/documents-tab";
+import { DoraAssistant } from "./detail/dora-assistant";
 import { ExtractionsSection } from "./detail/extractions-section";
-import { FitAssistant } from "./detail/fit-assistant";
 import { DeadlineChip } from "./detail/header-summary";
 import { ScheduleTab } from "./detail/schedule-tab";
 
@@ -185,13 +185,16 @@ export function TenderDetailDialog({
           </Tabs>
         )}
         {detail && !loading && (
-          <FitAssistant
-            rec={rec}
-            stale={recStale}
-            generatedAt={recGeneratedAt}
-            loading={recLoading}
-            error={recError}
-            onGenerate={generateRecommendation}
+          <DoraAssistant
+            tenderId={tenderId}
+            fit={{
+              rec,
+              stale: recStale,
+              generatedAt: recGeneratedAt,
+              loading: recLoading,
+              error: recError,
+              onGenerate: generateRecommendation,
+            }}
           />
         )}
       </DialogContent>

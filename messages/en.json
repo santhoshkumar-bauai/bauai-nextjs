@@ -656,6 +656,53 @@
         "NONE": "No deadline"
       }
     },
+    "chat": {
+      "title": "Dora — tender assistant",
+      "close": "Close",
+      "clear": "Clear conversation",
+      "loading": "Loading conversation…",
+      "empty": "Ask Dora anything about this tender — deadlines, requirements, risks, or how it compares to your company's documents.",
+      "placeholder": "Ask about this tender…",
+      "send": "Send",
+      "stop": "Stop",
+      "error": "Something went wrong. Try again.",
+      "rateLimited": "The AI is rate limited — try again in a moment.",
+      "errorMessage": "This reply failed to generate.",
+      "aborted": "Stopped",
+      "citationSource": "Source",
+      "fitQuickAction": "Company fit assessment",
+      "verdictQuickAction": "Bid / no-bid verdict",
+      "tool": {
+        "get_tender_notice": "Reading the tender notice…",
+        "get_tender_overview": "Loading the tender overview…",
+        "get_extractions": "Loading verified facts…",
+        "search_tender_documents": "Searching tender documents…",
+        "get_company_fit": "Checking company fit…",
+        "search_company_documents": "Searching your documents…",
+        "verdict": "Drafting the verdict…",
+        "generic": "Working…"
+      },
+      "verdict": {
+        "recommendation": {
+          "bid": "Bid",
+          "conditional": "Bid with conditions",
+          "no_bid": "Don't bid"
+        },
+        "stale": "Data changed — regenerate",
+        "scores": {
+          "eligibilityFit": "Eligibility fit",
+          "strategicFit": "Strategic fit",
+          "capacityFit": "Capacity fit",
+          "contractRisk": "Contract risk",
+          "deadlineFeasibility": "Deadline feasibility"
+        },
+        "risks": "Risks",
+        "severity": { "low": "Low", "medium": "Medium", "high": "High" },
+        "blocking": "Blocking requirements",
+        "unresolved": "Unresolved questions",
+        "generatedAt": "Generated {date}"
+      }
+    },
     "ai": {
       "title": "AI information",
       "intro": "Run the AI analysis to extract deadlines, requirements, penalties and payment terms from the tender documents — every value backed by a verified quote.",

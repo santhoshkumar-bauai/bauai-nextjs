@@ -232,7 +232,10 @@ export function useExtractions(tenderId: string | null): ExtractionsState & {
     if (!initialLoaded || autoFired.current) return;
     if (overview || analyzing || overviewLoading) return;
     autoFired.current = true;
-    analyze();
+    // Deferred so the setState calls inside analyze() happen outside the
+    // effect body (same pattern as the reset effect above).
+    const timer = setTimeout(analyze, 0);
+    return () => clearTimeout(timer);
   }, [initialLoaded, overview, analyzing, overviewLoading, analyze]);
 
   return {
