@@ -4,8 +4,9 @@
 #   docker compose -f docker/docker-compose.yml up -d --build
 #   docker compose -f docker/docker-compose.yml logs -f ingest
 #
-# MongoDB runs as a single-member replica set because transactions and change
-# streams require one (§6.1). This is fine for development; production must use a
+# MongoDB runs as mongodb-atlas-local: a single-member replica set (transactions
+# and change streams require one, §6.1) bundled with mongot, so $search and
+# $vectorSearch work locally exactly as on Atlas. Production must use a
 # three-member set or Atlas.
 
 name: bauai-ingestion
@@ -18,8 +19,10 @@ name: bauai-ingestion
 #
 # These two must be overridden, because .env.local points at localhost while the
 # workers reach MongoDB and Redis by compose service name.
+# atlas-local advertises itself as "localhost", so in-network clients must use
+# directConnection rather than the replica-set name.
 x-worker-env: &worker-env
-  MONGODB_URI: mongodb://mongo:27017/?replicaSet=rs0
+  MONGODB_URI: mongodb://mongo:27017/?directConnection=true
   REDIS_URL: redis://redis:6379
 
 x-worker-base: &worker-base
@@ -32,8 +35,8 @@ x-worker-base: &worker-base
     - path: ../.env.local
       required: false
   depends_on:
-    mongo-init:
-      condition: service_completed_successfully
+    mongo:
+      condition: service_healthy
     redis:
       condition: service_healthy
   # SIGTERM starts the graceful drain; the grace period must exceed
@@ -48,57 +51,37 @@ x-worker-base: &worker-base
 
 services:
   mongo:
-    image: mongo:8
-    command:
-      - --replSet
-      - rs0
-      - --bind_ip_all
-      - --wiredTigerCacheSizeGB
-      - "1"
+    # Bundles mongod + mongot and self-initiates the replica set, so no init
+    # side-car is needed and Atlas Search / Vector Search work locally.
+    image: mongodb/mongodb-atlas-local:8.2
+    # atlas-local names the replica set after the container hostname; without a
+    # pinned hostname, recreating the container generates a new name that no
+    # longer matches the stored replset config and the node boots as a GHOST.
+    hostname: bauai-mongo
+    # Behave like a system service: survive reboots without manual compose up.
+    restart: unless-stopped
+    # Bounded so a mongot vector-index build cannot starve the whole Docker VM
+    # (observed: host-wide Docker wedge during the 44k-notice embedding
+    # backfill on a 16GB machine). OOM-killing this container is recoverable —
+    # every AI pipeline resumes from its ledger.
+    mem_limit: ${MONGO_MEM_LIMIT:-4g}
     volumes:
       - mongo-data:/data/db
+      - mongot-data:/data/mongot
     ports:
-      # Host access needs directConnection=true, since the set advertises "mongo".
-      - "${MONGO_HOST_PORT:-27017}:27017"
+      # Host access needs directConnection=true. Default host port is 27018
+      # because dev machines commonly run their own mongod on 27017.
+      - "${MONGO_HOST_PORT:-27018}:27017"
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 20s
-
-  # One-shot: initiates the replica set, then exits. Workers wait for it to
-  # complete, so they never see a standalone mongod and fail their precondition.
-  mongo-init:
-    image: mongo:8
-    depends_on:
-      mongo:
-        condition: service_healthy
-    restart: "no"
-    entrypoint:
-      - bash
-      - -c
-      - |
-        set -e
-        if mongosh --host mongo:27017 --quiet --eval 'rs.status().ok' >/dev/null 2>&1; then
-          echo "replica set already initiated"
-        else
-          echo "initiating replica set rs0"
-          mongosh --host mongo:27017 --quiet --eval '
-            rs.initiate({_id: "rs0", members: [{_id: 0, host: "mongo:27017"}]})
-          '
-        fi
-        echo "waiting for primary"
-        mongosh --host mongo:27017 --quiet --eval '
-          for (let i = 0; i < 60; i++) {
-            if (db.hello().isWritablePrimary) { print("primary ready"); quit(0) }
-            sleep(1000)
-          }
-          print("timed out waiting for primary"); quit(1)
-        '
+      start_period: 40s
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     command:
       - redis-server
       - --appendonly
@@ -112,7 +95,9 @@ services:
     volumes:
       - redis-data:/data
     ports:
-      - "${REDIS_HOST_PORT:-6379}:6379"
+      # Host default is 6380: Windows dev machines often run their own Redis
+      # (5.x) service on 127.0.0.1:6379, which shadows a docker publish.
+      - "${REDIS_HOST_PORT:-6380}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -128,8 +113,8 @@ services:
       <<: *worker-env
     command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
     depends_on:
-      mongo-init:
-        condition: service_completed_successfully
+      mongo:
+        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -192,6 +177,19 @@ services:
       bootstrap:
         condition: service_completed_successfully
 
+  # BullMQ consumers + producers for the AI queues (embedding, chunking).
+  ai-indexer:
+    <<: *worker-base
+    environment:
+      <<: *worker-env
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/ai-indexer.mts"]
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "${AI_INDEXER_METRICS_PORT:-9466}:9464"
+
 volumes:
   mongo-data:
+  mongot-data:
   redis-data:

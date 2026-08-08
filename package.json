@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:seed:cpv": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/seed-cpv-codes.mts",
     "db:seed:onboarding": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/seed-onboarding-data.mts",
     "db:seed:all": "npm run db:seed:cpv && npm run db:seed:onboarding",
@@ -24,6 +26,11 @@
     "mongo:dev": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/mongo-dev-replica-set.mts",
     "seed:tenders": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/seed-tenders.mts",
     "worker:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/documents.mts",
+    "ai:bootstrap": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-bootstrap.mts",
+    "worker:ai": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/ai-indexer.mts",
+    "ai:backfill:notices": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-backfill-notices.mts",
+    "ai:backfill:chunks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-backfill-chunks.mts",
+    "ai:eval": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-retrieval-eval.mts",
     "fetch:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fetch-documents.mts",
     "documents:inspect": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/inspect-document-url.mts"
   },
@@ -36,6 +43,7 @@
     "@fontsource-variable/inter": "^5.3.0",
     "@vis.gl/react-google-maps": "^1.9.0",
     "better-auth": "^1.6.25",
+    "bullmq": "^5.81.3",
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -55,7 +63,8 @@
     "tailwind-merge": "^3.6.0",
     "tw-animate-css": "^1.4.0",
     "unpdf": "^1.8.0",
-    "unzipper": "^0.12.5"
+    "unzipper": "^0.12.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -63,9 +72,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/unzipper": "^0.10.11",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

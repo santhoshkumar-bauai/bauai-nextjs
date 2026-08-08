@@ -1,0 +1,79 @@
+import { z } from "zod";
+
+import { objectIdHexSchema, sha256Schema } from "../schemas/index.ts";
+
+/**
+ * Queue payloads and their idempotency keys (§10.3). The key doubles as the
+ * BullMQ `jobId` — a queued duplicate is dropped by BullMQ itself — and
+ * processors re-check identity (sourceHash + model + version) at write time so
+ * replays after completion are safe no-ops.
+ *
+ * Payloads carry only ids and version identities, never document content:
+ * Redis is transport, MongoDB is the source of truth.
+ */
+
+/** Work on the global tender corpus runs as the system actor. */
+const systemActor = z.string().min(1).default("system");
+
+export const noticeEmbedJobSchema = z.object({
+  kind: z.literal("notice_embed"),
+  tenderId: objectIdHexSchema,
+  embeddingModel: z.string().min(1),
+  embeddingVersion: z.string().min(1),
+  actorId: systemActor,
+  correlationId: z.string().min(1),
+  attempt: z.number().int().min(0).default(0),
+});
+export type NoticeEmbedJob = z.infer<typeof noticeEmbedJobSchema>;
+
+export const docChunkJobSchema = z.object({
+  kind: z.literal("doc_chunks"),
+  /** `tender_documents._id` — string of the form "canonicalKey#hash". */
+  documentRecordId: z.string().min(1),
+  tenderId: objectIdHexSchema,
+  fileSha256: sha256Schema,
+  chunkerVersion: z.string().min(1),
+  actorId: systemActor,
+  correlationId: z.string().min(1),
+  attempt: z.number().int().min(0).default(0),
+});
+export type DocChunkJob = z.infer<typeof docChunkJobSchema>;
+
+export const chunkEmbedJobSchema = z.object({
+  kind: z.literal("chunk_embed"),
+  documentRecordId: z.string().min(1),
+  tenderId: objectIdHexSchema,
+  fileSha256: sha256Schema,
+  chunkerVersion: z.string().min(1),
+  embeddingModel: z.string().min(1),
+  embeddingVersion: z.string().min(1),
+  actorId: systemActor,
+  correlationId: z.string().min(1),
+  attempt: z.number().int().min(0).default(0),
+});
+export type ChunkEmbedJob = z.infer<typeof chunkEmbedJobSchema>;
+
+export type AiJob = NoticeEmbedJob | DocChunkJob | ChunkEmbedJob;
+
+export const aiJobSchema = z.discriminatedUnion("kind", [
+  noticeEmbedJobSchema,
+  docChunkJobSchema,
+  chunkEmbedJobSchema,
+]);
+
+export function noticeEmbedJobId(job: Pick<NoticeEmbedJob, "tenderId" | "embeddingModel" | "embeddingVersion">): string {
+  return `embed:notice:${job.tenderId}:${job.embeddingModel}:${job.embeddingVersion}`;
+}
+
+export function docChunkJobId(job: Pick<DocChunkJob, "documentRecordId" | "fileSha256" | "chunkerVersion">): string {
+  return `chunk:doc:${job.documentRecordId}:${job.fileSha256}:${job.chunkerVersion}`;
+}
+
+export function chunkEmbedJobId(
+  job: Pick<
+    ChunkEmbedJob,
+    "documentRecordId" | "fileSha256" | "chunkerVersion" | "embeddingModel" | "embeddingVersion"
+  >,
+): string {
+  return `embed:chunks:${job.documentRecordId}:${job.fileSha256}:${job.chunkerVersion}:${job.embeddingModel}:${job.embeddingVersion}`;
+}

@@ -1,0 +1,721 @@
+{
+  "generatedAt": "2026-08-08T11:37:55.116Z",
+  "summaries": [
+    {
+      "mode": "keyword",
+      "language": "de",
+      "questions": 12,
+      "answerable": 12,
+      "hitAt1": 0.8333333333333334,
+      "hitAt5": 0.8333333333333334,
+      "hitAt10": 0.8333333333333334,
+      "mrr": 0.8333333333333334,
+      "meanLatencyMs": 33
+    },
+    {
+      "mode": "keyword",
+      "language": "en",
+      "questions": 12,
+      "answerable": 12,
+      "hitAt1": 0.16666666666666666,
+      "hitAt5": 0.16666666666666666,
+      "hitAt10": 0.16666666666666666,
+      "mrr": 0.16666666666666666,
+      "meanLatencyMs": 24
+    },
+    {
+      "mode": "vector",
+      "language": "de",
+      "questions": 12,
+      "answerable": 12,
+      "hitAt1": 0.8333333333333334,
+      "hitAt5": 1,
+      "hitAt10": 1,
+      "mrr": 0.8958333333333334,
+      "meanLatencyMs": 482
+    },
+    {
+      "mode": "vector",
+      "language": "en",
+      "questions": 12,
+      "answerable": 12,
+      "hitAt1": 0.9166666666666666,
+      "hitAt5": 0.9166666666666666,
+      "hitAt10": 0.9166666666666666,
+      "mrr": 0.9166666666666666,
+      "meanLatencyMs": 485
+    },
+    {
+      "mode": "hybrid",
+      "language": "de",
+      "questions": 12,
+      "answerable": 12,
+      "hitAt1": 0.9166666666666666,
+      "hitAt5": 1,
+      "hitAt10": 1,
+      "mrr": 0.9583333333333334,
+      "meanLatencyMs": 522
+    },
+    {
+      "mode": "hybrid",
+      "language": "en",
+      "questions": 12,
+      "answerable": 12,
+      "hitAt1": 0.4166666666666667,
+      "hitAt5": 0.9166666666666666,
+      "hitAt10": 0.9166666666666666,
+      "mrr": 0.6527777777777778,
+      "meanLatencyMs": 484
+    }
+  ],
+  "results": [
+    {
+      "questionId": "submission-deadline",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 29
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 19
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 590
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 456
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 679
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 472
+    },
+    {
+      "questionId": "required-references",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 18
+    },
+    {
+      "questionId": "required-references",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": null,
+      "retrieved": 0,
+      "latencyMs": 6
+    },
+    {
+      "questionId": "required-references",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 485
+    },
+    {
+      "questionId": "required-references",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 480
+    },
+    {
+      "questionId": "required-references",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 645
+    },
+    {
+      "questionId": "required-references",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 518
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 60
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": null,
+      "retrieved": 1,
+      "latencyMs": 63
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 491
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 447
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 487
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 480
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 16
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 17
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 481
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 476
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 458
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 463
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 158
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": null,
+      "retrieved": 0,
+      "latencyMs": 62
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 474
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 555
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 572
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 469
+    },
+    {
+      "questionId": "required-documents",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 23
+    },
+    {
+      "questionId": "required-documents",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 21
+    },
+    {
+      "questionId": "required-documents",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 479
+    },
+    {
+      "questionId": "required-documents",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 470
+    },
+    {
+      "questionId": "required-documents",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 475
+    },
+    {
+      "questionId": "required-documents",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb8369759cd96e3dd827",
+      "firstRelevantRank": 2,
+      "retrieved": 10,
+      "latencyMs": 473
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 16
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 15
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 447
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 524
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 476
+    },
+    {
+      "questionId": "submission-deadline",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 482
+    },
+    {
+      "questionId": "required-references",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 14
+    },
+    {
+      "questionId": "required-references",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 0,
+      "latencyMs": 5
+    },
+    {
+      "questionId": "required-references",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 488
+    },
+    {
+      "questionId": "required-references",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 496
+    },
+    {
+      "questionId": "required-references",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 522
+    },
+    {
+      "questionId": "required-references",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 497
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 12
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 1,
+      "latencyMs": 6
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 3,
+      "retrieved": 10,
+      "latencyMs": 457
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 458
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 554
+    },
+    {
+      "questionId": "insurance-coverage",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 472
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 14
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 10,
+      "latencyMs": 13
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 470
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 484
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 465
+    },
+    {
+      "questionId": "alternative-bids",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 1,
+      "retrieved": 10,
+      "latencyMs": 471
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 19
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": null,
+      "retrieved": 0,
+      "latencyMs": 5
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 470
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 480
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 474
+    },
+    {
+      "questionId": "contract-penalties",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 515
+    },
+    {
+      "questionId": "required-documents",
+      "language": "de",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 15
+    },
+    {
+      "questionId": "required-documents",
+      "language": "en",
+      "mode": "keyword",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 52
+    },
+    {
+      "questionId": "required-documents",
+      "language": "de",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 447
+    },
+    {
+      "questionId": "required-documents",
+      "language": "en",
+      "mode": "vector",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 490
+    },
+    {
+      "questionId": "required-documents",
+      "language": "de",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 462
+    },
+    {
+      "questionId": "required-documents",
+      "language": "en",
+      "mode": "hybrid",
+      "tenderId": "6a75cb9369759cd96e3dda49",
+      "firstRelevantRank": 0,
+      "retrieved": 10,
+      "latencyMs": 499
+    }
+  ]
+}
