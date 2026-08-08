@@ -32,6 +32,9 @@ type RegionAutocompleteProps = {
   emptyText: string;
   attribution: string;
   formatTypedRegion: (value: string) => string;
+  /** Native form-validation flag; onboarding requires a region, settings does not. */
+  required?: boolean;
+  disabled?: boolean;
 };
 
 export function RegionAutocomplete({
@@ -43,6 +46,8 @@ export function RegionAutocomplete({
   emptyText,
   attribution,
   formatTypedRegion,
+  required = true,
+  disabled = false,
 }: RegionAutocompleteProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(value?.label || "");
@@ -127,7 +132,8 @@ export function RegionAutocomplete({
           aria-controls="region-suggestions"
           aria-autocomplete="list"
           placeholder={placeholder}
-          required
+          required={required}
+          disabled={disabled}
           onFocus={() => setOpen(true)}
           onChange={(event) => {
             setQuery(event.target.value);
