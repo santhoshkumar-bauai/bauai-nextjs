@@ -1,12 +1,16 @@
 import { ObjectId } from "mongodb";
 
 import { getAiCollections } from "../db/collections.ts";
-import { keywordSearchChunks } from "./keyword.ts";
+import { keywordSearchChunks, keywordSearchCompanyChunks } from "./keyword.ts";
 import { fuseRanks } from "./rrf.ts";
 import { getReranker } from "./rerank.ts";
-import type { RetrievalQuery, RetrievedChunk } from "./types.ts";
+import type {
+  CompanyCorpusFilters,
+  RetrievalQuery,
+  RetrievedChunk,
+} from "./types.ts";
 import { CANDIDATES_PER_ARM } from "./types.ts";
-import { vectorSearchChunks } from "./vector.ts";
+import { vectorSearchChunks, vectorSearchCompanyChunks } from "./vector.ts";
 
 /**
  * The §17.3 pipeline: legal-ref-aware keyword search and vector search run in
@@ -68,6 +72,67 @@ export async function hybridRetrieveChunks(
   }
 
   const reranked = await getReranker().rerank(query.text, candidates, query.k);
+  return reranked.map((chunk, index) => ({ ...chunk, rank: index }));
+}
+
+/**
+ * Hybrid retrieval over a company's own document corpus (tenant-scoped
+ * chunks). Used as evidence for the fit analysis. Same §17.3 pipeline shape
+ * as tender retrieval, but through the strict CompanyCorpusFilters arms.
+ */
+export async function hybridRetrieveCompanyChunks(input: {
+  text: string;
+  filters: CompanyCorpusFilters;
+  k: number;
+}): Promise<RetrievedChunk[]> {
+  const [keywordHits, vectorHits] = await Promise.all([
+    keywordSearchCompanyChunks(input.text, input.filters, CANDIDATES_PER_ARM),
+    vectorSearchCompanyChunks(input.text, input.filters, CANDIDATES_PER_ARM),
+  ]);
+
+  const fused = fuseRanks([
+    { ids: keywordHits.map((hit) => hit.id) },
+    { ids: vectorHits.map((hit) => hit.id) },
+  ]);
+  const keywordScores = new Map(keywordHits.map((hit) => [hit.id, hit.score]));
+  const vectorScores = new Map(vectorHits.map((hit) => [hit.id, hit.score]));
+
+  const shortlist = fused.slice(0, CANDIDATES_PER_ARM);
+  const { chunks } = await getAiCollections();
+  const rows = await chunks
+    .find({
+      _id: { $in: shortlist.map((entry) => new ObjectId(entry.id)) },
+      // Belt-and-braces: even a bug in the search filters cannot cross the
+      // tenant boundary past this fetch filter.
+      tenantId: input.filters.tenantId,
+    })
+    .toArray();
+  const rowsById = new Map(rows.map((row) => [String(row._id), row]));
+
+  const candidates: RetrievedChunk[] = [];
+  for (const [rank, entry] of shortlist.entries()) {
+    const row = rowsById.get(entry.id);
+    if (!row?._id) continue;
+    candidates.push({
+      chunkId: row._id,
+      tenderId: row.tenderId,
+      documentRecordId: row.documentRecordId,
+      fileSha256: row.fileSha256,
+      fileName: row.fileName,
+      sectionPath: row.sectionPath,
+      text: row.text,
+      legalRefs: row.legalRefs,
+      anchor: row.anchor,
+      scores: {
+        keyword: keywordScores.get(entry.id),
+        vector: vectorScores.get(entry.id),
+        fused: entry.score,
+      },
+      rank,
+    });
+  }
+
+  const reranked = await getReranker().rerank(input.text, candidates, input.k);
   return reranked.map((chunk, index) => ({ ...chunk, rank: index }));
 }
 

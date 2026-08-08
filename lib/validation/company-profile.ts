@@ -259,6 +259,34 @@ export function buildCompanyProfileUpdate(
   if (has("specializations")) update.specializations = strList(body.specializations);
   if (has("certifications")) update.certifications = strList(body.certifications);
 
+  // Region coordinates from the Places picker (same shape onboarding writes).
+  // Without this handler a region change via settings silently drops the
+  // coordinates and geo matching keeps using the stale onboarding location.
+  if (has("regionLocation")) {
+    const location = body.regionLocation;
+    if (location && typeof location === "object") {
+      const record = location as Record<string, unknown>;
+      const placeId = str(record.placeId);
+      const latitude = record.latitude;
+      const longitude = record.longitude;
+      if (
+        placeId &&
+        typeof latitude === "number" &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        typeof longitude === "number" &&
+        longitude >= -180 &&
+        longitude <= 180
+      ) {
+        update.regionLocation = { placeId, latitude, longitude };
+      } else {
+        update.regionLocation = undefined;
+      }
+    } else {
+      update.regionLocation = undefined;
+    }
+  }
+
   if (has("addressCoordinates")) {
     const c = body.addressCoordinates;
     if (c && typeof c === "object") {

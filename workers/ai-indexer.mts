@@ -37,6 +37,15 @@ indexer.registerProcessor("notice_embed", async (job) => {
   await processNoticeEmbedJob(job);
 });
 
+const { processCompanyDocEmbed } = await import(
+  "../lib/ai/company/doc-embedder.ts"
+);
+
+indexer.registerProcessor("company_doc_embed", async (job) => {
+  if (job.kind !== "company_doc_embed") return;
+  await processCompanyDocEmbed(job);
+});
+
 indexer.registerProcessor("extract_schema", async (job) => {
   if (job.kind !== "extract_schema") return;
   const schemaName = EXTRACTION_SCHEMA_NAMES.find((n) => n === job.schemaName);

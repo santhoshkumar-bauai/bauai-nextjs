@@ -60,13 +60,15 @@ export interface ChunkAnchor {
   charEnd: number;
 }
 
-/** One retrievable chunk of one tender document file (§12.4). */
+/** One retrievable chunk of one tender document file (§12.4) — or, when
+ * `tenantId` is set and `tenderId` is null, of a company document. */
 export interface ChunkDocument extends EmbeddingMeta {
   _id?: ObjectId;
   /** null = shared tender corpus; ObjectId = tenant-owned (company upload). */
   tenantId: ObjectId | null;
-  tenderId: ObjectId;
-  /** `tender_documents._id` — a string of the form "canonicalKey#hash". */
+  /** null for company-corpus chunks. */
+  tenderId: ObjectId | null;
+  /** `tender_documents._id` ("canonicalKey#hash") or "company:{fileId}". */
   documentRecordId: string;
   fileSha256: string;
   fileName: string;
@@ -151,13 +153,61 @@ export interface ExtractionDocument {
 }
 
 /**
+ * Tender-centric AI overview (about / scope / buyer / risks / highlights),
+ * generated in BOTH languages with one call — the UI picks by locale.
+ * Tender-derived → global. Works from the notice alone; document excerpts
+ * enrich it when they exist (`sourceChunkCount` > 0).
+ */
+export interface TenderOverviewDocument {
+  _id?: ObjectId;
+  tenantId: null;
+  tenderId: ObjectId;
+  /** { en: {about, scope, buyer, risks[], highlights[]}, de: {...} } */
+  overview: Record<string, unknown>;
+  sourceChunkCount: number;
+  /** Chunk-corpus identity used, or null for notice-only generations. */
+  corpusHash: string | null;
+  model: { provider: string; providerModel: string; promptVersion: string };
+  generatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Cached company-fit recommendation, tenant-scoped: the assessment depends on
+ * the company's own data, so it is private to the tenant and keyed by a
+ * `companyDataHash` — when company data changes the stored hash no longer
+ * matches and the UI shows the cached result as stale.
+ */
+export interface TenderFitRecommendationDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  companyDataHash: string;
+  locale: "en" | "de";
+  /** TenderRecommendation shape from lib/tenders/recommendation.ts. */
+  recommendation: Record<string, unknown>;
+  model: { provider: string; providerModel: string; promptVersion: string };
+  /** Extraction corpus identity used for the facts section, if any. */
+  corpusHash: string | null;
+  retrievedChunkIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * Durable ledger for document-derived work (chunking, chunk embedding,
  * classification, extraction). `_id` is the idempotency key (§10.3), e.g.
  * `chunk:doc:{documentRecordId}:{fileSha256}:{chunkerVersion}`.
  */
 export interface AiIndexStateDocument {
   _id: string;
-  kind: "doc_chunks" | "chunk_embed" | "doc_class" | "extract_schema";
+  kind:
+    | "doc_chunks"
+    | "chunk_embed"
+    | "doc_class"
+    | "extract_schema"
+    | "company_doc_embed";
   /** The tender_documents._id this state belongs to. */
   refId: string;
   sourceHash: string;

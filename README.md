@@ -1,5 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project documentation
+
+| Doc | Covers |
+|---|---|
+| [docs/AI_SUBSYSTEM.md](docs/AI_SUBSYSTEM.md) | AI stack: embeddings, hybrid retrieval, extraction, overviews, fit analysis, workers, runbook, gotchas |
+| [docs/GLOSSARY.md](docs/GLOSSARY.md) | German procurement terms ↔ English code identifiers |
+| [docs/INGESTION_WORKER.md](docs/INGESTION_WORKER.md) | Tender notice ingestion pipeline |
+| [docs/DOCUMENT_RESOLVERS.md](docs/DOCUMENT_RESOLVERS.md) | Tender document acquisition (portal resolvers) |
+| [docs/COMPANY_DETAILS_AND_UPLOADS.md](docs/COMPANY_DETAILS_AND_UPLOADS.md) | Company profile + document uploads |
+| [BAU_AI_AGENTIC_TENDER_ROADMAP.md](BAU_AI_AGENTIC_TENDER_ROADMAP.md) | The one-month agentic platform roadmap (Clara/Dora/Nova) |
+
+Dev quickstart: `docker compose -f docker/docker-compose.yml up -d mongo redis`
+→ `npm run dev` + `npm run worker:ai` (AI features). MongoDB runs on host port
+**27018**, Redis on **6380** — see the AI subsystem doc's Dev environment section.
+
 ## Getting Started
 
 First, run the development server:

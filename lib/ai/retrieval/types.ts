@@ -18,6 +18,17 @@ export interface RetrievalFilters {
   language?: string;
 }
 
+/**
+ * Company-corpus search scope. Deliberately a SEPARATE type from
+ * RetrievalFilters: `tenantId` is REQUIRED and non-null, and there is no
+ * shared-corpus null branch — a company-corpus query may only ever see its
+ * own tenant's chunks. Never merge this with the tender-scope filter.
+ */
+export interface CompanyCorpusFilters {
+  tenantId: ObjectId;
+  documentRecordId?: string;
+}
+
 export type RetrievalMode = "keyword" | "vector" | "hybrid";
 
 export interface RetrievalQuery {
@@ -30,7 +41,8 @@ export interface RetrievalQuery {
 
 export interface RetrievedChunk {
   chunkId: ObjectId;
-  tenderId: ObjectId;
+  /** null for company-corpus chunks. */
+  tenderId: ObjectId | null;
   documentRecordId: string;
   fileSha256: string;
   fileName: string;

@@ -32,6 +32,8 @@
     "ai:backfill:chunks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-backfill-chunks.mts",
     "ai:classify:backfill": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-classify-backfill.mts",
     "ai:extract": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-extract.mts",
+    "ai:embed:company": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-embed-company.mts",
+    "geocode:backfill": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/geocode-backfill.mts",
     "ai:eval": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-retrieval-eval.mts",
     "fetch:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fetch-documents.mts",
     "documents:inspect": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/inspect-document-url.mts"

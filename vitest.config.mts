@@ -12,6 +12,7 @@ export default defineConfig({
       "lib/**/*.test.ts",
       "workers/**/*.test.ts",
       "scripts/**/*.test.mts",
+      "messages/**/*.test.ts",
     ],
     // Integration suites (real Mongo/Redis) opt in via AI_INTEGRATION=1 and
     // guard themselves with `describe.skipIf` — no separate config needed.
