@@ -30,7 +30,7 @@ const SCORE_KEYS = [
 
 /** Rich bid/no-bid verdict card rendered inside the Dora chat. */
 export function VerdictCard({ verdict }: { verdict: WireVerdict }) {
-  const t = useTranslations("Tenders.chat.verdict");
+  const t = useTranslations("Chat.verdict");
   const format = useFormatter();
 
   return (

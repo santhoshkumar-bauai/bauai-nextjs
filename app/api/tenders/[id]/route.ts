@@ -5,6 +5,7 @@ import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
 import type { TenderDocument } from "@/lib/ingestion/types";
 import { serializeTenderDetail } from "@/lib/tenders/detail";
+import { listFetchedTenderFiles } from "@/lib/tenders/document-files";
 
 /**
  * Full detail for a single tender, powering the detail modal. Gated to
@@ -32,5 +33,9 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ tender: serializeTenderDetail(doc) });
+  // The downloaded document files (tender_documents/S3), distinct from the
+  // notice's external links — the Documents tab shows both.
+  const files = await listFetchedTenderFiles(doc._id!).catch(() => []);
+
+  return NextResponse.json({ tender: serializeTenderDetail(doc), files });
 }

@@ -52,12 +52,20 @@ const { buildDoraGraph } = await import("./graph.ts");
 function fakeCtx(): AgentRunContext {
   return {
     tenantId: new ObjectId(),
-    tenderId: new ObjectId(),
     userId: "u",
     locale: "en",
     companyContext: {} as never,
     citations: new CitationCollector(),
-    tenderDetail: { title: "T", status: "OPEN", buyer: null, submissionDeadline: null } as never,
+    tender: {
+      tenderId: new ObjectId(),
+      tenderDetail: {
+        title: "T",
+        status: "OPEN",
+        buyer: null,
+        submissionDeadline: null,
+      } as never,
+    },
+    tenderCache: new Map(),
   };
 }
 
@@ -131,6 +139,27 @@ describe("buildDoraGraph", () => {
     const last = result.messages[result.messages.length - 1];
     expect(String(last.content)).toContain("Best answer");
     // Final call must have gone through the UNBOUND base model.
+    const lastCall = fake.calls[fake.calls.length - 1];
+    expect(lastCall.withTools).toBe(false);
+  });
+
+  it("recovers via finalize when the model answers with empty text", async () => {
+    // A thinking model that burned its budget on reasoning: no tool calls,
+    // no text. The graph must retry through finalize instead of ending empty.
+    const fake = new FakeToolCallingChatModel([
+      new AIMessage(""),
+      new AIMessage("Recovered answer."),
+    ]);
+    setAgentModelForTests(fake);
+
+    const graph = await buildDoraGraph(fakeCtx());
+    const result = await graph.invoke(
+      { messages: [new HumanMessage("Question")] },
+      { configurable: { thread_id: `test-empty-${Date.now()}` } },
+    );
+
+    const last = result.messages[result.messages.length - 1];
+    expect(String(last.content)).toContain("Recovered answer");
     const lastCall = fake.calls[fake.calls.length - 1];
     expect(lastCall.withTools).toBe(false);
   });

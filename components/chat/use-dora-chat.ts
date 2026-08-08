@@ -2,8 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { WireChatMessage, WireVerdict } from "@/lib/ai/agent/wire";
+import type { WireAttachment, WireChatMessage, WireVerdict } from "@/lib/ai/agent/wire";
 import { SseFrameParser } from "./sse";
+
+/** A composer attachment that finished uploading. */
+export interface PendingAttachment extends WireAttachment {
+  id: string;
+}
 
 export interface DoraChatState {
   messages: WireChatMessage[];
@@ -11,24 +16,38 @@ export interface DoraChatState {
   streamingText: string;
   /** Tool currently running, for the status line. */
   activeTool: string | null;
+  /** Optional sub-stage of the running tool (verdict pipeline stages). */
+  activeStage: string | null;
   sending: boolean;
   loading: boolean;
   error: string | null;
   verdicts: Record<string, WireVerdict>;
 }
 
-/** Chat lifecycle for one tender: bootstrap, send-with-SSE, abort, clear. */
-export function useDoraChat(tenderId: string | null) {
+/**
+ * Chat lifecycle against one chat endpoint (`/api/tenders/{id}/chat` or
+ * `/api/chat/threads/{threadId}`): bootstrap, send-with-SSE, abort, clear.
+ * Null endpoint = idle (closed popup / no selection).
+ */
+export function useDoraChat(
+  endpoint: string | null,
+  options?: { locale?: "en" | "de" },
+) {
+  const locale = options?.locale ?? "en";
   const [state, setState] = useState<DoraChatState>({
     messages: [],
     streamingText: "",
     activeTool: null,
+    activeStage: null,
     sending: false,
     loading: false,
     error: null,
     verdicts: {},
   });
   const abortRef = useRef<AbortController | null>(null);
+  // The endpoint currently shown — guards late async writes after switching.
+  const endpointRef = useRef(endpoint);
+  endpointRef.current = endpoint;
 
   useEffect(() => {
     abortRef.current?.abort();
@@ -38,13 +57,14 @@ export function useDoraChat(tenderId: string | null) {
         messages: [],
         streamingText: "",
         activeTool: null,
+        activeStage: null,
         sending: false,
-        loading: Boolean(tenderId),
+        loading: Boolean(endpoint),
         error: null,
         verdicts: {},
       });
-      if (!tenderId) return;
-      fetch(`/api/tenders/${tenderId}/chat`, { signal: controller.signal })
+      if (!endpoint) return;
+      fetch(endpoint, { signal: controller.signal })
         .then((response) => (response.ok ? response.json() : null))
         .then(
           (json: { messages: WireChatMessage[]; verdicts?: WireVerdict[] } | null) => {
@@ -68,27 +88,34 @@ export function useDoraChat(tenderId: string | null) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [tenderId]);
+  }, [endpoint]);
 
   const post = useCallback(
-    (body: { message: string } | { command: "verdict" }, optimisticText: string | null) => {
-      if (!tenderId) return;
+    (
+      body:
+        | { message: string; attachmentIds?: string[] }
+        | { command: "verdict" },
+      optimistic: { text: string; attachments?: WireAttachment[] } | null,
+    ) => {
+      if (!endpoint) return;
       const controller = new AbortController();
       abortRef.current = controller;
+      const optimisticId = `optimistic-${Date.now()}`;
 
       setState((prev) => ({
         ...prev,
-        messages: optimisticText
+        messages: optimistic
           ? [
               ...prev.messages,
               {
-                id: `optimistic-${Date.now()}`,
+                id: optimisticId,
                 role: "user",
-                content: optimisticText,
+                content: optimistic.text,
                 status: "complete",
-                locale: "en",
+                locale,
                 toolEvents: [],
                 citations: [],
+                attachments: optimistic.attachments,
                 verdictId: null,
                 createdAt: new Date().toISOString(),
               },
@@ -96,13 +123,21 @@ export function useDoraChat(tenderId: string | null) {
           : prev.messages,
         streamingText: "",
         activeTool: "command" in body ? "verdict" : null,
+        activeStage: null,
         sending: true,
         error: null,
       }));
 
+      // Set once the turn's outcome is reflected in state (final "message"
+      // or an explicit error event). Without it, the finally block re-syncs
+      // history from the server — the SSE stream can die quietly (proxy cut,
+      // server turn timeout, dev-mode remount) AFTER the answer or aborted
+      // marker was persisted, which otherwise looks like "no output".
+      let settled = false;
+
       void (async () => {
         try {
-          const response = await fetch(`/api/tenders/${tenderId}/chat`, {
+          const response = await fetch(endpoint, {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(body),
@@ -125,16 +160,29 @@ export function useDoraChat(tenderId: string | null) {
             for (const event of parser.push(decoder.decode(value, { stream: true }))) {
               setState((prev) => {
                 switch (event.type) {
+                  case "ready":
+                    // Adopt the persisted id so the optimistic bubble keys stably.
+                    return {
+                      ...prev,
+                      messages: prev.messages.map((message) =>
+                        message.id === optimisticId
+                          ? { ...message, id: event.messageId }
+                          : message,
+                      ),
+                    };
                   case "token":
                     return {
                       ...prev,
                       streamingText: prev.streamingText + event.delta,
                       activeTool: null,
+                      activeStage: null,
                     };
                   case "tool":
                     return {
                       ...prev,
                       activeTool: event.status === "start" ? event.name : null,
+                      activeStage:
+                        event.status === "start" ? (event.stage ?? null) : null,
                     };
                   case "artifact":
                     return {
@@ -142,13 +190,16 @@ export function useDoraChat(tenderId: string | null) {
                       verdicts: { ...prev.verdicts, [event.verdict.id]: event.verdict },
                     };
                   case "message":
+                    settled = true;
                     return {
                       ...prev,
                       messages: [...prev.messages, event.message],
                       streamingText: "",
                       activeTool: null,
+                      activeStage: null,
                     };
                   case "error":
+                    settled = true;
                     return { ...prev, error: event.message };
                   default:
                     return prev;
@@ -165,19 +216,60 @@ export function useDoraChat(tenderId: string | null) {
             ...prev,
             sending: false,
             activeTool: null,
+            activeStage: null,
             streamingText: "",
           }));
           abortRef.current = null;
+          if (!settled && endpointRef.current === endpoint) {
+            // The stream ended without a final event (timeout, stop, dropped
+            // connection). The server persisted whatever happened — re-sync
+            // so the user sees the answer or the aborted marker.
+            void fetch(endpoint)
+              .then((response) => (response.ok ? response.json() : null))
+              .then(
+                (json: {
+                  messages: WireChatMessage[];
+                  verdicts?: WireVerdict[];
+                } | null) => {
+                  if (!json || endpointRef.current !== endpoint) return;
+                  setState((prev) => ({
+                    ...prev,
+                    messages: json.messages,
+                    verdicts: Object.fromEntries(
+                      (json.verdicts ?? []).map((verdict) => [verdict.id, verdict]),
+                    ),
+                  }));
+                },
+              )
+              .catch(() => undefined);
+          }
         }
       })();
     },
-    [tenderId],
+    [endpoint, locale],
   );
 
   const send = useCallback(
-    (text: string) => {
-      if (!text.trim()) return;
-      post({ message: text }, text);
+    (text: string, attachments?: PendingAttachment[]) => {
+      const trimmed = text.trim();
+      if (!trimmed && !attachments?.length) return;
+      post(
+        {
+          message: text,
+          ...(attachments?.length
+            ? { attachmentIds: attachments.map((attachment) => attachment.id) }
+            : {}),
+        },
+        {
+          text,
+          attachments: attachments?.map((attachment) => ({
+            fileName: attachment.fileName,
+            contentType: attachment.contentType,
+            size: attachment.size,
+            status: attachment.status,
+          })),
+        },
+      );
     },
     [post],
   );
@@ -191,11 +283,11 @@ export function useDoraChat(tenderId: string | null) {
   }, []);
 
   const clear = useCallback(() => {
-    if (!tenderId) return;
-    void fetch(`/api/tenders/${tenderId}/chat`, { method: "DELETE" }).then(() =>
+    if (!endpoint) return;
+    void fetch(endpoint, { method: "DELETE" }).then(() =>
       setState((prev) => ({ ...prev, messages: [], verdicts: {}, error: null })),
     );
-  }, [tenderId]);
+  }, [endpoint]);
 
   return { ...state, send, requestVerdict, stop, clear };
 }

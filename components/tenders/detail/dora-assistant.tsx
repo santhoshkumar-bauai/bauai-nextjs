@@ -2,26 +2,28 @@
 
 import {
   ChevronDown,
+  Expand,
   MessageCircleMore,
   Scale,
   Sparkles,
   Trash2,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
+import { ChatInput } from "@/components/chat/chat-input";
+import { MessageList } from "@/components/chat/message-list";
+import { useDoraChat } from "@/components/chat/use-dora-chat";
 import { cn } from "@/lib/utils";
 import { FitSection, type FitSectionProps } from "./ai-tab";
-import { ChatInput } from "./chat/chat-input";
-import { MessageList } from "./chat/message-list";
-import { ToolStatus } from "./chat/tool-status";
-import { useDoraChat } from "./chat/use-dora-chat";
 
 /**
  * Dora — the floating tender assistant. A chat over the tender's structured
  * artifacts and documents, with the company-fit assessment as an expandable
- * quick-action card.
+ * quick-action card. The expand button continues the SAME conversation on
+ * the full-page chat (shared thread key).
  */
 export function DoraAssistant({
   tenderId,
@@ -31,9 +33,14 @@ export function DoraAssistant({
   fit: FitSectionProps;
 }) {
   const t = useTranslations("Tenders.chat");
+  const tc = useTranslations("Chat");
+  const locale = useLocale() as "en" | "de";
   const [open, setOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
-  const chat = useDoraChat(open ? tenderId : null);
+  const chat = useDoraChat(
+    open && tenderId ? `/api/tenders/${tenderId}/chat` : null,
+    { locale },
+  );
 
   return (
     <div className="absolute right-4 bottom-4 z-20 flex flex-col items-end gap-2">
@@ -45,12 +52,22 @@ export function DoraAssistant({
               {t("title")}
             </span>
             <span className="flex items-center gap-1">
+              {tenderId && (
+                <Link
+                  href={`/chat?tender=${tenderId}`}
+                  aria-label={t("openFullWindow")}
+                  title={t("openFullWindow")}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Expand className="size-3.5" />
+                </Link>
+              )}
               {chat.messages.length > 0 && (
                 <button
                   type="button"
                   onClick={chat.clear}
-                  aria-label={t("clear")}
-                  title={t("clear")}
+                  aria-label={tc("clear")}
+                  title={tc("clear")}
                   className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <Trash2 className="size-3.5" />
@@ -76,7 +93,7 @@ export function DoraAssistant({
                   onClick={() => setFitOpen(!fitOpen)}
                   className="flex w-full items-center justify-between px-3 py-2 text-[11px] font-medium text-foreground hover:bg-muted/40"
                 >
-                  {t("fitQuickAction")}
+                  {tc("fitQuickAction")}
                   <ChevronDown
                     className={cn(
                       "size-3.5 text-muted-foreground transition-transform",
@@ -97,29 +114,31 @@ export function DoraAssistant({
                 className="flex items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-[11px] font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
               >
                 <Scale className="size-3.5" />
-                {t("verdictQuickAction")}
+                {tc("verdictQuickAction")}
               </button>
             </div>
 
             {chat.loading ? (
               <p className="py-6 text-center text-[11px] text-muted-foreground">
-                {t("loading")}
+                {tc("loading")}
               </p>
             ) : (
               <MessageList
                 messages={chat.messages}
                 streamingText={chat.streamingText}
                 verdicts={chat.verdicts}
+                pending={chat.sending}
+                activeTool={chat.activeTool}
+                activeStage={chat.activeStage}
               />
             )}
             {chat.error && (
               <p className="pt-2 text-center text-[11px] text-rose-600">
-                {chat.error === "rate_limited" ? t("rateLimited") : t("error")}
+                {chat.error === "rate_limited" ? tc("rateLimited") : tc("error")}
               </p>
             )}
           </div>
 
-          <ToolStatus activeTool={chat.activeTool} />
           <ChatInput
             onSend={chat.send}
             onStop={chat.stop}

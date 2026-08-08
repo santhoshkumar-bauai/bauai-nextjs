@@ -1,4 +1,4 @@
-import type { ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 
 import { getIngestionDb } from "../../ingestion/db/client.ts";
 import { getAiCollections } from "../db/collections.ts";
@@ -6,13 +6,23 @@ import type { ChatThreadDocument } from "../types.ts";
 
 export const DORA_GRAPH_VERSION = "dora-chat-v1";
 
-/** The LangGraph thread id — server-derived only, never client input. */
-export function threadKey(tenantId: ObjectId, tenderId: ObjectId): string {
+/**
+ * LangGraph thread ids — server-derived only, never client input.
+ * The tender format is FROZEN: existing checkpoints are keyed by this exact
+ * string, so any change orphans every ongoing tender conversation. A unit
+ * test pins the format.
+ */
+export function tenderThreadKey(tenantId: ObjectId, tenderId: ObjectId): string {
   return `dora:${tenantId.toHexString()}:${tenderId.toHexString()}`;
 }
 
-/** One thread per (tenant, tender, agent); upsert-and-return. */
-export async function ensureThread(input: {
+/** Global (non-tender) threads are keyed by their own _id. */
+export function globalThreadKey(threadId: ObjectId): string {
+  return `dorag:${threadId.toHexString()}`;
+}
+
+/** One tender thread per (tenant, tender, agent); upsert-and-return. */
+export async function ensureTenderThread(input: {
   tenantId: ObjectId;
   tenderId: ObjectId;
   userId: string;
@@ -22,9 +32,18 @@ export async function ensureThread(input: {
   await chatThreads.updateOne(
     { tenantId: input.tenantId, tenderId: input.tenderId, agent: "dora" },
     {
+      // Lazy backfill for threads created before the kind/threadKey fields
+      // existed (ensureAiIndexes also backfills at boot; this is the safety
+      // net). Disjoint from $setOnInsert per Mongo rules.
+      $set: {
+        kind: "tender" as const,
+        ownerUserId: null,
+        threadKey: tenderThreadKey(input.tenantId, input.tenderId),
+      },
       $setOnInsert: {
         tenantId: input.tenantId,
         tenderId: input.tenderId,
+        title: null,
         agent: "dora",
         createdBy: input.userId,
         graphVersion: DORA_GRAPH_VERSION,
@@ -44,6 +63,104 @@ export async function ensureThread(input: {
   return thread as ChatThreadDocument;
 }
 
+/**
+ * Private per-user global thread; many per user, keyed by _id. Repeated
+ * "New chat" clicks reuse the user's newest still-empty thread instead of
+ * piling up shells.
+ */
+export async function createGlobalThread(input: {
+  tenantId: ObjectId;
+  userId: string;
+}): Promise<ChatThreadDocument> {
+  const { chatThreads } = await getAiCollections();
+  const empty = await chatThreads.findOne(
+    {
+      tenantId: input.tenantId,
+      kind: "global",
+      ownerUserId: input.userId,
+      agent: "dora",
+      messageCount: 0,
+      title: null,
+    },
+    { sort: { createdAt: -1 } },
+  );
+  if (empty) return empty as ChatThreadDocument;
+
+  const now = new Date();
+  const _id = new ObjectId();
+  const doc: ChatThreadDocument = {
+    _id,
+    tenantId: input.tenantId,
+    kind: "global",
+    tenderId: null,
+    ownerUserId: input.userId,
+    threadKey: globalThreadKey(_id),
+    title: null,
+    agent: "dora",
+    createdBy: input.userId,
+    graphVersion: DORA_GRAPH_VERSION,
+    lastMessageAt: now,
+    messageCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await chatThreads.insertOne(doc as never);
+  return doc;
+}
+
+/**
+ * Load a thread the caller may access: tenant must match, and global threads
+ * are visible only to their owner (tender threads are company-shared).
+ */
+export async function getOwnedThread(input: {
+  tenantId: ObjectId;
+  userId: string;
+  threadId: ObjectId;
+}): Promise<ChatThreadDocument | null> {
+  const { chatThreads } = await getAiCollections();
+  const thread = await chatThreads.findOne({
+    _id: input.threadId,
+    tenantId: input.tenantId,
+  });
+  if (!thread) return null;
+  if (thread.kind === "global" && thread.ownerUserId !== input.userId) return null;
+  return thread as ChatThreadDocument;
+}
+
+/**
+ * Sidebar listing: the user's own global threads plus the company's active
+ * tender threads (company-shared, so no owner filter there).
+ */
+export async function listThreads(input: {
+  tenantId: ObjectId;
+  userId: string;
+}): Promise<ChatThreadDocument[]> {
+  const { chatThreads } = await getAiCollections();
+  const [globalThreads, tenderThreads] = await Promise.all([
+    chatThreads
+      .find({
+        tenantId: input.tenantId,
+        kind: "global",
+        ownerUserId: input.userId,
+        agent: "dora",
+      })
+      .sort({ lastMessageAt: -1 })
+      .limit(50)
+      .toArray(),
+    chatThreads
+      .find({
+        tenantId: input.tenantId,
+        kind: "tender",
+        agent: "dora",
+        messageCount: { $gt: 0 },
+      })
+      .sort({ lastMessageAt: -1 })
+      .limit(20)
+      .toArray(),
+  ]);
+  return [...globalThreads, ...tenderThreads] as ChatThreadDocument[];
+}
+
 export async function bumpThread(
   tenantId: ObjectId,
   threadId: ObjectId,
@@ -56,22 +173,72 @@ export async function bumpThread(
   );
 }
 
-/** Full reset: messages, thread counters and LangGraph checkpoints. */
+/** First-message title for untitled global threads (word-boundary truncated). */
+export async function setThreadTitleIfEmpty(
+  tenantId: ObjectId,
+  threadId: ObjectId,
+  firstMessage: string,
+): Promise<void> {
+  const { chatThreads } = await getAiCollections();
+  let title = firstMessage.trim().replace(/\s+/g, " ");
+  if (title.length > 60) {
+    const cut = title.slice(0, 60);
+    const lastSpace = cut.lastIndexOf(" ");
+    title = (lastSpace > 30 ? cut.slice(0, lastSpace) : cut).trimEnd() + "…";
+  }
+  await chatThreads.updateOne(
+    { _id: threadId, tenantId, kind: "global", title: null },
+    { $set: { title, updatedAt: new Date() } },
+  );
+}
+
+export async function renameThread(
+  tenantId: ObjectId,
+  threadId: ObjectId,
+  title: string,
+): Promise<void> {
+  const { chatThreads } = await getAiCollections();
+  await chatThreads.updateOne(
+    { _id: threadId, tenantId, kind: "global" },
+    { $set: { title, updatedAt: new Date() } },
+  );
+}
+
+async function deleteCheckpoints(threadKey: string): Promise<void> {
+  const db = await getIngestionDb();
+  await db.collection("agent_checkpoints").deleteMany({ thread_id: threadKey });
+  await db.collection("agent_checkpoint_writes").deleteMany({ thread_id: threadKey });
+}
+
+/**
+ * Delete a thread's conversation. Tender threads keep the thread doc (reset
+ * counters — today's clear semantics); global threads are removed entirely.
+ */
+export async function deleteThread(thread: ChatThreadDocument): Promise<void> {
+  const { chatThreads, chatMessages } = await getAiCollections();
+  if (!thread._id) return;
+  await chatMessages.deleteMany({ tenantId: thread.tenantId, threadId: thread._id });
+  if (thread.kind === "global") {
+    await chatThreads.deleteOne({ _id: thread._id, tenantId: thread.tenantId });
+  } else {
+    await chatThreads.updateOne(
+      { _id: thread._id, tenantId: thread.tenantId },
+      { $set: { messageCount: 0, updatedAt: new Date() } },
+    );
+  }
+  const key =
+    thread.threadKey ??
+    (thread.tenderId ? tenderThreadKey(thread.tenantId, thread.tenderId) : null);
+  if (key) await deleteCheckpoints(key);
+}
+
+/** Full reset of a tender conversation (legacy entry point, tender route). */
 export async function clearThread(
   tenantId: ObjectId,
   tenderId: ObjectId,
 ): Promise<void> {
-  const { chatThreads, chatMessages } = await getAiCollections();
+  const { chatThreads } = await getAiCollections();
   const thread = await chatThreads.findOne({ tenantId, tenderId, agent: "dora" });
   if (!thread?._id) return;
-  await chatMessages.deleteMany({ tenantId, threadId: thread._id });
-  await chatThreads.updateOne(
-    { _id: thread._id, tenantId },
-    { $set: { messageCount: 0, updatedAt: new Date() } },
-  );
-
-  const db = await getIngestionDb();
-  const key = threadKey(tenantId, tenderId);
-  await db.collection("agent_checkpoints").deleteMany({ thread_id: key });
-  await db.collection("agent_checkpoint_writes").deleteMany({ thread_id: key });
+  await deleteThread(thread as ChatThreadDocument);
 }

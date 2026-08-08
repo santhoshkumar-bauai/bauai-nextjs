@@ -58,16 +58,53 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenderId: 1 }, name: "uq_tender", unique: true },
   ]);
 
+  // Thread-kind migration, strictly ordered: backfill legacy docs first (the
+  // partial index below only covers kind:"tender", which pre-migration docs
+  // lack), then swap the old full unique index for the partial one. Both
+  // steps are idempotent — safe to run on every boot.
+  await c.chatThreads.updateMany({ kind: { $exists: false } }, [
+    {
+      $set: {
+        kind: "tender",
+        ownerUserId: null,
+        title: null,
+        threadKey: {
+          $concat: ["dora:", { $toString: "$tenantId" }, ":", { $toString: "$tenderId" }],
+        },
+      },
+    },
+  ]);
+  try {
+    await c.chatThreads.dropIndex("uq_tenant_tender_agent");
+  } catch {
+    // already dropped (or never created on a fresh database)
+  }
   await c.chatThreads.createIndexes([
     {
+      // Uniqueness only for tender threads; global threads (tenderId null,
+      // many per user) would collide on a full unique index.
       key: { tenantId: 1, tenderId: 1, agent: 1 },
-      name: "uq_tenant_tender_agent",
+      name: "uq_tender_thread",
       unique: true,
+      partialFilterExpression: { kind: "tender" },
     },
+    { key: { tenantId: 1, ownerUserId: 1, kind: 1, lastMessageAt: -1 }, name: "ix_owner_recent" },
+    { key: { threadKey: 1 }, name: "ix_thread_key", unique: true },
   ]);
 
   await c.chatMessages.createIndexes([
     { key: { tenantId: 1, threadId: 1, createdAt: 1 }, name: "ix_thread_time" },
+  ]);
+
+  // Uploaded-but-never-sent attachments expire after a day; claimed ones are
+  // kept (their metadata lives on the message, the text stays queryable).
+  await c.chatAttachments.createIndexes([
+    {
+      key: { createdAt: 1 },
+      name: "ttl_unclaimed",
+      expireAfterSeconds: 24 * 60 * 60,
+      partialFilterExpression: { claimed: false },
+    },
   ]);
 
   await c.tenderVerdicts.createIndexes([
@@ -83,4 +120,11 @@ export async function ensureAiIndexes(): Promise<void> {
       { "enrichment.embedding.status": 1, lastSeenAt: -1 },
       { name: "ix_ai_embedding_sweep" },
     );
+
+  // LangGraph checkpoint collections are created implicitly by MongoDBSaver
+  // and read/deleted by thread_id (thread reset) — index them here since the
+  // saver never does.
+  for (const name of ["agent_checkpoints", "agent_checkpoint_writes"]) {
+    await db.collection(name).createIndex({ thread_id: 1 }, { name: "ix_thread" });
+  }
 }

@@ -3,10 +3,12 @@ import type { ObjectId } from "mongodb";
 
 import { logger } from "../../ingestion/observability/logger.ts";
 import { getAiCollections } from "../db/collections.ts";
-import type { ChatMessageDocument } from "../types.ts";
+import type { ChatAttachmentDocument, ChatMessageDocument } from "../types.ts";
+import { attachmentMeta, buildUserTurnContent } from "./attachments.ts";
+import { textFromContent } from "./content.ts";
 import type { AgentRunContext } from "./context.ts";
 import { buildDoraGraph } from "./graph.ts";
-import { bumpThread, threadKey } from "./threads.ts";
+import { bumpThread } from "./threads.ts";
 import type { WireChatMessage } from "./wire.ts";
 
 const log = logger.child("ai.dora");
@@ -19,6 +21,8 @@ export interface ChatTurnCallbacks {
   onToolEnd?: (name: string, durationMs: number, resultCount: number | null) => void;
 }
 
+export { textFromContent };
+
 export function serializeChatMessage(doc: ChatMessageDocument): WireChatMessage {
   return {
     id: String(doc._id),
@@ -28,6 +32,7 @@ export function serializeChatMessage(doc: ChatMessageDocument): WireChatMessage 
     locale: doc.locale,
     toolEvents: doc.toolEvents,
     citations: doc.citations as unknown as WireChatMessage["citations"],
+    attachments: doc.attachments,
     verdictId: doc.verdictId ? String(doc.verdictId) : null,
     createdAt: doc.createdAt.toISOString(),
   };
@@ -51,31 +56,45 @@ async function persistMessage(
 export async function runChatTurn(input: {
   ctx: AgentRunContext;
   threadId: ObjectId;
+  /** The stored ChatThreadDocument.threadKey — the LangGraph checkpoint id. */
+  threadKey: string;
   userText: string;
+  /** Already-claimed attachment docs to feed into this turn. */
+  attachments?: ChatAttachmentDocument[];
   signal?: AbortSignal;
   callbacks?: ChatTurnCallbacks;
 }): Promise<{ userMessage: ChatMessageDocument; assistantMessage: ChatMessageDocument }> {
   const { ctx, threadId, userText, signal, callbacks } = input;
+  const attachments = input.attachments ?? [];
   const startedAt = Date.now();
 
   const userMessage = await persistMessage({
     tenantId: ctx.tenantId,
     threadId,
-    tenderId: ctx.tenderId,
+    tenderId: ctx.tender?.tenderId ?? null,
     role: "user",
     content: userText,
     status: "complete",
     locale: ctx.locale,
     toolEvents: [],
     citations: [],
+    ...(attachments.length > 0
+      ? { attachments: attachments.map(attachmentMeta) }
+      : {}),
     verdictId: null,
     metrics: null,
   });
   callbacks?.onReady?.(userMessage);
 
+  // Attachment content rides inside the checkpointed user turn — later turns
+  // in this thread keep seeing the files without re-uploading. Document text
+  // is inlined; images become checkpoint-light media_ref parts that the graph
+  // resolves to base64 at model-call time.
+  const turnContent = buildUserTurnContent(userText, attachments);
+
   const graph = await buildDoraGraph(ctx);
   const config = {
-    configurable: { thread_id: threadKey(ctx.tenantId, ctx.tenderId) },
+    configurable: { thread_id: input.threadKey },
     signal,
   };
 
@@ -89,7 +108,7 @@ export async function runChatTurn(input: {
 
   try {
     const stream = graph.streamEvents(
-      { messages: [new HumanMessage(userText)] },
+      { messages: [new HumanMessage({ content: turnContent as never })] },
       { version: "v2", ...config },
     );
 
@@ -98,7 +117,7 @@ export async function runChatTurn(input: {
         const chunk = event.data?.chunk as
           | { content?: unknown; tool_call_chunks?: unknown[] }
           | undefined;
-        const delta = typeof chunk?.content === "string" ? chunk.content : "";
+        const delta = textFromContent(chunk?.content);
         if (delta) {
           content += delta;
           callbacks?.onToken?.(delta);
@@ -118,9 +137,11 @@ export async function runChatTurn(input: {
           // A tool-requesting turn streams no user-visible text; reset the
           // buffer so only the final answer accumulates.
           content = "";
-        } else if (typeof output?.content === "string" && output.content) {
-          // Authoritative final text (covers models/nodes that didn't stream).
-          content = output.content;
+        } else {
+          // Authoritative final text (covers models/nodes that didn't stream
+          // and array-parts content from thinking models).
+          const finalText = textFromContent(output?.content);
+          if (finalText) content = finalText;
         }
       } else if (event.event === "on_tool_start") {
         toolStarts.set(event.run_id, Date.now());
@@ -143,11 +164,11 @@ export async function runChatTurn(input: {
   } catch (error) {
     if (signal?.aborted) {
       status = "aborted";
-      log.info("chat turn aborted", { tenderId: String(ctx.tenderId) });
+      log.info("chat turn aborted", { threadKey: input.threadKey });
     } else {
       status = "error";
       log.error("chat turn failed", {
-        tenderId: String(ctx.tenderId),
+        threadKey: input.threadKey,
         error: String(error),
       });
       if (content.length === 0) content = "";
@@ -157,7 +178,7 @@ export async function runChatTurn(input: {
   const assistantMessage = await persistMessage({
     tenantId: ctx.tenantId,
     threadId,
-    tenderId: ctx.tenderId,
+    tenderId: ctx.tender?.tenderId ?? null,
     role: "assistant",
     content,
     status,

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 /** Numbered citation chips; clicking reveals the verbatim quote + source. */
 export function CitationChips({ citations }: { citations: WireCitation[] }) {
-  const t = useTranslations("Tenders.chat");
+  const t = useTranslations("Chat");
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   if (citations.length === 0) return null;

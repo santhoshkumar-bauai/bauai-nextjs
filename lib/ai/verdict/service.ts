@@ -1,7 +1,7 @@
 import type { ObjectId } from "mongodb";
 
 import { logger } from "../../ingestion/observability/logger.ts";
-import type { AgentRunContext } from "../agent/context.ts";
+import type { TenderAgentRunContext } from "../agent/context.ts";
 import type { ChatCitation } from "../agent/citations.ts";
 import type { WireVerdict } from "../agent/wire.ts";
 import { getAiCollections } from "../db/collections.ts";
@@ -67,16 +67,16 @@ export function serializeVerdict(
 }
 
 export async function getVerdictState(
-  ctx: AgentRunContext,
+  ctx: TenderAgentRunContext,
 ): Promise<{ verdict: TenderVerdictDocument; stale: boolean } | null> {
   const { tenderVerdicts } = await getAiCollections();
   const doc = await tenderVerdicts.findOne({
     tenantId: ctx.tenantId,
-    tenderId: ctx.tenderId,
+    tenderId: ctx.tender.tenderId,
   });
   if (!doc) return null;
 
-  const corpusHash = await computeCorpusHash(ctx.tenderId);
+  const corpusHash = await computeCorpusHash(ctx.tender.tenderId);
   const companyDataHash = hashCompanyData(
     companyProfileInput(ctx.companyContext.company),
     await listEmbeddedCompanyDocs(ctx.tenantId),
@@ -93,7 +93,7 @@ export async function getVerdictState(
  * model call → server-side citation resolution → replace-wholesale persist.
  */
 export async function generateVerdict(input: {
-  ctx: AgentRunContext;
+  ctx: TenderAgentRunContext;
   threadId: ObjectId | null;
   onProgress?: (stage: "loading_artifacts" | "retrieving_gaps" | "drafting") => void;
 }): Promise<TenderVerdictDocument> {
@@ -101,9 +101,9 @@ export async function generateVerdict(input: {
 
   input.onProgress?.("loading_artifacts");
   const [extractions, overviewRecord, fitState] = await Promise.all([
-    getExtractions(ctx.tenderId),
-    getTenderOverview(ctx.tenderId),
-    getFitState(ctx.companyContext, ctx.tenderId),
+    getExtractions(ctx.tender.tenderId),
+    getTenderOverview(ctx.tender.tenderId),
+    getFitState(ctx.companyContext, ctx.tender.tenderId),
   ]);
 
   input.onProgress?.("retrieving_gaps");
@@ -116,7 +116,7 @@ export async function generateVerdict(input: {
           text: "Eignung Nachweise Vertragsstrafen Fristen Zuschlagskriterien besondere Bedingungen",
           mode: "hybrid",
           k: GAP_RETRIEVAL_K,
-          filters: { tenantId: null, tenderId: ctx.tenderId },
+          filters: { tenantId: null, tenderId: ctx.tender.tenderId },
         }).catch(() => [])
       : [];
 
@@ -154,7 +154,7 @@ export async function generateVerdict(input: {
   const raw = await structured.invoke(prompt);
   const output = verdictOutputSchema.parse(raw);
 
-  const corpusHash = await computeCorpusHash(ctx.tenderId);
+  const corpusHash = await computeCorpusHash(ctx.tender.tenderId);
   const companyDataHash = hashCompanyData(
     companyProfileInput(ctx.companyContext.company),
     await listEmbeddedCompanyDocs(ctx.tenantId),
@@ -164,7 +164,7 @@ export async function generateVerdict(input: {
 
   const doc: Omit<TenderVerdictDocument, "_id" | "createdAt"> = {
     tenantId: ctx.tenantId,
-    tenderId: ctx.tenderId,
+    tenderId: ctx.tender.tenderId,
     threadId: input.threadId,
     messageId: null,
     agentRunId: null,
@@ -208,17 +208,17 @@ export async function generateVerdict(input: {
 
   const { tenderVerdicts } = await getAiCollections();
   await tenderVerdicts.updateOne(
-    { tenantId: ctx.tenantId, tenderId: ctx.tenderId },
+    { tenantId: ctx.tenantId, tenderId: ctx.tender.tenderId },
     { $set: doc, $setOnInsert: { createdAt: now } },
     { upsert: true },
   );
   const stored = await tenderVerdicts.findOne({
     tenantId: ctx.tenantId,
-    tenderId: ctx.tenderId,
+    tenderId: ctx.tender.tenderId,
   });
 
   log.info("verdict generated", {
-    tenderId: String(ctx.tenderId),
+    tenderId: String(ctx.tender.tenderId),
     recommendation: output.recommendation,
     risks: output.risks.length,
   });

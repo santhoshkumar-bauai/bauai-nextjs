@@ -18,6 +18,14 @@ export interface WireToolEvent {
   resultCount: number | null;
 }
 
+export interface WireAttachment {
+  fileName: string;
+  contentType: string;
+  size: number;
+  /** ready = Dora read it; unsupported/failed = attached but not readable. */
+  status: "ready" | "unsupported" | "failed";
+}
+
 export interface WireChatMessage {
   id: string;
   role: "user" | "assistant";
@@ -26,15 +34,30 @@ export interface WireChatMessage {
   locale: "en" | "de";
   toolEvents: WireToolEvent[];
   citations: WireCitation[];
+  attachments?: WireAttachment[];
   verdictId: string | null;
   createdAt: string;
 }
 
 export interface WireThread {
   id: string;
-  tenderId: string;
+  kind: "tender" | "global";
+  tenderId: string | null;
+  title: string | null;
   messageCount: number;
   lastMessageAt: string;
+}
+
+/** Sidebar listing row: `tenderTitle` is joined in for tender threads. */
+export interface WireThreadSummary {
+  id: string;
+  kind: "tender" | "global";
+  title: string | null;
+  tenderId: string | null;
+  tenderTitle: string | null;
+  messageCount: number;
+  lastMessageAt: string;
+  createdAt: string;
 }
 
 export interface WireVerdict {
@@ -65,7 +88,14 @@ export interface WireVerdict {
 export type DoraSseEvent =
   | { type: "ready"; threadId: string; messageId: string }
   | { type: "token"; delta: string }
-  | { type: "tool"; name: string; status: "start" | "end"; resultCount?: number }
+  | {
+      type: "tool";
+      name: string;
+      status: "start" | "end";
+      resultCount?: number;
+      /** Optional i18n sub-stage key (e.g. verdict pipeline stages). */
+      stage?: string;
+    }
   | { type: "artifact"; artifact: "verdict"; verdict: WireVerdict }
   | { type: "message"; message: WireChatMessage }
   | { type: "error"; message: string };

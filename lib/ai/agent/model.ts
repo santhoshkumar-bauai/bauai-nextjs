@@ -34,6 +34,15 @@ export interface AgentModelOptions {
   temperature?: number;
 }
 
+type ReasoningEffort = "none" | "low" | "medium" | "high";
+
+/** Anthropic extended-thinking budgets; must stay below maxTokens. */
+const ANTHROPIC_THINKING_BUDGET: Record<"low" | "medium" | "high", number> = {
+  low: 2_048,
+  medium: 6_144,
+  high: 12_288,
+};
+
 export async function getAgentChatModel(
   options: AgentModelOptions = {},
 ): Promise<BaseChatModel> {
@@ -43,6 +52,10 @@ export async function getAgentChatModel(
   const ref = resolveRole("agent");
   const maxOutputTokens = options.maxOutputTokens ?? env.agentMaxOutputTokens;
   const temperature = options.temperature ?? 0.2;
+  // Thinking-model support: reasoning content parts are already handled on
+  // the way out (textFromContent); this maps the requested effort onto each
+  // provider's own knob. Unset = provider default (dynamic thinking).
+  const effort: ReasoningEffort | undefined = env.agentReasoningEffort;
 
   switch (ref.provider) {
     case "gemini": {
@@ -52,6 +65,15 @@ export async function getAgentChatModel(
         apiKey: requireGeminiApiKey(),
         temperature,
         maxOutputTokens,
+        ...(effort === "none"
+          ? { thinkingConfig: { thinkingBudget: 0 } }
+          : effort
+            ? {
+                thinkingConfig: {
+                  thinkingLevel: effort.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
+                },
+              }
+            : {}),
       });
     }
     case "openai": {
@@ -61,15 +83,20 @@ export async function getAgentChatModel(
         apiKey: requireKey("OPENAI_API_KEY", "openai"),
         temperature,
         maxTokens: maxOutputTokens,
+        ...(effort ? { reasoningEffort: effort === "none" ? "minimal" : effort } : {}),
       });
     }
     case "anthropic": {
       const { ChatAnthropic } = await import("@langchain/anthropic");
+      const budget = effort && effort !== "none" ? ANTHROPIC_THINKING_BUDGET[effort] : null;
       return new ChatAnthropic({
         model: ref.model,
         apiKey: requireKey("ANTHROPIC_API_KEY", "anthropic"),
-        temperature,
-        maxTokens: maxOutputTokens,
+        // Extended thinking rejects custom temperatures — only set one when
+        // thinking is off. max_tokens must exceed the thinking budget.
+        ...(budget ? {} : { temperature }),
+        maxTokens: budget ? budget + maxOutputTokens : maxOutputTokens,
+        ...(budget ? { thinking: { type: "enabled", budget_tokens: budget } } : {}),
       });
     }
     default:

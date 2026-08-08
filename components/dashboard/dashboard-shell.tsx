@@ -35,6 +35,8 @@ type Agent = {
   image: string;
   available: boolean;
   remaining?: string;
+  /** When set, clicking the card navigates instead of selecting. */
+  href?: string;
 };
 type DashboardCopy = {
   nav: {
@@ -432,9 +434,11 @@ export function DashboardShell({
                         agent.available &&
                         "-translate-y-1 border-[#7587fa] shadow-[0_22px_48px_rgba(63,84,239,.14)]",
                     )}
-                    onClick={() =>
-                      agent.available && setSelectedAgent(agent.name)
-                    }
+                    onClick={() => {
+                      if (!agent.available) return;
+                      if (agent.href) router.push(agent.href);
+                      else setSelectedAgent(agent.name);
+                    }}
                     disabled={!agent.available}
                     aria-pressed={agent.available ? selected : undefined}
                   >

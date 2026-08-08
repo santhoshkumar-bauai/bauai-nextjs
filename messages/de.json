@@ -497,7 +497,10 @@
   "Tenders": {
     "title": "Relevante Ausschreibungen",
     "subtitle": "Ausschreibungen passend zu den CPV-Codes und der Region Ihres Unternehmens.",
-    "views": { "list": "Liste", "map": "Karte" },
+    "views": {
+      "list": "Liste",
+      "map": "Karte"
+    },
     "filters": {
       "searchPlaceholder": "Titel oder Beschreibung suchen",
       "status": "Status",
@@ -523,18 +526,18 @@
       "supplies": "Lieferungen"
     },
     "sector": {
+      "31": "Elektrotechnik",
+      "34": "Transport",
+      "39": "Möbel",
+      "43": "Maschinen",
+      "44": "Materialien",
       "45": "Bau",
+      "48": "Software",
       "71": "Architektur & Ingenieurwesen",
       "72": "IT-Dienstleistungen",
-      "48": "Software",
-      "90": "Umwelt",
+      "77": "Garten- & Landschaftsbau",
       "79": "Unternehmensdienste",
-      "44": "Materialien",
-      "43": "Maschinen",
-      "34": "Transport",
-      "31": "Elektrotechnik",
-      "39": "Möbel",
-      "77": "Garten- & Landschaftsbau"
+      "90": "Umwelt"
     },
     "region": {
       "DE1": "Baden-Württemberg",
@@ -577,7 +580,11 @@
       "match": "{percent}% Übereinstimmung",
       "cpvMore": "+{count} weitere",
       "viewSource": "Quelle ansehen",
-      "breakdown": { "cpv": "CPV-Eignung", "geo": "Standort", "time": "Aktualität" }
+      "breakdown": {
+        "cpv": "CPV-Eignung",
+        "geo": "Standort",
+        "time": "Aktualität"
+      }
     },
     "states": {
       "loading": "Ausschreibungen werden geladen…",
@@ -654,54 +661,15 @@
         "TENDER": "Angebotsfrist",
         "PARTICIPATION_REQUEST": "Teilnahmefrist",
         "NONE": "Keine Frist"
-      }
+      },
+      "filesHeading": "Vergabeunterlagen",
+      "linksHeading": "Externe Links",
+      "fileNotReadable": "Nicht maschinenlesbar"
     },
     "chat": {
       "title": "Dora — Ausschreibungsassistentin",
       "close": "Schließen",
-      "clear": "Verlauf löschen",
-      "loading": "Verlauf wird geladen…",
-      "empty": "Fragen Sie Dora alles zu dieser Ausschreibung — Fristen, Anforderungen, Risiken oder den Abgleich mit Ihren Unternehmensunterlagen.",
-      "placeholder": "Frage zur Ausschreibung…",
-      "send": "Senden",
-      "stop": "Stopp",
-      "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
-      "rateLimited": "Die KI ist ausgelastet — bitte gleich erneut versuchen.",
-      "errorMessage": "Diese Antwort konnte nicht erstellt werden.",
-      "aborted": "Gestoppt",
-      "citationSource": "Quelle",
-      "fitQuickAction": "Firmen-Fit-Bewertung",
-      "verdictQuickAction": "Bieten / Nicht bieten?",
-      "tool": {
-        "get_tender_notice": "Lese die Bekanntmachung…",
-        "get_tender_overview": "Lade die Übersicht…",
-        "get_extractions": "Lade geprüfte Fakten…",
-        "search_tender_documents": "Durchsuche Vergabeunterlagen…",
-        "get_company_fit": "Prüfe Firmen-Fit…",
-        "search_company_documents": "Durchsuche Ihre Unterlagen…",
-        "verdict": "Erstelle die Empfehlung…",
-        "generic": "Arbeite…"
-      },
-      "verdict": {
-        "recommendation": {
-          "bid": "Bieten",
-          "conditional": "Bieten mit Vorbehalt",
-          "no_bid": "Nicht bieten"
-        },
-        "stale": "Daten geändert — neu generieren",
-        "scores": {
-          "eligibilityFit": "Eignung",
-          "strategicFit": "Strategischer Fit",
-          "capacityFit": "Kapazität",
-          "contractRisk": "Vertragsrisiko",
-          "deadlineFeasibility": "Fristen-Machbarkeit"
-        },
-        "risks": "Risiken",
-        "severity": { "low": "Niedrig", "medium": "Mittel", "high": "Hoch" },
-        "blocking": "Blockierende Anforderungen",
-        "unresolved": "Offene Fragen",
-        "generatedAt": "Erstellt {date}"
-      }
+      "openFullWindow": "Im Vollbild öffnen"
     },
     "ai": {
       "title": "KI-Informationen",
@@ -836,6 +804,93 @@
         "WEAK_FIT": "Wenig geeignet",
         "NOT_RECOMMENDED": "Nicht empfohlen"
       }
+    }
+  },
+  "Chat": {
+    "clear": "Verlauf löschen",
+    "loading": "Verlauf wird geladen…",
+    "empty": "Fragen Sie Dora alles zu dieser Ausschreibung — Fristen, Anforderungen, Risiken oder den Abgleich mit Ihren Unternehmensunterlagen.",
+    "placeholder": "Frage zur Ausschreibung…",
+    "send": "Senden",
+    "stop": "Stopp",
+    "error": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "rateLimited": "Die KI ist ausgelastet — bitte gleich erneut versuchen.",
+    "errorMessage": "Diese Antwort konnte nicht erstellt werden.",
+    "aborted": "Gestoppt",
+    "citationSource": "Quelle",
+    "fitQuickAction": "Firmen-Fit-Bewertung",
+    "verdictQuickAction": "Bieten / Nicht bieten?",
+    "tool": {
+      "get_tender_notice": "Lese die Bekanntmachung…",
+      "get_tender_overview": "Lade die Übersicht…",
+      "get_extractions": "Lade geprüfte Fakten…",
+      "search_tender_documents": "Durchsuche Vergabeunterlagen…",
+      "get_company_fit": "Prüfe Firmen-Fit…",
+      "search_company_documents": "Durchsuche Ihre Unterlagen…",
+      "verdict": "Erstelle die Empfehlung…",
+      "generic": "Arbeite…",
+      "find_tenders": "Suche Ausschreibungen…",
+      "get_company_profile": "Lese das Unternehmensprofil…",
+      "list_company_documents": "Liste Ihre Unterlagen…",
+      "verdictStage": {
+        "loading_artifacts": "Sammle geprüfte Fakten…",
+        "retrieving_gaps": "Schließe Beweislücken…",
+        "drafting": "Erstelle die Empfehlung…"
+      },
+      "list_tender_files": "Liste Vergabeunterlagen…",
+      "read_tender_document": "Lese eine Vergabeunterlage…"
+    },
+    "verdict": {
+      "recommendation": {
+        "bid": "Bieten",
+        "conditional": "Bieten mit Vorbehalt",
+        "no_bid": "Nicht bieten"
+      },
+      "stale": "Daten geändert — neu generieren",
+      "scores": {
+        "eligibilityFit": "Eignung",
+        "strategicFit": "Strategischer Fit",
+        "capacityFit": "Kapazität",
+        "contractRisk": "Vertragsrisiko",
+        "deadlineFeasibility": "Fristen-Machbarkeit"
+      },
+      "risks": "Risiken",
+      "severity": {
+        "low": "Niedrig",
+        "medium": "Mittel",
+        "high": "Hoch"
+      },
+      "blocking": "Blockierende Anforderungen",
+      "unresolved": "Offene Fragen",
+      "generatedAt": "Erstellt {date}"
+    },
+    "title": "Dora",
+    "globalPlaceholder": "Fragen Sie Dora zu Ausschreibungen oder Ihrem Unternehmen…",
+    "globalEmpty": "Fragen Sie Dora alles — finden Sie Ausschreibungen, prüfen Sie Ihr Unternehmensprofil oder gleichen Sie Anforderungen mit Ihren Unterlagen ab.",
+    "suggestions": {
+      "findTenders": "Offene Ausschreibungen finden, die zu unserem Unternehmen passen",
+      "companyDocs": "Welche unserer Unterlagen sind durchsuchbar?",
+      "profile": "Unser Unternehmensprofil zusammenfassen"
+    },
+    "sessions": {
+      "title": "Unterhaltungen",
+      "newChat": "Neuer Chat",
+      "chats": "Chats",
+      "tenderChats": "Ausschreibungs-Chats",
+      "untitled": "Neue Unterhaltung",
+      "rename": "Umbenennen",
+      "delete": "Löschen",
+      "deleteConfirm": "Diese Unterhaltung löschen?",
+      "cancel": "Abbrechen",
+      "save": "Speichern"
+    },
+    "thinking": "Dora denkt nach…",
+    "attach": {
+      "button": "Datei anhängen",
+      "remove": "Anhang entfernen",
+      "unsupported": "Dora kann diesen Dateityp nicht lesen",
+      "tooLarge": "Datei zu groß (max. 25 MB)",
+      "failed": "Upload fehlgeschlagen"
     }
   }
 }

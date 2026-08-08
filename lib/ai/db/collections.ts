@@ -3,6 +3,7 @@ import type { Collection } from "mongodb";
 import { getIngestionDb } from "../../ingestion/db/client.ts";
 import type {
   AiIndexStateDocument,
+  ChatAttachmentDocument,
   ChatMessageDocument,
   ChatThreadDocument,
   ChunkDocument,
@@ -24,6 +25,7 @@ export const aiCollectionNames = {
   tenderOverviews: "tender_overviews",
   chatThreads: "chat_threads",
   chatMessages: "chat_messages",
+  chatAttachments: "chat_attachments",
   tenderVerdicts: "tender_verdicts",
 } as const;
 
@@ -37,6 +39,7 @@ export interface AiCollections {
   tenderOverviews: Collection<TenderOverviewDocument>;
   chatThreads: Collection<ChatThreadDocument>;
   chatMessages: Collection<ChatMessageDocument>;
+  chatAttachments: Collection<ChatAttachmentDocument>;
   tenderVerdicts: Collection<TenderVerdictDocument>;
 }
 
@@ -55,6 +58,7 @@ export async function getAiCollections(): Promise<AiCollections> {
     tenderOverviews: db.collection(aiCollectionNames.tenderOverviews),
     chatThreads: db.collection(aiCollectionNames.chatThreads),
     chatMessages: db.collection(aiCollectionNames.chatMessages),
+    chatAttachments: db.collection(aiCollectionNames.chatAttachments),
     tenderVerdicts: db.collection(aiCollectionNames.tenderVerdicts),
   };
 }

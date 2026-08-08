@@ -227,6 +227,22 @@ export async function deleteObject(key: string): Promise<void> {
   );
 }
 
+/** Server-side upload for bytes the API already holds (chat attachments). */
+export async function putObjectBuffer(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  await s3().send(
+    new PutObjectCommand({
+      Bucket: s3Config().bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+}
+
 /** Downloads an object's bytes (company-document text extraction). */
 export async function getObjectBuffer(key: string): Promise<Buffer> {
   const result = await s3().send(

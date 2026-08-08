@@ -82,6 +82,7 @@ export default async function DashboardPage() {
       image: "/agents/dora.svg",
       available: true,
       remaining,
+      href: "/chat",
     },
     {
       name: "Clara",

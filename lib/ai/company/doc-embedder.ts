@@ -31,6 +31,8 @@ export interface CompanyFileRow {
   fileName: string;
   contentType: string;
   s3Key: string;
+  size?: number;
+  createdAt?: Date;
 }
 
 export async function getCompanyFilesCollection() {
@@ -177,6 +179,54 @@ export async function processCompanyDocEmbed(job: CompanyDocEmbedJob): Promise<v
     );
     throw error;
   }
+}
+
+export type CompanyDocEmbedStatus =
+  | "indexed"
+  | "failed"
+  | "processing"
+  | "not_indexed";
+
+/**
+ * Latest embedding-ledger status per company file, batched. A file can have
+ * several ledger rows (one per content hash); the most recent one wins.
+ * "not_indexed" covers both never-processed files and ones with no
+ * extractable text (DONE with chunkCount 0).
+ */
+export async function getCompanyDocEmbedStatuses(
+  companyFileIds: string[],
+): Promise<Map<string, CompanyDocEmbedStatus>> {
+  const statuses = new Map<string, CompanyDocEmbedStatus>(
+    companyFileIds.map((id) => [id, "not_indexed" as const]),
+  );
+  if (companyFileIds.length === 0) return statuses;
+
+  const { aiIndexState } = await getAiCollections();
+  const rows = await aiIndexState
+    .find({
+      kind: "company_doc_embed",
+      refId: { $in: companyFileIds.map(companyDocRecordId) },
+    } as never)
+    .sort({ updatedAt: 1 })
+    .toArray();
+
+  for (const row of rows as Array<{
+    refId?: string;
+    status?: string;
+    chunkCount?: number | null;
+  }>) {
+    const fileId = row.refId?.slice("company:".length);
+    if (!fileId || !statuses.has(fileId)) continue;
+    // Ascending sort → the last row per file (latest updatedAt) sticks.
+    if (row.status === "DONE") {
+      statuses.set(fileId, (row.chunkCount ?? 0) > 0 ? "indexed" : "not_indexed");
+    } else if (row.status === "FAILED") {
+      statuses.set(fileId, "failed");
+    } else if (row.status === "RUNNING") {
+      statuses.set(fileId, "processing");
+    }
+  }
+  return statuses;
 }
 
 /** Removes every AI artifact of a deleted company file. */

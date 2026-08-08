@@ -1,7 +1,7 @@
 import { deadlineDaysLeft } from "../../tenders/deadline.ts";
 import type { StoredCitedValue } from "../extraction/citations.ts";
 import type { ExtractionDocument } from "../types.ts";
-import type { AgentRunContext } from "../agent/context.ts";
+import type { TenderAgentRunContext } from "../agent/context.ts";
 import type { ChatCitation } from "../agent/citations.ts";
 import type { RetrievedChunk } from "../retrieval/types.ts";
 import { buildFullCompanyContext } from "../fit/company-context.ts";
@@ -72,14 +72,14 @@ function chunkIdOf(chunk: RetrievedChunk): unknown {
 }
 
 export function buildVerdictPrompt(input: {
-  ctx: AgentRunContext;
+  ctx: TenderAgentRunContext;
   extractions: ExtractionDocument[];
   overviewText: string | null;
   fit: { recommendation: TenderRecommendation; stale: boolean } | null;
   evidence: EvidenceTable;
 }): string {
   const { ctx } = input;
-  const d = ctx.tenderDetail;
+  const d = ctx.tender.tenderDetail;
   const daysLeft = d.submissionDeadline
     ? deadlineDaysLeft(d.submissionDeadline)
     : null;
