@@ -432,7 +432,10 @@ async function claimNext(host?: string): Promise<TenderDocumentRecord | null> {
       },
       $inc: { attempts: 1 },
     },
-    { returnDocument: "after", sort: { nextAttemptAt: 1 } },
+    // Newest tenders first: fresh documents are the ones users are waiting
+    // on; the old backlog fills in behind. Retries stay eligible via the
+    // nextAttemptAt filter but no longer jump the queue by age.
+    { returnDocument: "after", sort: { createdAt: -1 } },
   );
 }
 

@@ -25,7 +25,14 @@ try {
   const targets = await chunks
     .aggregate<{ _id: { documentRecordId: string; fileSha256: string } }>([
       { $match: { docClass: null } },
-      { $group: { _id: { documentRecordId: "$documentRecordId", fileSha256: "$fileSha256" } } },
+      {
+        $group: {
+          _id: { documentRecordId: "$documentRecordId", fileSha256: "$fileSha256" },
+          newestChunkAt: { $max: "$createdAt" },
+        },
+      },
+      // Newest documents first — matches the worker sweeps' ordering.
+      { $sort: { newestChunkAt: -1 } },
     ])
     .toArray();
   console.log(`[ai-classify] ${targets.length} unclassified files (llm=${allowModel})`);

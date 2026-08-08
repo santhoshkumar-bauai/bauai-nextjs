@@ -26,7 +26,11 @@ try {
   const companyFiles = await getCompanyFilesCollection();
   const filter: Record<string, unknown> = { category: { $ne: "logo" } };
   if (companyFilter) filter.companyId = new ObjectId(companyFilter);
-  const files = await companyFiles.find(filter as never).toArray();
+  // Newest uploads first.
+  const files = await companyFiles
+    .find(filter as never)
+    .sort({ createdAt: -1 })
+    .toArray();
   console.log(`[ai-embed-company] ${files.length} company documents`);
 
   let done = 0;

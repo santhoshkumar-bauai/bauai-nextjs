@@ -33,7 +33,8 @@ try {
 
   const cursor = records.find(
     { status: "FETCHED", "files.textStatus": "DONE" },
-    { projection: { _id: 1 } },
+    // Newest documents first — matches the worker sweeps' ordering.
+    { projection: { _id: 1 }, sort: { updatedAt: -1 } },
   );
 
   let processed = 0;

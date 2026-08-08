@@ -22,6 +22,8 @@ export async function ensureDocumentIndexes(): Promise<void> {
   const store = await documentStore();
   await store.createIndexes([
     { key: { status: 1, nextAttemptAt: 1 }, name: "ix_claimable" },
+    // Supports the newest-first claim (status filter + createdAt desc sort).
+    { key: { status: 1, createdAt: -1 }, name: "ix_claim_newest" },
     { key: { status: 1, heartbeatAt: 1 }, name: "ix_stale_lease" },
     { key: { tenderId: 1 }, name: "ix_tender" },
     { key: { canonicalKey: 1 }, name: "ix_canonical_key" },
