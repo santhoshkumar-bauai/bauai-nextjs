@@ -7,6 +7,7 @@ import type {
   DocumentClassificationDocument,
   ExtractionDocument,
   TenderFitRecommendationDocument,
+  TenderOverviewDocument,
   TenderSearchDocument,
 } from "../types.ts";
 
@@ -17,6 +18,7 @@ export const aiCollectionNames = {
   documentClassifications: "document_classifications",
   extractions: "extractions",
   tenderFitRecommendations: "tender_fit_recommendations",
+  tenderOverviews: "tender_overviews",
 } as const;
 
 export interface AiCollections {
@@ -26,6 +28,7 @@ export interface AiCollections {
   documentClassifications: Collection<DocumentClassificationDocument>;
   extractions: Collection<ExtractionDocument>;
   tenderFitRecommendations: Collection<TenderFitRecommendationDocument>;
+  tenderOverviews: Collection<TenderOverviewDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -40,5 +43,6 @@ export async function getAiCollections(): Promise<AiCollections> {
     tenderFitRecommendations: db.collection(
       aiCollectionNames.tenderFitRecommendations,
     ),
+    tenderOverviews: db.collection(aiCollectionNames.tenderOverviews),
   };
 }

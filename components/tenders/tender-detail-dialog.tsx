@@ -16,9 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SerializedTenderDetail } from "@/lib/tenders/detail";
 import type { TenderRecommendation } from "@/lib/tenders/recommendation";
 import { AboutTab } from "./detail/about-tab";
-import { FitSection } from "./detail/ai-tab";
 import { DocumentsTab } from "./detail/documents-tab";
 import { ExtractionsSection } from "./detail/extractions-section";
+import { FitAssistant } from "./detail/fit-assistant";
 import { DeadlineChip } from "./detail/header-summary";
 import { ScheduleTab } from "./detail/schedule-tab";
 
@@ -124,6 +124,9 @@ export function TenderDetailDialog({
 
   return (
     <Dialog open={tenderId !== null} onOpenChange={(open) => !open && onClose()}>
+      {/* No `relative` here: tailwind-merge would replace the popup's `fixed`
+          positioning and break centering. The popup's transform already makes
+          it the containing block for the floating assistant. */}
       <DialogContent className="h-[85svh] max-h-[720px] max-w-3xl">
         <DialogHeader>
           <DialogTitle className="pr-2">
@@ -175,19 +178,21 @@ export function TenderDetailDialog({
               <TabsContent value="schedule" className="pt-2">
                 <ScheduleTab detail={detail} />
               </TabsContent>
-              <TabsContent value="ai" className="flex flex-col gap-6 pt-2">
-                <FitSection
-                  rec={rec}
-                  stale={recStale}
-                  generatedAt={recGeneratedAt}
-                  loading={recLoading}
-                  error={recError}
-                  onGenerate={generateRecommendation}
-                />
+              <TabsContent value="ai" className="pt-2 pb-16">
                 <ExtractionsSection tenderId={tenderId} />
               </TabsContent>
             </div>
           </Tabs>
+        )}
+        {detail && !loading && (
+          <FitAssistant
+            rec={rec}
+            stale={recStale}
+            generatedAt={recGeneratedAt}
+            loading={recLoading}
+            error={recError}
+            onGenerate={generateRecommendation}
+          />
         )}
       </DialogContent>
     </Dialog>

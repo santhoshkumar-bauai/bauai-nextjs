@@ -153,6 +153,27 @@ export interface ExtractionDocument {
 }
 
 /**
+ * Tender-centric AI overview (about / scope / buyer / risks / highlights),
+ * generated in BOTH languages with one call — the UI picks by locale.
+ * Tender-derived → global. Works from the notice alone; document excerpts
+ * enrich it when they exist (`sourceChunkCount` > 0).
+ */
+export interface TenderOverviewDocument {
+  _id?: ObjectId;
+  tenantId: null;
+  tenderId: ObjectId;
+  /** { en: {about, scope, buyer, risks[], highlights[]}, de: {...} } */
+  overview: Record<string, unknown>;
+  sourceChunkCount: number;
+  /** Chunk-corpus identity used, or null for notice-only generations. */
+  corpusHash: string | null;
+  model: { provider: string; providerModel: string; promptVersion: string };
+  generatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * Cached company-fit recommendation, tenant-scoped: the assessment depends on
  * the company's own data, so it is private to the tenant and keyed by a
  * `companyDataHash` — when company data changes the stored hash no longer

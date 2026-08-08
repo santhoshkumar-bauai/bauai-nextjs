@@ -10,6 +10,7 @@ import { EXTRACTION_SCHEMA_NAMES } from "@/lib/ai/extraction/schema-names";
 import { cn } from "@/lib/utils";
 import { ExtractionValue } from "./extraction-value";
 import { SectionLabel } from "./field";
+import { OverviewCard } from "./overview-card";
 import {
   useExtractions,
   type ExtractionRecordView,
@@ -156,11 +157,19 @@ function SchemaCard({
   );
 }
 
-/** "AI Information": citation-verified extraction results for the tender. */
+/** "AI Information": bilingual tender overview + citation-verified extractions. */
 export function ExtractionsSection({ tenderId }: { tenderId: string | null }) {
   const t = useTranslations("Tenders.ai");
-  const { records, runStates, corpusReady, analyzing, error, analyze } =
-    useExtractions(tenderId);
+  const {
+    records,
+    runStates,
+    corpusReady,
+    analyzing,
+    overview,
+    overviewLoading,
+    error,
+    analyze,
+  } = useExtractions(tenderId);
 
   const recordsByName = new Map(records.map((record) => [record.schemaName, record]));
   const doneCount = EXTRACTION_SCHEMA_NAMES.filter((name) => {
@@ -168,6 +177,7 @@ export function ExtractionsSection({ tenderId }: { tenderId: string | null }) {
     return state === "DONE" || state === "FAILED" || recordsByName.has(name);
   }).length;
   const hasAny = records.length > 0;
+  const busy = analyzing || overviewLoading;
 
   return (
     <div className="flex flex-col gap-3">
@@ -178,27 +188,33 @@ export function ExtractionsSection({ tenderId }: { tenderId: string | null }) {
             {t("title")}
           </span>
         </SectionLabel>
-        {corpusReady !== false && (
-          <button
-            type="button"
-            onClick={analyze}
-            disabled={analyzing}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
-          >
-            {analyzing ? (
-              <Loader2 className="size-3 animate-spin" />
-            ) : (
-              <ScanSearch className="size-3" />
-            )}
-            {analyzing ? t("analyzing") : hasAny ? t("reanalyze") : t("analyze")}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={analyze}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
+        >
+          {busy ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <ScanSearch className="size-3" />
+          )}
+          {busy ? t("analyzing") : hasAny || overview ? t("reanalyze") : t("analyze")}
+        </button>
       </div>
 
-      {corpusReady === false && (
+      {overviewLoading && !overview && (
         <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-          {t("noCorpus")}
+          {t("overview.generating")}
         </p>
+      )}
+      {overview && <OverviewCard view={overview} />}
+
+      {error === "timeout" && (
+        <p className="text-center text-[11px] text-muted-foreground">{t("timeout")}</p>
+      )}
+      {error === "request" && (
+        <p className="text-center text-[11px] text-muted-foreground">{t("error")}</p>
       )}
 
       {analyzing && (
@@ -208,13 +224,6 @@ export function ExtractionsSection({ tenderId }: { tenderId: string | null }) {
             {doneCount}/{EXTRACTION_SCHEMA_NAMES.length}
           </span>
         </div>
-      )}
-
-      {error === "timeout" && (
-        <p className="text-center text-[11px] text-muted-foreground">{t("timeout")}</p>
-      )}
-      {error === "request" && (
-        <p className="text-center text-[11px] text-muted-foreground">{t("error")}</p>
       )}
 
       {(hasAny || analyzing) &&
@@ -227,7 +236,13 @@ export function ExtractionsSection({ tenderId }: { tenderId: string | null }) {
           />
         ))}
 
-      {!hasAny && !analyzing && corpusReady !== false && (
+      {corpusReady === false && !hasAny && (
+        <p className="rounded-lg border border-dashed border-border px-3 py-3 text-center text-[11px] text-muted-foreground">
+          {t("noCorpus")}
+        </p>
+      )}
+
+      {!hasAny && !overview && !busy && corpusReady !== false && (
         <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
           {t("intro")}
         </p>

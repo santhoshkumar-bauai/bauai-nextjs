@@ -40,11 +40,30 @@ export type SchemaRunState =
   | "DONE"
   | "FAILED";
 
+export interface LangOverview {
+  about: string;
+  scope: string;
+  buyer: string;
+  /** Added in ov-p2; older stored overviews may lack them. */
+  timeline?: string;
+  requirements?: string;
+  risks: string[];
+  highlights: string[];
+}
+
+export interface OverviewView {
+  overview: { en: LangOverview; de: LangOverview };
+  sourceChunkCount: number;
+  generatedAt: string | null;
+}
+
 export interface ExtractionsState {
   records: ExtractionRecordView[];
   runStates: { [schema: string]: SchemaRunState };
   corpusReady: boolean | null;
   analyzing: boolean;
+  overview: OverviewView | null;
+  overviewLoading: boolean;
   error: string | null;
 }
 
@@ -63,7 +82,11 @@ export function useExtractions(tenderId: string | null): ExtractionsState & {
   const [runStates, setRunStates] = useState<{ [schema: string]: SchemaRunState }>({});
   const [corpusReady, setCorpusReady] = useState<boolean | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [overview, setOverview] = useState<OverviewView | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoaded, setInitialLoaded] = useState(false);
+  const autoFired = useRef(false);
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopPolling = useCallback(() => {
@@ -113,9 +136,26 @@ export function useExtractions(tenderId: string | null): ExtractionsState & {
       setRunStates({});
       setCorpusReady(null);
       setAnalyzing(false);
+      setOverview(null);
+      setOverviewLoading(false);
       setError(null);
+      setInitialLoaded(false);
+      autoFired.current = false;
       if (!tenderId) return;
-      loadOnce(tenderId, controller.signal).catch(() => undefined);
+      const overviewLoad = fetch(`/api/tenders/${tenderId}/overview`, {
+        signal: controller.signal,
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((json: OverviewView | null) => {
+          if (json?.overview) setOverview(json);
+        })
+        .catch(() => undefined);
+      Promise.allSettled([
+        loadOnce(tenderId, controller.signal),
+        overviewLoad,
+      ]).then(() => {
+        if (!controller.signal.aborted) setInitialLoaded(true);
+      });
     }, 0);
     return () => {
       clearTimeout(timer);
@@ -125,11 +165,22 @@ export function useExtractions(tenderId: string | null): ExtractionsState & {
   }, [tenderId, loadOnce, stopPolling]);
 
   const analyze = useCallback(() => {
-    if (!tenderId || analyzing) return;
+    if (!tenderId || analyzing || overviewLoading) return;
     setAnalyzing(true);
     setError(null);
     const controller = new AbortController();
     const startedAt = Date.now();
+
+    // The overview needs no documents — it always runs, inline, bilingual.
+    setOverviewLoading(true);
+    void fetch(`/api/tenders/${tenderId}/overview`, { method: "POST" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json: OverviewView | null) => {
+        if (json?.overview) setOverview(json);
+        else setError("request");
+      })
+      .catch(() => setError("request"))
+      .finally(() => setOverviewLoading(false));
 
     void (async () => {
       try {
@@ -139,6 +190,8 @@ export function useExtractions(tenderId: string | null): ExtractionsState & {
           body: JSON.stringify({}),
         });
         if (response.status === 409) {
+          // No processed documents: the overview still covers the notice;
+          // only the document-level extraction is unavailable.
           setCorpusReady(false);
           setAnalyzing(false);
           return;
@@ -170,7 +223,26 @@ export function useExtractions(tenderId: string | null): ExtractionsState & {
         setError("request");
       }
     })();
-  }, [tenderId, analyzing, loadOnce, stopPolling]);
+  }, [tenderId, analyzing, overviewLoading, loadOnce, stopPolling]);
 
-  return { records, runStates, corpusReady, analyzing, error, analyze };
+  // Auto-fire: the section mounts when the AI tab is first opened; if no
+  // stored overview exists yet, analysis starts without a click. At most
+  // once per tender.
+  useEffect(() => {
+    if (!initialLoaded || autoFired.current) return;
+    if (overview || analyzing || overviewLoading) return;
+    autoFired.current = true;
+    analyze();
+  }, [initialLoaded, overview, analyzing, overviewLoading, analyze]);
+
+  return {
+    records,
+    runStates,
+    corpusReady,
+    analyzing,
+    overview,
+    overviewLoading,
+    error,
+    analyze,
+  };
 }
