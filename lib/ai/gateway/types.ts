@@ -7,7 +7,13 @@ import type { z } from "zod";
  * providers is a config change, never a code change.
  */
 
-export type ModelRole = "embedding" | "extraction" | "reasoning" | "agent";
+export type ModelRole =
+  | "embedding"
+  | "extraction"
+  | "reasoning"
+  | "agent"
+  /** Long-form tender report — the most demanding synthesis in the product. */
+  | "report";
 
 /** Mirrors the retrieval asymmetry of embedding models: documents and
  * queries are embedded with different task hints. */

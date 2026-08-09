@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   Expand,
+  FileText,
   MessageCircleMore,
   Scale,
   Sparkles,
@@ -41,6 +42,7 @@ export function ClaraAssistant({
 }) {
   const t = useTranslations("Tenders.chat");
   const tc = useTranslations("Chat");
+  const tr = useTranslations("Tenders.report");
   const locale = useLocale() as "en" | "de";
   const [open, setOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
@@ -128,6 +130,17 @@ export function ClaraAssistant({
                 <Scale className="size-3.5" />
                 {tc("verdictQuickAction")}
               </button>
+              {/* The verdict answers "should we bid?" in the chat; the report
+                  is the long form of that answer, on its own page. */}
+              {tenderId && (
+                <Link
+                  href={`/tenders/${tenderId}/report`}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <FileText className="size-3.5" />
+                  {tr("openReport")}
+                </Link>
+              )}
             </div>
 
             {chat.loading ? (

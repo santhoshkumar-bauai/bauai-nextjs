@@ -67,6 +67,20 @@ const AiEnvSchema = z.object({
    */
   agentReasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
 
+  /**
+   * The full tender report is a single very long synthesis over every artifact
+   * the system holds, so it gets its own budget rather than the agent's: a
+   * large output allowance and, by default, maximum reasoning effort.
+   */
+  reportMaxOutputTokens: z.coerce.number().int().positive().default(32_768),
+  reportReasoningEffort: z
+    .enum(["none", "low", "medium", "high"])
+    .default("high"),
+  /** Tender document excerpts fed to the report prompt. */
+  reportMaxTenderChunks: z.coerce.number().int().positive().default(40),
+  /** Company document excerpts fed to the report prompt. */
+  reportMaxCompanyChunks: z.coerce.number().int().positive().default(16),
+
   /** Context cap for the retrieval-targeted extraction path. */
   extractionMaxChunks: z.coerce.number().int().positive().default(16),
   /** Context cap for the full-document extraction path. */
@@ -92,13 +106,20 @@ function parseModelRoles(raw: string | undefined) {
  * gateway migration is behavior-identical for already-deployed setups. */
 function defaultModelRoles(): Record<string, string> {
   const generation = `gemini:${process.env.GEMINI_MODEL || "gemini-2.5-flash-lite"}`;
+  const agent = "gemini:gemini-3.5-flash";
   return {
     embedding: `gemini:${process.env.EMBEDDING_MODEL || "gemini-embedding-001"}`,
     extraction: generation,
     reasoning: generation,
     // The agent needs stronger multi-step tool reasoning than the pipeline
     // roles; deliberately NOT derived from GEMINI_MODEL.
-    agent: "gemini:gemini-3.5-flash",
+    agent,
+    /**
+     * The report deserves the best model available. Point it at one explicitly
+     * via AI_MODEL_ROLES.report (or the AI_REPORT_MODEL shortcut) — it falls
+     * back to the agent model only so an unconfigured deployment still works.
+     */
+    report: process.env.AI_REPORT_MODEL || agent,
   };
 }
 
@@ -129,6 +150,10 @@ export function aiEnv(): AiEnv {
     agentMaxOutputTokens: process.env.AI_AGENT_MAX_OUTPUT_TOKENS,
     agentHistoryMaxMessages: process.env.AI_AGENT_HISTORY_MAX_MESSAGES,
     agentReasoningEffort: process.env.AI_AGENT_REASONING,
+    reportMaxOutputTokens: process.env.AI_REPORT_MAX_OUTPUT_TOKENS,
+    reportReasoningEffort: process.env.AI_REPORT_REASONING,
+    reportMaxTenderChunks: process.env.AI_REPORT_MAX_TENDER_CHUNKS,
+    reportMaxCompanyChunks: process.env.AI_REPORT_MAX_COMPANY_CHUNKS,
     extractionMaxChunks: process.env.AI_EXTRACTION_MAX_CHUNKS,
     extractionMaxDocChars: process.env.AI_EXTRACTION_MAX_DOC_CHARS,
     extractionRpm: process.env.AI_EXTRACTION_RPM,

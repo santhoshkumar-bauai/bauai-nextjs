@@ -1,14 +1,18 @@
 "use client";
 
 import { PanelLeft, Sparkles, X } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { WireThreadSummary } from "@/lib/ai/agent/wire";
+import { ReportSummaryCard } from "@/components/tenders/report/report-summary-card";
+import { useReportSummaries } from "@/components/tenders/report/use-report-summaries";
 import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
 import { SessionsSidebar } from "./sessions-sidebar";
+import { TenderReportPanel } from "./tender-report-panel";
 import { useChatSessions } from "./use-chat-sessions";
 import { useClaraChat } from "./use-clara-chat";
 
@@ -20,6 +24,7 @@ import { useClaraChat } from "./use-clara-chat";
  */
 export function ClaraChatWorkspace() {
   const t = useTranslations("Chat");
+  const tReport = useTranslations("Tenders.report");
   const locale = useLocale() as "en" | "de";
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,6 +35,7 @@ export function ClaraChatWorkspace() {
   const { create: createSession, refresh: refreshSessions } = sessionsApi;
   const endpoint = threadId ? `/api/chat/threads/${threadId}` : null;
   const chat = useClaraChat(endpoint, { locale });
+  const { reports, loading: reportsLoading } = useReportSummaries();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // A message typed before any session exists: create → navigate → send.
@@ -195,24 +201,53 @@ export function ClaraChatWorkspace() {
                     </button>
                   ))}
                 </div>
+
+                {/* The company's standing written conclusions. More useful on
+                    an empty chat than a blank page, and the fastest route back
+                    into a tender someone already analysed. */}
+                {!reportsLoading && reports.length > 0 && (
+                  <div className="w-full pt-6 text-left">
+                    <div className="flex items-baseline justify-between gap-2 pb-2">
+                      <p className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                        {tReport("recentReports")}
+                      </p>
+                      <Link
+                        href="/tenders"
+                        className="text-[11px] text-muted-foreground transition-colors hover:text-primary"
+                      >
+                        {tReport("browseTenders")}
+                      </Link>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {reports.slice(0, 6).map((summary) => (
+                        <ReportSummaryCard key={summary.tenderId} summary={summary} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : chat.loading ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
                 {t("loading")}
               </p>
             ) : (
-              <MessageList
-                messages={chat.messages}
-                streamingText={chat.streamingText}
-                verdicts={chat.verdicts}
-                density="comfortable"
-                emptyText={
-                  activeSession?.kind === "tender" ? t("empty") : t("globalEmpty")
-                }
-                pending={chat.sending || pendingMessage !== null}
-                activeTool={chat.activeTool}
-                activeStage={chat.activeStage}
-              />
+              <>
+                {activeSession?.kind === "tender" && activeSession.tenderId && (
+                  <TenderReportPanel tenderId={activeSession.tenderId} />
+                )}
+                <MessageList
+                  messages={chat.messages}
+                  streamingText={chat.streamingText}
+                  verdicts={chat.verdicts}
+                  density="comfortable"
+                  emptyText={
+                    activeSession?.kind === "tender" ? t("empty") : t("globalEmpty")
+                  }
+                  pending={chat.sending || pendingMessage !== null}
+                  activeTool={chat.activeTool}
+                  activeStage={chat.activeStage}
+                />
+              </>
             )}
             {chat.error && (
               <p className="pt-3 text-center text-xs text-rose-600">

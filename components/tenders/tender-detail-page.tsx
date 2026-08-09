@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ const STATUS_VARIANT = {
  */
 export function TenderDetailPage({ tenderId }: { tenderId: string }) {
   const t = useTranslations("Tenders");
+  const tReport = useTranslations("Tenders.report");
   const { detail, files, decision, setDecision, loading, error, fit } =
     useTenderDetail(tenderId);
 
@@ -75,12 +76,20 @@ export function TenderDetailPage({ tenderId }: { tenderId: string }) {
             {buyerLine(detail) && (
               <p className="text-sm text-muted-foreground">{buyerLine(detail)}</p>
             )}
-            <TenderDecisionActions
-              tenderId={tenderId}
-              status={decision}
-              onChange={setDecision}
-              className="pt-1"
-            />
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <TenderDecisionActions
+                tenderId={tenderId}
+                status={decision}
+                onChange={setDecision}
+              />
+              <Link
+                href={`/tenders/${tenderId}/report`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+              >
+                <FileText className="size-3.5" />
+                {tReport("openReport")}
+              </Link>
+            </div>
           </header>
 
           <TenderDetailTabs
