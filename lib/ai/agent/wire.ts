@@ -1,5 +1,5 @@
 /**
- * Client-safe wire types for the Dora chat: serialized documents and the SSE
+ * Client-safe wire types for the Clara chat: serialized documents and the SSE
  * event protocol. This module must import NOTHING server-side (no mongodb, no
  * node:crypto) — it is the only agent module components may import.
  */
@@ -22,7 +22,7 @@ export interface WireAttachment {
   fileName: string;
   contentType: string;
   size: number;
-  /** ready = Dora read it; unsupported/failed = attached but not readable. */
+  /** ready = Clara read it; unsupported/failed = attached but not readable. */
   status: "ready" | "unsupported" | "failed";
 }
 
@@ -85,7 +85,7 @@ export interface WireVerdict {
 }
 
 /** SSE events the chat route emits. Tool labels are i18n KEYS, not text. */
-export type DoraSseEvent =
+export type ClaraSseEvent =
   | { type: "ready"; threadId: string; messageId: string }
   | { type: "token"; delta: string }
   | {

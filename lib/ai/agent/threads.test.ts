@@ -12,20 +12,21 @@ const { getOwnedThread, globalThreadKey, tenderThreadKey } = await import(
 describe("thread keys", () => {
   // Checkpoints in agent_checkpoints are keyed by these exact strings — a
   // format change silently orphans every existing conversation. If this test
-  // fails, you are breaking checkpoint compatibility, not fixing a bug.
+  // fails, you are breaking checkpoint compatibility, not fixing a bug; the
+  // only sanctioned way through is to pair the change with `ai:reset:chat`.
   it("tender key format is frozen", () => {
     const tenantId = new ObjectId("64a000000000000000000001");
     const tenderId = new ObjectId("64a000000000000000000002");
     expect(tenderThreadKey(tenantId, tenderId)).toBe(
-      "dora:64a000000000000000000001:64a000000000000000000002",
+      "clara:64a000000000000000000001:64a000000000000000000002",
     );
   });
 
   it("global key derives from the thread id and cannot collide with tender keys", () => {
     const threadId = new ObjectId("64a000000000000000000003");
     const key = globalThreadKey(threadId);
-    expect(key).toBe("dorag:64a000000000000000000003");
-    expect(key.startsWith("dora:")).toBe(false);
+    expect(key).toBe("clarag:64a000000000000000000003");
+    expect(key.startsWith("clara:")).toBe(false);
   });
 });
 

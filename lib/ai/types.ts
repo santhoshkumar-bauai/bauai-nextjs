@@ -153,7 +153,7 @@ export interface ExtractionDocument {
 }
 
 /**
- * Dora's bid/no-bid verdict (roadmap §12.6/§20.3). Tenant-scoped — it
+ * Clara's bid/no-bid verdict (roadmap §12.6/§20.3). Tenant-scoped — it
  * depends on the company's fit. One current verdict per (tenant, tender),
  * replaced wholesale. `review` follows §12.6; the review UI is future work.
  */
@@ -204,13 +204,13 @@ export interface TenderVerdictDocument {
 }
 
 /**
- * A Dora chat thread. Two kinds share this collection:
+ * A Clara chat thread. Two kinds share this collection:
  * - "tender": company-shared, exactly one per (tenant, tender) — enforced by
  *   a partial unique index. `tenderId` set, `ownerUserId` null.
  * - "global": private per user, many per user. `tenderId` null, `ownerUserId`
  *   set, `title` from the first message (renameable).
  * `threadKey` is the LangGraph checkpoint id; the tender format
- * (`dora:{tenant}:{tender}`) is frozen — changing it orphans checkpoints.
+ * (`clara:{tenant}:{tender}`) is frozen — changing it orphans checkpoints.
  */
 export interface ChatThreadDocument {
   _id?: ObjectId;
@@ -220,7 +220,7 @@ export interface ChatThreadDocument {
   ownerUserId: string | null;
   threadKey: string;
   title: string | null;
-  agent: "dora";
+  agent: "clara";
   createdBy: string;
   graphVersion: string;
   lastMessageAt: Date;

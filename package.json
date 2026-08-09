@@ -27,6 +27,7 @@
     "seed:tenders": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/seed-tenders.mts",
     "worker:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/documents.mts",
     "ai:bootstrap": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-bootstrap.mts",
+    "ai:reset:chat": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-reset-chat.mts",
     "worker:ai": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/ai-indexer.mts",
     "ai:backfill:notices": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-backfill-notices.mts",
     "ai:backfill:chunks": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-backfill-chunks.mts",

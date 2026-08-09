@@ -3,7 +3,7 @@ import { claimChatAttachments } from "./attachments.ts";
 import type { AgentRunContext, TenderAgentRunContext } from "./context.ts";
 import { runChatTurn, serializeChatMessage } from "./service.ts";
 import { setThreadTitleIfEmpty } from "./threads.ts";
-import type { DoraSseEvent } from "./wire.ts";
+import type { ClaraSseEvent } from "./wire.ts";
 
 /**
  * The one SSE-over-POST implementation behind both chat routes (per-tender
@@ -42,7 +42,7 @@ export function streamChatTurnResponse(input: {
     start(controller) {
       let open = true;
 
-      const send = (event: DoraSseEvent) => {
+      const send = (event: ClaraSseEvent) => {
         if (!open) return;
         try {
           controller.enqueue(
@@ -164,7 +164,7 @@ export function streamChatTurnResponse(input: {
 async function runVerdictCommand(
   ctx: TenderAgentRunContext,
   thread: ChatThreadDocument,
-  send: (event: DoraSseEvent) => void,
+  send: (event: ClaraSseEvent) => void,
 ): Promise<void> {
   const { generateVerdict, serializeVerdict, getVerdictState } = await import(
     "../verdict/service.ts"

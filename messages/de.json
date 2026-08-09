@@ -156,7 +156,7 @@
       },
       "nova": {
         "role": "Angebotsbewertungsagentin",
-        "description": "Angebote automatisch bewerten, Kerndaten extrahieren und die Bereitschaft einstufen."
+        "description": "Laden Sie beliebig viele Angebote hoch — Nova extrahiert Preise, Termine und Qualifikationen, vergleicht sie, meldet Auffälligkeiten und empfiehlt den Zuschlag."
       }
     },
     "pendingTitle": "Warten auf die Freigabe durch einen Administrator",
@@ -239,7 +239,7 @@
       "tender": "Ausschreibungsinformationen",
       "employees": "Mitarbeiterinformationen",
       "billing": "Abrechnung",
-      "dora": "Dora-Playbook"
+      "clara": "Clara-Playbook"
     },
     "common": {
       "preview": "UI-Vorschau",
@@ -308,8 +308,8 @@
       "previewTitle": "Abrechnungsvorschau",
       "previewDescription": "Abonnementverwaltung und Rechnungen werden hier bald verfügbar sein."
     },
-    "dora": {
-      "title": "Dora-Playbook",
+    "clara": {
+      "title": "Clara-Playbook",
       "subtitle": "Ein geführter Arbeitsbereich für bessere Ausschreibungsantworten.",
       "cards": {
         "analysis": "Ausschreibung analysieren",
@@ -318,7 +318,7 @@
       },
       "description": "Für diesen Schritt wird gerade ein fokussierter Workflow vorbereitet.",
       "previewTitle": "Playbook-Vorschau",
-      "previewDescription": "Doras geführtes Ausschreibungs-Playbook wird derzeit entwickelt."
+      "previewDescription": "Claras geführtes Ausschreibungs-Playbook wird derzeit entwickelt."
     },
     "sidebar": {
       "profileSetup": "Profil einrichten",
@@ -723,7 +723,7 @@
       "fileNotReadable": "Nicht maschinenlesbar"
     },
     "chat": {
-      "title": "Dora — Ausschreibungsassistentin",
+      "title": "Clara — Ausschreibungsassistentin",
       "close": "Schließen",
       "openFullWindow": "Im Vollbild öffnen"
     },
@@ -865,7 +865,7 @@
   "Chat": {
     "clear": "Verlauf löschen",
     "loading": "Verlauf wird geladen…",
-    "empty": "Fragen Sie Dora alles zu dieser Ausschreibung — Fristen, Anforderungen, Risiken oder den Abgleich mit Ihren Unternehmensunterlagen.",
+    "empty": "Fragen Sie Clara alles zu dieser Ausschreibung — Fristen, Anforderungen, Risiken oder den Abgleich mit Ihren Unternehmensunterlagen.",
     "placeholder": "Frage zur Ausschreibung…",
     "send": "Senden",
     "stop": "Stopp",
@@ -920,9 +920,9 @@
       "unresolved": "Offene Fragen",
       "generatedAt": "Erstellt {date}"
     },
-    "title": "Dora",
-    "globalPlaceholder": "Fragen Sie Dora zu Ausschreibungen oder Ihrem Unternehmen…",
-    "globalEmpty": "Fragen Sie Dora alles — finden Sie Ausschreibungen, prüfen Sie Ihr Unternehmensprofil oder gleichen Sie Anforderungen mit Ihren Unterlagen ab.",
+    "title": "Clara",
+    "globalPlaceholder": "Fragen Sie Clara zu Ausschreibungen oder Ihrem Unternehmen…",
+    "globalEmpty": "Fragen Sie Clara alles — finden Sie Ausschreibungen, prüfen Sie Ihr Unternehmensprofil oder gleichen Sie Anforderungen mit Ihren Unterlagen ab.",
     "suggestions": {
       "findTenders": "Offene Ausschreibungen finden, die zu unserem Unternehmen passen",
       "companyDocs": "Welche unserer Unterlagen sind durchsuchbar?",
@@ -940,11 +940,11 @@
       "cancel": "Abbrechen",
       "save": "Speichern"
     },
-    "thinking": "Dora denkt nach…",
+    "thinking": "Clara denkt nach…",
     "attach": {
       "button": "Datei anhängen",
       "remove": "Anhang entfernen",
-      "unsupported": "Dora kann diesen Dateityp nicht lesen",
+      "unsupported": "Clara kann diesen Dateityp nicht lesen",
       "tooLarge": "Datei zu groß (max. 25 MB)",
       "failed": "Upload fehlgeschlagen"
     }

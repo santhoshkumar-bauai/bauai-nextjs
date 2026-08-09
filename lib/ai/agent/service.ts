@@ -7,11 +7,11 @@ import type { ChatAttachmentDocument, ChatMessageDocument } from "../types.ts";
 import { attachmentMeta, buildUserTurnContent } from "./attachments.ts";
 import { textFromContent } from "./content.ts";
 import type { AgentRunContext } from "./context.ts";
-import { buildDoraGraph } from "./graph.ts";
+import { buildClaraGraph } from "./graph.ts";
 import { bumpThread } from "./threads.ts";
 import type { WireChatMessage } from "./wire.ts";
 
-const log = logger.child("ai.dora");
+const log = logger.child("ai.clara");
 
 export interface ChatTurnCallbacks {
   /** Fired as soon as the user message is persisted, before the model runs. */
@@ -92,7 +92,7 @@ export async function runChatTurn(input: {
   // resolves to base64 at model-call time.
   const turnContent = buildUserTurnContent(userText, attachments);
 
-  const graph = await buildDoraGraph(ctx);
+  const graph = await buildClaraGraph(ctx);
   const config = {
     configurable: { thread_id: input.threadKey },
     signal,

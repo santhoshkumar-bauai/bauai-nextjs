@@ -10,7 +10,7 @@ import type {
  * Read access to the FETCHED files of a tender's `tender_documents` records —
  * the actual downloaded documents in S3, as opposed to the notice's external
  * links. Powers the Documents tab file list, the file download route, and
- * Dora's list/read tools.
+ * Clara's list/read tools.
  */
 
 export interface SerializedTenderFile {
@@ -19,7 +19,7 @@ export interface SerializedTenderFile {
   fileName: string;
   mimeType: string;
   byteLength: number;
-  /** DONE = extracted text exists (searchable/readable by Dora). */
+  /** DONE = extracted text exists (searchable/readable by Clara). */
   textStatus: StoredDocumentFile["textStatus"];
   textChars: number;
 }

@@ -11,7 +11,7 @@ import { forCompanyContext } from "../tenant/repository.ts";
 import { CitationCollector } from "./citations.ts";
 
 /**
- * Everything a Dora run needs, derived SERVER-SIDE from the authenticated
+ * Everything a Clara run needs, derived SERVER-SIDE from the authenticated
  * request. Tools close over this — their inputs never carry TENANT identifiers,
  * so a prompt-injected tool call cannot change company scope (§6.5).
  *

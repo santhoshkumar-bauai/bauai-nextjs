@@ -4,21 +4,23 @@ import { getIngestionDb } from "../../ingestion/db/client.ts";
 import { getAiCollections } from "../db/collections.ts";
 import type { ChatThreadDocument } from "../types.ts";
 
-export const DORA_GRAPH_VERSION = "dora-chat-v1";
+export const CLARA_GRAPH_VERSION = "clara-chat-v1";
 
 /**
  * LangGraph thread ids — server-derived only, never client input.
- * The tender format is FROZEN: existing checkpoints are keyed by this exact
- * string, so any change orphans every ongoing tender conversation. A unit
- * test pins the format.
+ * The tender format is FROZEN going forward: checkpoints in `agent_checkpoints`
+ * are keyed by this exact string, so any change orphans every ongoing tender
+ * conversation. The one deliberate break so far (the Clara rebrand) was paired
+ * with a full wipe via `npm run ai:reset:chat`; any future change needs the
+ * same. A unit test pins the format.
  */
 export function tenderThreadKey(tenantId: ObjectId, tenderId: ObjectId): string {
-  return `dora:${tenantId.toHexString()}:${tenderId.toHexString()}`;
+  return `clara:${tenantId.toHexString()}:${tenderId.toHexString()}`;
 }
 
 /** Global (non-tender) threads are keyed by their own _id. */
 export function globalThreadKey(threadId: ObjectId): string {
-  return `dorag:${threadId.toHexString()}`;
+  return `clarag:${threadId.toHexString()}`;
 }
 
 /** One tender thread per (tenant, tender, agent); upsert-and-return. */
@@ -30,11 +32,11 @@ export async function ensureTenderThread(input: {
   const { chatThreads } = await getAiCollections();
   const now = new Date();
   await chatThreads.updateOne(
-    { tenantId: input.tenantId, tenderId: input.tenderId, agent: "dora" },
+    { tenantId: input.tenantId, tenderId: input.tenderId, agent: "clara" },
     {
-      // Lazy backfill for threads created before the kind/threadKey fields
-      // existed (ensureAiIndexes also backfills at boot; this is the safety
-      // net). Disjoint from $setOnInsert per Mongo rules.
+      // Keep the derived fields current on every open, so a threadKey format
+      // change only needs a wipe of the checkpoints, not of the thread docs.
+      // Disjoint from $setOnInsert per Mongo rules.
       $set: {
         kind: "tender" as const,
         ownerUserId: null,
@@ -44,9 +46,9 @@ export async function ensureTenderThread(input: {
         tenantId: input.tenantId,
         tenderId: input.tenderId,
         title: null,
-        agent: "dora",
+        agent: "clara",
         createdBy: input.userId,
-        graphVersion: DORA_GRAPH_VERSION,
+        graphVersion: CLARA_GRAPH_VERSION,
         lastMessageAt: now,
         messageCount: 0,
         createdAt: now,
@@ -58,7 +60,7 @@ export async function ensureTenderThread(input: {
   const thread = await chatThreads.findOne({
     tenantId: input.tenantId,
     tenderId: input.tenderId,
-    agent: "dora",
+    agent: "clara",
   });
   return thread as ChatThreadDocument;
 }
@@ -78,7 +80,7 @@ export async function createGlobalThread(input: {
       tenantId: input.tenantId,
       kind: "global",
       ownerUserId: input.userId,
-      agent: "dora",
+      agent: "clara",
       messageCount: 0,
       title: null,
     },
@@ -96,9 +98,9 @@ export async function createGlobalThread(input: {
     ownerUserId: input.userId,
     threadKey: globalThreadKey(_id),
     title: null,
-    agent: "dora",
+    agent: "clara",
     createdBy: input.userId,
-    graphVersion: DORA_GRAPH_VERSION,
+    graphVersion: CLARA_GRAPH_VERSION,
     lastMessageAt: now,
     messageCount: 0,
     createdAt: now,
@@ -142,7 +144,7 @@ export async function listThreads(input: {
         tenantId: input.tenantId,
         kind: "global",
         ownerUserId: input.userId,
-        agent: "dora",
+        agent: "clara",
       })
       .sort({ lastMessageAt: -1 })
       .limit(50)
@@ -151,7 +153,7 @@ export async function listThreads(input: {
       .find({
         tenantId: input.tenantId,
         kind: "tender",
-        agent: "dora",
+        agent: "clara",
         messageCount: { $gt: 0 },
       })
       .sort({ lastMessageAt: -1 })
@@ -238,7 +240,7 @@ export async function clearThread(
   tenderId: ObjectId,
 ): Promise<void> {
   const { chatThreads } = await getAiCollections();
-  const thread = await chatThreads.findOne({ tenantId, tenderId, agent: "dora" });
+  const thread = await chatThreads.findOne({ tenantId, tenderId, agent: "clara" });
   if (!thread?._id) return;
   await deleteThread(thread as ChatThreadDocument);
 }

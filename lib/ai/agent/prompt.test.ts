@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext } from "./context.ts";
-import { buildDoraSystemPrompt } from "./prompt.ts";
+import { buildClaraSystemPrompt } from "./prompt.ts";
 
 function ctxOf(tender: AgentRunContext["tender"]): AgentRunContext {
   return {
@@ -27,14 +27,21 @@ const tenderCtx = ctxOf({
   } as never,
 });
 
-describe("buildDoraSystemPrompt", () => {
+describe("buildClaraSystemPrompt", () => {
+  // The persona name is the product brand; a half-finished rebrand should fail
+  // here rather than reach a user mid-conversation.
+  it("both modes introduce the agent as Clara", () => {
+    expect(buildClaraSystemPrompt(tenderCtx)).toContain("You are Clara,");
+    expect(buildClaraSystemPrompt(ctxOf(null))).toContain("You are Clara,");
+  });
+
   it("tender mode carries the current-tender block, global mode the scope block", () => {
-    const tenderPrompt = buildDoraSystemPrompt(tenderCtx);
+    const tenderPrompt = buildClaraSystemPrompt(tenderCtx);
     expect(tenderPrompt).toContain("## Current tender");
     expect(tenderPrompt).toContain("Neubau Kita");
     expect(tenderPrompt).not.toContain("find_tenders");
 
-    const globalPrompt = buildDoraSystemPrompt(ctxOf(null));
+    const globalPrompt = buildClaraSystemPrompt(ctxOf(null));
     expect(globalPrompt).toContain("## Scope");
     expect(globalPrompt).toContain("find_tenders");
     expect(globalPrompt).not.toContain("## Current tender");
@@ -43,8 +50,8 @@ describe("buildDoraSystemPrompt", () => {
   it("citation and data-boundary rules are byte-identical in both modes", () => {
     const tail = (prompt: string) =>
       prompt.slice(prompt.indexOf("## How to answer"));
-    expect(tail(buildDoraSystemPrompt(tenderCtx))).toBe(
-      tail(buildDoraSystemPrompt(ctxOf(null))),
+    expect(tail(buildClaraSystemPrompt(tenderCtx))).toBe(
+      tail(buildClaraSystemPrompt(ctxOf(null))),
     );
   });
 });

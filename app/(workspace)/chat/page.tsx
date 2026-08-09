@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import { DoraChatWorkspace } from "@/components/chat/dora-chat-workspace";
+import { ClaraChatWorkspace } from "@/components/chat/clara-chat-workspace";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { buildDashboardCopy } from "@/lib/dashboard/shell-copy";
 import { auth } from "@/lib/auth";
@@ -10,7 +10,7 @@ import { connectMongoose } from "@/lib/db/mongoose";
 import { AccountProfile } from "@/models/account-profile";
 
 /**
- * Full-page Dora chat (sessions sidebar + thread view). Static segment beats
+ * Full-page Clara chat (sessions sidebar + thread view). Static segment beats
  * the `[section]` dynamic route, same as `tenders`. Gating mirrors
  * `app/(workspace)/tenders/page.tsx`. The client workspace reads `?thread=` /
  * `?tender=` itself, hence only a Suspense boundary here (useSearchParams).
@@ -40,7 +40,7 @@ export default async function ChatPage() {
       dateLabel=""
       workspaceContent={
         <Suspense>
-          <DoraChatWorkspace />
+          <ClaraChatWorkspace />
         </Suspense>
       }
       copy={copy}

@@ -32,7 +32,7 @@ vi.mock("./context.ts", () => ({ getVisibleTender: vi.fn() }));
 const retrieval = await import("../retrieval/hybrid.ts");
 const contextModule = await import("./context.ts");
 const docEmbedder = await import("../company/doc-embedder.ts");
-const { buildDoraTools } = await import("./tools.ts");
+const { buildClaraTools } = await import("./tools.ts");
 
 function tenderScope(): AgentTenderScope {
   return {
@@ -73,7 +73,7 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): AgentRunConte
 }
 
 function toolByName(ctx: AgentRunContext, name: string) {
-  const found = buildDoraTools(ctx).find((tool) => tool.name === name);
+  const found = buildClaraTools(ctx).find((tool) => tool.name === name);
   if (!found) throw new Error(`tool ${name} not found`);
   return found;
 }
@@ -85,9 +85,9 @@ beforeEach(() => {
   vi.mocked(contextModule.getVisibleTender).mockReset();
 });
 
-describe("buildDoraTools — tender mode", () => {
+describe("buildClaraTools — tender mode", () => {
   it("registers the tender registry (no find_tenders, no tenderId inputs)", () => {
-    const names = buildDoraTools(fakeCtx()).map((tool) => tool.name);
+    const names = buildClaraTools(fakeCtx()).map((tool) => tool.name);
     expect(names.sort()).toEqual([
       "get_company_fit",
       "get_company_profile",
@@ -241,9 +241,9 @@ describe("buildDoraTools — tender mode", () => {
   });
 });
 
-describe("buildDoraTools — global mode", () => {
+describe("buildClaraTools — global mode", () => {
   it("registers find_tenders and tenderId-taking tender tools", () => {
-    const names = buildDoraTools(fakeCtx(null)).map((tool) => tool.name);
+    const names = buildClaraTools(fakeCtx(null)).map((tool) => tool.name);
     expect(names).toContain("find_tenders");
     expect(names).toHaveLength(11);
   });

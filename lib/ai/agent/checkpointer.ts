@@ -6,13 +6,13 @@ import { ingestionEnv } from "../../ingestion/config/env.ts";
 /**
  * LangGraph checkpointer: serialized graph state (model-context memory) per
  * thread. The collections are global, but `thread_id` is ALWAYS derived
- * server-side (`dora:{tenantId}:{tenderId}` — see threads.ts), never accepted
+ * server-side (`clara:{tenantId}:{tenderId}` — see threads.ts), never accepted
  * from a client, so cross-tenant checkpoint access is inexpressible via the
  * API surface.
  */
 let saver: MongoDBSaver | null = null;
 
-export async function getDoraCheckpointer(): Promise<MongoDBSaver> {
+export async function getClaraCheckpointer(): Promise<MongoDBSaver> {
   if (saver) return saver;
   const client = await getIngestionClient();
   saver = new MongoDBSaver({

@@ -10,7 +10,7 @@ import { setAgentModelForTests } from "./model.ts";
 
 // The graph pulls tools + checkpointer; both are mocked for unit isolation.
 vi.mock("./tools.ts", () => ({
-  buildDoraTools: () => [
+  buildClaraTools: () => [
     {
       name: "get_tender_notice",
       description: "test tool",
@@ -22,7 +22,7 @@ vi.mock("./tools.ts", () => ({
 vi.mock("./checkpointer.ts", async () => {
   const { MemorySaver } = await import("@langchain/langgraph");
   const saver = new MemorySaver();
-  return { getDoraCheckpointer: async () => saver };
+  return { getClaraCheckpointer: async () => saver };
 });
 // ToolNode needs real StructuredTools; simplest is to mock the whole prebuilt
 // ToolNode call with a passthrough node producing a ToolMessage.
@@ -47,7 +47,7 @@ vi.mock("@langchain/langgraph/prebuilt", async () => {
   return { ToolNode: FakeToolNode };
 });
 
-const { buildDoraGraph, sanitizeToolPairs } = await import("./graph.ts");
+const { buildClaraGraph, sanitizeToolPairs } = await import("./graph.ts");
 
 function fakeCtx(): AgentRunContext {
   return {
@@ -131,7 +131,7 @@ describe("sanitizeToolPairs", () => {
   });
 });
 
-describe("buildDoraGraph", () => {
+describe("buildClaraGraph", () => {
   it("runs one tool round then answers", async () => {
     const fake = new FakeToolCallingChatModel([
       toolCallMessage(),
@@ -139,7 +139,7 @@ describe("buildDoraGraph", () => {
     ]);
     setAgentModelForTests(fake);
 
-    const graph = await buildDoraGraph(fakeCtx());
+    const graph = await buildClaraGraph(fakeCtx());
     const result = await graph.invoke(
       { messages: [new HumanMessage("When is the deadline?")] },
       { configurable: { thread_id: `test-${Date.now()}` } },
@@ -165,7 +165,7 @@ describe("buildDoraGraph", () => {
     ]);
     setAgentModelForTests(fake);
 
-    const graph = await buildDoraGraph(fakeCtx());
+    const graph = await buildClaraGraph(fakeCtx());
     const result = await graph.invoke(
       { messages: [new HumanMessage("Hard question")] },
       { configurable: { thread_id: `test-cap-${Date.now()}` } },
@@ -187,7 +187,7 @@ describe("buildDoraGraph", () => {
     ]);
     setAgentModelForTests(fake);
 
-    const graph = await buildDoraGraph(fakeCtx());
+    const graph = await buildClaraGraph(fakeCtx());
     const result = await graph.invoke(
       { messages: [new HumanMessage("Question")] },
       { configurable: { thread_id: `test-empty-${Date.now()}` } },
@@ -208,7 +208,7 @@ describe("buildDoraGraph", () => {
     setAgentModelForTests(fake);
 
     const ctx = fakeCtx();
-    const graph = await buildDoraGraph(ctx);
+    const graph = await buildClaraGraph(ctx);
     await graph.invoke(
       { messages: [new HumanMessage("Our budget is 2M EUR.")] },
       { configurable: { thread_id: threadId } },

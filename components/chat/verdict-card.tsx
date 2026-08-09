@@ -28,7 +28,7 @@ const SCORE_KEYS = [
   "deadlineFeasibility",
 ] as const;
 
-/** Rich bid/no-bid verdict card rendered inside the Dora chat. */
+/** Rich bid/no-bid verdict card rendered inside the Clara chat. */
 export function VerdictCard({ verdict }: { verdict: WireVerdict }) {
   const t = useTranslations("Chat.verdict");
   const format = useFormatter();

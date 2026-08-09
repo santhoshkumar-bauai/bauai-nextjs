@@ -19,7 +19,7 @@ import {
   type EvidenceTable,
 } from "./prompt.ts";
 import {
-  DORA_VERDICT_PROMPT_VERSION,
+  CLARA_VERDICT_PROMPT_VERSION,
   VERDICT_JSON_SCHEMA,
   verdictOutputSchema,
   type VerdictOutput,
@@ -84,7 +84,7 @@ export async function getVerdictState(
   const stale =
     doc.inputs.corpusHash !== corpusHash ||
     doc.inputs.companyDataHash !== companyDataHash ||
-    doc.model.promptVersion !== DORA_VERDICT_PROMPT_VERSION;
+    doc.model.promptVersion !== CLARA_VERDICT_PROMPT_VERSION;
   return { verdict: doc, stale };
 }
 
@@ -199,7 +199,7 @@ export async function generateVerdict(input: {
     model: {
       provider: modelRef.provider,
       providerModel: modelRef.model,
-      promptVersion: DORA_VERDICT_PROMPT_VERSION,
+      promptVersion: CLARA_VERDICT_PROMPT_VERSION,
     },
     review: { state: "PENDING", reviewerId: null, reviewedAt: null, edits: [] },
     locale: ctx.locale,

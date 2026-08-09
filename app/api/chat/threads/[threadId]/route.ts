@@ -23,7 +23,7 @@ import { getCompanyContext, type CompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
 /**
- * One Dora chat session, addressed by thread id — the full-page chat's API.
+ * One Clara chat session, addressed by thread id — the full-page chat's API.
  * Serves BOTH kinds: global threads (owner-only) and tender threads (any
  * company member; same threadKey as the tender-dialog route, so both surfaces
  * continue one conversation). GET = history, POST = one SSE turn,

@@ -10,7 +10,7 @@ export interface PendingAttachment extends WireAttachment {
   id: string;
 }
 
-export interface DoraChatState {
+export interface ClaraChatState {
   messages: WireChatMessage[];
   /** Assistant text currently streaming (not yet a persisted message). */
   streamingText: string;
@@ -29,12 +29,12 @@ export interface DoraChatState {
  * `/api/chat/threads/{threadId}`): bootstrap, send-with-SSE, abort, clear.
  * Null endpoint = idle (closed popup / no selection).
  */
-export function useDoraChat(
+export function useClaraChat(
   endpoint: string | null,
   options?: { locale?: "en" | "de" },
 ) {
   const locale = options?.locale ?? "en";
-  const [state, setState] = useState<DoraChatState>({
+  const [state, setState] = useState<ClaraChatState>({
     messages: [],
     streamingText: "",
     activeTool: null,

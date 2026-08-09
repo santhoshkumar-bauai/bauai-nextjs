@@ -96,8 +96,7 @@ Overview card renders the active locale's language from the stored bilingual
 record. Extraction schema cards fill via 3.5s polling while `worker:ai`
 processes; each field shows value, confidence, citationState badge and
 expandable verbatim German quotes. The **company fit lives in the floating
-chat-style bubble** bottom-right (`fit-assistant.tsx`) — deliberately shaped
-as the future Dora chat seat.
+chat-style bubble** bottom-right (`clara-assistant.tsx`) — Clara's chat seat.
 
 All strings exist in `messages/en.json` + `de.json`; parity enforced by
 `messages/parity.test.ts`.
@@ -122,6 +121,7 @@ All strings exist in `messages/en.json` + `de.json`; parity enforced by
 
 ```bash
 npm run ai:bootstrap            # collections + plain & search indexes (idempotent)
+npm run ai:reset:chat -- --yes  # wipe chat/agent state only (--dry-run first)
 npm run worker:ai               # BullMQ consumers + sweeps (newest-first everywhere)
 npm run ai:backfill:notices     # monitor notice-embedding convergence (--watch)
 npm run ai:backfill:chunks      # chunk+embed all fetched docs inline
@@ -178,7 +178,7 @@ Deliberately not built yet: extraction golden labels + accuracy eval (roadmap
 §31), page/bbox citations (Python document worker), OCR, real cross-encoder
 reranker, `$rankFusion`.
 
-**Next: the agents.** The chat bubble in the tender popup is Dora's seat. The
+**Next: the agents.** The chat bubble in the tender popup is Clara's seat. The
 roadmap's design (§19–22) maps directly onto what exists: agent tools are
 thin wrappers over `getExtractions`, `getTenderOverview`, `hybridRetrieveChunks`,
 `searchNotices` and the fit service; LangGraph.js checkpointing gets an

@@ -1,6 +1,6 @@
 import type { AgentRunContext } from "./context.ts";
 
-export const DORA_SYSTEM_PROMPT_VERSION = "dora-p2";
+export const CLARA_SYSTEM_PROMPT_VERSION = "clara-p1";
 
 /**
  * Per-turn system prompt: injected fresh on every model call, never persisted
@@ -8,12 +8,12 @@ export const DORA_SYSTEM_PROMPT_VERSION = "dora-p2";
  * ONE builder for both modes — the citation and data-boundary rules must stay
  * byte-identical, and two builders would drift.
  */
-export function buildDoraSystemPrompt(ctx: AgentRunContext): string {
+export function buildClaraSystemPrompt(ctx: AgentRunContext): string {
   const language = ctx.locale === "de" ? "German" : "English";
 
   const scopeBlock = ctx.tender
     ? [
-        "You are Dora, the tender-analysis assistant of BAU AI, helping a bidder evaluate ONE German public tender.",
+        "You are Clara, the tender-analysis assistant of BAU AI, helping a bidder evaluate ONE German public tender.",
         "",
         "## Current tender",
         `Title: ${ctx.tender.tenderDetail.title ?? "—"}`,
@@ -22,7 +22,7 @@ export function buildDoraSystemPrompt(ctx: AgentRunContext): string {
         `Status: ${ctx.tender.tenderDetail.status}`,
       ]
     : [
-        "You are Dora, the tender-analysis assistant of BAU AI, working across ALL published German public tenders and the user's company data.",
+        "You are Clara, the tender-analysis assistant of BAU AI, working across ALL published German public tenders and the user's company data.",
         "",
         "## Scope",
         "- No single tender is in scope. Use find_tenders to discover tenders by topic, trade or buyer wording; pass the returned tenderId to the tender tools to drill in.",

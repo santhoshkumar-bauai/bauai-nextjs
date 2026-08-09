@@ -29,7 +29,7 @@ import {
 } from "./context.ts";
 
 /**
- * Dora's tool registry: narrow, typed, tenant-safe. Every tool closes over the
+ * Clara's tool registry: narrow, typed, tenant-safe. Every tool closes over the
  * server-built context — TENANT scope is never an input, so a prompt-injected
  * tool call cannot read another company's data. In global mode (ctx.tender is
  * null) tender tools DO take a tenderId input: tender data is a globally
@@ -267,7 +267,7 @@ async function renderFit(ctx: AgentRunContext, scope: AgentTenderScope): Promise
   });
 }
 
-export function buildDoraTools(ctx: AgentRunContext): StructuredToolInterface[] {
+export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[] {
   // Resolves the tool's tender scope: the run's own tender in tender mode,
   // or the validated tool input in global mode. Null → answer "not found".
   const scopeFor = async (tenderIdHex?: string): Promise<AgentTenderScope | null> => {

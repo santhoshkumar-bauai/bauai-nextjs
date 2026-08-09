@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import type { ChatDensity } from "./message-list";
-import type { PendingAttachment } from "./use-dora-chat";
+import type { PendingAttachment } from "./use-clara-chat";
 
 const MAX_FILES = 4;
 

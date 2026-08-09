@@ -15,17 +15,17 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageList } from "@/components/chat/message-list";
-import { useDoraChat } from "@/components/chat/use-dora-chat";
+import { useClaraChat } from "@/components/chat/use-clara-chat";
 import { cn } from "@/lib/utils";
 import { FitSection, type FitSectionProps } from "./ai-tab";
 
 /**
- * Dora — the floating tender assistant. A chat over the tender's structured
+ * Clara — the floating tender assistant. A chat over the tender's structured
  * artifacts and documents, with the company-fit assessment as an expandable
  * quick-action card. The expand button continues the SAME conversation on
  * the full-page chat (shared thread key).
  */
-export function DoraAssistant({
+export function ClaraAssistant({
   tenderId,
   fit,
 }: {
@@ -37,7 +37,7 @@ export function DoraAssistant({
   const locale = useLocale() as "en" | "de";
   const [open, setOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
-  const chat = useDoraChat(
+  const chat = useClaraChat(
     open && tenderId ? `/api/tenders/${tenderId}/chat` : null,
     { locale },
   );

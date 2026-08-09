@@ -58,27 +58,6 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenderId: 1 }, name: "uq_tender", unique: true },
   ]);
 
-  // Thread-kind migration, strictly ordered: backfill legacy docs first (the
-  // partial index below only covers kind:"tender", which pre-migration docs
-  // lack), then swap the old full unique index for the partial one. Both
-  // steps are idempotent — safe to run on every boot.
-  await c.chatThreads.updateMany({ kind: { $exists: false } }, [
-    {
-      $set: {
-        kind: "tender",
-        ownerUserId: null,
-        title: null,
-        threadKey: {
-          $concat: ["dora:", { $toString: "$tenantId" }, ":", { $toString: "$tenderId" }],
-        },
-      },
-    },
-  ]);
-  try {
-    await c.chatThreads.dropIndex("uq_tenant_tender_agent");
-  } catch {
-    // already dropped (or never created on a fresh database)
-  }
   await c.chatThreads.createIndexes([
     {
       // Uniqueness only for tender threads; global threads (tenderId null,

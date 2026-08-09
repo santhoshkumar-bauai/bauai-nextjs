@@ -10,7 +10,7 @@ import { getCompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
 /**
- * Dora chat for one tender. GET bootstraps the thread + history, POST streams
+ * Clara chat for one tender. GET bootstraps the thread + history, POST streams
  * one turn over SSE (fetch-reader on the client — SSE-over-POST), DELETE
  * clears the conversation. The agent runs inline; the BullMQ worker is not
  * involved.

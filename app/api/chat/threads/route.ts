@@ -14,7 +14,7 @@ import { mongoDatabase } from "@/lib/db/mongodb";
 import { forCompanyContext } from "@/lib/ai/tenant/repository";
 
 /**
- * Dora chat sessions. GET lists the caller's sidebar (own global threads +
+ * Clara chat sessions. GET lists the caller's sidebar (own global threads +
  * the company's active tender threads); POST creates a global thread, or —
  * with a tenderId — ensures and returns the company's tender thread (the
  * `/chat?tender=` deep-link boot, one round trip).

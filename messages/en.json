@@ -156,7 +156,7 @@
       },
       "nova": {
         "role": "Bid Evaluation Agent",
-        "description": "Evaluate every bid automatically, extract key data, and score readiness."
+        "description": "Upload any number of bids — Nova extracts pricing, timelines and qualifications, scores them side-by-side, flags anomalies, and recommends a winner."
       }
     },
     "pendingTitle": "Waiting for administrator approval",
@@ -239,7 +239,7 @@
       "tender": "Tender Information",
       "employees": "Employee Information",
       "billing": "Billing",
-      "dora": "Dora-Playbook"
+      "clara": "Clara Playbook"
     },
     "common": {
       "preview": "UI preview",
@@ -308,8 +308,8 @@
       "previewTitle": "Billing preview",
       "previewDescription": "Subscription management and invoices will be available here soon."
     },
-    "dora": {
-      "title": "Dora-Playbook",
+    "clara": {
+      "title": "Clara Playbook",
       "subtitle": "A guided workspace for preparing stronger tender responses.",
       "cards": {
         "analysis": "Analyse the tender",
@@ -318,7 +318,7 @@
       },
       "description": "A focused workflow is being prepared for this step.",
       "previewTitle": "Playbook preview",
-      "previewDescription": "Dora’s guided tender playbook is currently being built."
+      "previewDescription": "Clara’s guided tender playbook is currently being built."
     },
     "sidebar": {
       "profileSetup": "Profile setup",
@@ -723,7 +723,7 @@
       "fileNotReadable": "Not machine-readable"
     },
     "chat": {
-      "title": "Dora — tender assistant",
+      "title": "Clara — tender assistant",
       "close": "Close",
       "openFullWindow": "Open in full window"
     },
@@ -865,7 +865,7 @@
   "Chat": {
     "clear": "Clear conversation",
     "loading": "Loading conversation…",
-    "empty": "Ask Dora anything about this tender — deadlines, requirements, risks, or how it compares to your company's documents.",
+    "empty": "Ask Clara anything about this tender — deadlines, requirements, risks, or how it compares to your company's documents.",
     "placeholder": "Ask about this tender…",
     "send": "Send",
     "stop": "Stop",
@@ -920,9 +920,9 @@
       "unresolved": "Unresolved questions",
       "generatedAt": "Generated {date}"
     },
-    "title": "Dora",
-    "globalPlaceholder": "Ask Dora about tenders or your company…",
-    "globalEmpty": "Ask Dora anything — find tenders, check your company profile, or compare requirements against your documents.",
+    "title": "Clara",
+    "globalPlaceholder": "Ask Clara about tenders or your company…",
+    "globalEmpty": "Ask Clara anything — find tenders, check your company profile, or compare requirements against your documents.",
     "suggestions": {
       "findTenders": "Find open tenders that match our company",
       "companyDocs": "Which of our documents are searchable?",
@@ -940,11 +940,11 @@
       "cancel": "Cancel",
       "save": "Save"
     },
-    "thinking": "Dora is thinking…",
+    "thinking": "Clara is thinking…",
     "attach": {
       "button": "Attach file",
       "remove": "Remove attachment",
-      "unsupported": "Dora cannot read this file type",
+      "unsupported": "Clara cannot read this file type",
       "tooLarge": "File too large (max 25 MB)",
       "failed": "Upload failed"
     }

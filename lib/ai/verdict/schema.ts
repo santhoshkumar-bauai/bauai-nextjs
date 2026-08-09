@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const DORA_VERDICT_PROMPT_VERSION = "vd-p1";
+export const CLARA_VERDICT_PROMPT_VERSION = "vd-p1";
 
 /**
  * Model output for the verdict (roadmap §20.3). Citations are BY REFERENCE:

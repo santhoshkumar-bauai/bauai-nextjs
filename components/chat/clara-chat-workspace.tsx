@@ -10,15 +10,15 @@ import { ChatInput } from "./chat-input";
 import { MessageList } from "./message-list";
 import { SessionsSidebar } from "./sessions-sidebar";
 import { useChatSessions } from "./use-chat-sessions";
-import { useDoraChat } from "./use-dora-chat";
+import { useClaraChat } from "./use-clara-chat";
 
 /**
- * The full-page Dora chat (ChatGPT-style): sessions sidebar + thread view.
+ * The full-page Clara chat (ChatGPT-style): sessions sidebar + thread view.
  * The URL is the source of truth — `?thread={id}` selects a session,
  * `?tender={tenderId}` boots the company's tender thread (deep link from the
  * tender dialog) and then normalizes to `?thread=`.
  */
-export function DoraChatWorkspace() {
+export function ClaraChatWorkspace() {
   const t = useTranslations("Chat");
   const locale = useLocale() as "en" | "de";
   const router = useRouter();
@@ -29,7 +29,7 @@ export function DoraChatWorkspace() {
   const sessionsApi = useChatSessions();
   const { create: createSession, refresh: refreshSessions } = sessionsApi;
   const endpoint = threadId ? `/api/chat/threads/${threadId}` : null;
-  const chat = useDoraChat(endpoint, { locale });
+  const chat = useClaraChat(endpoint, { locale });
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // A message typed before any session exists: create → navigate → send.

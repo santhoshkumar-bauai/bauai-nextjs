@@ -18,7 +18,7 @@ import type { SerializedTenderFile } from "@/lib/tenders/document-files";
 import type { TenderRecommendation } from "@/lib/tenders/recommendation";
 import { AboutTab } from "./detail/about-tab";
 import { DocumentsTab } from "./detail/documents-tab";
-import { DoraAssistant } from "./detail/dora-assistant";
+import { ClaraAssistant } from "./detail/clara-assistant";
 import { ExtractionsSection } from "./detail/extractions-section";
 import { DeadlineChip } from "./detail/header-summary";
 import { ScheduleTab } from "./detail/schedule-tab";
@@ -194,7 +194,7 @@ export function TenderDetailDialog({
           </Tabs>
         )}
         {detail && !loading && (
-          <DoraAssistant
+          <ClaraAssistant
             tenderId={tenderId}
             fit={{
               rec,

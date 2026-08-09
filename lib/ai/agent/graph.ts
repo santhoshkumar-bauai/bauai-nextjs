@@ -11,13 +11,13 @@ import { aiEnv } from "../config/env.ts";
 import { resolveMediaParts } from "./attachments.ts";
 import { textFromContent } from "./content.ts";
 import { getAgentChatModel } from "./model.ts";
-import { buildDoraSystemPrompt } from "./prompt.ts";
-import { buildDoraTools } from "./tools.ts";
+import { buildClaraSystemPrompt } from "./prompt.ts";
+import { buildClaraTools } from "./tools.ts";
 import type { AgentRunContext } from "./context.ts";
-import { getDoraCheckpointer } from "./checkpointer.ts";
+import { getClaraCheckpointer } from "./checkpointer.ts";
 
 /**
- * Dora's chat graph: a minimal, capped tool loop.
+ * Clara's chat graph: a minimal, capped tool loop.
  *
  *   trim → model(tools bound) ─ has tool_calls & under cap ─► tools → model
  *                             ─ has tool_calls & cap hit ───► finalize → END
@@ -30,7 +30,7 @@ import { getDoraCheckpointer } from "./checkpointer.ts";
  * API. ToolNode is reused so tool errors become ToolMessages, not crashes.
  */
 
-const DoraState = Annotation.Root({
+const ClaraState = Annotation.Root({
   messages: Annotation<BaseMessage[]>({
     reducer: (left, right) => left.concat(right),
     default: () => [],
@@ -41,9 +41,9 @@ const DoraState = Annotation.Root({
   }),
 });
 
-export type DoraStateType = typeof DoraState.State;
+export type ClaraStateType = typeof ClaraState.State;
 
-function lastMessage(state: DoraStateType): BaseMessage | undefined {
+function lastMessage(state: ClaraStateType): BaseMessage | undefined {
   return state.messages[state.messages.length - 1];
 }
 
@@ -87,16 +87,16 @@ export function sanitizeToolPairs(messages: BaseMessage[]): BaseMessage[] {
   return out;
 }
 
-export async function buildDoraGraph(ctx: AgentRunContext) {
+export async function buildClaraGraph(ctx: AgentRunContext) {
   const env = aiEnv();
   // Global chats chain find_tenders → notice → search and need more hops.
   const maxIterations = ctx.tender
     ? env.agentMaxIterations
     : env.agentGlobalMaxIterations;
   const model = await getAgentChatModel();
-  const tools = buildDoraTools(ctx);
+  const tools = buildClaraTools(ctx);
   const boundModel = model.bindTools ? model.bindTools(tools) : model;
-  const systemPrompt = new SystemMessage(buildDoraSystemPrompt(ctx));
+  const systemPrompt = new SystemMessage(buildClaraSystemPrompt(ctx));
 
   // Resetting the iteration counter is this node's entire job — it re-arms
   // the tool-loop cap at the start of every turn. History trimming happens
@@ -117,13 +117,13 @@ export async function buildDoraGraph(ctx: AgentRunContext) {
 
   // Forwarding `config` into every model invocation is what propagates the
   // callback manager — without it, streamEvents sees no token/tool events.
-  const modelNode = async (state: DoraStateType, config: RunnableConfig) => {
+  const modelNode = async (state: ClaraStateType, config: RunnableConfig) => {
     const window = await resolveMediaParts(contextWindow(state.messages), mediaCache);
     const response = await boundModel.invoke([systemPrompt, ...window], config);
     return { messages: [response], iterations: state.iterations + 1 };
   };
 
-  const finalizeNode = async (state: DoraStateType, config: RunnableConfig) => {
+  const finalizeNode = async (state: ClaraStateType, config: RunnableConfig) => {
     // Cap reached with the model still asking for tools (or an empty
     // answer): strip the dangling tool-call request and force plain prose
     // with no tools bound. The explicit nudge matters — a history full of
@@ -146,7 +146,7 @@ export async function buildDoraGraph(ctx: AgentRunContext) {
     return { messages: [response] };
   };
 
-  const graph = new StateGraph(DoraState)
+  const graph = new StateGraph(ClaraState)
     .addNode("beginTurn", beginTurnNode)
     .addNode("model", modelNode)
     .addNode("tools", new ToolNode(tools))
@@ -166,6 +166,6 @@ export async function buildDoraGraph(ctx: AgentRunContext) {
     .addEdge("tools", "model")
     .addEdge("finalize", END);
 
-  const checkpointer = await getDoraCheckpointer();
+  const checkpointer = await getClaraCheckpointer();
   return graph.compile({ checkpointer });
 }
