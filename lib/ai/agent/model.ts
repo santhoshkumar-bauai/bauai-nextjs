@@ -2,13 +2,16 @@ import type { BaseChatModel } from "@langchain/core/language_models/chat_models"
 
 import { aiEnv, requireGeminiApiKey } from "../config/env.ts";
 import { resolveRole } from "../gateway/config.ts";
+import type { ModelRole } from "../gateway/types.ts";
 
 /**
- * Chat-model factory for the agent role. Unlike the deterministic pipelines
- * (which stay on the raw-fetch gateway), the agent uses LangChain's native
- * model classes — tool calling, token streaming and LangGraph integration
- * come from the library. All three provider bindings are installed; which
- * one runs is purely `AI_MODEL_ROLES.agent` ("provider:model").
+ * Chat-model factory for the conversational roles. Unlike the deterministic
+ * pipelines (which stay on the raw-fetch gateway), these use LangChain's
+ * native model classes — tool calling, token streaming and LangGraph
+ * integration come from the library. All three provider bindings are
+ * installed; which one runs is purely `AI_MODEL_ROLES.<role>`
+ * ("provider:model"), so the report can sit on a stronger model than the chat
+ * agent without a code change.
  */
 
 let testOverride: BaseChatModel | null = null;
@@ -18,11 +21,11 @@ export function setAgentModelForTests(model: BaseChatModel | null): void {
   testOverride = model;
 }
 
-function requireKey(name: string, provider: string): string {
+function requireKey(name: string, provider: string, role: string): string {
   const value = process.env[name];
   if (!value) {
     throw new Error(
-      `${name} is not configured, but the "agent" role resolves to provider "${provider}". ` +
+      `${name} is not configured, but the "${role}" role resolves to provider "${provider}". ` +
         `Set the key or change AI_MODEL_ROLES.`,
     );
   }
@@ -36,6 +39,13 @@ export interface AgentModelOptions {
 
 type ReasoningEffort = "none" | "low" | "medium" | "high";
 
+export interface ChatModelOptions extends AgentModelOptions {
+  /** Defaults to "agent". */
+  role?: Extract<ModelRole, "agent" | "report">;
+  /** Overrides the env-configured effort for this role. */
+  reasoningEffort?: ReasoningEffort;
+}
+
 /** Anthropic extended-thinking budgets; must stay below maxTokens. */
 const ANTHROPIC_THINKING_BUDGET: Record<"low" | "medium" | "high", number> = {
   low: 2_048,
@@ -43,19 +53,25 @@ const ANTHROPIC_THINKING_BUDGET: Record<"low" | "medium" | "high", number> = {
   high: 12_288,
 };
 
-export async function getAgentChatModel(
-  options: AgentModelOptions = {},
+/** The chat model for one role — "agent" unless told otherwise. */
+export async function getChatModel(
+  options: ChatModelOptions = {},
 ): Promise<BaseChatModel> {
   if (testOverride) return testOverride;
 
   const env = aiEnv();
-  const ref = resolveRole("agent");
-  const maxOutputTokens = options.maxOutputTokens ?? env.agentMaxOutputTokens;
+  const role = options.role ?? "agent";
+  const ref = resolveRole(role);
+  const maxOutputTokens =
+    options.maxOutputTokens ??
+    (role === "report" ? env.reportMaxOutputTokens : env.agentMaxOutputTokens);
   const temperature = options.temperature ?? 0.2;
   // Thinking-model support: reasoning content parts are already handled on
   // the way out (textFromContent); this maps the requested effort onto each
   // provider's own knob. Unset = provider default (dynamic thinking).
-  const effort: ReasoningEffort | undefined = env.agentReasoningEffort;
+  const effort: ReasoningEffort | undefined =
+    options.reasoningEffort ??
+    (role === "report" ? env.reportReasoningEffort : env.agentReasoningEffort);
 
   switch (ref.provider) {
     case "gemini": {
@@ -80,7 +96,7 @@ export async function getAgentChatModel(
       const { ChatOpenAI } = await import("@langchain/openai");
       return new ChatOpenAI({
         model: ref.model,
-        apiKey: requireKey("OPENAI_API_KEY", "openai"),
+        apiKey: requireKey("OPENAI_API_KEY", "openai", role),
         temperature,
         maxTokens: maxOutputTokens,
         ...(effort ? { reasoningEffort: effort === "none" ? "minimal" : effort } : {}),
@@ -91,7 +107,7 @@ export async function getAgentChatModel(
       const budget = effort && effort !== "none" ? ANTHROPIC_THINKING_BUDGET[effort] : null;
       return new ChatAnthropic({
         model: ref.model,
-        apiKey: requireKey("ANTHROPIC_API_KEY", "anthropic"),
+        apiKey: requireKey("ANTHROPIC_API_KEY", "anthropic", role),
         // Extended thinking rejects custom temperatures — only set one when
         // thinking is off. max_tokens must exceed the thinking budget.
         ...(budget ? {} : { temperature }),
@@ -101,7 +117,14 @@ export async function getAgentChatModel(
     }
     default:
       throw new Error(
-        `Unknown agent provider "${ref.provider}". Known: gemini, openai, anthropic.`,
+        `Unknown ${role} provider "${ref.provider}". Known: gemini, openai, anthropic.`,
       );
   }
+}
+
+/** The chat agent's model. Thin alias kept for the many existing call sites. */
+export async function getAgentChatModel(
+  options: AgentModelOptions = {},
+): Promise<BaseChatModel> {
+  return getChatModel({ ...options, role: "agent" });
 }

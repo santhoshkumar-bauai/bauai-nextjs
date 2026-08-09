@@ -90,6 +90,17 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenantId: 1, tenderId: 1 }, name: "uq_tenant_tender", unique: true },
   ]);
 
+  await c.tenderReports.createIndexes([
+    { key: { tenantId: 1, tenderId: 1 }, name: "uq_tenant_tender", unique: true },
+    { key: { tenantId: 1, generatedAt: -1 }, name: "ix_tenant_recent" },
+  ]);
+
+  // The unique key is what makes claiming a run safe: two readers pressing
+  // Generate at the same moment race on the upsert and exactly one wins.
+  await c.tenderReportRuns.createIndexes([
+    { key: { tenantId: 1, tenderId: 1 }, name: "uq_tenant_tender", unique: true },
+  ]);
+
   // AI-owned index on the shared `tenders` collection: drives the embedding
   // sweep without scanning 44k documents. Deliberately created here rather
   // than in lib/ingestion/db/indexes.ts — the ingestion pipeline never reads it.

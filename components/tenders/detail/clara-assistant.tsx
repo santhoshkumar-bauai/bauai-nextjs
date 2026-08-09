@@ -3,6 +3,7 @@
 import {
   ChevronDown,
   Expand,
+  FileText,
   MessageCircleMore,
   Scale,
   Sparkles,
@@ -28,12 +29,20 @@ import { FitSection, type FitSectionProps } from "./ai-tab";
 export function ClaraAssistant({
   tenderId,
   fit,
+  className,
 }: {
   tenderId: string | null;
   fit: FitSectionProps;
+  /**
+   * Positioning override. The default anchors the assistant to the detail
+   * popup; the full page passes `fixed …` so it stays put while the page
+   * scrolls.
+   */
+  className?: string;
 }) {
   const t = useTranslations("Tenders.chat");
   const tc = useTranslations("Chat");
+  const tr = useTranslations("Tenders.report");
   const locale = useLocale() as "en" | "de";
   const [open, setOpen] = useState(false);
   const [fitOpen, setFitOpen] = useState(false);
@@ -43,7 +52,12 @@ export function ClaraAssistant({
   );
 
   return (
-    <div className="absolute right-4 bottom-4 z-20 flex flex-col items-end gap-2">
+    <div
+      className={cn(
+        "absolute right-4 bottom-4 z-20 flex flex-col items-end gap-2",
+        className,
+      )}
+    >
       {open && (
         <div className="flex h-[560px] max-h-[70vh] w-[380px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-xl">
           <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
@@ -116,6 +130,17 @@ export function ClaraAssistant({
                 <Scale className="size-3.5" />
                 {tc("verdictQuickAction")}
               </button>
+              {/* The verdict answers "should we bid?" in the chat; the report
+                  is the long form of that answer, on its own page. */}
+              {tenderId && (
+                <Link
+                  href={`/tenders/${tenderId}/report`}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-[11px] font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <FileText className="size-3.5" />
+                  {tr("openReport")}
+                </Link>
+              )}
             </div>
 
             {chat.loading ? (

@@ -678,6 +678,10 @@
     },
     "detail": {
       "loading": "Wird geladen…",
+      "expand": "Vollansicht öffnen",
+      "back": "Zurück zu den Ausschreibungen",
+      "rejected": "Abgelehnt",
+      "openWorkspace": "Workspace öffnen",
       "tabs": {
         "about": "Übersicht",
         "documents": "Dokumente",
@@ -721,6 +725,204 @@
       "filesHeading": "Vergabeunterlagen",
       "linksHeading": "Externe Links",
       "fileNotReadable": "Nicht maschinenlesbar"
+    },
+    "report": {
+      "navTitle": "Vollständiger Bericht",
+      "pageSubtitle": "Ein vollständiges Bid/No-Bid-Dossier aus allen Vergabeunterlagen und Ihrem gesamten Unternehmensprofil.",
+      "back": "Zurück zur Ausschreibung",
+      "openReport": "Vollständiger Bericht",
+      "generate": "Vollständigen Bericht erstellen",
+      "regenerate": "Neu erstellen",
+      "generating": "Bericht wird geschrieben…",
+      "takesAWhile": "Alle Unterlagen und das gesamte Unternehmensprofil werden ausgewertet — das kann eine Minute dauern.",
+      "exportPdf": "PDF",
+      "exportDocx": "Word",
+      "exporting": "Wird vorbereitet…",
+      "exportError": "Der Export konnte nicht erstellt werden.",
+      "error": "Der Bericht konnte nicht erstellt werden.",
+      "rateLimited": "Die KI ist derzeit ausgelastet. Bitte versuchen Sie es in Kürze erneut.",
+      "contents": "Inhalt",
+      "emptyTitle": "Noch kein Bericht",
+      "emptyDescription": "Erstellen Sie den vollständigen Bericht für eine umfassende, entscheidungsreife Analyse dieser Ausschreibung für Ihr Unternehmen.",
+      "localeFallback": "Dieser Bericht liegt noch nicht in Ihrer Sprache vor — angezeigt wird die {shown} Fassung. Erstellen Sie ihn neu, um sie zu ergänzen.",
+      "staleShort": "Veraltet",
+      "recentReports": "Ausschreibungsberichte",
+      "browseTenders": "Ausschreibungen ansehen",
+      "summary": {
+        "gaps": "{count, plural, one {# offene Anforderung} other {# offene Anforderungen}}",
+        "highRisks": "{count, plural, one {# hohes Risiko} other {# hohe Risiken}}"
+      },
+      "languages": {
+        "en": "englische",
+        "de": "deutsche"
+      },
+      "stages": {
+        "gathering": "Vergabeunterlagen und Unternehmensprofil werden gelesen",
+        "analyzing": "Die Analyse wird verfasst",
+        "translating": "Die andere Sprachfassung wird erstellt",
+        "saving": "Wird abgeschlossen"
+      },
+      "documentTitle": "Ausschreibungsbericht",
+      "preparedFor": "Erstellt für",
+      "generatedAt": "Erstellt am",
+      "poweredBy": "BAU AI",
+      "disclaimer": "KI-generierte Analyse — prüfen Sie jede Angabe vor der Abgabe anhand der offiziellen Vergabeunterlagen.",
+      "staleWarning": "Ihre Unternehmensdaten oder die Vergabeunterlagen haben sich nach Erstellung dieses Berichts geändert. Erstellen Sie ihn für eine aktuelle Analyse neu.",
+      "buyer": "Auftraggeber",
+      "deadline": "Abgabefrist",
+      "estimatedValue": "Geschätzter Wert",
+      "procedure": "Verfahren",
+      "notProvided": "Nicht angegeben",
+      "none": "Keine",
+      "page": "Seite",
+      "sections": {
+        "executiveSummary": "Management Summary",
+        "recommendation": "Empfehlung",
+        "scores": "Bewertung",
+        "overview": "Die Ausschreibung",
+        "keyFacts": "Eckdaten",
+        "timeline": "Terminplan",
+        "requirements": "Anforderungen vs. Ihr Unternehmen",
+        "commercials": "Kaufmännische Bedingungen",
+        "companyFit": "Unternehmenseignung",
+        "risks": "Risiken",
+        "competition": "Wettbewerbsumfeld",
+        "bidStrategy": "Angebotsstrategie",
+        "actionPlan": "Maßnahmenplan",
+        "openQuestions": "Fragen an den Auftraggeber",
+        "documentChecklist": "Checkliste zur Abgabe",
+        "dataGaps": "Was dieser Bericht nicht klären konnte",
+        "sources": "Quellen",
+        "coverage": "Datengrundlage"
+      },
+      "overview": {
+        "purpose": "Zweck",
+        "scope": "Leistungsumfang",
+        "lots": "Lose",
+        "buyer": "Der Auftraggeber",
+        "procedure": "Verfahren und Zuschlag",
+        "relevant": "Relevant",
+        "notRelevant": "Nicht relevant"
+      },
+      "recommendation": {
+        "confidence": "Zuversicht",
+        "rationale": "Begründung",
+        "conditions": "Bedingungen für eine Teilnahme",
+        "decision": {
+          "bid": "Angebot abgeben",
+          "conditional": "Angebot — unter Bedingungen",
+          "no_bid": "Nicht anbieten"
+        }
+      },
+      "scores": {
+        "eligibilityFit": "Eignung",
+        "technicalFit": "Technische Passung",
+        "capacityFit": "Kapazität",
+        "commercialAttractiveness": "Wirtschaftliche Attraktivität",
+        "contractRisk": "Vertragsrisiko",
+        "deadlineFeasibility": "Fristenmachbarkeit",
+        "riskHint": "höher ist schlechter"
+      },
+      "requirements": {
+        "requirement": "Anforderung",
+        "category": "Art",
+        "mandatory": "Pflicht",
+        "status": "Ihr Stand",
+        "evidence": "Grundlage",
+        "action": "Erforderliche Maßnahme",
+        "mandatoryYes": "Ja",
+        "mandatoryNo": "Optional",
+        "categories": {
+          "eligibility": "Eignung",
+          "technical": "Technisch",
+          "financial": "Finanziell",
+          "insurance": "Versicherung",
+          "certification": "Zertifizierung",
+          "reference": "Referenz",
+          "formal": "Formal",
+          "other": "Sonstiges"
+        },
+        "statuses": {
+          "met": "Erfüllt",
+          "partial": "Teilweise",
+          "gap": "Lücke",
+          "unknown": "Unbekannt"
+        }
+      },
+      "commercials": {
+        "valueAssessment": "Auftragswert",
+        "paymentTerms": "Zahlungsbedingungen",
+        "retentionsAndSecurities": "Einbehalte und Sicherheiten",
+        "penalties": "Vertragsstrafen",
+        "priceRisks": "Preisrisiken"
+      },
+      "companyFit": {
+        "strengths": "Stärken",
+        "gaps": "Lücken",
+        "differentiators": "Alleinstellungsmerkmale",
+        "capacity": "Kapazitätsbewertung"
+      },
+      "risks": {
+        "risk": "Risiko",
+        "severity": "Schwere",
+        "likelihood": "Eintrittswahrscheinlichkeit",
+        "impact": "Auswirkung",
+        "mitigation": "Gegenmaßnahme",
+        "levels": {
+          "low": "Gering",
+          "medium": "Mittel",
+          "high": "Hoch"
+        }
+      },
+      "timeline": {
+        "date": "Datum",
+        "event": "Meilenstein",
+        "detail": "Detail",
+        "critical": "Kritisch"
+      },
+      "bidStrategy": {
+        "winThemes": "Kernbotschaften",
+        "pricingApproach": "Kalkulationsansatz",
+        "partnering": "Partner und Nachunternehmer",
+        "effortEstimate": "Aufwand für das Angebot"
+      },
+      "actionPlan": {
+        "action": "Maßnahme",
+        "priority": "Priorität",
+        "dueBy": "Fällig bis",
+        "rationale": "Warum",
+        "priorities": {
+          "immediate": "Sofort",
+          "high": "Hoch",
+          "normal": "Normal"
+        }
+      },
+      "openQuestions": {
+        "question": "Frage",
+        "whoToAsk": "Adressat",
+        "why": "Klärt"
+      },
+      "checklist": {
+        "document": "Unterlage",
+        "source": "Herkunft",
+        "note": "Hinweis",
+        "sources": {
+          "company_has": "Liegt Ihnen vor",
+          "must_obtain": "Muss beschafft werden",
+          "must_produce": "Muss erstellt werden",
+          "unknown": "Unklar"
+        }
+      },
+      "coverage": {
+        "tenderExcerpts": "Ausschreibungsauszüge",
+        "companyExcerpts": "Unternehmensauszüge",
+        "extractions": "Extraktionsdatensätze",
+        "overviewUsed": "Überblick genutzt",
+        "fitUsed": "Eignung genutzt",
+        "verdictUsed": "Empfehlung genutzt",
+        "yes": "ja",
+        "no": "nein"
+      }
     },
     "chat": {
       "title": "Clara — Ausschreibungsassistentin",

@@ -678,6 +678,10 @@
     },
     "detail": {
       "loading": "Loading…",
+      "expand": "Open full page",
+      "back": "Back to tenders",
+      "rejected": "Rejected",
+      "openWorkspace": "Open workspace",
       "tabs": {
         "about": "About",
         "documents": "Documents",
@@ -721,6 +725,204 @@
       "filesHeading": "Tender files",
       "linksHeading": "External links",
       "fileNotReadable": "Not machine-readable"
+    },
+    "report": {
+      "navTitle": "Full report",
+      "pageSubtitle": "A complete bid/no-bid dossier built from every tender document and your whole company profile.",
+      "back": "Back to tender",
+      "openReport": "Full report",
+      "generate": "Generate full report",
+      "regenerate": "Regenerate",
+      "generating": "Writing the report…",
+      "takesAWhile": "This reads every document and the whole company profile — it can take a minute.",
+      "exportPdf": "PDF",
+      "exportDocx": "Word",
+      "exporting": "Preparing…",
+      "exportError": "The export could not be created.",
+      "error": "The report could not be generated.",
+      "rateLimited": "The AI is rate limited right now. Try again shortly.",
+      "contents": "Contents",
+      "emptyTitle": "No report yet",
+      "emptyDescription": "Generate the full report to get an exhaustive, decision-ready analysis of this tender against your company.",
+      "localeFallback": "This report is not available in your language yet — showing the {shown} version. Regenerate to add it.",
+      "staleShort": "Outdated",
+      "recentReports": "Tender reports",
+      "browseTenders": "Browse tenders",
+      "summary": {
+        "gaps": "{count, plural, one {# requirement gap} other {# requirement gaps}}",
+        "highRisks": "{count, plural, one {# high risk} other {# high risks}}"
+      },
+      "languages": {
+        "en": "English",
+        "de": "German"
+      },
+      "stages": {
+        "gathering": "Reading the tender documents and your company profile",
+        "analyzing": "Writing the analysis",
+        "translating": "Preparing the other language",
+        "saving": "Finishing up"
+      },
+      "documentTitle": "Tender report",
+      "preparedFor": "Prepared for",
+      "generatedAt": "Generated",
+      "poweredBy": "BAU AI",
+      "disclaimer": "AI-generated analysis — verify every figure against the official tender documents before submitting.",
+      "staleWarning": "Your company data or the tender documents changed after this report was written. Regenerate for an up-to-date analysis.",
+      "buyer": "Contracting authority",
+      "deadline": "Submission deadline",
+      "estimatedValue": "Estimated value",
+      "procedure": "Procedure",
+      "notProvided": "Not provided",
+      "none": "None",
+      "page": "Page",
+      "sections": {
+        "executiveSummary": "Executive summary",
+        "recommendation": "Recommendation",
+        "scores": "Assessment scores",
+        "overview": "The tender",
+        "keyFacts": "Key facts",
+        "timeline": "Timeline",
+        "requirements": "Requirements vs. your company",
+        "commercials": "Commercial terms",
+        "companyFit": "Company fit",
+        "risks": "Risks",
+        "competition": "Competitive picture",
+        "bidStrategy": "Bid strategy",
+        "actionPlan": "Action plan",
+        "openQuestions": "Questions for the authority",
+        "documentChecklist": "Submission checklist",
+        "dataGaps": "What this report could not establish",
+        "sources": "Sources",
+        "coverage": "Coverage"
+      },
+      "overview": {
+        "purpose": "Purpose",
+        "scope": "Scope of work",
+        "lots": "Lots",
+        "buyer": "The client",
+        "procedure": "Procedure and award",
+        "relevant": "Relevant",
+        "notRelevant": "Not relevant"
+      },
+      "recommendation": {
+        "confidence": "confidence",
+        "rationale": "Rationale",
+        "conditions": "Conditions to proceed",
+        "decision": {
+          "bid": "Bid",
+          "conditional": "Bid — conditionally",
+          "no_bid": "Do not bid"
+        }
+      },
+      "scores": {
+        "eligibilityFit": "Eligibility fit",
+        "technicalFit": "Technical fit",
+        "capacityFit": "Capacity fit",
+        "commercialAttractiveness": "Commercial attractiveness",
+        "contractRisk": "Contract risk",
+        "deadlineFeasibility": "Deadline feasibility",
+        "riskHint": "higher is worse"
+      },
+      "requirements": {
+        "requirement": "Requirement",
+        "category": "Type",
+        "mandatory": "Mandatory",
+        "status": "Your status",
+        "evidence": "Basis",
+        "action": "Action needed",
+        "mandatoryYes": "Yes",
+        "mandatoryNo": "Optional",
+        "categories": {
+          "eligibility": "Eligibility",
+          "technical": "Technical",
+          "financial": "Financial",
+          "insurance": "Insurance",
+          "certification": "Certification",
+          "reference": "Reference",
+          "formal": "Formal",
+          "other": "Other"
+        },
+        "statuses": {
+          "met": "Met",
+          "partial": "Partial",
+          "gap": "Gap",
+          "unknown": "Unknown"
+        }
+      },
+      "commercials": {
+        "valueAssessment": "Contract value",
+        "paymentTerms": "Payment terms",
+        "retentionsAndSecurities": "Retentions and securities",
+        "penalties": "Contractual penalties",
+        "priceRisks": "Pricing risks"
+      },
+      "companyFit": {
+        "strengths": "Strengths",
+        "gaps": "Gaps",
+        "differentiators": "Differentiators",
+        "capacity": "Capacity assessment"
+      },
+      "risks": {
+        "risk": "Risk",
+        "severity": "Severity",
+        "likelihood": "Likelihood",
+        "impact": "Impact",
+        "mitigation": "Mitigation",
+        "levels": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "timeline": {
+        "date": "Date",
+        "event": "Milestone",
+        "detail": "Detail",
+        "critical": "Critical"
+      },
+      "bidStrategy": {
+        "winThemes": "Win themes",
+        "pricingApproach": "Pricing approach",
+        "partnering": "Partners and subcontractors",
+        "effortEstimate": "Effort to bid"
+      },
+      "actionPlan": {
+        "action": "Action",
+        "priority": "Priority",
+        "dueBy": "Due by",
+        "rationale": "Why",
+        "priorities": {
+          "immediate": "Immediate",
+          "high": "High",
+          "normal": "Normal"
+        }
+      },
+      "openQuestions": {
+        "question": "Question",
+        "whoToAsk": "Ask",
+        "why": "Unblocks"
+      },
+      "checklist": {
+        "document": "Document",
+        "source": "Source",
+        "note": "Note",
+        "sources": {
+          "company_has": "You already have it",
+          "must_obtain": "Must be obtained",
+          "must_produce": "Must be written",
+          "unknown": "Unclear"
+        }
+      },
+      "coverage": {
+        "tenderExcerpts": "Tender excerpts",
+        "companyExcerpts": "Company excerpts",
+        "extractions": "Extraction records",
+        "overviewUsed": "Overview used",
+        "fitUsed": "Fit used",
+        "verdictUsed": "Verdict used",
+        "yes": "yes",
+        "no": "no"
+      }
     },
     "chat": {
       "title": "Clara — tender assistant",

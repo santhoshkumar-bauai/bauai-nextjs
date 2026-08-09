@@ -3,13 +3,16 @@ import { NextResponse } from "next/server";
 
 import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
+import { connectMongoose } from "@/lib/db/mongoose";
 import type { TenderDocument } from "@/lib/ingestion/types";
 import { serializeTenderDetail } from "@/lib/tenders/detail";
 import { listFetchedTenderFiles } from "@/lib/tenders/document-files";
+import { TenderDecision } from "@/models/tender-decision";
 
 /**
- * Full detail for a single tender, powering the detail modal. Gated to
- * authenticated company members; `params` is a Promise in this Next.js build.
+ * Full detail for a single tender, powering the detail modal and the full-page
+ * view. Gated to authenticated company members; `params` is a Promise in this
+ * Next.js build.
  */
 export async function GET(
   _request: Request,
@@ -37,5 +40,19 @@ export async function GET(
   // notice's external links — the Documents tab shows both.
   const files = await listFetchedTenderFiles(doc._id!).catch(() => []);
 
-  return NextResponse.json({ tender: serializeTenderDetail(doc), files });
+  // This company's own decision, so the detail view can offer "To Workspace" /
+  // "Reject" or report where the tender already sits.
+  await connectMongoose();
+  const decision = await TenderDecision.findOne({
+    companyId: String(context.company._id),
+    tenderId: id,
+  })
+    .select({ status: 1 })
+    .lean();
+
+  return NextResponse.json({
+    tender: serializeTenderDetail(doc),
+    files,
+    decision: decision?.status ?? null,
+  });
 }

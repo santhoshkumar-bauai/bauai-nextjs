@@ -332,6 +332,85 @@ export interface TenderFitRecommendationDocument {
 }
 
 /**
+ * The full tender report: one long-form, decision-ready dossier synthesized
+ * from every other artifact (notice, overview, extractions, fit, verdict,
+ * document corpus) plus the company's own profile and documents. Tenant-scoped
+ * — it assesses the tender against ONE company — and replaced wholesale on
+ * regeneration. Staleness is the same triple as the verdict: document corpus,
+ * company data, prompt version.
+ */
+export interface TenderReportDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  /** Snapshot of the tender's headline data, so exports need no re-fetch. */
+  tender: {
+    title: string | null;
+    buyerName: string | null;
+    submissionDeadline: Date | null;
+    estimatedValue: { amount: string | null; currency: string | null } | null;
+    procedureType: string | null;
+  };
+  companyName: string | null;
+  /**
+   * TenderReportContent per UI language (lib/ai/report/schema.ts). Written
+   * once in `primaryLocale` and translated into the other, so the two can
+   * never disagree about the verdict. A language is absent only when its
+   * translation pass failed.
+   */
+  report: Partial<Record<"en" | "de", Record<string, unknown>>>;
+  /** Evidence id → ChatCitation, resolved server-side after generation. */
+  citations: Record<string, Record<string, unknown>>;
+  inputs: {
+    corpusHash: string | null;
+    companyDataHash: string;
+    extractionStatuses: Record<string, string>;
+    tenderChunkCount: number;
+    companyChunkCount: number;
+    hasOverview: boolean;
+    hasVerdict: boolean;
+    hasFit: boolean;
+  };
+  model: { provider: string; providerModel: string; promptVersion: string };
+  /** The language the analysis was reasoned in; the other one is translated. */
+  primaryLocale: "en" | "de";
+  generatedByUserId: string;
+  generatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * An in-flight (or just-finished) report generation, one per (tenant, tender).
+ *
+ * A report takes minutes, so the run cannot live in the request that started
+ * it: the reader reloads, closes the tab, or loses the connection, and must
+ * still find the work in progress rather than an empty page. This record is
+ * the single source of truth for "is something running and how far is it",
+ * which is what makes the page resumable and what stops two readers from
+ * kicking off the same expensive generation twice.
+ *
+ * `updatedAt` doubles as a heartbeat: a `running` row that stops being touched
+ * belongs to a process that died, and may be claimed again.
+ */
+export interface TenderReportRunDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  status: "running" | "done" | "failed";
+  /** Which step the run is on; meaningless unless `status` is "running". */
+  stage: "gathering" | "analyzing" | "translating" | "saving";
+  locale: "en" | "de";
+  startedByUserId: string;
+  /** i18n key ("rate_limited" | "invalid_output" | "failed"), never raw. */
+  error: string | null;
+  startedAt: Date;
+  finishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * Durable ledger for document-derived work (chunking, chunk embedding,
  * classification, extraction). `_id` is the idempotency key (§10.3), e.g.
  * `chunk:doc:{documentRecordId}:{fileSha256}:{chunkerVersion}`.

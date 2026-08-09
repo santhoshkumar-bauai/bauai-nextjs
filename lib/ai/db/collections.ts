@@ -11,6 +11,8 @@ import type {
   ExtractionDocument,
   TenderFitRecommendationDocument,
   TenderOverviewDocument,
+  TenderReportDocument,
+  TenderReportRunDocument,
   TenderSearchDocument,
   TenderVerdictDocument,
 } from "../types.ts";
@@ -27,6 +29,8 @@ export const aiCollectionNames = {
   chatMessages: "chat_messages",
   chatAttachments: "chat_attachments",
   tenderVerdicts: "tender_verdicts",
+  tenderReports: "tender_reports",
+  tenderReportRuns: "tender_report_runs",
 } as const;
 
 export interface AiCollections {
@@ -41,6 +45,8 @@ export interface AiCollections {
   chatMessages: Collection<ChatMessageDocument>;
   chatAttachments: Collection<ChatAttachmentDocument>;
   tenderVerdicts: Collection<TenderVerdictDocument>;
+  tenderReports: Collection<TenderReportDocument>;
+  tenderReportRuns: Collection<TenderReportRunDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -60,5 +66,7 @@ export async function getAiCollections(): Promise<AiCollections> {
     chatMessages: db.collection(aiCollectionNames.chatMessages),
     chatAttachments: db.collection(aiCollectionNames.chatAttachments),
     tenderVerdicts: db.collection(aiCollectionNames.tenderVerdicts),
+    tenderReports: db.collection(aiCollectionNames.tenderReports),
+    tenderReportRuns: db.collection(aiCollectionNames.tenderReportRuns),
   };
 }

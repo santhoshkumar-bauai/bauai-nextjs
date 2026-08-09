@@ -11,6 +11,20 @@
   }
 }
 
+/* Slow drifting wash behind the report-generation card — long-running work
+   should feel alive without a spinning throbber. */
+@keyframes report-aurora {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate3d(0, -4%, 0) scale(1.08);
+  }
+}
+
 @theme {
   --color-background: #ffffff;
   --color-foreground: #191724;
