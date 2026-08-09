@@ -47,7 +47,9 @@ vi.mock("@langchain/langgraph/prebuilt", async () => {
   return { ToolNode: FakeToolNode };
 });
 
-const { buildClaraGraph, sanitizeToolPairs } = await import("./graph.ts");
+const { buildClaraGraph, sanitizeToolPairs, windowFromUserTurn } = await import(
+  "./graph.ts"
+);
 
 function fakeCtx(): AgentRunContext {
   return {
@@ -128,6 +130,67 @@ describe("sanitizeToolPairs", () => {
       "human",
       "ai",
     ]);
+  });
+});
+
+describe("windowFromUserTurn", () => {
+  const toolMsg = (id: string) =>
+    new ToolMessage({ content: "result", tool_call_id: id, name: "t" });
+
+  /** One complete turn: user question, `hops` tool rounds, final answer. */
+  const turn = (question: string, hops: number) => [
+    new HumanMessage(question),
+    ...Array.from({ length: hops }, (_, i) => [
+      toolCallMessage(),
+      toolMsg(`call-${i}`),
+    ]).flat(),
+    new AIMessage("answer"),
+  ];
+
+  it("never opens on a model turn when the cut lands mid tool-loop", () => {
+    // The shape that 400'd in production: two long global-chat turns plus a
+    // third mid-loop, sliced to 30 — the naive cut starts on turn 1's
+    // function-call turn, whose tool response follows it, so pair-sanitizing
+    // alone happily keeps it.
+    const messages = [
+      ...turn("q1", 2),
+      ...turn("q2", 7),
+      new HumanMessage("q3"),
+      ...Array.from({ length: 4 }, (_, i) => [
+        toolCallMessage(),
+        toolMsg(`c3-${i}`),
+      ]).flat(),
+    ];
+    expect(messages.length).toBeGreaterThan(30);
+    expect(messages.slice(-30)[0].getType()).toBe("ai");
+
+    expect(windowFromUserTurn(messages, 30)[0].getType()).toBe("human");
+  });
+
+  it("keeps every function-call turn preceded by a user or tool turn", () => {
+    const window = windowFromUserTurn(
+      [...turn("q1", 2), ...turn("q2", 7), ...turn("q3", 4)],
+      30,
+    );
+    for (const [i, message] of window.entries()) {
+      if (message.getType() !== "ai") continue;
+      const calls = (message as AIMessage).tool_calls ?? [];
+      if (calls.length === 0) continue;
+      expect(i).toBeGreaterThan(0);
+      expect(["human", "tool"]).toContain(window[i - 1].getType());
+    }
+  });
+
+  it("passes short histories through untouched", () => {
+    const messages = turn("q1", 1);
+    expect(windowFromUserTurn(messages, 30)).toHaveLength(messages.length);
+  });
+
+  it("falls back to the newest earlier user turn rather than an invalid window", () => {
+    // Cap so small the cut lands past every user turn — an empty or
+    // model-first history is a guaranteed 400, an oversized one is not.
+    const window = windowFromUserTurn(turn("q1", 6), 3);
+    expect(window[0].getType()).toBe("human");
   });
 });
 

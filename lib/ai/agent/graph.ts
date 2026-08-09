@@ -87,6 +87,44 @@ export function sanitizeToolPairs(messages: BaseMessage[]): BaseMessage[] {
   return out;
 }
 
+/**
+ * Trim history to the model's window, always opening on a user turn.
+ *
+ * A plain `slice(-max)` regularly lands mid tool-loop on multi-turn global
+ * chats (one turn can be ~18 messages), leaving the window to start on a
+ * function-call turn whose responses follow it — which `sanitizeToolPairs`
+ * legitimately keeps, since locally the pairing is intact. Gemini then rejects
+ * the whole request: a function-call turn must come after a user turn or a
+ * function-response turn, and here it is the FIRST turn. So the cut moves
+ * forward to the oldest user turn still inside the window.
+ *
+ * If the cut passed every user turn, it falls back to the newest one before
+ * the cut — a window slightly over `max` beats a guaranteed 400. Exported for
+ * tests.
+ */
+export function windowFromUserTurn(
+  messages: BaseMessage[],
+  max: number,
+): BaseMessage[] {
+  const cut = Math.max(0, messages.length - max);
+  let begin = -1;
+  for (let i = cut; i < messages.length; i += 1) {
+    if (messages[i].getType() === "human") {
+      begin = i;
+      break;
+    }
+  }
+  if (begin < 0) {
+    for (let i = cut - 1; i >= 0; i -= 1) {
+      if (messages[i].getType() === "human") {
+        begin = i;
+        break;
+      }
+    }
+  }
+  return sanitizeToolPairs(messages.slice(begin < 0 ? cut : begin));
+}
+
 export async function buildClaraGraph(ctx: AgentRunContext) {
   const env = aiEnv();
   // Global chats chain find_tenders → notice → search and need more hops.
@@ -103,13 +141,10 @@ export async function buildClaraGraph(ctx: AgentRunContext) {
   // at model-call time in contextWindow() (a concat reducer can't shrink).
   const beginTurnNode = () => ({ iterations: 0 });
 
-  const contextWindow = (messages: BaseMessage[]): BaseMessage[] => {
-    const max = env.agentHistoryMaxMessages;
-    const window = messages.length > max ? messages.slice(-max) : messages;
-    // Repairs both slice damage (window starting on orphaned tool results)
-    // and dangling tool-call turns left in state by the finalize path.
-    return sanitizeToolPairs(window);
-  };
+  // Repairs both slice damage (a window starting mid tool-loop) and dangling
+  // tool-call turns left in state by the finalize path.
+  const contextWindow = (messages: BaseMessage[]): BaseMessage[] =>
+    windowFromUserTurn(messages, env.agentHistoryMaxMessages);
 
   // Attached images are checkpointed as tiny media_ref parts; the base64
   // payload is materialized here, per model call, cached for the turn.
