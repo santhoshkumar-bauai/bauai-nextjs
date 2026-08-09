@@ -678,6 +678,10 @@
     },
     "detail": {
       "loading": "Wird geladen…",
+      "expand": "Vollansicht öffnen",
+      "back": "Zurück zu den Ausschreibungen",
+      "rejected": "Abgelehnt",
+      "openWorkspace": "Workspace öffnen",
       "tabs": {
         "about": "Übersicht",
         "documents": "Dokumente",

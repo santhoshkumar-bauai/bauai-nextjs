@@ -303,6 +303,9 @@ export function RelevantTenders() {
       <TenderDetailDialog
         tenderId={selectedTenderId}
         onClose={() => setSelectedTenderId(null)}
+        // A decision taken inside the popup has to reach the feed too: rejected
+        // tenders drop out, workspace ones come back labelled "In workspace".
+        onDecided={() => setRefreshKey((key) => key + 1)}
       />
     </div>
   );

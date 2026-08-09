@@ -1,5 +1,7 @@
 import { Schema, model, models, type Model } from "mongoose";
 
+import { DECISION_STATUSES } from "@/lib/tenders/pipeline-status";
+
 /**
  * A company's decision about a tender: which kanban column it sits in, or that
  * it was set aside.
@@ -8,36 +10,26 @@ import { Schema, model, models, type Model } from "mongoose";
  * `status` rather than inserting a second row, so the board and the relevant
  * feed can never disagree about where a tender sits.
  *
- * Two non-board states:
- *  - `deadzone` — rejected from the feed or removed from the board. Hidden from
- *    both, restorable from the Dead Zone view.
- *  - `deleted`  — dismissed permanently. The *tender* is never destroyed (the
- *    corpus is shared across companies); this only marks that this company
- *    never wants to see it again, and the UI offers no way back.
+ * The status vocabulary itself lives in `lib/tenders/pipeline-status` (no
+ * Mongoose import, so client components can use it) and is re-exported here so
+ * server-side callers keep importing it from the model.
  */
-export const PIPELINE_STATUSES = [
-  "interested",
-  "preparing",
-  "submitted",
-  "won",
-  "lost",
-] as const;
-export type PipelineStatus = (typeof PIPELINE_STATUSES)[number];
+export {
+  DECISION_STATUSES,
+  HIDDEN_STATUSES,
+  PIPELINE_STATUSES,
+} from "@/lib/tenders/pipeline-status";
+export type {
+  DecisionStatus,
+  PipelineStatus,
+} from "@/lib/tenders/pipeline-status";
 
-export const DECISION_STATUSES = [
-  ...PIPELINE_STATUSES,
-  "deadzone",
-  "deleted",
-] as const;
-export type DecisionStatus = (typeof DECISION_STATUSES)[number];
-
-/** Statuses that keep a tender out of the relevant feed. */
-export const HIDDEN_STATUSES = ["deadzone", "deleted"] as const;
+type DecisionStatusValue = (typeof DECISION_STATUSES)[number];
 
 export interface TenderDecisionDocument {
   companyId: string;
   tenderId: string;
-  status: DecisionStatus;
+  status: DecisionStatusValue;
   decidedByUserId: string;
   /** Company member responsible for this tender; defaults to whoever moved it. */
   assigneeUserId?: string;

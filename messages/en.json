@@ -678,6 +678,10 @@
     },
     "detail": {
       "loading": "Loading…",
+      "expand": "Open full page",
+      "back": "Back to tenders",
+      "rejected": "Rejected",
+      "openWorkspace": "Open workspace",
       "tabs": {
         "about": "About",
         "documents": "Documents",
