@@ -76,20 +76,20 @@ export default async function DashboardPage() {
       available: false,
     },
     {
-      name: "Dora",
-      role: t("agents.dora.role"),
-      description: t("agents.dora.description"),
-      image: "/agents/dora.svg",
-      available: true,
-      remaining,
-    },
-    {
       name: "Clara",
       role: t("agents.clara.role"),
       description: t("agents.clara.description"),
       image: "/agents/clara.svg",
       available: true,
       remaining,
+      href: "/chat",
+    },
+    {
+      name: "Dora",
+      role: t("agents.dora.role"),
+      description: t("agents.dora.description"),
+      image: "/agents/dora.svg",
+      available: false,
     },
     {
       name: "Dario",

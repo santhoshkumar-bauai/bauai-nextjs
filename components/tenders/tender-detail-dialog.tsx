@@ -14,11 +14,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SerializedTenderDetail } from "@/lib/tenders/detail";
+import type { SerializedTenderFile } from "@/lib/tenders/document-files";
 import type { TenderRecommendation } from "@/lib/tenders/recommendation";
 import { AboutTab } from "./detail/about-tab";
 import { DocumentsTab } from "./detail/documents-tab";
+import { ClaraAssistant } from "./detail/clara-assistant";
 import { ExtractionsSection } from "./detail/extractions-section";
-import { FitAssistant } from "./detail/fit-assistant";
 import { DeadlineChip } from "./detail/header-summary";
 import { ScheduleTab } from "./detail/schedule-tab";
 
@@ -32,6 +33,7 @@ export function TenderDetailDialog({
   const t = useTranslations("Tenders");
 
   const [detail, setDetail] = useState<SerializedTenderDetail | null>(null);
+  const [files, setFiles] = useState<SerializedTenderFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -46,6 +48,7 @@ export function TenderDetailDialog({
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setDetail(null);
+      setFiles([]);
       setError(false);
       setLoading(true);
       setRec(null);
@@ -55,9 +58,15 @@ export function TenderDetailDialog({
       fetch(`/api/tenders/${tenderId}`, { signal: controller.signal })
         .then((response) => {
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.json() as Promise<{ tender: SerializedTenderDetail }>;
+          return response.json() as Promise<{
+            tender: SerializedTenderDetail;
+            files?: SerializedTenderFile[];
+          }>;
         })
-        .then((json) => setDetail(json.tender))
+        .then((json) => {
+          setDetail(json.tender);
+          setFiles(json.files ?? []);
+        })
         .catch(() => {
           if (!controller.signal.aborted) setError(true);
         })
@@ -173,7 +182,7 @@ export function TenderDetailDialog({
                 <AboutTab detail={detail} />
               </TabsContent>
               <TabsContent value="documents" className="pt-2">
-                <DocumentsTab detail={detail} />
+                <DocumentsTab detail={detail} files={files} />
               </TabsContent>
               <TabsContent value="schedule" className="pt-2">
                 <ScheduleTab detail={detail} />
@@ -185,13 +194,16 @@ export function TenderDetailDialog({
           </Tabs>
         )}
         {detail && !loading && (
-          <FitAssistant
-            rec={rec}
-            stale={recStale}
-            generatedAt={recGeneratedAt}
-            loading={recLoading}
-            error={recError}
-            onGenerate={generateRecommendation}
+          <ClaraAssistant
+            tenderId={tenderId}
+            fit={{
+              rec,
+              stale: recStale,
+              generatedAt: recGeneratedAt,
+              loading: recLoading,
+              error: recError,
+              onGenerate: generateRecommendation,
+            }}
           />
         )}
       </DialogContent>

@@ -110,7 +110,7 @@ export async function generateTenderOverview(input: {
   const { chunks, tenderOverviews } = await getAiCollections();
 
   const chunkCount = await chunks.countDocuments({ tenderId: input.tenderId });
-  let excerpts: string[] = [];
+  const excerpts: string[] = [];
   if (chunkCount > 0) {
     const seen = new Set<string>();
     for (const query of CONTEXT_QUERIES) {

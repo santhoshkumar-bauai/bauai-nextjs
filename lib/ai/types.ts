@@ -153,6 +153,142 @@ export interface ExtractionDocument {
 }
 
 /**
+ * Clara's bid/no-bid verdict (roadmap §12.6/§20.3). Tenant-scoped — it
+ * depends on the company's fit. One current verdict per (tenant, tender),
+ * replaced wholesale. `review` follows §12.6; the review UI is future work.
+ */
+export interface TenderVerdictDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  threadId: ObjectId | null;
+  messageId: ObjectId | null;
+  agentRunId: null;
+  recommendation: "bid" | "no_bid" | "conditional";
+  rationale: string;
+  scoreBreakdown: {
+    eligibilityFit: number;
+    strategicFit: number;
+    capacityFit: number;
+    contractRisk: number;
+    deadlineFeasibility: number;
+  };
+  /** citations are ChatCitation[] (lib/ai/agent/citations.ts). */
+  risks: Array<{
+    text: string;
+    severity: "low" | "medium" | "high";
+    citations: Array<Record<string, unknown>>;
+    uncited?: boolean;
+  }>;
+  blockingRequirements: Array<{
+    text: string;
+    citations: Array<Record<string, unknown>>;
+  }>;
+  unresolvedQuestions: string[];
+  inputs: {
+    corpusHash: string | null;
+    companyDataHash: string;
+    extractionStatuses: Record<string, string>;
+    fitGeneratedAt: Date | null;
+  };
+  model: { provider: string; providerModel: string; promptVersion: string };
+  review: {
+    state: "PENDING";
+    reviewerId: null;
+    reviewedAt: null;
+    edits: [];
+  };
+  locale: "en" | "de";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * A Clara chat thread. Two kinds share this collection:
+ * - "tender": company-shared, exactly one per (tenant, tender) — enforced by
+ *   a partial unique index. `tenderId` set, `ownerUserId` null.
+ * - "global": private per user, many per user. `tenderId` null, `ownerUserId`
+ *   set, `title` from the first message (renameable).
+ * `threadKey` is the LangGraph checkpoint id; the tender format
+ * (`clara:{tenant}:{tender}`) is frozen — changing it orphans checkpoints.
+ */
+export interface ChatThreadDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  kind: "tender" | "global";
+  tenderId: ObjectId | null;
+  ownerUserId: string | null;
+  threadKey: string;
+  title: string | null;
+  agent: "clara";
+  createdBy: string;
+  graphVersion: string;
+  lastMessageAt: Date;
+  messageCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * A file attached to a chat message. Raw bytes go to S3; documents get their
+ * text extracted at upload, images are fed to the model as vision input.
+ * Unclaimed rows (uploaded but never sent) expire via a TTL index.
+ */
+export interface ChatAttachmentDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  /** Uploader; claiming a message requires the same user. */
+  userId: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  /** Raw bytes in the bucket (chat category under the tenant's prefix). */
+  s3Key: string | null;
+  /** ready = model-readable (text extracted or vision-capable image). */
+  status: "ready" | "unsupported" | "failed";
+  /** Extracted text, capped at upload time. Empty for images. */
+  text: string;
+  claimed: boolean;
+  createdAt: Date;
+}
+
+/** Attachment metadata carried on a persisted message (for rendering). */
+export interface ChatMessageAttachment {
+  fileName: string;
+  contentType: string;
+  size: number;
+  status: "ready" | "unsupported" | "failed";
+}
+
+/** UI-facing chat log (model context lives in the LangGraph checkpointer). */
+export interface ChatMessageDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  threadId: ObjectId;
+  /** Null for messages in global (non-tender) threads. */
+  tenderId: ObjectId | null;
+  role: "user" | "assistant";
+  content: string;
+  status: "complete" | "aborted" | "error";
+  locale: "en" | "de";
+  /** Coarse tool activity for rendering — never model reasoning. */
+  toolEvents: Array<{ name: string; durationMs: number; resultCount: number | null }>;
+  /** ChatCitation[] (lib/ai/agent/citations.ts). */
+  citations: Array<Record<string, unknown>>;
+  /** Files attached to this (user) message; absent on older documents. */
+  attachments?: ChatMessageAttachment[];
+  verdictId: ObjectId | null;
+  metrics: {
+    llmCalls: number;
+    inputTokens: number;
+    outputTokens: number;
+    durationMs: number;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * Tender-centric AI overview (about / scope / buyer / risks / highlights),
  * generated in BOTH languages with one call — the UI picks by locale.
  * Tender-derived → global. Works from the notice alone; document excerpts

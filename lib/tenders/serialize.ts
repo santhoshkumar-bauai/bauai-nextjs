@@ -24,12 +24,30 @@ export interface SerializedTender {
   score: number;
   scoreBreakdown: { cpv: number; geo: number; time: number };
   hasCoordinates: boolean;
+  /**
+   * Straight-line kilometres from the company. Null when either side has no
+   * known coordinates — the list never geocodes to fill this in.
+   */
+  distanceKm: number | null;
+  procedureType: string | null;
+  contractNature: string | null;
+  /** Human-readable CPV category names, resolved from the CPV catalog. */
+  categories: string[];
+  /** Set when the company already moved this tender into a kanban column. */
+  pipelineStatus: string | null;
   sourceUrl: string | null;
 }
 
 const round = (n: number) => Math.round((n ?? 0) * 1000) / 1000;
 
-export function serializeTender(raw: RankedTenderRaw): SerializedTender {
+export function serializeTender(
+  raw: RankedTenderRaw,
+  extra?: {
+    distanceKm?: number | null;
+    categories?: string[];
+    pipelineStatus?: string | null;
+  },
+): SerializedTender {
   return {
     id: String(raw._id),
     title: raw.title ?? null,
@@ -60,6 +78,11 @@ export function serializeTender(raw: RankedTenderRaw): SerializedTender {
       time: round(raw.timeScore),
     },
     hasCoordinates: Boolean(raw.hasCoordinates),
+    distanceKm: extra?.distanceKm ?? null,
+    procedureType: raw.procedureType ?? null,
+    contractNature: raw.contractNature ?? null,
+    categories: extra?.categories ?? [],
+    pipelineStatus: extra?.pipelineStatus ?? null,
     sourceUrl: raw.sourceUrl ?? null,
   };
 }

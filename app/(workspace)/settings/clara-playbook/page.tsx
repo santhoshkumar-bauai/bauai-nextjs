@@ -3,12 +3,12 @@ import { getTranslations } from "next-intl/server";
 
 import { card, panelIcon } from "@/components/settings/settings-ui";
 
-export default async function DoraPlaybookPage() {
+export default async function ClaraPlaybookPage() {
   const t = await getTranslations("Settings");
   const cards: Array<[string, string]> = [
-    ["analysis", t("dora.cards.analysis")],
-    ["drafting", t("dora.cards.drafting")],
-    ["review", t("dora.cards.review")],
+    ["analysis", t("clara.cards.analysis")],
+    ["drafting", t("clara.cards.drafting")],
+    ["review", t("clara.cards.review")],
   ];
 
   return (
@@ -18,14 +18,14 @@ export default async function DoraPlaybookPage() {
           <Sparkles size={23} />
         </span>
         <div className="flex-1">
-          <h2 className="m-0 text-base font-bold">{t("dora.title")}</h2>
+          <h2 className="m-0 text-base font-bold">{t("clara.title")}</h2>
           <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-            {t("dora.subtitle")}
+            {t("clara.subtitle")}
           </p>
         </div>
       </section>
       <p className="my-5 max-w-[620px] text-xs leading-relaxed text-[#85818c]">
-        {t("dora.previewDescription")}
+        {t("clara.previewDescription")}
       </p>
       <div className="grid gap-4 md:grid-cols-3">
         {cards.map(([key, title], index) => (
@@ -35,7 +35,7 @@ export default async function DoraPlaybookPage() {
             </span>
             <h3 className="mt-7 text-sm font-bold">{title}</h3>
             <p className="mt-1 text-xs leading-relaxed text-[#85818c]">
-              {t("dora.description")}
+              {t("clara.description")}
             </p>
           </article>
         ))}

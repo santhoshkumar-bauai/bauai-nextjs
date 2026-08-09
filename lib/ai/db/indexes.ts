@@ -58,6 +58,38 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenderId: 1 }, name: "uq_tender", unique: true },
   ]);
 
+  await c.chatThreads.createIndexes([
+    {
+      // Uniqueness only for tender threads; global threads (tenderId null,
+      // many per user) would collide on a full unique index.
+      key: { tenantId: 1, tenderId: 1, agent: 1 },
+      name: "uq_tender_thread",
+      unique: true,
+      partialFilterExpression: { kind: "tender" },
+    },
+    { key: { tenantId: 1, ownerUserId: 1, kind: 1, lastMessageAt: -1 }, name: "ix_owner_recent" },
+    { key: { threadKey: 1 }, name: "ix_thread_key", unique: true },
+  ]);
+
+  await c.chatMessages.createIndexes([
+    { key: { tenantId: 1, threadId: 1, createdAt: 1 }, name: "ix_thread_time" },
+  ]);
+
+  // Uploaded-but-never-sent attachments expire after a day; claimed ones are
+  // kept (their metadata lives on the message, the text stays queryable).
+  await c.chatAttachments.createIndexes([
+    {
+      key: { createdAt: 1 },
+      name: "ttl_unclaimed",
+      expireAfterSeconds: 24 * 60 * 60,
+      partialFilterExpression: { claimed: false },
+    },
+  ]);
+
+  await c.tenderVerdicts.createIndexes([
+    { key: { tenantId: 1, tenderId: 1 }, name: "uq_tenant_tender", unique: true },
+  ]);
+
   // AI-owned index on the shared `tenders` collection: drives the embedding
   // sweep without scanning 44k documents. Deliberately created here rather
   // than in lib/ingestion/db/indexes.ts — the ingestion pipeline never reads it.
@@ -67,4 +99,11 @@ export async function ensureAiIndexes(): Promise<void> {
       { "enrichment.embedding.status": 1, lastSeenAt: -1 },
       { name: "ix_ai_embedding_sweep" },
     );
+
+  // LangGraph checkpoint collections are created implicitly by MongoDBSaver
+  // and read/deleted by thread_id (thread reset) — index them here since the
+  // saver never does.
+  for (const name of ["agent_checkpoints", "agent_checkpoint_writes"]) {
+    await db.collection(name).createIndex({ thread_id: 1 }, { name: "ix_thread" });
+  }
 }

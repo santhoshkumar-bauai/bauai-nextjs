@@ -1,15 +1,32 @@
 "use client";
 
-import { ExternalLink, FileText, Globe } from "lucide-react";
+import { Download, ExternalLink, FileText, Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import type { SerializedTenderDetail } from "@/lib/tenders/detail";
+import type { SerializedTenderFile } from "@/lib/tenders/document-files";
 
-export function DocumentsTab({ detail }: { detail: SerializedTenderDetail }) {
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}
+
+export function DocumentsTab({
+  detail,
+  files = [],
+}: {
+  detail: SerializedTenderDetail;
+  files?: SerializedTenderFile[];
+}) {
   const t = useTranslations("Tenders");
 
-  if (detail.documents.length === 0 && detail.sourceLinks.length === 0) {
+  if (
+    files.length === 0 &&
+    detail.documents.length === 0 &&
+    detail.sourceLinks.length === 0
+  ) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
         {t("detail.noDocuments")}
@@ -19,6 +36,38 @@ export function DocumentsTab({ detail }: { detail: SerializedTenderDetail }) {
 
   return (
     <div className="flex flex-col gap-2">
+      {files.length > 0 && (
+        <p className="pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+          {t("detail.filesHeading")}
+        </p>
+      )}
+      {files.map((file) => (
+        <a
+          key={`${file.recordId}-${file.fileIndex}`}
+          href={`/api/tenders/${detail.id}/documents?record=${encodeURIComponent(file.recordId)}&file=${file.fileIndex}`}
+          className="group flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/40 hover:bg-muted/50"
+        >
+          <FileText className="size-4 shrink-0 text-primary/70" />
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm text-foreground">{file.fileName}</span>
+            <span className="truncate text-[11px] text-muted-foreground">
+              {formatBytes(file.byteLength)} · {file.mimeType}
+            </span>
+          </span>
+          {file.textStatus !== "DONE" && (
+            <Badge variant="neutral" className="shrink-0">
+              {t("detail.fileNotReadable")}
+            </Badge>
+          )}
+          <Download className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-y-0.5" />
+        </a>
+      ))}
+      {files.length > 0 &&
+        (detail.documents.length > 0 || detail.sourceLinks.length > 0) && (
+          <p className="pt-2 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+            {t("detail.linksHeading")}
+          </p>
+        )}
       {detail.documents.map((doc, index) => (
         <a
           key={`${doc.url}-${index}`}

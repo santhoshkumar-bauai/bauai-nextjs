@@ -91,7 +91,7 @@ client-side tab), under `app/(workspace)/settings/`:
 - `settings/layout.tsx` — auth guard + dashboard shell + top-tab nav
   (`SettingsTabs`). Tabs: `/settings`, `/settings/tender-information`,
   `/settings/employee-information`, `/settings/billing`,
-  `/settings/dora-playbook`.
+  `/settings/clara-playbook`.
 - `settings/(company)/` — a route group (no URL segment) that adds the KB
   sidebar (`CompanySidebar`) around the Company Information sub-sections, each
   its own path: `/settings/company-info`, `/settings/company-details`,

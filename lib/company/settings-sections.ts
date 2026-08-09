@@ -201,7 +201,7 @@ export const SETTINGS_TABS = [
   { href: "/settings/tender-information", tabKey: "tender", match: "tender-information" },
   { href: "/settings/employee-information", tabKey: "employees", match: "employee-information" },
   { href: "/settings/billing", tabKey: "billing", match: "billing" },
-  { href: "/settings/dora-playbook", tabKey: "dora", match: "dora-playbook" },
+  { href: "/settings/clara-playbook", tabKey: "clara", match: "clara-playbook" },
 ] as const;
 
 /** Document categories (label/description keys under Settings.documents.categories). */

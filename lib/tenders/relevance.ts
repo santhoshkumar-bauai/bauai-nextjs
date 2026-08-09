@@ -10,6 +10,11 @@
  * Reuses the CPV prefix-family semantics from `app/api/tenders/events/route.ts`
  * (a division such as `45` matches `45232421`, i.e. a whole CPV family).
  */
+import type { ObjectId } from "mongodb";
+
+// Type-only, so this does not create a runtime cycle with `filters.ts`
+// (which imports OPPORTUNITY_STATUSES from here).
+import type { TenderSort } from "@/lib/tenders/filters";
 import type { NutsResolution } from "@/lib/tenders/nuts";
 
 /** Opportunity statuses worth surfacing — awards/closed/cancelled are excluded. */
@@ -63,6 +68,10 @@ export interface RankedTenderRaw {
   geoScore: number;
   timeScore: number;
   hasCoordinates: boolean;
+  /** GeoJSON point, present only once this tender has been geocoded. */
+  location?: { type: "Point"; coordinates: [number, number] } | null;
+  procedureType: string | null;
+  contractNature: string | null;
   sourceUrl: string | null;
 }
 
@@ -125,6 +134,35 @@ export interface RelevanceOptions {
   regions?: string[];
   /** Hard filter: only tenders with a deadline within this many days. */
   deadlineInDays?: number;
+  /** Ordering applied to the ranked pool; defaults to relevance. */
+  sort?: TenderSort;
+  /** Tender _ids to drop from the feed entirely (e.g. rejected by the company). */
+  excludeIds?: ObjectId[];
+}
+
+/** Sentinels that park undated tenders at the end of a date-ordered page. */
+const FAR_FUTURE = new Date("9999-12-31T00:00:00.000Z");
+const FAR_PAST = new Date("0001-01-01T00:00:00.000Z");
+
+/**
+ * Stages that re-order the already-ranked pool. Prepended to the `items` branch
+ * of the `$facet`, so paging stays correct and `total` is unaffected. Relevance
+ * order needs no stages — the pipeline is already sorted that way.
+ */
+function reorderStages(sort: TenderSort | undefined): Record<string, unknown>[] {
+  if (sort === "deadline") {
+    return [
+      { $addFields: { sortKey: { $ifNull: ["$submissionDeadline", FAR_FUTURE] } } },
+      { $sort: { sortKey: 1, score: -1, _id: 1 } },
+    ];
+  }
+  if (sort === "newest") {
+    return [
+      { $addFields: { sortKey: { $ifNull: ["$publicationDate", FAR_PAST] } } },
+      { $sort: { sortKey: -1, score: -1, _id: 1 } },
+    ];
+  }
+  return [];
 }
 
 export interface BuiltRelevanceQuery {
@@ -217,6 +255,9 @@ export function buildRelevancePipeline(
     countries: { $in: countries },
     $and: and,
   };
+  if (opts.excludeIds?.length) {
+    match._id = { $nin: opts.excludeIds };
+  }
 
   // --- Score expressions -----------------------------------------------------
   const cpvScoreExpr = {
@@ -359,6 +400,11 @@ export function buildRelevancePipeline(
     {
       $facet: {
         items: [
+          // Re-order *within* the ranked pool: "sort by deadline" means the
+          // company's relevant tenders soonest-first, not the whole corpus.
+          // Undated tenders sort last either way (missing keys are pushed by
+          // the coalesced sort key below).
+          ...reorderStages(opts.sort),
           { $skip: skip },
           { $limit: opts.pageSize },
           {
@@ -384,6 +430,9 @@ export function buildRelevancePipeline(
               hasCoordinates: {
                 $cond: [{ $ifNull: ["$buyer.location", false] }, true, false],
               },
+              location: "$buyer.location",
+              procedureType: 1,
+              contractNature: 1,
               sourceUrl: { $ifNull: [{ $arrayElemAt: ["$sourceLinks.url", 0] }, null] },
             },
           },

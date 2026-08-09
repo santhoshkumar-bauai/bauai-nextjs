@@ -48,6 +48,25 @@ const AiEnvSchema = z.object({
 
   classifierVersion: z.string().default("v1"),
 
+  /** Tool-loop iterations per chat turn before the forced-finalize path. */
+  agentMaxIterations: z.coerce.number().int().positive().default(6),
+  /** Global (non-tender) chats need longer find→drill-in tool chains. */
+  agentGlobalMaxIterations: z.coerce.number().int().positive().default(8),
+  /**
+   * Generous because thinking models spend reasoning tokens from the SAME
+   * budget — 2048 starved gemini-3.5-flash into empty answers on complex
+   * multi-tool turns.
+   */
+  agentMaxOutputTokens: z.coerce.number().int().positive().default(8192),
+  /** Conversation messages kept in model context (UI history is unlimited). */
+  agentHistoryMaxMessages: z.coerce.number().int().positive().default(30),
+  /**
+   * Reasoning effort for thinking-capable agent models, mapped per provider
+   * (Gemini thinkingConfig, OpenAI reasoningEffort, Anthropic thinking
+   * budget). Unset = provider default.
+   */
+  agentReasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
+
   /** Context cap for the retrieval-targeted extraction path. */
   extractionMaxChunks: z.coerce.number().int().positive().default(16),
   /** Context cap for the full-document extraction path. */
@@ -77,6 +96,9 @@ function defaultModelRoles(): Record<string, string> {
     embedding: `gemini:${process.env.EMBEDDING_MODEL || "gemini-embedding-001"}`,
     extraction: generation,
     reasoning: generation,
+    // The agent needs stronger multi-step tool reasoning than the pipeline
+    // roles; deliberately NOT derived from GEMINI_MODEL.
+    agent: "gemini:gemini-3.5-flash",
   };
 }
 
@@ -102,6 +124,11 @@ export function aiEnv(): AiEnv {
     chunkTargetTokens: process.env.CHUNK_TARGET_TOKENS,
     chunkMaxTokens: process.env.CHUNK_MAX_TOKENS,
     classifierVersion: process.env.CLASSIFIER_VERSION,
+    agentMaxIterations: process.env.AI_AGENT_MAX_ITERATIONS,
+    agentGlobalMaxIterations: process.env.AI_AGENT_GLOBAL_MAX_ITERATIONS,
+    agentMaxOutputTokens: process.env.AI_AGENT_MAX_OUTPUT_TOKENS,
+    agentHistoryMaxMessages: process.env.AI_AGENT_HISTORY_MAX_MESSAGES,
+    agentReasoningEffort: process.env.AI_AGENT_REASONING,
     extractionMaxChunks: process.env.AI_EXTRACTION_MAX_CHUNKS,
     extractionMaxDocChars: process.env.AI_EXTRACTION_MAX_DOC_CHARS,
     extractionRpm: process.env.AI_EXTRACTION_RPM,
