@@ -10,23 +10,44 @@ import { getExtractions } from "../extraction/store.ts";
 import type { StoredCitedValue } from "../extraction/citations.ts";
 import { EXTRACTION_SCHEMA_NAMES } from "../extraction/schema-names.ts";
 import { loadFileText } from "../extraction/source-text.ts";
+import { deadlineDaysLeft } from "../../tenders/deadline.ts";
 import {
   findTenderFileByName,
   listFetchedTenderFiles,
 } from "../../tenders/document-files.ts";
+import { DECISION_STATUSES } from "../../tenders/pipeline-status.ts";
 import { buildFullCompanyContext } from "../fit/company-context.ts";
 import { companyProfileInput, getFitState } from "../fit/service.ts";
 import { getTenderOverview } from "../overview/service.ts";
+import { getReportState, listReportSummaries, serializeReport } from "../report/service.ts";
 import {
   hybridRetrieveChunks,
   hybridRetrieveCompanyChunks,
   searchNotices,
 } from "../retrieval/hybrid.ts";
+import { getVerdictState } from "../verdict/service.ts";
+import type { ChatCitation } from "./citations.ts";
 import {
   getVisibleTender,
   type AgentRunContext,
   type AgentTenderScope,
+  type TenderAgentRunContext,
 } from "./context.ts";
+import {
+  projectReportSection,
+  REPORT_SECTIONS,
+  type ReportSection,
+} from "./report-view.ts";
+import {
+  getTenderCoverage,
+  listRelevantTenders,
+  listWorkspaceTenders,
+  loadReportDecisions,
+  lookupCpvCodes,
+  MAX_CPV_ROWS,
+  MAX_FEED_ITEMS,
+  MAX_WORKSPACE_ITEMS,
+} from "./workspace.ts";
 
 /**
  * Clara's tool registry: narrow, typed, tenant-safe. Every tool closes over the
@@ -35,8 +56,15 @@ import {
  * null) tender tools DO take a tenderId input: tender data is a globally
  * shared corpus (stored under tenantId:null), so this crosses no tenant
  * boundary — but every call re-validates visibility via getVisibleTender.
+ * The two CROSS-tender tools (find_similar_tenders, compare_tenders) take ids
+ * in BOTH modes for the same reason, and validate them the same way.
  * Outputs are bounded; document text is wrapped in <document> markers so the
  * system prompt's injection posture applies.
+ *
+ * The registry is deliberately layered so the model can spend one cheap call
+ * instead of several speculative ones: coverage (what exists) → stored
+ * analysis (report/verdict/fit) → structured facts (extractions) → retrieval →
+ * whole files. `get_tender_analysis_status` returns that routing explicitly.
  */
 
 const TEXT_CAP = 1_500;
@@ -76,6 +104,11 @@ function renderTenderNotice(scope: AgentTenderScope): string {
     tenderId: scope.tenderId.toHexString(),
     title: d.title,
     status: d.status,
+    // Computed here so the model never has to do date arithmetic — it gets
+    // that wrong, and "how long do we have" is the most asked question.
+    daysUntilDeadline: d.submissionDeadline
+      ? deadlineDaysLeft(d.submissionDeadline)
+      : null,
     buyer: {
       name: d.buyer?.name ?? null,
       legalType: d.buyer?.legalType ?? null,
@@ -267,6 +300,243 @@ async function renderFit(ctx: AgentRunContext, scope: AgentTenderScope): Promise
   });
 }
 
+/**
+ * Rewrites the report's internal evidence ids into this turn's citation keys,
+ * registering each referenced quote on the way. Without this the report's
+ * claims would arrive uncited — the one thing §6 forbids — because the stored
+ * evidence ids are report-local and mean nothing outside that document.
+ */
+function attachReportCitations(
+  ctx: AgentRunContext,
+  value: unknown,
+  citations: Record<string, ChatCitation>,
+): void {
+  if (Array.isArray(value)) {
+    for (const entry of value) attachReportCitations(ctx, entry, citations);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  const record = value as Record<string, unknown>;
+  for (const [key, child] of Object.entries(record)) {
+    if (key === "evidenceIds") {
+      const keys = (Array.isArray(child) ? child : [])
+        .flatMap((id) => (typeof id === "string" ? [citations[id]] : []))
+        .filter((citation): citation is ChatCitation => citation != null)
+        .map(
+          (citation) =>
+            ctx.citations.add({
+              quote: citation.quote,
+              fileName: citation.fileName,
+              documentRecordId: citation.documentRecordId,
+              chunkId: citation.chunkId,
+            }).key,
+        );
+      delete record[key];
+      if (keys.length > 0) record.citationKeys = keys;
+      continue;
+    }
+    attachReportCitations(ctx, child, citations);
+  }
+}
+
+async function renderReport(
+  ctx: AgentRunContext,
+  scope: AgentTenderScope,
+  section: ReportSection,
+): Promise<string> {
+  const state = await getReportState(ctx.companyContext, scope.tenderId);
+  const serialized = state
+    ? serializeReport(state.report, state.stale, ctx.locale)
+    : null;
+  if (!serialized) {
+    return JSON.stringify({
+      notGenerated: true,
+      hint: "No full report exists for this tender yet. The user generates it from the tender's report page. Use get_extractions, get_tender_overview and get_company_fit instead.",
+    });
+  }
+
+  // Cloned because the projection shares object references with the loaded
+  // report document and the citation rewrite mutates in place.
+  const projected = structuredClone(
+    projectReportSection(serialized.report, section),
+  );
+  attachReportCitations(ctx, projected, serialized.citations ?? {});
+  return JSON.stringify({
+    section,
+    stale: serialized.stale,
+    locale: serialized.locale,
+    // Set when the requested language was never generated — the reader must
+    // know they are being answered from another language's analysis.
+    fallbackFromLocale: serialized.requestedLocale,
+    generatedAt: serialized.generatedAt,
+    ...projected,
+  });
+}
+
+async function renderVerdict(
+  ctx: AgentRunContext,
+  scope: AgentTenderScope,
+): Promise<string> {
+  // getVerdictState is typed for tender-bound runs; in global mode the scope
+  // comes from the validated tool input instead of the run.
+  const state = await getVerdictState({
+    ...ctx,
+    tender: scope,
+  } as TenderAgentRunContext);
+  if (!state) {
+    return JSON.stringify({
+      notGenerated: true,
+      hint: "No verdict exists for this tender yet. Use get_tender_report, get_company_fit or get_extractions.",
+    });
+  }
+
+  const { verdict } = state;
+  const withCitations = <T extends { citations: Array<Record<string, unknown>> }>(
+    entry: T,
+  ): string[] =>
+    entry.citations
+      .map((raw) => raw as unknown as ChatCitation)
+      .filter((citation) => citation?.quote)
+      .map(
+        (citation) =>
+          ctx.citations.add({
+            quote: citation.quote,
+            fileName: citation.fileName,
+            documentRecordId: citation.documentRecordId,
+            chunkId: citation.chunkId,
+          }).key,
+      );
+
+  return JSON.stringify({
+    stale: state.stale,
+    generatedAt: verdict.updatedAt,
+    locale: verdict.locale,
+    recommendation: verdict.recommendation,
+    rationale: cap(verdict.rationale, SECTION_CAP),
+    scoreBreakdown: verdict.scoreBreakdown,
+    risks: verdict.risks.slice(0, 12).map((risk) => ({
+      text: risk.text,
+      severity: risk.severity,
+      citationKeys: withCitations(risk),
+      uncited: risk.uncited === true,
+    })),
+    blockingRequirements: verdict.blockingRequirements
+      .slice(0, 12)
+      .map((requirement) => ({
+        text: requirement.text,
+        citationKeys: withCitations(requirement),
+      })),
+    unresolvedQuestions: verdict.unresolvedQuestions.slice(0, 10),
+  });
+}
+
+async function renderSimilarTenders(
+  ctx: AgentRunContext,
+  scope: AgentTenderScope,
+  limit: number,
+): Promise<string> {
+  const d = scope.tenderDetail;
+  // The notice's own wording IS the query — same text the notice embedding was
+  // built from, so this lands in the right neighbourhood of the vector space.
+  const text = [d.title, d.description?.slice(0, 1_000)]
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+  if (text.length < 3) {
+    return JSON.stringify({
+      noQueryText: true,
+      hint: "This tender has no title or description to search similar tenders with.",
+    });
+  }
+
+  const self = scope.tenderId.toHexString();
+  // One extra hit covers the tender matching itself, which it always does.
+  const hits = await searchNotices({ text, limit: limit + 1 });
+  const results = [];
+  for (const hit of hits) {
+    const hex = hit.tenderId.toHexString();
+    if (hex === self) continue;
+    const candidate = await getVisibleTender(ctx, hex);
+    if (!candidate) continue;
+    const detail = candidate.tenderDetail;
+    results.push({
+      tenderId: hex,
+      title: detail.title,
+      buyer: detail.buyer?.name ?? null,
+      status: detail.status,
+      submissionDeadline: detail.submissionDeadline,
+      daysUntilDeadline: detail.submissionDeadline
+        ? deadlineDaysLeft(detail.submissionDeadline)
+        : null,
+      cpvCodes: detail.cpvCodes.slice(0, 6),
+      similarity: Number(hit.score.toFixed(4)),
+    });
+    if (results.length >= limit) break;
+  }
+  return JSON.stringify(results);
+}
+
+async function renderCompareTenders(
+  ctx: AgentRunContext,
+  tenderIds: string[],
+): Promise<string> {
+  const scopes: AgentTenderScope[] = [];
+  const notFound: string[] = [];
+  for (const hex of [...new Set(tenderIds)]) {
+    const scope = await getVisibleTender(ctx, hex);
+    if (scope) scopes.push(scope);
+    else notFound.push(hex);
+  }
+  if (scopes.length === 0) {
+    return JSON.stringify({ tenderNotFound: true, notFound });
+  }
+
+  const [reportDecisions, coverages] = await Promise.all([
+    loadReportDecisions(
+      ctx,
+      scopes.map((scope) => scope.tenderId),
+    ),
+    // Workspace status per tender comes from the coverage map, which is one
+    // decisions read shared across the row set.
+    Promise.all(scopes.map((scope) => getTenderCoverage(ctx, scope.tenderId))),
+  ]);
+
+  return JSON.stringify({
+    ...(notFound.length > 0 ? { notFound } : {}),
+    tenders: scopes.map((scope, index) => {
+      const d = scope.tenderDetail;
+      const hex = scope.tenderId.toHexString();
+      const coverage = coverages[index];
+      return {
+        tenderId: hex,
+        title: d.title,
+        buyer: d.buyer?.name ?? null,
+        city: d.buyer?.address?.city ?? null,
+        status: d.status,
+        procedureType: d.procedureType,
+        contractNature: d.contractNature,
+        cpvCodes: d.cpvCodes.slice(0, 6),
+        regions: d.regions.slice(0, 4),
+        estimatedValue: d.estimatedValue,
+        submissionDeadline: d.submissionDeadline,
+        daysUntilDeadline: d.submissionDeadline
+          ? deadlineDaysLeft(d.submissionDeadline)
+          : null,
+        lotCount: d.lots.length,
+        workspaceStatus: coverage.workspaceStatus,
+        reportDecision: reportDecisions.get(hex) ?? null,
+        verdictRecommendation: coverage.verdict.recommendation,
+        analysisDepth: {
+          documents: coverage.documents.fetchedFiles,
+          indexedChunks: coverage.documents.indexedChunks,
+          hasOverview: coverage.overview.exists,
+          hasReport: coverage.report.exists,
+        },
+      };
+    }),
+  });
+}
+
 export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[] {
   // Resolves the tool's tender scope: the run's own tender in tender mode,
   // or the validated tool input in global mode. Null → answer "not found".
@@ -386,6 +656,203 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
       description:
         "The stored assessment of how well a tender fits the user's company (verdict, fit score, strengths, concerns). Read-only; may be marked stale.",
       schema: withTenderId({}),
+    },
+  );
+
+  const getTenderReport = tool(
+    async (input: { tenderId?: string; section?: ReportSection }) => {
+      const scope = await scopeFor(input?.tenderId);
+      return scope
+        ? renderReport(ctx, scope, input?.section ?? "summary")
+        : TENDER_NOT_FOUND;
+    },
+    {
+      name: "get_tender_report",
+      description:
+        "The full BID/NO-BID report for this tender and this company — the deepest analysis the system produces (decision, scores, requirements assessed against the company, risks, commercials, bid strategy, action plan). Returns a compact summary by default; pass a section to read one part in full. ALWAYS check this FIRST for any bid/no-bid, requirement-gap, risk or strategy question — it already answers most of them.",
+      schema: withTenderId({
+        section: z
+          .enum(REPORT_SECTIONS)
+          .optional()
+          .describe(
+            "Which part to read in full. Omit for the summary, which lists the sections that actually exist.",
+          ),
+      }),
+    },
+  );
+
+  const getTenderVerdict = tool(
+    async (input: { tenderId?: string }) => {
+      const scope = await scopeFor(input?.tenderId);
+      return scope ? renderVerdict(ctx, scope) : TENDER_NOT_FOUND;
+    },
+    {
+      name: "get_tender_verdict",
+      description:
+        "The stored short verdict for this tender: bid / conditional / no_bid with a score breakdown, cited risks, blocking requirements and open questions. Cheaper and shorter than get_tender_report — use it when the user wants the call, not the full analysis.",
+      schema: withTenderId({}),
+    },
+  );
+
+  const getTenderAnalysisStatus = tool(
+    async (input: { tenderId?: string }) => {
+      const scope = await scopeFor(input?.tenderId);
+      if (!scope) return TENDER_NOT_FOUND;
+      return JSON.stringify(await getTenderCoverage(ctx, scope.tenderId));
+    },
+    {
+      name: "get_tender_analysis_status",
+      description:
+        "What the system already knows about this tender: how many documents were downloaded and indexed, which extractions/overview/fit/verdict/report exist and whether they are stale, where the tender sits on the company board, plus a suggestedTools list. Call this FIRST when unsure which tool will pay off, or to explain honestly why an answer is not available.",
+      schema: withTenderId({}),
+    },
+  );
+
+  const findSimilarTenders = tool(
+    async (input: { tenderId?: string; limit: number }) => {
+      const scope = await scopeFor(input?.tenderId);
+      return scope
+        ? renderSimilarTenders(ctx, scope, input.limit)
+        : TENDER_NOT_FOUND;
+    },
+    {
+      name: "find_similar_tenders",
+      description:
+        "Other published tenders whose notices resemble this one, by semantic similarity of title and description. Use for 'are there comparable jobs', competitor/benchmark and 'what else could we bid on instead' questions.",
+      schema: withTenderId({
+        limit: z.number().int().min(1).max(8).default(5),
+      }),
+    },
+  );
+
+  const compareTenders = tool(
+    async ({ tenderIds }: { tenderIds: string[] }) =>
+      renderCompareTenders(ctx, tenderIds),
+    {
+      name: "compare_tenders",
+      description:
+        "Side-by-side facts for 2-5 tenders in ONE call: deadlines and days left, buyer, value, procedure, CPV, board status, and any stored report/verdict decision. Use instead of calling get_tender_notice repeatedly when the user is choosing between tenders.",
+      schema: z.object({
+        tenderIds: z
+          .array(z.string().length(24))
+          .min(2)
+          .max(5)
+          .describe("Tender ids from find_tenders, list_relevant_tenders or the board."),
+      }),
+    },
+  );
+
+  const listRelevantTendersTool = tool(
+    async (input: {
+      limit: number;
+      query?: string;
+      sectors?: string[];
+      regions?: string[];
+      contractNatures?: string[];
+      deadlineInDays?: number;
+      minScore?: number;
+      sort?: "relevance" | "deadline" | "newest";
+    }) => JSON.stringify(await listRelevantTenders(ctx, input)),
+    {
+      name: "list_relevant_tenders",
+      description:
+        "The company's OWN ranked opportunity feed — exactly what the Relevant Tenders page shows, scored on CPV fit, location and timing, with tenders the company rejected excluded. Use for 'what should we bid on', 'anything new for us', 'what closes this month'. Prefer this over find_tenders whenever the question is about THIS company's opportunities rather than a named tender.",
+      schema: z.object({
+        limit: z.number().int().min(1).max(MAX_FEED_ITEMS).default(8),
+        query: z
+          .string()
+          .min(2)
+          .max(120)
+          .optional()
+          .describe("Free-text narrowing over title and description."),
+        sectors: z
+          .array(z.string().regex(/^[0-9]{2}$/))
+          .max(5)
+          .optional()
+          .describe("Two-digit CPV divisions, e.g. ['45','71']."),
+        regions: z
+          .array(z.string().regex(/^DE[0-9A-Z]{0,2}$/))
+          .max(5)
+          .optional()
+          .describe("NUTS prefixes, e.g. ['DE3','DEA']."),
+        contractNatures: z
+          .array(z.enum(["works", "services", "supplies"]))
+          .max(3)
+          .optional(),
+        deadlineInDays: z
+          .number()
+          .int()
+          .min(1)
+          .max(365)
+          .optional()
+          .describe("Only tenders whose submission deadline falls within N days."),
+        minScore: z.number().min(0).max(1).optional(),
+        sort: z.enum(["relevance", "deadline", "newest"]).default("relevance"),
+      }),
+    },
+  );
+
+  const listWorkspaceTendersTool = tool(
+    async (input: {
+      statuses?: Array<(typeof DECISION_STATUSES)[number]>;
+      limit: number;
+    }) => JSON.stringify(await listWorkspaceTenders(ctx, input)),
+    {
+      name: "list_workspace_tenders",
+      description:
+        "The company's own bid pipeline: which tenders sit in which board column (interested, preparing, submitted, won, lost) plus their deadlines and days left, soonest first. Use for 'what are we working on', 'what have we submitted', 'what is due next', win/loss questions. Pass statuses ['deadzone'] to inspect rejected tenders.",
+      schema: z.object({
+        statuses: z
+          .array(z.enum(DECISION_STATUSES))
+          .max(7)
+          .optional()
+          .describe("Board columns to include. Omit for every non-rejected tender."),
+        limit: z.number().int().min(1).max(MAX_WORKSPACE_ITEMS).default(20),
+      }),
+    },
+  );
+
+  const listTenderReportsTool = tool(
+    async ({ limit }: { limit: number }) =>
+      JSON.stringify(await listReportSummaries(ctx.companyContext, ctx.locale, limit)),
+    {
+      name: "list_tender_reports",
+      description:
+        "Every full report this company has generated, newest first: tender, decision, confidence, headline, risk and gap counts. Use for 'what have we analyzed', 'which ones did you recommend bidding on', or to find the tenderId of a tender the user only remembers by its analysis.",
+      schema: z.object({
+        limit: z.number().int().min(1).max(24).default(10),
+      }),
+    },
+  );
+
+  const lookupCpvCodesTool = tool(
+    async (input: { codes?: string[]; query?: string; limit: number }) =>
+      JSON.stringify(
+        await lookupCpvCodes({
+          codes: input.codes,
+          query: input.query,
+          locale: ctx.locale,
+          limit: input.limit,
+        }),
+      ),
+    {
+      name: "lookup_cpv_codes",
+      description:
+        "The CPV catalog, both directions: codes → their official names, or wording → the codes that cover it. Use to explain what a tender's bare CPV codes actually mean, and to turn a trade description into the sector filters for list_relevant_tenders or find_tenders. Never guess what a CPV code means — look it up.",
+      schema: z.object({
+        codes: z
+          .array(z.string().min(2).max(12))
+          .max(8)
+          .optional()
+          .describe("CPV codes to resolve, with or without check digit."),
+        query: z
+          .string()
+          .min(2)
+          .max(80)
+          .optional()
+          .describe("Trade or sector wording to search the catalog for."),
+        limit: z.number().int().min(1).max(MAX_CPV_ROWS).default(10),
+      }),
     },
   );
 
@@ -532,18 +999,36 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
     },
   );
 
-  const companyTools = [searchCompanyDocuments, getCompanyProfile, listCompanyDocuments];
+  const companyTools = [
+    searchCompanyDocuments,
+    getCompanyProfile,
+    listCompanyDocuments,
+    listRelevantTendersTool,
+    listWorkspaceTendersTool,
+    listTenderReportsTool,
+    lookupCpvCodesTool,
+  ];
   const tenderTools = [
+    getTenderAnalysisStatus,
     getTenderNotice,
+    getTenderReport,
+    getTenderVerdict,
     getOverviewTool,
     getExtractionsTool,
     searchTenderDocuments,
     listTenderFiles,
     readTenderDocument,
     getCompanyFit,
+    findSimilarTenders,
   ];
+  /**
+   * Takes explicit ids rather than a scope, so it is registered identically in
+   * both modes — comparison is only ever driven by ids the model already got
+   * back from a listing tool.
+   */
+  const crossTenderTools = [compareTenders];
 
   return tenderMode
-    ? [...tenderTools, ...companyTools]
-    : [findTenders, ...tenderTools, ...companyTools];
+    ? [...tenderTools, ...crossTenderTools, ...companyTools]
+    : [findTenders, ...tenderTools, ...crossTenderTools, ...companyTools];
 }

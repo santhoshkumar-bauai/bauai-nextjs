@@ -13,6 +13,11 @@ import { VerdictCard } from "./verdict-card";
 
 export type ChatDensity = "compact" | "comfortable";
 
+/**
+ * Tools with a hand-written progress label. Anything Clara calls that is not
+ * listed here still renders, as `tool.generic` — so a new tool degrades to
+ * "Working…" rather than crashing the message list on a missing key.
+ */
 const TOOL_LABEL_KEYS = [
   "get_tender_notice",
   "get_tender_overview",
@@ -25,6 +30,15 @@ const TOOL_LABEL_KEYS = [
   "get_company_profile",
   "list_company_documents",
   "find_tenders",
+  "get_tender_report",
+  "get_tender_verdict",
+  "get_tender_analysis_status",
+  "find_similar_tenders",
+  "compare_tenders",
+  "list_relevant_tenders",
+  "list_workspace_tenders",
+  "list_tender_reports",
+  "lookup_cpv_codes",
   "verdict",
 ] as const;
 

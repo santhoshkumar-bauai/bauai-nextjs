@@ -1096,7 +1096,16 @@
         "drafting": "Erstelle die Empfehlung…"
       },
       "list_tender_files": "Liste Vergabeunterlagen…",
-      "read_tender_document": "Lese eine Vergabeunterlage…"
+      "read_tender_document": "Lese eine Vergabeunterlage…",
+      "get_tender_report": "Lese den Ausschreibungsbericht…",
+      "get_tender_verdict": "Lese die gespeicherte Empfehlung…",
+      "get_tender_analysis_status": "Prüfe den Analysestand…",
+      "find_similar_tenders": "Suche ähnliche Ausschreibungen…",
+      "compare_tenders": "Vergleiche Ausschreibungen…",
+      "list_relevant_tenders": "Lade Ihre relevanten Ausschreibungen…",
+      "list_workspace_tenders": "Prüfe Ihre Angebots-Pipeline…",
+      "list_tender_reports": "Lade Ihre Berichte…",
+      "lookup_cpv_codes": "Schlage CPV-Codes nach…"
     },
     "verdict": {
       "recommendation": {

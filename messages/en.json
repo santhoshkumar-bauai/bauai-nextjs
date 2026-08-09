@@ -1096,7 +1096,16 @@
         "drafting": "Drafting the verdict…"
       },
       "list_tender_files": "Listing tender files…",
-      "read_tender_document": "Reading a tender document…"
+      "read_tender_document": "Reading a tender document…",
+      "get_tender_report": "Reading the tender report…",
+      "get_tender_verdict": "Reading the saved verdict…",
+      "get_tender_analysis_status": "Checking what has been analyzed…",
+      "find_similar_tenders": "Finding similar tenders…",
+      "compare_tenders": "Comparing tenders…",
+      "list_relevant_tenders": "Loading your relevant tenders…",
+      "list_workspace_tenders": "Checking your bid pipeline…",
+      "list_tender_reports": "Loading your reports…",
+      "lookup_cpv_codes": "Looking up CPV codes…"
     },
     "verdict": {
       "recommendation": {

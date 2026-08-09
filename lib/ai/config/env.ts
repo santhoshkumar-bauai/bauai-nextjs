@@ -48,10 +48,15 @@ const AiEnvSchema = z.object({
 
   classifierVersion: z.string().default("v1"),
 
-  /** Tool-loop iterations per chat turn before the forced-finalize path. */
-  agentMaxIterations: z.coerce.number().int().positive().default(6),
+  /**
+   * Tool-loop iterations per chat turn before the forced-finalize path. Raised
+   * with the expanded registry: a coverage check followed by a report section
+   * and a document search is now a normal, correct three-call turn, and the old
+   * cap of 6 forced a finalize mid-investigation on top of that.
+   */
+  agentMaxIterations: z.coerce.number().int().positive().default(8),
   /** Global (non-tender) chats need longer find→drill-in tool chains. */
-  agentGlobalMaxIterations: z.coerce.number().int().positive().default(8),
+  agentGlobalMaxIterations: z.coerce.number().int().positive().default(10),
   /**
    * Generous because thinking models spend reasoning tokens from the SAME
    * budget — 2048 starved gemini-3.5-flash into empty answers on complex
