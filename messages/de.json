@@ -178,9 +178,6 @@
   "Workspace": {
     "kanban": {
       "title": "Ausschreibungspipeline",
-      "tenderCount": "0 Ausschreibungen",
-      "previewTitle": "Wir arbeiten gerade daran",
-      "previewDescription": "Dieser Arbeitsbereich ist eine UI-Vorschau. Ausschreibungsstatus und Zusammenarbeit folgen als Nächstes.",
       "workspace": "Arbeitsbereich",
       "deadZone": "Archiv",
       "noTenders": "Noch keine Ausschreibungen",
@@ -191,6 +188,32 @@
         "submitted": "Eingereicht",
         "won": "Gewonnen",
         "lost": "Verloren"
+      },
+      "tenderCountValue": "{count, plural, one {# Ausschreibung} other {# Ausschreibungen}}",
+      "refresh": "Board aktualisieren",
+      "unassigned": "Nicht zugewiesen",
+      "assignTo": "Zuweisen an",
+      "unassign": "Zuweisung entfernen",
+      "restore": "Wiederherstellen",
+      "deadZoneEmpty": "Nichts in der Dead Zone.",
+      "emptyTitle": "Noch keine Ausschreibungen im Workspace",
+      "emptyDescription": "Es wurde noch nichts zur Pipeline hinzugefügt. Sehen Sie sich Ihre passenden Ausschreibungen an und schicken Sie vielversprechende hierher.",
+      "exploreTenders": "Ausschreibungen entdecken",
+      "remove": {
+        "trigger": "Ausschreibung entfernen",
+        "title": "Ausschreibung entfernen?",
+        "description": "Wählen Sie, was mit dieser Ausschreibung geschehen soll:",
+        "deadzone": {
+          "title": "Aus dem Workspace entfernen",
+          "description": "Verschiebt die Ausschreibung in die Dead Zone. Sie können sie später wiederherstellen."
+        },
+        "permanent": {
+          "title": "Zusätzlich dauerhaft ausblenden",
+          "description": "Blendet die Ausschreibung dauerhaft für diese Firma aus. Nicht rückgängig zu machen."
+        },
+        "cancel": "Abbrechen",
+        "confirm": "Entfernen",
+        "confirmPermanent": "Dauerhaft ausblenden"
       }
     },
     "comingSoon": {
@@ -509,16 +532,38 @@
       "clear": "Filter zurücksetzen",
       "button": "Filter",
       "clearAll": "Alle zurücksetzen",
+      "applied": "Aktive Filter",
+      "removeChip": "{label} entfernen",
       "sections": {
+        "status": "Status",
         "contract": "Auftragsart",
         "sector": "Branche",
         "region": "Region",
         "deadline": "Frist",
         "match": "Min. Übereinstimmung"
       },
+      "chips": {
+        "search": "Suche"
+      },
       "deadlineAny": "Beliebig",
       "deadlineDays": "≤ {days}T",
       "matchValue": "{percent}%+"
+    },
+    "sort": {
+      "button": "Sortieren",
+      "options": {
+        "relevance": "Beste Übereinstimmung",
+        "deadline": "Frist zuerst",
+        "newest": "Neueste zuerst"
+      }
+    },
+    "regionPicker": {
+      "unset": "Region festlegen",
+      "change": "Ihre Region",
+      "hint": "Bestimmt die Bewertung und die Entfernung auf jeder Ausschreibung.",
+      "save": "Region speichern",
+      "error": "Region konnte nicht gespeichert werden. Bitte erneut versuchen.",
+      "forbidden": "Nur Firmen-Admins können die Region ändern."
     },
     "contract": {
       "works": "Bauleistungen",
@@ -578,9 +623,20 @@
       "value": "Geschätzter Wert",
       "notProvided": "Nicht angegeben",
       "match": "{percent}% Übereinstimmung",
+      "distance": "{km} km",
+      "distanceHint": "Luftlinie ab Ihrer Firmenregion",
+      "daysLeft": "noch {days}T",
+      "inWorkspace": "Im Workspace",
+      "reject": "Ablehnen",
+      "toWorkspace": "Zum Workspace",
+      "undo": "Rückgängig",
+      "undoIn": "Rückgängig ({seconds}s)",
+      "decisionError": "Konnte nicht gespeichert werden. Bitte erneut versuchen.",
       "cpvMore": "+{count} weitere",
+      "cpvLess": "Weniger anzeigen",
       "viewSource": "Quelle ansehen",
       "breakdown": {
+        "title": "Warum diese Übereinstimmung",
         "cpv": "CPV-Eignung",
         "geo": "Standort",
         "time": "Aktualität"

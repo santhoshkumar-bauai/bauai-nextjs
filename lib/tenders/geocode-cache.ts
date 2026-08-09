@@ -172,13 +172,25 @@ async function runWithConcurrency<T>(
   await Promise.all(runners);
 }
 
+export interface ResolveOptions {
+  /**
+   * Whether unknown keys may be geocoded via Google. The tender *list* passes
+   * false: it shows a distance only where coordinates are already known
+   * (on the tender, or warm in the postal cache), keeping that endpoint
+   * Google-free as documented on `/api/tenders/relevant/geo`.
+   */
+  allowGeocoding?: boolean;
+}
+
 /**
  * Resolves coordinates for the given markers, geocoding (cheaply) only what's
  * missing. Returns a per-tender coordinate map plus cost/telemetry stats.
  */
 export async function resolveMarkerLocations(
   inputs: MarkerInput[],
+  options: ResolveOptions = {},
 ): Promise<GeoResolveResult> {
+  const allowGeocoding = options.allowGeocoding !== false;
   const coordinates = new Map<string, ResolvedPoint>();
   const stats = { requested: inputs.length, fromCache: 0, geocoded: 0, failed: 0, skipped: 0 };
 
@@ -244,7 +256,7 @@ export async function resolveMarkerLocations(
   }
 
   // 4. Geocode the misses, hard-capped, with bounded concurrency.
-  const capped = toGeocode.slice(0, MAX_NEW_GEOCODES);
+  const capped = allowGeocoding ? toGeocode.slice(0, MAX_NEW_GEOCODES) : [];
   stats.skipped += toGeocode.length - capped.length;
 
   const now = new Date();

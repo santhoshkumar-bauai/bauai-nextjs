@@ -60,9 +60,6 @@ export default async function WorkspaceSectionPage({
     section === "kanban" ? (
       <KanbanBoard
         title={workspace("kanban.title")}
-        tenderCount={workspace("kanban.tenderCount")}
-        previewTitle={workspace("kanban.previewTitle")}
-        previewDescription={workspace("kanban.previewDescription")}
         workspaceLabel={workspace("kanban.workspace")}
         deadZoneLabel={workspace("kanban.deadZone")}
         noTenders={workspace("kanban.noTenders")}

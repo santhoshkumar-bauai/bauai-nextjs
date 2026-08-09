@@ -6,10 +6,11 @@ import { ChevronLeft, ChevronRight, LayoutList, Loader2, Map as MapIcon } from "
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { RegionSwitcher } from "@/components/tenders/region-switcher";
 import { SavedFilters } from "@/components/tenders/saved-filters";
 import { TenderCard } from "@/components/tenders/tender-card";
 import { TenderDetailDialog } from "@/components/tenders/tender-detail-dialog";
-import { TenderFilterBar } from "@/components/tenders/tender-filters";
+import { TenderToolbar } from "@/components/tenders/tender-toolbar";
 import {
   parseTenderFilters,
   tenderFiltersToParams,
@@ -34,7 +35,12 @@ interface ApiResponse {
   page: number;
   pageSize: number;
   total: number;
-  profile: { cpv: string[]; nuts: NutsResolution };
+  profile: {
+    cpv: string[];
+    nuts: NutsResolution;
+    region: string | null;
+    hasCoordinates: boolean;
+  };
 }
 
 function MapPlaceholder() {
@@ -74,6 +80,9 @@ export function RelevantTenders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
+  // Tenders decided on this page. The server already excludes them on the next
+  // fetch; this keeps them from flashing back before that happens.
+  const [decided, setDecided] = useState<Set<string>>(new Set());
 
   // Debounce only the free-text query; chip changes apply immediately.
   useEffect(() => {
@@ -201,11 +210,19 @@ export function RelevantTenders() {
         </div>
       </header>
 
-      <TenderFilterBar
+      <TenderToolbar
         filters={filters}
         onChange={updateFilters}
         savedSlot={
-          <SavedFilters currentFilters={filters} onApply={applyPreset} />
+          <>
+            <RegionSwitcher
+              region={data?.profile.region ?? null}
+              // Region feeds the geo score and the distance hints, so a change
+              // has to re-run the query rather than just relabel the chip.
+              onSaved={() => setRefreshKey((key) => key + 1)}
+            />
+            <SavedFilters currentFilters={filters} onApply={applyPreset} />
+          </>
         }
       />
 
@@ -235,13 +252,24 @@ export function RelevantTenders() {
               loading && "pointer-events-none opacity-60",
             )}
           >
-            {data?.items.map((tender) => (
-              <TenderCard
-                key={tender.id}
-                tender={tender}
-                onOpen={setSelectedTenderId}
-              />
-            ))}
+            {data?.items
+              .filter((tender) => !decided.has(tender.id))
+              .map((tender) => (
+                <TenderCard
+                  key={tender.id}
+                  tender={tender}
+                  onOpen={setSelectedTenderId}
+                  onDecided={(tenderId, status) => {
+                    if (status === "deadzone") {
+                      setDecided((prev) => new Set(prev).add(tenderId));
+                      return;
+                    }
+                    // Moved to the board: refetch so it comes back labelled
+                    // "In workspace" instead of offering the action bar again.
+                    setRefreshKey((key) => key + 1);
+                  }}
+                />
+              ))}
           </div>
 
           <div className="flex items-center justify-between gap-3 pt-1">

@@ -178,9 +178,6 @@
   "Workspace": {
     "kanban": {
       "title": "Tender Pipeline",
-      "tenderCount": "0 tenders",
-      "previewTitle": "We're currently building it",
-      "previewDescription": "This workspace is a UI preview. Tender movement and collaboration are coming next.",
       "workspace": "Workspace",
       "deadZone": "Dead Zone",
       "noTenders": "No tenders yet",
@@ -191,6 +188,32 @@
         "submitted": "Submitted",
         "won": "Won",
         "lost": "Lost"
+      },
+      "tenderCountValue": "{count, plural, one {# tender} other {# tenders}}",
+      "refresh": "Refresh board",
+      "unassigned": "Unassigned",
+      "assignTo": "Assign to",
+      "unassign": "Clear assignee",
+      "restore": "Restore",
+      "deadZoneEmpty": "Nothing in the dead zone.",
+      "emptyTitle": "No tenders in your workspace yet",
+      "emptyDescription": "Nothing has been added to the pipeline. Browse your matched tenders and send the promising ones here.",
+      "exploreTenders": "Explore tenders",
+      "remove": {
+        "trigger": "Remove tender",
+        "title": "Remove tender?",
+        "description": "Choose what to do with this tender:",
+        "deadzone": {
+          "title": "Remove from workspace",
+          "description": "Moves the tender to the dead zone. You can restore it later."
+        },
+        "permanent": {
+          "title": "Also dismiss permanently",
+          "description": "Hides the tender from this company for good. This cannot be undone."
+        },
+        "cancel": "Cancel",
+        "confirm": "Remove",
+        "confirmPermanent": "Dismiss permanently"
       }
     },
     "comingSoon": {
@@ -509,16 +532,38 @@
       "clear": "Clear filters",
       "button": "Filters",
       "clearAll": "Clear all",
+      "applied": "Applied filters",
+      "removeChip": "Remove {label}",
       "sections": {
+        "status": "Status",
         "contract": "Contract type",
         "sector": "Sector",
         "region": "Region",
         "deadline": "Deadline",
         "match": "Min. match"
       },
+      "chips": {
+        "search": "Search"
+      },
       "deadlineAny": "Any",
       "deadlineDays": "≤ {days}d",
       "matchValue": "{percent}%+"
+    },
+    "sort": {
+      "button": "Sort",
+      "options": {
+        "relevance": "Best match",
+        "deadline": "Deadline soonest",
+        "newest": "Newest first"
+      }
+    },
+    "regionPicker": {
+      "unset": "Set region",
+      "change": "Your region",
+      "hint": "Drives match scoring and the distance shown on each tender.",
+      "save": "Save region",
+      "error": "Couldn't save the region. Please try again.",
+      "forbidden": "Only company admins can change the region."
     },
     "contract": {
       "works": "Works",
@@ -578,9 +623,20 @@
       "value": "Estimated value",
       "notProvided": "Not provided",
       "match": "{percent}% match",
+      "distance": "{km} km",
+      "distanceHint": "Straight-line distance from your company region",
+      "daysLeft": "{days}d left",
+      "inWorkspace": "In workspace",
+      "reject": "Reject",
+      "toWorkspace": "To Workspace",
+      "undo": "Undo",
+      "undoIn": "Undo ({seconds}s)",
+      "decisionError": "Couldn't save that. Please try again.",
       "cpvMore": "+{count} more",
+      "cpvLess": "Show less",
       "viewSource": "View source",
       "breakdown": {
+        "title": "Why this match",
         "cpv": "CPV fit",
         "geo": "Location",
         "time": "Recency"

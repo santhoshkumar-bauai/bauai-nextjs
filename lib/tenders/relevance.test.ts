@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { stripCheckDigit, toFamilyPrefixes } from "./relevance.ts";
+import type { TenderSort } from "./filters.ts";
+import {
+  buildRelevancePipeline,
+  stripCheckDigit,
+  toFamilyPrefixes,
+} from "./relevance.ts";
 
 describe("stripCheckDigit", () => {
   it("removes the check digit suffix", () => {
@@ -41,5 +46,57 @@ describe("toFamilyPrefixes", () => {
 
   it("returns nothing for empty input", () => {
     expect(toFamilyPrefixes([])).toEqual([]);
+  });
+});
+
+describe("sort ordering", () => {
+  const itemStages = (sort?: TenderSort) => {
+    const { pipeline } = buildRelevancePipeline(
+      {
+        companyCpvCodes: ["45000000-7"],
+        nuts: { country: "DE", nuts1: "DE3", source: "nuts-code" },
+      },
+      { now: new Date("2026-01-01T00:00:00.000Z"), page: 0, pageSize: 20, sort },
+    );
+    const facet = pipeline.at(-1) as {
+      $facet: { items: Record<string, unknown>[] };
+    };
+    return facet.$facet.items;
+  };
+
+  it("leaves the ranked order untouched for relevance", () => {
+    expect(itemStages()[0]).toHaveProperty("$skip");
+  });
+
+  it("re-sorts inside the ranked pool, before paging", () => {
+    const stages = itemStages("deadline");
+    expect(stages[0]).toHaveProperty("$addFields");
+    expect(stages[1]).toEqual({ $sort: { sortKey: 1, score: -1, _id: 1 } });
+    expect(stages[2]).toHaveProperty("$skip");
+  });
+
+  it("orders newest-first by publication date", () => {
+    expect(itemStages("newest")[1]).toEqual({
+      $sort: { sortKey: -1, score: -1, _id: 1 },
+    });
+  });
+
+  it("keeps the total branch independent of the sort", () => {
+    const { pipeline } = buildRelevancePipeline(
+      {
+        companyCpvCodes: ["45000000-7"],
+        nuts: { country: "DE", nuts1: "DE3", source: "nuts-code" },
+      },
+      {
+        now: new Date("2026-01-01T00:00:00.000Z"),
+        page: 0,
+        pageSize: 20,
+        sort: "deadline",
+      },
+    );
+    const facet = pipeline.at(-1) as {
+      $facet: { total: Record<string, unknown>[] };
+    };
+    expect(facet.$facet.total).toEqual([{ $count: "value" }]);
   });
 });

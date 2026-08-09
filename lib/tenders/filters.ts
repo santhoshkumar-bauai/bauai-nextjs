@@ -56,6 +56,15 @@ export const GERMAN_REGION_CODES = [
 
 export const DEADLINE_DAY_OPTIONS = [7, 14, 30, 60] as const;
 
+/**
+ * Result ordering. All three reorder the *same* relevance-ranked pool, so a
+ * deadline sort still means "my most relevant tenders, soonest first" rather
+ * than "every tender in the corpus by deadline".
+ */
+export const SORT_OPTIONS = ["relevance", "deadline", "newest"] as const;
+export type TenderSort = (typeof SORT_OPTIONS)[number];
+export const DEFAULT_SORT: TenderSort = "relevance";
+
 export interface TenderFilters {
   q?: string;
   statuses: string[];
@@ -68,6 +77,8 @@ export interface TenderFilters {
   deadlineInDays?: number;
   /** Minimum composite relevance score, 0..1. */
   minScore?: number;
+  /** Result ordering; `relevance` is the default and is never serialized. */
+  sort?: TenderSort;
 }
 
 export const EMPTY_FILTERS: TenderFilters = {
@@ -118,7 +129,21 @@ export function parseTenderFilters(params: URLSearchParams): TenderFilters {
     ? Math.min(1, Math.max(0, minScoreRaw))
     : undefined;
 
-  return { q, statuses, contractNatures, sectors, regions, deadlineInDays, minScore };
+  const sortRaw = params.get("sort") ?? "";
+  const sort = (SORT_OPTIONS as readonly string[]).includes(sortRaw)
+    ? (sortRaw as TenderSort)
+    : undefined;
+
+  return {
+    q,
+    statuses,
+    contractNatures,
+    sectors,
+    regions,
+    deadlineInDays,
+    minScore,
+    sort,
+  };
 }
 
 /** Coerce an untrusted object (saved-preset body) into a safe TenderFilters. */
@@ -138,6 +163,7 @@ export function normalizeTenderFilters(raw: unknown): TenderFilters {
     params.set("deadlineInDays", String(record.deadlineInDays));
   if (typeof record.minScore === "number")
     params.set("minScore", String(record.minScore));
+  if (typeof record.sort === "string") params.set("sort", record.sort);
 
   return parseTenderFilters(params);
 }
@@ -157,6 +183,7 @@ export function tenderFiltersToParams(
   if (filters.deadlineInDays) params.set("deadlineInDays", String(filters.deadlineInDays));
   if (typeof filters.minScore === "number" && filters.minScore > 0)
     params.set("minScore", String(filters.minScore));
+  if (filters.sort && filters.sort !== DEFAULT_SORT) params.set("sort", filters.sort);
   for (const [key, value] of Object.entries(extra ?? {})) params.set(key, value);
   return params;
 }
@@ -172,4 +199,57 @@ export function activeFilterCount(filters: TenderFilters): number {
     (filters.deadlineInDays ? 1 : 0) +
     (filters.minScore && filters.minScore > 0 ? 1 : 0)
   );
+}
+
+/**
+ * One entry per active filter *value*, so the chip row can drop a single value
+ * without clearing its whole facet. `field` + `value` is enough for the caller
+ * to reverse the choice; labels stay in the component, which owns `t`.
+ */
+export type ActiveFilterChip =
+  | { key: string; field: "q" }
+  | { key: string; field: "deadlineInDays" }
+  | { key: string; field: "minScore" }
+  | {
+      key: string;
+      field: "statuses" | "contractNatures" | "sectors" | "regions";
+      value: string;
+    };
+
+export function activeFilterChips(filters: TenderFilters): ActiveFilterChip[] {
+  const chips: ActiveFilterChip[] = [];
+  if (filters.q) chips.push({ key: "q", field: "q" });
+  for (const value of filters.statuses)
+    chips.push({ key: `statuses:${value}`, field: "statuses", value });
+  for (const value of filters.contractNatures)
+    chips.push({ key: `contract:${value}`, field: "contractNatures", value });
+  for (const value of filters.sectors)
+    chips.push({ key: `sector:${value}`, field: "sectors", value });
+  for (const value of filters.regions)
+    chips.push({ key: `region:${value}`, field: "regions", value });
+  if (filters.deadlineInDays)
+    chips.push({ key: "deadline", field: "deadlineInDays" });
+  if (filters.minScore && filters.minScore > 0)
+    chips.push({ key: "minScore", field: "minScore" });
+  return chips;
+}
+
+/** Remove one chip's value, leaving the rest of the filter state intact. */
+export function removeFilterChip(
+  filters: TenderFilters,
+  chip: ActiveFilterChip,
+): TenderFilters {
+  switch (chip.field) {
+    case "q":
+      return { ...filters, q: undefined };
+    case "deadlineInDays":
+      return { ...filters, deadlineInDays: undefined };
+    case "minScore":
+      return { ...filters, minScore: undefined };
+    default:
+      return {
+        ...filters,
+        [chip.field]: filters[chip.field].filter((item) => item !== chip.value),
+      };
+  }
 }
