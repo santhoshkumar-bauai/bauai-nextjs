@@ -9,6 +9,7 @@ import { textFromContent } from "./content.ts";
 import type { AgentRunContext } from "./context.ts";
 import { buildClaraGraph } from "./graph.ts";
 import { bumpThread } from "./threads.ts";
+import type { TenderRef } from "./tender-refs.ts";
 import type { WireChatMessage } from "./wire.ts";
 
 const log = logger.child("ai.clara");
@@ -19,6 +20,8 @@ export interface ChatTurnCallbacks {
   onToken?: (delta: string) => void;
   onToolStart?: (name: string) => void;
   onToolEnd?: (name: string, durationMs: number, resultCount: number | null) => void;
+  /** New or enriched tender cards, as the tools surface them mid-turn. */
+  onTenderRefs?: (refs: TenderRef[]) => void;
 }
 
 export { textFromContent };
@@ -33,6 +36,7 @@ export function serializeChatMessage(doc: ChatMessageDocument): WireChatMessage 
     toolEvents: doc.toolEvents,
     citations: doc.citations as unknown as WireChatMessage["citations"],
     attachments: doc.attachments,
+    tenderRefs: doc.tenderRefs,
     verdictId: doc.verdictId ? String(doc.verdictId) : null,
     createdAt: doc.createdAt.toISOString(),
   };
@@ -159,6 +163,10 @@ export async function runChatTurn(input: {
         }
         toolEvents.push({ name: event.name, durationMs, resultCount });
         callbacks?.onToolEnd?.(event.name, durationMs, resultCount);
+        // Tenders the tool just registered, streamed before the answer text so
+        // the reader can already click into them while Clara is still writing.
+        const refs = ctx.tenderRefs.drain();
+        if (refs.length > 0) callbacks?.onTenderRefs?.(refs);
       }
     }
   } catch (error) {
@@ -175,6 +183,10 @@ export async function runChatTurn(input: {
     }
   }
 
+  // The whole turn's cards, not just the last drain — history must restore
+  // every tender the answer talks about.
+  const tenderRefs = ctx.tenderRefs.list();
+
   const assistantMessage = await persistMessage({
     tenantId: ctx.tenantId,
     threadId,
@@ -185,6 +197,7 @@ export async function runChatTurn(input: {
     locale: ctx.locale,
     toolEvents,
     citations: ctx.citations.list() as unknown as Array<Record<string, unknown>>,
+    ...(tenderRefs.length > 0 ? { tenderRefs } : {}),
     verdictId: null,
     metrics: {
       llmCalls,

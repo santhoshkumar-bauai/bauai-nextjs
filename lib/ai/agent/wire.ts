@@ -12,6 +12,28 @@ export interface WireCitation {
   chunkId: string | null;
 }
 
+/**
+ * A tender one of the turn's tools surfaced, in the shape the chat renders as
+ * a clickable card. Collected server-side (lib/ai/agent/tender-refs.ts) so the
+ * UI never has to find tender ids in the model's prose.
+ */
+export interface WireTenderRef {
+  tenderId: string;
+  title: string | null;
+  buyer: string | null;
+  status: string | null;
+  submissionDeadline: string | null;
+  daysUntilDeadline: number | null;
+  /** Board column the tender sits in for this company, if any. */
+  workspaceStatus: string | null;
+  /** Stored report/verdict decision, when a tool surfaced one. */
+  decision: "bid" | "no_bid" | "conditional" | null;
+  /** 0..1 feed match score — only list_relevant_tenders knows it. */
+  matchScore: number | null;
+  /** A full report exists, so the card can link straight to it. */
+  hasReport: boolean;
+}
+
 export interface WireToolEvent {
   name: string;
   durationMs: number;
@@ -35,6 +57,8 @@ export interface WireChatMessage {
   toolEvents: WireToolEvent[];
   citations: WireCitation[];
   attachments?: WireAttachment[];
+  /** Tenders this answer is about; absent on older documents. */
+  tenderRefs?: WireTenderRef[];
   verdictId: string | null;
   createdAt: string;
 }
@@ -96,6 +120,8 @@ export type ClaraSseEvent =
       /** Optional i18n sub-stage key (e.g. verdict pipeline stages). */
       stage?: string;
     }
+  /** Tenders surfaced so far — sent as they are found, before the answer. */
+  | { type: "tenders"; tenders: WireTenderRef[] }
   | { type: "artifact"; artifact: "verdict"; verdict: WireVerdict }
   | { type: "message"; message: WireChatMessage }
   | { type: "error"; message: string };

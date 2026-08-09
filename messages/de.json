@@ -1139,6 +1139,14 @@
       "companyDocs": "Welche unserer Unterlagen sind durchsuchbar?",
       "profile": "Unser Unternehmensprofil zusammenfassen"
     },
+    "tenders": {
+      "heading": "Ausschreibungen in dieser Antwort",
+      "untitled": "Ausschreibung ohne Titel",
+      "report": "Bericht",
+      "ask": "Zu dieser Ausschreibung fragen",
+      "showMore": "{count} weitere anzeigen",
+      "showLess": "Weniger anzeigen"
+    },
     "sessions": {
       "title": "Unterhaltungen",
       "newChat": "Neuer Chat",

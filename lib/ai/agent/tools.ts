@@ -38,6 +38,7 @@ import {
   REPORT_SECTIONS,
   type ReportSection,
 } from "./report-view.ts";
+import type { TenderRefInput } from "./tender-refs.ts";
 import {
   getTenderCoverage,
   listRelevantTenders,
@@ -81,6 +82,38 @@ function cap(text: string | null | undefined, max: number): string {
 
 function wrapDocument(text: string): string {
   return `<document>${text}</document>`;
+}
+
+/**
+ * Registers a tender for the answer's navigation cards (tender-refs.ts). The
+ * tender a tender chat is already bound to is skipped — the reader is looking
+ * at its page, so a card back to it is noise.
+ */
+function noteTender(ctx: AgentRunContext, ref: TenderRefInput): void {
+  if (ctx.tender?.tenderId.toHexString() === ref.tenderId) return;
+  ctx.tenderRefs.add(ref);
+}
+
+/** The notice-level facts every card needs, from an already-loaded scope. */
+function noteTenderScope(ctx: AgentRunContext, scope: AgentTenderScope): void {
+  const d = scope.tenderDetail;
+  noteTender(ctx, {
+    tenderId: scope.tenderId.toHexString(),
+    title: d.title,
+    buyer: d.buyer?.name ?? null,
+    status: d.status,
+    submissionDeadline: d.submissionDeadline,
+    daysUntilDeadline: d.submissionDeadline
+      ? deadlineDaysLeft(d.submissionDeadline)
+      : null,
+  });
+}
+
+/** Report/verdict decisions arrive as loose strings; only these are cards. */
+const CARD_DECISIONS = ["bid", "no_bid", "conditional"] as const;
+
+function asDecision(value: string | null | undefined): TenderRefInput["decision"] {
+  return CARD_DECISIONS.find((decision) => decision === value) ?? null;
 }
 
 const TENDER_NOT_FOUND = JSON.stringify({
@@ -458,6 +491,7 @@ async function renderSimilarTenders(
     if (hex === self) continue;
     const candidate = await getVisibleTender(ctx, hex);
     if (!candidate) continue;
+    noteTenderScope(ctx, candidate);
     const detail = candidate.tenderDetail;
     results.push({
       tenderId: hex,
@@ -507,6 +541,15 @@ async function renderCompareTenders(
       const d = scope.tenderDetail;
       const hex = scope.tenderId.toHexString();
       const coverage = coverages[index];
+      noteTenderScope(ctx, scope);
+      noteTender(ctx, {
+        tenderId: hex,
+        workspaceStatus: coverage.workspaceStatus,
+        decision:
+          asDecision(reportDecisions.get(hex)?.decision) ??
+          asDecision(coverage.verdict.recommendation),
+        hasReport: coverage.report.exists,
+      });
       return {
         tenderId: hex,
         title: d.title,
@@ -543,7 +586,11 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
   const scopeFor = async (tenderIdHex?: string): Promise<AgentTenderScope | null> => {
     if (ctx.tender) return ctx.tender;
     if (!tenderIdHex) return null;
-    return getVisibleTender(ctx, tenderIdHex);
+    const scope = await getVisibleTender(ctx, tenderIdHex);
+    // Every global-mode tool that drills into a tender routes through here, so
+    // one registration covers notice, report, verdict, documents and the rest.
+    if (scope) noteTenderScope(ctx, scope);
+    return scope;
   };
 
   const tenderMode = ctx.tender !== null;
@@ -698,7 +745,16 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
     async (input: { tenderId?: string }) => {
       const scope = await scopeFor(input?.tenderId);
       if (!scope) return TENDER_NOT_FOUND;
-      return JSON.stringify(await getTenderCoverage(ctx, scope.tenderId));
+      const coverage = await getTenderCoverage(ctx, scope.tenderId);
+      noteTender(ctx, {
+        tenderId: coverage.tenderId,
+        workspaceStatus: coverage.workspaceStatus,
+        decision:
+          asDecision(coverage.report.decision) ??
+          asDecision(coverage.verdict.recommendation),
+        hasReport: coverage.report.exists,
+      });
+      return JSON.stringify(coverage);
     },
     {
       name: "get_tender_analysis_status",
@@ -752,7 +808,22 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
       deadlineInDays?: number;
       minScore?: number;
       sort?: "relevance" | "deadline" | "newest";
-    }) => JSON.stringify(await listRelevantTenders(ctx, input)),
+    }) => {
+      const feed = await listRelevantTenders(ctx, input);
+      for (const row of feed.items) {
+        noteTender(ctx, {
+          tenderId: row.tenderId,
+          title: row.title,
+          buyer: row.buyer,
+          status: row.status,
+          submissionDeadline: row.submissionDeadline,
+          daysUntilDeadline: row.daysLeft,
+          workspaceStatus: row.workspaceStatus,
+          matchScore: row.matchScore,
+        });
+      }
+      return JSON.stringify(feed);
+    },
     {
       name: "list_relevant_tenders",
       description:
@@ -796,7 +867,21 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
     async (input: {
       statuses?: Array<(typeof DECISION_STATUSES)[number]>;
       limit: number;
-    }) => JSON.stringify(await listWorkspaceTenders(ctx, input)),
+    }) => {
+      const rows = await listWorkspaceTenders(ctx, input);
+      for (const row of rows) {
+        noteTender(ctx, {
+          tenderId: row.tenderId,
+          title: row.title,
+          buyer: row.buyer,
+          status: row.tenderStatus,
+          submissionDeadline: row.submissionDeadline,
+          daysUntilDeadline: row.daysLeft,
+          workspaceStatus: row.status,
+        });
+      }
+      return JSON.stringify(rows);
+    },
     {
       name: "list_workspace_tenders",
       description:
@@ -813,8 +898,24 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
   );
 
   const listTenderReportsTool = tool(
-    async ({ limit }: { limit: number }) =>
-      JSON.stringify(await listReportSummaries(ctx.companyContext, ctx.locale, limit)),
+    async ({ limit }: { limit: number }) => {
+      const summaries = await listReportSummaries(
+        ctx.companyContext,
+        ctx.locale,
+        limit,
+      );
+      for (const summary of summaries) {
+        noteTender(ctx, {
+          tenderId: summary.tenderId,
+          title: summary.tenderTitle,
+          buyer: summary.buyerName,
+          submissionDeadline: summary.submissionDeadline,
+          decision: asDecision(summary.decision),
+          hasReport: true,
+        });
+      }
+      return JSON.stringify(summaries);
+    },
     {
       name: "list_tender_reports",
       description:
@@ -971,6 +1072,7 @@ export function buildClaraTools(ctx: AgentRunContext): StructuredToolInterface[]
         // tenders drop out even if their search document lags behind.
         const scope = await getVisibleTender(ctx, hit.tenderId.toHexString());
         if (!scope) continue;
+        noteTenderScope(ctx, scope);
         const d = scope.tenderDetail;
         results.push({
           tenderId: scope.tenderId.toHexString(),

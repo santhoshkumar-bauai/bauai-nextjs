@@ -1139,6 +1139,14 @@
       "companyDocs": "Which of our documents are searchable?",
       "profile": "Summarize our company profile"
     },
+    "tenders": {
+      "heading": "Tenders in this answer",
+      "untitled": "Untitled tender",
+      "report": "Report",
+      "ask": "Ask about this tender",
+      "showMore": "Show {count} more",
+      "showLess": "Show less"
+    },
     "sessions": {
       "title": "Conversations",
       "newChat": "New chat",

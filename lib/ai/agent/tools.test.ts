@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext, AgentTenderScope } from "./context.ts";
+import { TenderRefCollector } from "./tender-refs.ts";
 
 vi.mock("../retrieval/hybrid.ts", () => ({
   hybridRetrieveChunks: vi.fn(),
@@ -85,6 +86,7 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): AgentRunConte
     locale: "de",
     companyContext: { company: {} } as never,
     citations: new CitationCollector(),
+    tenderRefs: new TenderRefCollector(),
     tender,
     tenderCache: new Map(),
   };
@@ -348,6 +350,52 @@ describe("buildClaraTools — global mode", () => {
     );
     expect(result).toHaveLength(1);
     expect(result[0].tenderId).toBe(visible.tenderId.toHexString());
+  });
+
+  it("find_tenders registers its hits as navigation cards", async () => {
+    const ctx = fakeCtx(null);
+    const visible = tenderScope();
+    vi.mocked(retrieval.searchNotices).mockResolvedValue([
+      { tenderId: visible.tenderId, score: 0.9 },
+    ]);
+    vi.mocked(contextModule.getVisibleTender).mockResolvedValue(visible);
+
+    await toolByName(ctx, "find_tenders").invoke({
+      query: "Straßenbau Bayern",
+      limit: 5,
+    });
+    expect(ctx.tenderRefs.list()).toEqual([
+      expect.objectContaining({
+        tenderId: visible.tenderId.toHexString(),
+        title: "Testausschreibung",
+        status: "OPEN",
+      }),
+    ]);
+  });
+
+  it("list_workspace_tenders cards carry the board column", async () => {
+    const ctx = fakeCtx(null);
+    vi.mocked(workspace.listWorkspaceTenders).mockResolvedValue([
+      {
+        tenderId: "a".repeat(24),
+        status: "preparing",
+        title: "Neubau Kita",
+        buyer: "Stadt X",
+        tenderStatus: "OPEN",
+        submissionDeadline: null,
+        daysLeft: 12,
+        movedAt: null,
+      },
+    ]);
+
+    await toolByName(ctx, "list_workspace_tenders").invoke({ limit: 5 });
+    expect(ctx.tenderRefs.list()).toEqual([
+      expect.objectContaining({
+        tenderId: "a".repeat(24),
+        workspaceStatus: "preparing",
+        daysUntilDeadline: 12,
+      }),
+    ]);
   });
 
   it("company tools take no tender or tenant scope inputs in either mode", () => {
@@ -614,6 +662,34 @@ describe("buildClaraTools — workspace tools", () => {
     expect(result[0].tenderId).toBe(other.tenderId.toHexString());
     // One extra candidate is requested to absorb the self-match.
     expect(vi.mocked(retrieval.searchNotices).mock.calls[0][0].limit).toBe(4);
+    // The similar tender is worth a card; the tender under discussion is not.
+    expect(ctx.tenderRefs.list().map((ref) => ref.tenderId)).toEqual([
+      other.tenderId.toHexString(),
+    ]);
+  });
+
+  it("never cards the tender a tender chat is already about", async () => {
+    const ctx = fakeCtx();
+    const self = ctx.tender!.tenderId.toHexString();
+    const other = tenderScope();
+    vi.mocked(contextModule.getVisibleTender).mockImplementation(
+      async (_ctx, hex) => (hex === self ? ctx.tender : other),
+    );
+    vi.mocked(workspace.loadReportDecisions).mockResolvedValue(new Map());
+    vi.mocked(workspace.getTenderCoverage).mockResolvedValue({
+      workspaceStatus: null,
+      verdict: { recommendation: null },
+      documents: { fetchedFiles: 0, indexedChunks: 0 },
+      overview: { exists: false },
+      report: { exists: false },
+    } as never);
+
+    await toolByName(ctx, "compare_tenders").invoke({
+      tenderIds: [self, other.tenderId.toHexString()],
+    });
+    expect(ctx.tenderRefs.list().map((ref) => ref.tenderId)).toEqual([
+      other.tenderId.toHexString(),
+    ]);
   });
 });
 

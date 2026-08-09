@@ -126,6 +126,7 @@ export function streamChatTurnResponse(input: {
                   status: "end",
                   resultCount: resultCount ?? undefined,
                 }),
+              onTenderRefs: (tenders) => send({ type: "tenders", tenders }),
             },
           });
           send({

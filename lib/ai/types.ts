@@ -1,5 +1,6 @@
 import type { ObjectId } from "mongodb";
 
+import type { WireTenderRef } from "./agent/wire.ts";
 import type { DocClass } from "./classification/doc-classes.ts";
 
 /**
@@ -277,6 +278,11 @@ export interface ChatMessageDocument {
   citations: Array<Record<string, unknown>>;
   /** Files attached to this (user) message; absent on older documents. */
   attachments?: ChatMessageAttachment[];
+  /**
+   * Tenders the turn's tools surfaced, rendered as links into the tender's own
+   * pages. Absent on messages written before tender cards existed.
+   */
+  tenderRefs?: WireTenderRef[];
   verdictId: ObjectId | null;
   metrics: {
     llmCalls: number;

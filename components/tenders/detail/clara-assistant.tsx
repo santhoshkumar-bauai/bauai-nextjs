@@ -155,6 +155,7 @@ export function ClaraAssistant({
                 pending={chat.sending}
                 activeTool={chat.activeTool}
                 activeStage={chat.activeStage}
+                liveTenderRefs={chat.tenderRefs}
               />
             )}
             {chat.error && (

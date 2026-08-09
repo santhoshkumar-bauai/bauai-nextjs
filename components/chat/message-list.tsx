@@ -5,10 +5,16 @@ import { useTranslations } from "next-intl";
 
 import { FileText, Image as ImageIcon } from "lucide-react";
 
-import type { WireAttachment, WireChatMessage, WireVerdict } from "@/lib/ai/agent/wire";
+import type {
+  WireAttachment,
+  WireChatMessage,
+  WireTenderRef,
+  WireVerdict,
+} from "@/lib/ai/agent/wire";
 import { cn } from "@/lib/utils";
 import { CitationChips } from "./citation-chip";
 import { ChatMarkdown } from "./markdown";
+import { TenderRefCards } from "./tender-ref-cards";
 import { VerdictCard } from "./verdict-card";
 
 export type ChatDensity = "compact" | "comfortable";
@@ -171,6 +177,9 @@ function Bubble({
         <span className="text-[10px] text-muted-foreground">{t("aborted")}</span>
       )}
       {!isUser && <CitationChips citations={message.citations} />}
+      {!isUser && (
+        <TenderRefCards refs={message.tenderRefs} density={density} />
+      )}
       {verdict && <VerdictCard verdict={verdict} />}
     </div>
   );
@@ -185,6 +194,7 @@ export function MessageList({
   pending = false,
   activeTool = null,
   activeStage = null,
+  liveTenderRefs = [],
 }: {
   messages: WireChatMessage[];
   streamingText: string;
@@ -196,6 +206,11 @@ export function MessageList({
   pending?: boolean;
   activeTool?: string | null;
   activeStage?: string | null;
+  /**
+   * Tenders the running turn has surfaced so far. Shown while the turn is in
+   * flight; the finished message carries the same list persistently.
+   */
+  liveTenderRefs?: WireTenderRef[];
 }) {
   const t = useTranslations("Chat");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -247,6 +262,9 @@ export function MessageList({
           activeStage={activeStage}
           density={density}
         />
+      )}
+      {(pending || streamingText !== "") && liveTenderRefs.length > 0 && (
+        <TenderRefCards refs={liveTenderRefs} density={density} />
       )}
       <div ref={bottomRef} />
     </div>

@@ -9,6 +9,7 @@ import {
 } from "../../tenders/detail.ts";
 import { forCompanyContext } from "../tenant/repository.ts";
 import { CitationCollector } from "./citations.ts";
+import { TenderRefCollector } from "./tender-refs.ts";
 
 /**
  * Everything a Clara run needs, derived SERVER-SIDE from the authenticated
@@ -32,6 +33,8 @@ export interface AgentRunContext {
   locale: "en" | "de";
   companyContext: CompanyContext;
   citations: CitationCollector;
+  /** Tenders the turn's tools touched, rendered as cards under the answer. */
+  tenderRefs: TenderRefCollector;
   tender: AgentTenderScope | null;
   /** Per-run memo so an 8-iteration global run doesn't refetch one tender. */
   tenderCache: Map<string, AgentTenderScope | null>;
@@ -82,6 +85,7 @@ export async function buildAgentRunContext(input: {
     locale: input.locale,
     companyContext: input.companyContext,
     citations: new CitationCollector(),
+    tenderRefs: new TenderRefCollector(),
     tender,
     tenderCache: new Map([[input.tenderIdHex, tender]]),
   };
@@ -98,6 +102,7 @@ export function buildGlobalAgentRunContext(input: {
     locale: input.locale,
     companyContext: input.companyContext,
     citations: new CitationCollector(),
+    tenderRefs: new TenderRefCollector(),
     tender: null,
     tenderCache: new Map(),
   };
