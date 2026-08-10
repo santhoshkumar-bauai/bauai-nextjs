@@ -34,7 +34,10 @@ interface ApiResponse {
   items: SerializedTender[];
   page: number;
   pageSize: number;
+  /** Every tender matching the filters. */
   total: number;
+  /** The pageable slice of that — the top `RANK_CAP` by relevance. */
+  rankedTotal: number;
   profile: {
     cpv: string[];
     nuts: NutsResolution;
@@ -158,9 +161,12 @@ export function RelevantTenders() {
   };
 
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const from = total === 0 ? 0 : page * PAGE_SIZE + 1;
-  const to = Math.min(total, (page + 1) * PAGE_SIZE);
+  // Only the ranked pool is pageable, so the pager bounds come from that —
+  // while the label still reports how many tenders matched in total.
+  const ranked = data?.rankedTotal ?? 0;
+  const totalPages = Math.max(1, Math.ceil(ranked / PAGE_SIZE));
+  const from = ranked === 0 ? 0 : page * PAGE_SIZE + 1;
+  const to = Math.min(ranked, (page + 1) * PAGE_SIZE);
   const nuts = data?.profile.nuts;
   const nutsRegion = nuts?.nuts3 || nuts?.nuts2 || nuts?.nuts1 || nuts?.country;
 
@@ -274,7 +280,9 @@ export function RelevantTenders() {
 
           <div className="flex items-center justify-between gap-3 pt-1">
             <span className="text-xs text-muted-foreground">
-              {t("pagination.showing", { from, to, total })}
+              {total > ranked
+                ? t("pagination.showingRanked", { from, to, ranked, total })
+                : t("pagination.showing", { from, to, total })}
             </span>
             <div className="flex items-center gap-1">
               <button

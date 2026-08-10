@@ -341,13 +341,18 @@
       "view": "Ansehen",
       "delete": "Löschen",
       "add": "Hinzufügen",
+      "retry": "Erneut versuchen",
+      "dismiss": "Ausblenden",
       "tagHint": "Eingeben und Enter drücken"
     },
     "feedback": {
       "saveFailed": "Speichern fehlgeschlagen.",
       "uploadFailed": "Hochladen fehlgeschlagen.",
       "deleteFailed": "Löschen fehlgeschlagen.",
-      "openFailed": "Datei konnte nicht geöffnet werden."
+      "openFailed": "Datei konnte nicht geöffnet werden.",
+      "fileTooLarge": "{name} überschreitet das Limit von {limit} MB.",
+      "unsupportedFileType": "{name} hat ein nicht unterstütztes Dateiformat.",
+      "emptyFile": "{name} ist leer."
     },
     "sections": {
       "companyInfo": {
@@ -493,6 +498,9 @@
     },
     "documents": {
       "empty": "Noch keine Dokumente hochgeladen.",
+      "multipleHint": "Mehrere Dateien gleichzeitig auswählen oder hierher ziehen.",
+      "queued": "Wartet…",
+      "uploadingFile": "Wird hochgeladen…",
       "categories": {
         "general": {
           "label": "Allgemeine Dokumente",
@@ -554,7 +562,8 @@
       "options": {
         "relevance": "Beste Übereinstimmung",
         "deadline": "Frist zuerst",
-        "newest": "Neueste zuerst"
+        "newest": "Neueste zuerst",
+        "nearest": "Nächstgelegene zuerst"
       }
     },
     "regionPicker": {
@@ -639,7 +648,7 @@
         "title": "Warum diese Übereinstimmung",
         "cpv": "CPV-Eignung",
         "geo": "Standort",
-        "time": "Aktualität"
+        "time": "Zeitfenster"
       }
     },
     "states": {
@@ -653,7 +662,8 @@
     "pagination": {
       "previous": "Zurück",
       "next": "Weiter",
-      "showing": "{from}–{to} von {total}"
+      "showing": "{from}–{to} von {total}",
+      "showingRanked": "{from}–{to} der {ranked} besten Treffer ({total} insgesamt)"
     },
     "map": {
       "attribution": "Kartendaten © Google",

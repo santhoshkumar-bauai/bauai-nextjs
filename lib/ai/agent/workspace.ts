@@ -135,6 +135,7 @@ export interface RelevantTendersResult {
     country: string;
     nutsSource: string;
   };
+  /** Every tender matching the feed, not just the `items` page. */
   total: number;
   items: RelevantTenderRow[];
 }

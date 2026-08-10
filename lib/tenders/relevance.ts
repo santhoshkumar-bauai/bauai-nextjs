@@ -2,13 +2,20 @@
  * Relevance ranking for the `tenders` collection.
  *
  * Builds a MongoDB aggregation that filters to real open opportunities and
- * scores each candidate on a *balanced* blend of CPV/sector fit, NUTS-tier
- * location proximity, and recency/deadline urgency (~equal thirds). Scores are
- * computed, not stored; the sort is fully deterministic per company snapshot so
- * offset pagination is stable within a snapshot.
+ * scores each candidate on CPV/sector fit, NUTS-tier location proximity, and
+ * how workable the timing is. Scores are computed, not stored; the sort is
+ * fully deterministic per company snapshot so offset pagination is stable
+ * within a snapshot.
  *
- * Reuses the CPV prefix-family semantics from `app/api/tenders/events/route.ts`
- * (a division such as `45` matches `45232421`, i.e. a whole CPV family).
+ * Fit dominates the blend (CPV 45% + location 35%): those decide whether the
+ * company *can* bid at all. Timing is a 20% modifier, not a third of the
+ * verdict — a freshly published tender in the wrong trade is still the wrong
+ * trade.
+ *
+ * The recall filter reuses the CPV prefix-family semantics from
+ * `app/api/tenders/events/route.ts` (a division such as `45` matches
+ * `45232421`, i.e. a whole CPV family). Scoring is deliberately *stricter* than
+ * recall: see `buildCpvPrefixSets`.
  */
 import type { ObjectId } from "mongodb";
 
@@ -27,10 +34,10 @@ export const OPPORTUNITY_CATEGORIES = [
   "UPCOMING_OPPORTUNITY",
 ] as const;
 
-/** Balanced score weights (roughly equal thirds; exported for tuning). */
-export const W_CPV = 0.34;
-export const W_GEO = 0.33;
-export const W_TIME = 0.33;
+/** Composite score weights — fit first, timing as a modifier. */
+export const W_CPV = 0.45;
+export const W_GEO = 0.35;
+export const W_TIME = 0.2;
 
 /** Ranking past a few hundred results is meaningless; this also bounds sort cost. */
 export const RANK_CAP = 500;
@@ -38,10 +45,96 @@ export const RANK_CAP = 500;
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 50;
 
-/** Decay time-constants (days) for the urgency/recency curves. */
-const URGENCY_TAU_DAYS = 21;
+/** Decay time-constant (days) for the publication-freshness curve. */
 const RECENCY_TAU_DAYS = 45;
 const MS_PER_DAY = 86_400_000;
+
+// --- CPV fit tuning ---------------------------------------------------------
+
+/**
+ * Matched-prefix depth → fit score. Depth is the longest common prefix of the
+ * two codes' *significant* digits, so it is capped by whichever side is
+ * vaguer: two codes that agree only on the division ("45…" construction) land
+ * at depth 2 no matter how many digits they nominally share.
+ */
+export const CPV_DEPTH_SCORE: Record<number, number> = {
+  7: 1.0,
+  6: 0.9,
+  5: 0.78,
+  4: 0.62,
+  3: 0.45,
+  2: 0.25,
+};
+
+/** Deepest prefix tested. CPV's 8th digit is almost always a filler zero. */
+const CPV_MAX_DEPTH = 7;
+
+/** Best single code carries the score; breadth of overlap only nudges it. */
+const CPV_BEST_WEIGHT = 0.85;
+const CPV_BREADTH_WEIGHT = 0.15;
+/** Matching codes needed to max out the breadth term. */
+const CPV_BREADTH_TARGET = 3;
+
+// --- Location tuning --------------------------------------------------------
+
+/**
+ * NUTS tier → proximity score. NUTS2 sits high because that is as precise as
+ * the corpus usually gets: most tenders carry a 4-character region ("DEA5")
+ * while companies resolve all the way to NUTS3, so scoring a same-region
+ * tender at NUTS2 penalises the *data*, not the tender.
+ */
+export const GEO_NUTS3_SCORE = 1.0;
+export const GEO_NUTS2_SCORE = 0.85;
+export const GEO_NUTS1_SCORE = 0.55;
+export const GEO_COUNTRY_SCORE = 0.2;
+
+/**
+ * Stand-in kilometres per NUTS tier, used by the "nearest" sort when a tender
+ * has no resolvable coordinates — only about half of any ranked pool carries a
+ * buyer address at all.
+ *
+ * NUTS regions are geographic containment, so the tier *is* a coarse distance
+ * measurement. Each figure sits near the outer edge of its tier's typical
+ * radius rather than the middle, so a tender with a known distance sorts ahead
+ * of an unlocated one from the same region instead of interleaving with it.
+ */
+export const GEO_TIER_DISTANCE_KM: ReadonlyArray<{ minScore: number; km: number }> = [
+  { minScore: GEO_NUTS3_SCORE, km: 40 },
+  { minScore: GEO_NUTS2_SCORE, km: 90 },
+  { minScore: GEO_NUTS1_SCORE, km: 200 },
+  { minScore: GEO_COUNTRY_SCORE, km: 600 },
+];
+/** Not even in the company's country. */
+const GEO_TIER_DISTANCE_FALLBACK_KM = 2000;
+
+/** Mean Earth radius in km — mirrors `lib/tenders/distance.ts`. */
+const EARTH_RADIUS_KM = 6371;
+
+// --- Timing tuning ----------------------------------------------------------
+
+/**
+ * Days-to-deadline → workability, as ascending upper bounds (exclusive).
+ *
+ * This is deliberately *not* an urgency curve. A tender closing in two days
+ * cannot realistically be bid, so ranking it top is worse than useless; the
+ * sweet spot is enough runway to assemble an offer. Callers who genuinely want
+ * "closing first" have the deadline sort and the CLOSING_SOON filter.
+ */
+const DEADLINE_WINDOW: ReadonlyArray<{ underDays: number; score: number }> = [
+  { underDays: 3, score: 0.15 },
+  { underDays: 7, score: 0.5 },
+  { underDays: 14, score: 0.8 },
+  { underDays: 45, score: 1.0 },
+  { underDays: 90, score: 0.7 },
+];
+/** Beyond the last window bound — real, but nothing to act on yet. */
+const DEADLINE_FAR_SCORE = 0.45;
+/** ~10% of DE opportunities carry no deadline at all; neutral beats zero. */
+const DEADLINE_UNKNOWN_SCORE = 0.35;
+const FRESHNESS_UNKNOWN_SCORE = 0.3;
+
+const TIME_WINDOW_WEIGHT = 0.6;
+const TIME_FRESHNESS_WEIGHT = 0.4;
 
 /** Shape of each projected item coming out of the aggregation (pre-serialize). */
 export interface RankedTenderRaw {
@@ -81,19 +174,28 @@ export function stripCheckDigit(code: string): string {
 }
 
 /**
+ * The significant part of a CPV code — trailing filler zeros removed, never
+ * shorter than the 2-digit division. "45000000" → "45" (a whole division),
+ * "45233120" → "4523312" (one specific work type).
+ */
+export function cpvStem(code: string): string {
+  const digits = stripCheckDigit(code);
+  const stem = digits.replace(/0+$/, "");
+  return stem.length >= 2 ? stem : digits.slice(0, 2);
+}
+
+/**
  * Reduce a company's exact CPV codes to a minimal set of family prefixes.
  * Trailing zeros are trimmed so a division-level code ("45000000") broadens to
  * its whole family ("45") while a specific code ("45233120") stays narrow
  * ("4523312"). Prefixes subsumed by a shorter one are dropped, and every prefix
  * keeps at least 2 digits (a CPV division).
+ *
+ * This drives *recall* only. It is intentionally generous — narrowing happens
+ * in scoring, where `buildCpvPrefixSets` grades how deep the match actually is.
  */
 export function toFamilyPrefixes(exactCodes: string[]): string[] {
-  const trimmed = exactCodes
-    .map((code) => {
-      const stem = code.replace(/0+$/, "");
-      return stem.length >= 2 ? stem : code.slice(0, 2);
-    })
-    .filter((p) => p.length >= 2);
+  const trimmed = exactCodes.map(cpvStem).filter((p) => p.length >= 2);
 
   const unique = [...new Set(trimmed)].sort((a, b) => a.length - b.length);
   const minimal: string[] = [];
@@ -101,6 +203,68 @@ export function toFamilyPrefixes(exactCodes: string[]): string[] {
     if (!minimal.some((kept) => prefix.startsWith(kept))) minimal.push(prefix);
   }
   return minimal;
+}
+
+/**
+ * Company CPV prefixes bucketed by depth: `sets[k]` holds the first `k` digits
+ * of every company code specific enough to *carry* `k` meaningful digits.
+ *
+ * That last condition is the whole point. A company listing "45000000" has
+ * declared "we do construction", not "we do 45-something-precise", so the code
+ * contributes to depth 2 and nothing deeper — it can never earn a specific
+ * match. Without this, holding one division-level code awarded a perfect CPV
+ * score to every tender in the division.
+ */
+export function buildCpvPrefixSets(exactCodes: string[]): Map<number, string[]> {
+  const sets = new Map<number, string[]>();
+  for (let depth = 2; depth <= CPV_MAX_DEPTH; depth += 1) {
+    const prefixes = new Set<string>();
+    for (const code of exactCodes) {
+      if (cpvStem(code).length >= depth) prefixes.add(code.slice(0, depth));
+    }
+    if (prefixes.size > 0) sets.set(depth, [...prefixes]);
+  }
+  return sets;
+}
+
+/**
+ * Significant length of the tender code bound to `$$c` — the index at which
+ * its trailing zeros start, floored at the 2-digit division. Mirrors `cpvStem`
+ * inside the aggregation, so a vague tender code cannot claim a deep match
+ * either.
+ */
+const TENDER_STEM_LEN_EXPR = {
+  $let: {
+    vars: { zeros: { $regexFind: { input: "$$c", regex: "0+$" } } },
+    in: { $max: [2, { $ifNull: ["$$zeros.idx", { $strLenCP: "$$c" }] }] },
+  },
+};
+
+/** Score for one tender CPV code (`$$c`): deepest company prefix it matches. */
+function cpvDepthScoreExpr(
+  prefixSets: Map<number, string[]>,
+): Record<string, unknown> | number {
+  const branches: Record<string, unknown>[] = [];
+  for (let depth = CPV_MAX_DEPTH; depth >= 2; depth -= 1) {
+    const prefixes = prefixSets.get(depth);
+    if (!prefixes) continue;
+    branches.push({
+      case: {
+        $and: [
+          { $gte: ["$$stemLen", depth] },
+          { $in: [{ $substrCP: ["$$c", 0, depth] }, prefixes] },
+        ],
+      },
+      then: CPV_DEPTH_SCORE[depth],
+    });
+  }
+  if (branches.length === 0) return 0;
+  return {
+    $let: {
+      vars: { stemLen: TENDER_STEM_LEN_EXPR },
+      in: { $switch: { branches, default: 0 } },
+    },
+  };
 }
 
 function escapeRegex(input: string): string {
@@ -113,6 +277,12 @@ export interface RelevanceInputs {
   nuts: NutsResolution;
   /** Countries to restrict to; defaults to the resolved NUTS country. */
   countries?: string[];
+  /**
+   * Where the company sits. Only the "nearest" sort uses it, and only to
+   * sharpen the ordering: without it that sort still works, ranking by NUTS
+   * tier alone.
+   */
+  companyPoint?: { lat: number; lng: number } | null;
 }
 
 export interface RelevanceOptions {
@@ -145,11 +315,155 @@ const FAR_FUTURE = new Date("9999-12-31T00:00:00.000Z");
 const FAR_PAST = new Date("0001-01-01T00:00:00.000Z");
 
 /**
- * Stages that re-order the already-ranked pool. Prepended to the `items` branch
- * of the `$facet`, so paging stays correct and `total` is unaffected. Relevance
- * order needs no stages — the pipeline is already sorted that way.
+ * Cache key for a tender's buyer address, mirroring `deriveKey` in
+ * `lib/tenders/geocode-cache.ts` — postal code preferred, city as fallback.
+ * Both sides must agree or the lookup silently misses, so keep them in step.
  */
-function reorderStages(sort: TenderSort | undefined): Record<string, unknown>[] {
+const GEO_CACHE_KEY_EXPR = {
+  $let: {
+    vars: {
+      country: { $toUpper: { $ifNull: ["$buyer.address.countryCode", ""] } },
+      postal: { $trim: { input: { $ifNull: ["$buyer.address.postalCode", ""] } } },
+      city: { $trim: { input: { $ifNull: ["$buyer.address.city", ""] } } },
+    },
+  in: {
+      $cond: [
+        { $eq: [{ $strLenCP: "$$country" }, 0] },
+        null,
+        {
+          $cond: [
+            { $gt: [{ $strLenCP: "$$postal" }, 0] },
+            { $concat: ["$$country", ":", "$$postal"] },
+            {
+              $cond: [
+                { $gt: [{ $strLenCP: "$$city" }, 0] },
+                { $concat: ["$$country", ":city:", { $toLower: "$$city" }] },
+                null,
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+};
+
+/** Great-circle km from the company to `$resolvedPoint`, or null if unlocated. */
+function haversineExpr(from: { lat: number; lng: number }): Record<string, unknown> {
+  // GeoJSON stores [lng, lat]. The company's own trig terms are constants, so
+  // they are folded here rather than recomputed per document.
+  const lng2 = { $arrayElemAt: ["$resolvedPoint", 0] };
+  const lat2 = { $arrayElemAt: ["$resolvedPoint", 1] };
+  const halfDLat = {
+    $divide: [{ $degreesToRadians: { $subtract: [lat2, from.lat] } }, 2],
+  };
+  const halfDLng = {
+    $divide: [{ $degreesToRadians: { $subtract: [lng2, from.lng] } }, 2],
+  };
+  const a = {
+    $add: [
+      { $pow: [{ $sin: halfDLat }, 2] },
+      {
+        $multiply: [
+          Math.cos((from.lat * Math.PI) / 180),
+          { $cos: { $degreesToRadians: lat2 } },
+          { $pow: [{ $sin: halfDLng }, 2] },
+        ],
+      },
+    ],
+  };
+  return {
+    $cond: [
+      { $eq: [{ $size: { $ifNull: ["$resolvedPoint", []] } }, 2] },
+      {
+        $multiply: [
+          2 * EARTH_RADIUS_KM,
+          { $asin: { $min: [1, { $sqrt: a }] } },
+        ],
+      },
+      null,
+    ],
+  };
+}
+
+/** Tier stand-in distance, derived from the geo score already on the document. */
+const GEO_TIER_DISTANCE_EXPR = {
+  $switch: {
+    branches: GEO_TIER_DISTANCE_KM.map(({ minScore, km }) => ({
+      case: { $gte: ["$geoScore", minScore] },
+      then: km,
+    })),
+    default: GEO_TIER_DISTANCE_FALLBACK_KM,
+  },
+};
+
+/**
+ * Order the pool by how far each tender is from the company.
+ *
+ * Coordinates come from the tender itself where ingestion or a previous map
+ * view has filled them in, otherwise from the shared postal cache — the same
+ * two sources the card's "X km away" hint uses, so the ordering and the label
+ * can never disagree. Neither is a Google call: an address the cache has never
+ * seen falls back to its NUTS tier rather than triggering a lookup per page
+ * view, which is what keeps this endpoint free.
+ */
+function nearestStages(
+  companyPoint: { lat: number; lng: number } | null | undefined,
+): Record<string, unknown>[] {
+  const stages: Record<string, unknown>[] = [];
+
+  if (companyPoint) {
+    stages.push(
+      { $addFields: { geoCacheKey: GEO_CACHE_KEY_EXPR } },
+      {
+        $lookup: {
+          from: "geo_cache",
+          localField: "geoCacheKey",
+          foreignField: "_id",
+          as: "geoCacheHit",
+        },
+      },
+      {
+        $addFields: {
+          // A cache entry for an address Google could not resolve carries no
+          // `location`, so it correctly falls through to the tier estimate.
+          resolvedPoint: {
+            $ifNull: [
+              "$buyer.location.coordinates",
+              { $arrayElemAt: ["$geoCacheHit.location.coordinates", 0] },
+            ],
+          },
+        },
+      },
+    );
+  }
+
+  stages.push(
+    {
+      $addFields: {
+        sortDistanceKm: companyPoint
+          ? { $ifNull: [haversineExpr(companyPoint), GEO_TIER_DISTANCE_EXPR] }
+          : GEO_TIER_DISTANCE_EXPR,
+      },
+    },
+    { $sort: { sortDistanceKm: 1, score: -1, _id: 1 } },
+  );
+  return stages;
+}
+
+/**
+ * Stages that re-order the already-ranked pool. Applied inside the `items`
+ * branch of the `$facet` after the rank cap, so paging stays correct and
+ * `total` is unaffected. Relevance order needs no stages — the pool is already
+ * sorted that way.
+ */
+function reorderStages(
+  sort: TenderSort | undefined,
+  companyPoint?: { lat: number; lng: number } | null,
+): Record<string, unknown>[] {
+  if (sort === "nearest") {
+    return nearestStages(companyPoint);
+  }
   if (sort === "deadline") {
     return [
       { $addFields: { sortKey: { $ifNull: ["$submissionDeadline", FAR_FUTURE] } } },
@@ -167,13 +481,22 @@ function reorderStages(sort: TenderSort | undefined): Record<string, unknown>[] 
 
 export interface BuiltRelevanceQuery {
   pipeline: Record<string, unknown>[];
+  /**
+   * Everything up to and including the rank cap, without the terminal `$facet`
+   * — the shared prefix the map view re-projects instead of re-deriving.
+   */
+  rankedStages: Record<string, unknown>[];
   exactCodes: string[];
   countries: string[];
 }
 
 /**
  * Builds the ranking aggregation pipeline (a single `$facet` returning `items`
- * + capped `total`). Caller runs it against `mongoDatabase.collection("tenders")`.
+ * + `total`). Caller runs it against `mongoDatabase.collection("tenders")`.
+ *
+ * `total` counts every scored candidate, not just the ranked pool: the sort and
+ * rank cap live inside the `items` branch so the caller can report how many
+ * tenders actually match while still paging over a bounded set.
  */
 export function buildRelevancePipeline(
   inputs: RelevanceInputs,
@@ -260,61 +583,72 @@ export function buildRelevancePipeline(
   }
 
   // --- Score expressions -----------------------------------------------------
-  const cpvScoreExpr = {
-    $add: [
-      {
-        $multiply: [
-          0.6,
-          {
-            $divide: [
-              {
-                $min: [
-                  3,
-                  { $size: { $setIntersection: ["$cpvCodes", exactCodes] } },
-                ],
+  // CPV: how deep the best code match runs, nudged by how much of the tender's
+  // scope the company covers.
+  const depthScoreExpr = cpvDepthScoreExpr(buildCpvPrefixSets(exactCodes));
+  const cpvScoreExpr =
+    depthScoreExpr === 0
+      ? 0
+      : {
+          $let: {
+            vars: {
+              scores: {
+                $map: {
+                  input: { $ifNull: ["$cpvCodes", []] },
+                  as: "c",
+                  in: depthScoreExpr,
+                },
               },
-              3,
-            ],
-          },
-        ],
-      },
-      {
-        $multiply: [
-          0.4,
-          familyRegex
-            ? {
-                $cond: [
-                  {
-                    $anyElementTrue: {
-                      $map: {
-                        input: "$cpvCodes",
-                        as: "c",
-                        in: { $regexMatch: { input: "$$c", regex: familyRegex } },
-                      },
+            },
+            in: {
+              $add: [
+                {
+                  $multiply: [
+                    CPV_BEST_WEIGHT,
+                    { $ifNull: [{ $max: "$$scores" }, 0] },
+                  ],
+                },
+                {
+                  $multiply: [
+                    CPV_BREADTH_WEIGHT,
+                    {
+                      $min: [
+                        1,
+                        {
+                          $divide: [
+                            {
+                              $size: {
+                                $filter: {
+                                  input: "$$scores",
+                                  as: "s",
+                                  cond: { $gt: ["$$s", 0] },
+                                },
+                              },
+                            },
+                            CPV_BREADTH_TARGET,
+                          ],
+                        },
+                      ],
                     },
-                  },
-                  1,
-                  0,
-                ],
-              }
-            : 0,
-        ],
-      },
-    ],
-  };
+                  ],
+                },
+              ],
+            },
+          },
+        };
 
   // Per-region NUTS tier, then the max across the tender's regions.
   const regionTierExpr = {
     $switch: {
       branches: [
         ...(inputs.nuts.nuts3
-          ? [{ case: { $eq: ["$$r", inputs.nuts.nuts3] }, then: 1.0 }]
+          ? [{ case: { $eq: ["$$r", inputs.nuts.nuts3] }, then: GEO_NUTS3_SCORE }]
           : []),
         ...(inputs.nuts.nuts2
           ? [
               {
                 case: { $eq: [{ $substrCP: ["$$r", 0, 4] }, inputs.nuts.nuts2] },
-                then: 0.7,
+                then: GEO_NUTS2_SCORE,
               },
             ]
           : []),
@@ -322,13 +656,13 @@ export function buildRelevancePipeline(
           ? [
               {
                 case: { $eq: [{ $substrCP: ["$$r", 0, 3] }, inputs.nuts.nuts1] },
-                then: 0.4,
+                then: GEO_NUTS1_SCORE,
               },
             ]
           : []),
         {
           case: { $eq: [{ $substrCP: ["$$r", 0, 2] }, inputs.nuts.country] },
-          then: 0.15,
+          then: GEO_COUNTRY_SCORE,
         },
       ],
       default: 0,
@@ -348,31 +682,44 @@ export function buildRelevancePipeline(
   const daysToDeadline = {
     $divide: [{ $subtract: ["$submissionDeadline", opts.now] }, MS_PER_DAY],
   };
-  const urgencyExpr = {
+  const windowExpr = {
     $cond: [
       { $eq: [{ $ifNull: ["$submissionDeadline", null] }, null] },
-      0,
-      { $exp: { $multiply: [-1, { $divide: [{ $max: [0, daysToDeadline] }, URGENCY_TAU_DAYS] }] } },
+      DEADLINE_UNKNOWN_SCORE,
+      {
+        $switch: {
+          branches: DEADLINE_WINDOW.map(({ underDays, score }) => ({
+            case: { $lt: [daysToDeadline, underDays] },
+            then: score,
+          })),
+          default: DEADLINE_FAR_SCORE,
+        },
+      },
     ],
   };
   const daysSincePub = {
     $divide: [{ $subtract: [opts.now, "$publicationDate"] }, MS_PER_DAY],
   };
-  const recencyExpr = {
+  const freshnessExpr = {
     $cond: [
       { $eq: [{ $ifNull: ["$publicationDate", null] }, null] },
-      0,
+      FRESHNESS_UNKNOWN_SCORE,
       { $exp: { $multiply: [-1, { $divide: [{ $max: [0, daysSincePub] }, RECENCY_TAU_DAYS] }] } },
     ],
   };
   const timeScoreExpr = {
-    $add: [{ $multiply: [0.5, urgencyExpr] }, { $multiply: [0.5, recencyExpr] }],
+    $add: [
+      { $multiply: [TIME_WINDOW_WEIGHT, windowExpr] },
+      { $multiply: [TIME_FRESHNESS_WEIGHT, freshnessExpr] },
+    ],
   };
 
   const rankCap = opts.rankCap ?? RANK_CAP;
   const skip = opts.page * opts.pageSize;
 
-  const pipeline: Record<string, unknown>[] = [
+  // Scored candidates — everything that survives the hard filter and the
+  // optional match-percentage floor, before any ordering.
+  const scoredStages: Record<string, unknown>[] = [
     { $match: match },
     {
       $addFields: {
@@ -395,16 +742,26 @@ export function buildRelevancePipeline(
     ...(typeof opts.minScore === "number"
       ? [{ $match: { score: { $gte: opts.minScore } } }]
       : []),
+  ];
+
+  const rankedStages: Record<string, unknown>[] = [
+    ...scoredStages,
     { $sort: { score: -1, submissionDeadline: 1, _id: 1 } },
     { $limit: rankCap },
+  ];
+
+  const pipeline: Record<string, unknown>[] = [
+    ...scoredStages,
     {
       $facet: {
         items: [
+          { $sort: { score: -1, submissionDeadline: 1, _id: 1 } },
+          { $limit: rankCap },
           // Re-order *within* the ranked pool: "sort by deadline" means the
           // company's relevant tenders soonest-first, not the whole corpus.
           // Undated tenders sort last either way (missing keys are pushed by
           // the coalesced sort key below).
-          ...reorderStages(opts.sort),
+          ...reorderStages(opts.sort, inputs.companyPoint),
           { $skip: skip },
           { $limit: opts.pageSize },
           {
@@ -437,12 +794,14 @@ export function buildRelevancePipeline(
             },
           },
         ],
+        // Counts every match, not just the ranked pool — the feed reports how
+        // much is out there even though only `rankCap` of it is pageable.
         total: [{ $count: "value" }],
       },
     },
   ];
 
-  return { pipeline, exactCodes, countries };
+  return { pipeline, rankedStages, exactCodes, countries };
 }
 
 /** Max markers a single `/geo` request will rank and attempt to geocode. */
@@ -475,17 +834,16 @@ export interface RankedGeoRaw {
 }
 
 /**
- * Same candidate + scoring stages as the list, but capped to the top
- * `markerCap` and re-projected for the map. Reuses `buildRelevancePipeline`
- * and swaps its trailing `$facet` (list projection) for a marker projection,
- * so the ranking logic stays defined in exactly one place.
+ * Same candidate + scoring stages as the list, capped to the top `markerCap`
+ * and re-projected for the map. Reuses `buildRelevancePipeline`'s ranked
+ * prefix, so the ranking logic stays defined in exactly one place.
  */
 export function buildGeoPipeline(
   inputs: RelevanceInputs,
   opts: GeoQueryOptions,
 ): { pipeline: Record<string, unknown>[]; exactCodes: string[]; countries: string[] } {
   const markerCap = opts.markerCap ?? MARKER_CAP;
-  const { pipeline, exactCodes, countries } = buildRelevancePipeline(inputs, {
+  const { rankedStages, exactCodes, countries } = buildRelevancePipeline(inputs, {
     now: opts.now,
     page: 0,
     pageSize: markerCap,
@@ -498,22 +856,22 @@ export function buildGeoPipeline(
     regions: opts.regions,
     deadlineInDays: opts.deadlineInDays,
   });
-  // pipeline ends with [$match, $addFields×2, (minScore?), $sort, $limit, $facet].
-  // Drop the $facet and project marker fields from the already-scored top set.
-  const base = pipeline.slice(0, -1);
-  base.push({
-    $project: {
-      _id: 1,
-      title: 1,
-      status: 1,
-      submissionDeadline: 1,
-      score: 1,
-      buyerName: "$buyer.name",
-      countryCode: "$buyer.address.countryCode",
-      postalCode: "$buyer.address.postalCode",
-      city: "$buyer.address.city",
-      location: "$buyer.location",
+  const pipeline = [
+    ...rankedStages,
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        status: 1,
+        submissionDeadline: 1,
+        score: 1,
+        buyerName: "$buyer.name",
+        countryCode: "$buyer.address.countryCode",
+        postalCode: "$buyer.address.postalCode",
+        city: "$buyer.address.city",
+        location: "$buyer.location",
+      },
     },
-  });
-  return { pipeline: base, exactCodes, countries };
+  ];
+  return { pipeline, exactCodes, countries };
 }

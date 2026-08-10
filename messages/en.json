@@ -341,13 +341,18 @@
       "view": "View",
       "delete": "Delete",
       "add": "Add",
+      "retry": "Retry",
+      "dismiss": "Dismiss",
       "tagHint": "Type and press Enter"
     },
     "feedback": {
       "saveFailed": "Save failed.",
       "uploadFailed": "Upload failed.",
       "deleteFailed": "Delete failed.",
-      "openFailed": "Could not open the file."
+      "openFailed": "Could not open the file.",
+      "fileTooLarge": "{name} is larger than the {limit} MB limit.",
+      "unsupportedFileType": "{name} has an unsupported file type.",
+      "emptyFile": "{name} is empty."
     },
     "sections": {
       "companyInfo": {
@@ -493,6 +498,9 @@
     },
     "documents": {
       "empty": "No documents uploaded yet.",
+      "multipleHint": "Select or drop several files at once.",
+      "queued": "Waiting…",
+      "uploadingFile": "Uploading…",
       "categories": {
         "general": {
           "label": "General documents",
@@ -554,7 +562,8 @@
       "options": {
         "relevance": "Best match",
         "deadline": "Deadline soonest",
-        "newest": "Newest first"
+        "newest": "Newest first",
+        "nearest": "Nearest first"
       }
     },
     "regionPicker": {
@@ -639,7 +648,7 @@
         "title": "Why this match",
         "cpv": "CPV fit",
         "geo": "Location",
-        "time": "Recency"
+        "time": "Timing"
       }
     },
     "states": {
@@ -653,7 +662,8 @@
     "pagination": {
       "previous": "Previous",
       "next": "Next",
-      "showing": "Showing {from}–{to} of {total}"
+      "showing": "Showing {from}–{to} of {total}",
+      "showingRanked": "Showing {from}–{to} of the {ranked} best matches ({total} total)"
     },
     "map": {
       "attribution": "Map data © Google",

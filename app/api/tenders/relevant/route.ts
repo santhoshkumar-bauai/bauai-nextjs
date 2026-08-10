@@ -19,7 +19,7 @@ import {
   type RankedTenderRaw,
 } from "@/lib/tenders/relevance";
 import { serializeTender } from "@/lib/tenders/serialize";
-import { CpvCode } from "@/models/cpv-code";
+import { resolveCpvNames } from "@/lib/tenders/cpv-names";
 
 /**
  * Ranked, most-relevant-first tenders for the authenticated company, with hard
@@ -80,11 +80,23 @@ export async function GET(request: Request) {
     addressCoordinates: company.addressCoordinates,
   });
 
+  // Where the company sits — the anchor for both the "X km away" hint below and
+  // the nearest-first ordering inside the pipeline.
+  const companyLat =
+    company.regionLocation?.latitude ?? company.addressCoordinates?.lat;
+  const companyLng =
+    company.regionLocation?.longitude ?? company.addressCoordinates?.lng;
+  const companyPoint: LatLng | null =
+    typeof companyLat === "number" && typeof companyLng === "number"
+      ? { lat: companyLat, lng: companyLng }
+      : null;
+
   const { pipeline } = buildRelevancePipeline(
     {
       companyCpvCodes: company.cpvCodes ?? [],
       nuts,
       countries: countries.length ? countries : undefined,
+      companyPoint,
     },
     {
       now: new Date(),
@@ -117,15 +129,6 @@ export async function GET(request: Request) {
   // tender, or warm in the shared postal cache). `allowGeocoding: false` keeps
   // this endpoint Google-free; tenders with no known point simply show no
   // distance rather than triggering a lookup per page view.
-  const companyLat =
-    company.regionLocation?.latitude ?? company.addressCoordinates?.lat;
-  const companyLng =
-    company.regionLocation?.longitude ?? company.addressCoordinates?.lng;
-  const companyPoint: LatLng | null =
-    typeof companyLat === "number" && typeof companyLng === "number"
-      ? { lat: companyLat, lng: companyLng }
-      : null;
-
   let distances = new Map<string, number>();
   if (companyPoint) {
     const { coordinates } = await resolveMarkerLocations(
@@ -150,15 +153,7 @@ export async function GET(request: Request) {
   // lookup for the whole page, not one per tender.
   const locale = searchParams.get("locale") === "de" ? "de" : "en";
   const pageCpvCodes = [...new Set(rows.flatMap((row) => row.cpvCodes ?? []))];
-  const cpvNames = new Map<string, string>();
-  if (pageCpvCodes.length) {
-    const catalog = await CpvCode.find({ code: { $in: pageCpvCodes } })
-      .select({ code: 1, name: 1 })
-      .lean();
-    for (const entry of catalog) {
-      cpvNames.set(entry.code, locale === "de" ? entry.name.de : entry.name.en);
-    }
-  }
+  const cpvNames = await resolveCpvNames(pageCpvCodes, locale);
 
   const items = rows.map((row) =>
     serializeTender(row, {
@@ -174,13 +169,17 @@ export async function GET(request: Request) {
       pipelineStatus: pipelineByTender.get(String(row._id)) ?? null,
     }),
   );
-  const total = Math.min(facet?.total?.[0]?.value ?? 0, RANK_CAP);
+  // `total` is every tender that matches; `rankedTotal` is how much of it is
+  // actually reachable, since only the top `RANK_CAP` are ordered and paged.
+  const total = facet?.total?.[0]?.value ?? 0;
+  const rankedTotal = Math.min(total, RANK_CAP);
 
   return NextResponse.json({
     items,
     page,
     pageSize,
     total,
+    rankedTotal,
     profile: {
       cpv: company.cpvCodes ?? [],
       nuts,

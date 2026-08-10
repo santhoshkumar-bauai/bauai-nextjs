@@ -153,7 +153,12 @@ describe("listRelevantTenders", () => {
     await listRelevantTenders(ctxOf(), { limit: 500 });
     const pipeline = calls.tenders[0].pipeline as Array<Record<string, unknown>>;
     const facet = pipeline.at(-1) as { $facet: { items: Array<{ $limit?: number }> } };
-    expect(facet.$facet.items.find((stage) => stage.$limit)?.$limit).toBe(15);
+    // The items branch limits twice: first the relevance rank cap, then the
+    // page. It is the trailing one that has to honour the agent's row budget.
+    const limits = facet.$facet.items.flatMap((stage) =>
+      typeof stage.$limit === "number" ? [stage.$limit] : [],
+    );
+    expect(limits.at(-1)).toBe(15);
   });
 });
 
