@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAiEnvCache } from "../config/env.ts";
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext } from "./context.ts";
+import { TenderRefCollector } from "./tender-refs.ts";
 import { FakeToolCallingChatModel } from "./testing.ts";
 import { setAgentModelForTests } from "./model.ts";
 
@@ -58,6 +59,7 @@ function fakeCtx(): AgentRunContext {
     locale: "en",
     companyContext: {} as never,
     citations: new CitationCollector(),
+    tenderRefs: new TenderRefCollector(),
     tender: {
       tenderId: new ObjectId(),
       tenderDetail: {

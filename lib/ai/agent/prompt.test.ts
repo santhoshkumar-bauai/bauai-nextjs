@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext } from "./context.ts";
 import { buildClaraSystemPrompt } from "./prompt.ts";
+import { TenderRefCollector } from "./tender-refs.ts";
 
 function ctxOf(tender: AgentRunContext["tender"]): AgentRunContext {
   return {
@@ -12,6 +13,7 @@ function ctxOf(tender: AgentRunContext["tender"]): AgentRunContext {
     locale: "en",
     companyContext: {} as never,
     citations: new CitationCollector(),
+    tenderRefs: new TenderRefCollector(),
     tender,
     tenderCache: new Map(),
   };

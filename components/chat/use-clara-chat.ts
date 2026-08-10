@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { WireAttachment, WireChatMessage, WireVerdict } from "@/lib/ai/agent/wire";
+import type {
+  WireAttachment,
+  WireChatMessage,
+  WireTenderRef,
+  WireVerdict,
+} from "@/lib/ai/agent/wire";
 import { SseFrameParser } from "./sse";
 
 /** A composer attachment that finished uploading. */
@@ -18,6 +23,11 @@ export interface ClaraChatState {
   activeTool: string | null;
   /** Optional sub-stage of the running tool (verdict pipeline stages). */
   activeStage: string | null;
+  /**
+   * Tenders the running turn has surfaced, streamed as the tools find them.
+   * Emptied once the finished message arrives — it carries them persistently.
+   */
+  tenderRefs: WireTenderRef[];
   sending: boolean;
   loading: boolean;
   error: string | null;
@@ -39,6 +49,7 @@ export function useClaraChat(
     streamingText: "",
     activeTool: null,
     activeStage: null,
+    tenderRefs: [],
     sending: false,
     loading: false,
     error: null,
@@ -58,6 +69,7 @@ export function useClaraChat(
         streamingText: "",
         activeTool: null,
         activeStage: null,
+        tenderRefs: [],
         sending: false,
         loading: Boolean(endpoint),
         error: null,
@@ -124,6 +136,7 @@ export function useClaraChat(
         streamingText: "",
         activeTool: "command" in body ? "verdict" : null,
         activeStage: null,
+        tenderRefs: [],
         sending: true,
         error: null,
       }));
@@ -184,6 +197,15 @@ export function useClaraChat(
                       activeStage:
                         event.status === "start" ? (event.stage ?? null) : null,
                     };
+                  case "tenders": {
+                    // Merge by id: later events enrich a card already shown
+                    // (a decision, a board status) rather than duplicate it.
+                    const byId = new Map(
+                      prev.tenderRefs.map((ref) => [ref.tenderId, ref]),
+                    );
+                    for (const ref of event.tenders) byId.set(ref.tenderId, ref);
+                    return { ...prev, tenderRefs: [...byId.values()] };
+                  }
                   case "artifact":
                     return {
                       ...prev,
@@ -197,6 +219,8 @@ export function useClaraChat(
                       streamingText: "",
                       activeTool: null,
                       activeStage: null,
+                      // The persisted message now owns the cards.
+                      tenderRefs: [],
                     };
                   case "error":
                     settled = true;
@@ -218,6 +242,9 @@ export function useClaraChat(
             activeTool: null,
             activeStage: null,
             streamingText: "",
+            // Whatever was persisted carries the cards from here on; keeping
+            // the live copy would double them once history re-syncs.
+            tenderRefs: [],
           }));
           abortRef.current = null;
           if (!settled && endpointRef.current === endpoint) {

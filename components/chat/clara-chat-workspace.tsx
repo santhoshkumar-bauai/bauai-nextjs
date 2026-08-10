@@ -246,6 +246,7 @@ export function ClaraChatWorkspace() {
                   pending={chat.sending || pendingMessage !== null}
                   activeTool={chat.activeTool}
                   activeStage={chat.activeStage}
+                  liveTenderRefs={chat.tenderRefs}
                 />
               </>
             )}

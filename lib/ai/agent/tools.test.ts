@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext, AgentTenderScope } from "./context.ts";
+import { TenderRefCollector } from "./tender-refs.ts";
 
 vi.mock("../retrieval/hybrid.ts", () => ({
   hybridRetrieveChunks: vi.fn(),
@@ -28,10 +29,28 @@ vi.mock("../../tenders/document-files.ts", () => ({
   findTenderFileByName: vi.fn(),
 }));
 vi.mock("./context.ts", () => ({ getVisibleTender: vi.fn() }));
+vi.mock("../report/service.ts", () => ({
+  getReportState: vi.fn(),
+  serializeReport: vi.fn(),
+  listReportSummaries: vi.fn(),
+}));
+vi.mock("../verdict/service.ts", () => ({ getVerdictState: vi.fn() }));
+vi.mock("./workspace.ts", async (importOriginal) => ({
+  // The registry reads the MAX_* clamps at build time, so they must be real.
+  ...(await importOriginal<typeof import("./workspace.ts")>()),
+  getTenderCoverage: vi.fn(),
+  listRelevantTenders: vi.fn(),
+  listWorkspaceTenders: vi.fn(),
+  loadReportDecisions: vi.fn(),
+  lookupCpvCodes: vi.fn(),
+}));
 
 const retrieval = await import("../retrieval/hybrid.ts");
 const contextModule = await import("./context.ts");
 const docEmbedder = await import("../company/doc-embedder.ts");
+const reportService = await import("../report/service.ts");
+const verdictService = await import("../verdict/service.ts");
+const workspace = await import("./workspace.ts");
 const { buildClaraTools } = await import("./tools.ts");
 
 function tenderScope(): AgentTenderScope {
@@ -67,6 +86,7 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): AgentRunConte
     locale: "de",
     companyContext: { company: {} } as never,
     citations: new CitationCollector(),
+    tenderRefs: new TenderRefCollector(),
     tender,
     tenderCache: new Map(),
   };
@@ -85,21 +105,47 @@ beforeEach(() => {
   vi.mocked(contextModule.getVisibleTender).mockReset();
 });
 
+/** Every tool whose scope is the run's tender (or a validated tender input). */
+const TENDER_SCOPED = [
+  "find_similar_tenders",
+  "get_company_fit",
+  "get_extractions",
+  "get_tender_analysis_status",
+  "get_tender_notice",
+  "get_tender_overview",
+  "get_tender_report",
+  "get_tender_verdict",
+  "list_tender_files",
+  "read_tender_document",
+  "search_tender_documents",
+];
+
 describe("buildClaraTools — tender mode", () => {
   it("registers the tender registry (no find_tenders, no tenderId inputs)", () => {
     const names = buildClaraTools(fakeCtx()).map((tool) => tool.name);
-    expect(names.sort()).toEqual([
-      "get_company_fit",
-      "get_company_profile",
-      "get_extractions",
-      "get_tender_notice",
-      "get_tender_overview",
-      "list_company_documents",
-      "list_tender_files",
-      "read_tender_document",
-      "search_company_documents",
-      "search_tender_documents",
-    ]);
+    expect(names.sort()).toEqual(
+      [
+        ...TENDER_SCOPED,
+        "compare_tenders",
+        "get_company_profile",
+        "list_company_documents",
+        "list_relevant_tenders",
+        "list_tender_reports",
+        "list_workspace_tenders",
+        "lookup_cpv_codes",
+        "search_company_documents",
+      ].sort(),
+    );
+  });
+
+  it("binds every tender-scoped tool to the run's tender — no tenderId input", () => {
+    const ctx = fakeCtx();
+    for (const name of TENDER_SCOPED) {
+      const schema = toolByName(ctx, name).schema as {
+        shape?: Record<string, unknown>;
+      };
+      expect(Object.keys(schema.shape ?? {})).not.toContain("tenderId");
+    }
   });
 
   it("get_tender_notice caps the description and wraps it as document data", async () => {
@@ -243,9 +289,17 @@ describe("buildClaraTools — tender mode", () => {
 
 describe("buildClaraTools — global mode", () => {
   it("registers find_tenders and tenderId-taking tender tools", () => {
-    const names = buildClaraTools(fakeCtx(null)).map((tool) => tool.name);
+    const ctx = fakeCtx(null);
+    const names = buildClaraTools(ctx).map((tool) => tool.name);
     expect(names).toContain("find_tenders");
-    expect(names).toHaveLength(11);
+    // Same registry as tender mode, plus find_tenders.
+    expect(names).toHaveLength(buildClaraTools(fakeCtx()).length + 1);
+    for (const name of TENDER_SCOPED) {
+      const schema = toolByName(ctx, name).schema as {
+        shape?: Record<string, unknown>;
+      };
+      expect(Object.keys(schema.shape ?? {})).toContain("tenderId");
+    }
   });
 
   it("tender tools refuse invalid or hidden tender ids", async () => {
@@ -298,12 +352,62 @@ describe("buildClaraTools — global mode", () => {
     expect(result[0].tenderId).toBe(visible.tenderId.toHexString());
   });
 
+  it("find_tenders registers its hits as navigation cards", async () => {
+    const ctx = fakeCtx(null);
+    const visible = tenderScope();
+    vi.mocked(retrieval.searchNotices).mockResolvedValue([
+      { tenderId: visible.tenderId, score: 0.9 },
+    ]);
+    vi.mocked(contextModule.getVisibleTender).mockResolvedValue(visible);
+
+    await toolByName(ctx, "find_tenders").invoke({
+      query: "Straßenbau Bayern",
+      limit: 5,
+    });
+    expect(ctx.tenderRefs.list()).toEqual([
+      expect.objectContaining({
+        tenderId: visible.tenderId.toHexString(),
+        title: "Testausschreibung",
+        status: "OPEN",
+      }),
+    ]);
+  });
+
+  it("list_workspace_tenders cards carry the board column", async () => {
+    const ctx = fakeCtx(null);
+    vi.mocked(workspace.listWorkspaceTenders).mockResolvedValue([
+      {
+        tenderId: "a".repeat(24),
+        status: "preparing",
+        title: "Neubau Kita",
+        buyer: "Stadt X",
+        tenderStatus: "OPEN",
+        submissionDeadline: null,
+        daysLeft: 12,
+        movedAt: null,
+      },
+    ]);
+
+    await toolByName(ctx, "list_workspace_tenders").invoke({ limit: 5 });
+    expect(ctx.tenderRefs.list()).toEqual([
+      expect.objectContaining({
+        tenderId: "a".repeat(24),
+        workspaceStatus: "preparing",
+        daysUntilDeadline: 12,
+      }),
+    ]);
+  });
+
   it("company tools take no tender or tenant scope inputs in either mode", () => {
     for (const mode of [fakeCtx(), fakeCtx(null)]) {
       for (const name of [
         "search_company_documents",
         "get_company_profile",
         "list_company_documents",
+        "list_relevant_tenders",
+        "list_workspace_tenders",
+        "list_tender_reports",
+        "lookup_cpv_codes",
       ]) {
         const schema = toolByName(mode, name).schema as {
           shape?: Record<string, unknown>;
@@ -312,6 +416,301 @@ describe("buildClaraTools — global mode", () => {
         expect(keys).not.toContain("tenderId");
         expect(keys).not.toContain("tenantId");
       }
+    }
+  });
+});
+
+describe("buildClaraTools — stored analysis tools", () => {
+  it("get_tender_report returns the summary by default and registers cited evidence", async () => {
+    const ctx = fakeCtx();
+    vi.mocked(reportService.getReportState).mockResolvedValue({
+      report: {} as never,
+      stale: true,
+    });
+    vi.mocked(reportService.serializeReport).mockReturnValue({
+      locale: "de",
+      requestedLocale: null,
+      stale: true,
+      generatedAt: "2026-08-01T00:00:00.000Z",
+      citations: {
+        E1: {
+          key: "E1",
+          quote: "Die Angebotsfrist endet am 01.09.2026.",
+          fileName: "Bekanntmachung.pdf",
+          documentRecordId: "proc:x#1",
+          chunkId: "abc",
+        },
+      },
+      report: {
+        executiveSummary: "First paragraph.\n\nSecond paragraph.",
+        recommendation: {
+          decision: "conditional",
+          confidence: 0.62,
+          rationale: "Because.",
+          conditions: ["Nachweis 124 beschaffen"],
+        },
+        scores: { eligibilityFit: 0.8 },
+        requirements: [
+          {
+            requirement: "Haftpflicht 5 Mio",
+            companyStatus: "gap",
+            evidenceIds: ["E1", "UNKNOWN"],
+          },
+        ],
+        risks: [{ severity: "high" }],
+      },
+    } as never);
+
+    const result = JSON.parse(
+      (await toolByName(ctx, "get_tender_report").invoke({})) as string,
+    );
+    expect(result.section).toBe("summary");
+    expect(result.decision).toBe("conditional");
+    expect(result.stale).toBe(true);
+    expect(result.counts).toMatchObject({ requirementGaps: 1, highRisks: 1 });
+    // The summary is a menu — it must name the sections worth asking for.
+    expect(result.availableSections).toContain("requirements");
+    // Only the opening paragraph of the executive summary rides in the summary.
+    expect(result.executiveSummaryOpening).toBe("First paragraph.");
+
+    const requirements = JSON.parse(
+      (await toolByName(ctx, "get_tender_report").invoke({
+        section: "requirements",
+      })) as string,
+    );
+    // Report-local evidence ids are replaced by this turn's citation keys, and
+    // ids with no matching citation simply drop out.
+    expect(requirements.requirements[0].citationKeys).toEqual(["c1"]);
+    expect(requirements.requirements[0].evidenceIds).toBeUndefined();
+    expect(ctx.citations.list()[0].fileName).toBe("Bekanntmachung.pdf");
+  });
+
+  it("get_tender_report reports honestly when no report exists", async () => {
+    vi.mocked(reportService.getReportState).mockResolvedValue(null);
+    const result = JSON.parse(
+      (await toolByName(fakeCtx(), "get_tender_report").invoke({})) as string,
+    );
+    expect(result.notGenerated).toBe(true);
+  });
+
+  it("get_tender_verdict registers risk citations and caps the lists", async () => {
+    const ctx = fakeCtx();
+    vi.mocked(verdictService.getVerdictState).mockResolvedValue({
+      stale: false,
+      verdict: {
+        updatedAt: new Date("2026-08-02"),
+        locale: "de",
+        recommendation: "bid",
+        rationale: "r".repeat(5000),
+        scoreBreakdown: { eligibilityFit: 0.9 },
+        risks: Array.from({ length: 20 }, (_, index) => ({
+          text: `risk ${index}`,
+          severity: "medium",
+          citations: [
+            { key: "x", quote: `q${index}`, fileName: "LV.pdf", chunkId: `c${index}` },
+          ],
+        })),
+        blockingRequirements: [{ text: "Formblatt 124", citations: [] }],
+        unresolvedQuestions: ["Wer haftet?"],
+      },
+    } as never);
+
+    const result = JSON.parse(
+      (await toolByName(ctx, "get_tender_verdict").invoke({})) as string,
+    );
+    expect(result.recommendation).toBe("bid");
+    expect(result.rationale.length).toBeLessThanOrEqual(2_500 + 1);
+    expect(result.risks).toHaveLength(12);
+    expect(result.risks[0].citationKeys).toEqual(["c1"]);
+    expect(result.blockingRequirements[0].citationKeys).toEqual([]);
+  });
+
+  it("global-mode analysis tools resolve the tender before touching tenant data", async () => {
+    const ctx = fakeCtx(null);
+    vi.mocked(contextModule.getVisibleTender).mockResolvedValue(null);
+    const result = JSON.parse(
+      (await toolByName(ctx, "get_tender_report").invoke({
+        tenderId: "0".repeat(24),
+      })) as string,
+    );
+    expect(result.tenderNotFound).toBe(true);
+    expect(reportService.getReportState).not.toHaveBeenCalled();
+  });
+});
+
+describe("buildClaraTools — workspace tools", () => {
+  it("list_relevant_tenders forwards filters and clamps the page size", async () => {
+    const ctx = fakeCtx(null);
+    vi.mocked(workspace.listRelevantTenders).mockResolvedValue({
+      profile: { cpvCodes: [], nuts: [], country: "DE", nutsSource: "name" },
+      total: 0,
+      items: [],
+    });
+    await toolByName(ctx, "list_relevant_tenders").invoke({
+      limit: 5,
+      sectors: ["45"],
+      deadlineInDays: 30,
+      sort: "deadline",
+    });
+    const [passedCtx, filters] = vi.mocked(workspace.listRelevantTenders).mock
+      .calls[0];
+    expect(passedCtx).toBe(ctx);
+    expect(filters).toMatchObject({
+      limit: 5,
+      sectors: ["45"],
+      deadlineInDays: 30,
+      sort: "deadline",
+    });
+    await expect(
+      toolByName(ctx, "list_relevant_tenders").invoke({ limit: 99 }),
+    ).rejects.toThrow();
+    // Sectors are CPV divisions; free text there would silently match nothing.
+    await expect(
+      toolByName(ctx, "list_relevant_tenders").invoke({
+        limit: 5,
+        sectors: ["Straßenbau"],
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("list_workspace_tenders only accepts real board statuses", async () => {
+    const ctx = fakeCtx();
+    vi.mocked(workspace.listWorkspaceTenders).mockResolvedValue([]);
+    await toolByName(ctx, "list_workspace_tenders").invoke({
+      statuses: ["preparing", "submitted"],
+      limit: 20,
+    });
+    expect(vi.mocked(workspace.listWorkspaceTenders).mock.calls[0][1]).toEqual({
+      statuses: ["preparing", "submitted"],
+      limit: 20,
+    });
+    await expect(
+      toolByName(ctx, "list_workspace_tenders").invoke({
+        statuses: ["archived"],
+        limit: 5,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("list_tender_reports and lookup_cpv_codes inherit the run's locale", async () => {
+    const ctx = fakeCtx();
+    vi.mocked(reportService.listReportSummaries).mockResolvedValue([]);
+    vi.mocked(workspace.lookupCpvCodes).mockResolvedValue([]);
+
+    await toolByName(ctx, "list_tender_reports").invoke({ limit: 4 });
+    expect(reportService.listReportSummaries).toHaveBeenCalledWith(
+      ctx.companyContext,
+      "de",
+      4,
+    );
+
+    await toolByName(ctx, "lookup_cpv_codes").invoke({
+      codes: ["45233120-6"],
+      limit: 5,
+    });
+    expect(workspace.lookupCpvCodes).toHaveBeenCalledWith({
+      codes: ["45233120-6"],
+      query: undefined,
+      locale: "de",
+      limit: 5,
+    });
+  });
+
+  it("compare_tenders drops ids that fail the visibility check", async () => {
+    const ctx = fakeCtx(null);
+    const visible = tenderScope();
+    vi.mocked(contextModule.getVisibleTender).mockImplementation(
+      async (_ctx, hex) => (hex === visible.tenderId.toHexString() ? visible : null),
+    );
+    vi.mocked(workspace.loadReportDecisions).mockResolvedValue(new Map());
+    vi.mocked(workspace.getTenderCoverage).mockResolvedValue({
+      workspaceStatus: "preparing",
+      verdict: { recommendation: "bid" },
+      documents: { fetchedFiles: 3, indexedChunks: 40 },
+      overview: { exists: true },
+      report: { exists: false },
+    } as never);
+
+    const hiddenId = "0".repeat(24);
+    const result = JSON.parse(
+      (await toolByName(ctx, "compare_tenders").invoke({
+        tenderIds: [visible.tenderId.toHexString(), hiddenId],
+      })) as string,
+    );
+    expect(result.tenders).toHaveLength(1);
+    expect(result.notFound).toEqual([hiddenId]);
+    expect(result.tenders[0].workspaceStatus).toBe("preparing");
+    // Fewer than two ids is a comparison of nothing.
+    await expect(
+      toolByName(ctx, "compare_tenders").invoke({ tenderIds: [hiddenId] }),
+    ).rejects.toThrow();
+  });
+
+  it("find_similar_tenders excludes the tender itself", async () => {
+    const ctx = fakeCtx();
+    const other = tenderScope();
+    vi.mocked(retrieval.searchNotices).mockResolvedValue([
+      { tenderId: ctx.tender!.tenderId, score: 1 },
+      { tenderId: other.tenderId, score: 0.8 },
+    ]);
+    vi.mocked(contextModule.getVisibleTender).mockResolvedValue(other);
+
+    const result = JSON.parse(
+      (await toolByName(ctx, "find_similar_tenders").invoke({ limit: 3 })) as string,
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].tenderId).toBe(other.tenderId.toHexString());
+    // One extra candidate is requested to absorb the self-match.
+    expect(vi.mocked(retrieval.searchNotices).mock.calls[0][0].limit).toBe(4);
+    // The similar tender is worth a card; the tender under discussion is not.
+    expect(ctx.tenderRefs.list().map((ref) => ref.tenderId)).toEqual([
+      other.tenderId.toHexString(),
+    ]);
+  });
+
+  it("never cards the tender a tender chat is already about", async () => {
+    const ctx = fakeCtx();
+    const self = ctx.tender!.tenderId.toHexString();
+    const other = tenderScope();
+    vi.mocked(contextModule.getVisibleTender).mockImplementation(
+      async (_ctx, hex) => (hex === self ? ctx.tender : other),
+    );
+    vi.mocked(workspace.loadReportDecisions).mockResolvedValue(new Map());
+    vi.mocked(workspace.getTenderCoverage).mockResolvedValue({
+      workspaceStatus: null,
+      verdict: { recommendation: null },
+      documents: { fetchedFiles: 0, indexedChunks: 0 },
+      overview: { exists: false },
+      report: { exists: false },
+    } as never);
+
+    await toolByName(ctx, "compare_tenders").invoke({
+      tenderIds: [self, other.tenderId.toHexString()],
+    });
+    expect(ctx.tenderRefs.list().map((ref) => ref.tenderId)).toEqual([
+      other.tenderId.toHexString(),
+    ]);
+  });
+});
+
+describe("tool progress labels", () => {
+  // A tool with no label renders as the generic "Working…" spinner, which
+  // makes the most interesting part of a turn invisible. Both catalogs are
+  // checked because the UI resolves the label in the user's own language.
+  it("every registered tool has a label in both message catalogs", async () => {
+    const [en, de] = await Promise.all([
+      import("../../../messages/en.json"),
+      import("../../../messages/de.json"),
+    ]);
+    const names = new Set(
+      [...buildClaraTools(fakeCtx()), ...buildClaraTools(fakeCtx(null))].map(
+        (tool) => tool.name,
+      ),
+    );
+    for (const catalog of [en.default, de.default]) {
+      const labels = (catalog as { Chat: { tool: Record<string, unknown> } }).Chat
+        .tool;
+      expect([...names].filter((name) => labels[name] == null)).toEqual([]);
     }
   });
 });

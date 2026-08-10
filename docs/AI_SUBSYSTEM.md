@@ -52,6 +52,7 @@ and replaced wholesale, never patched.
 | `fit/` | Company-fit: full company context builder, `companyDataHash` (profile + embedded docs → staleness), prompt with company evidence + verified tender facts |
 | `company/` | `company_doc_embed` processor: S3 → text-extract → chunk → embed as tenant chunks (`tenderId: null`, `documentRecordId: company:{fileId}`) |
 | `eval/` | Retrieval eval (canonical §17.5 questions, hit@k/MRR). Baseline: `evals/retrieval-baseline-2026-08-08.json` (hybrid hit@5 = 1.00 DE / 0.92 EN) |
+| `agent/` | Clara. `tools.ts` is the registry (20 tools; tender / cross-tender / company-workspace), `workspace.ts` the feed + board + CPV + coverage data layer, `report-view.ts` the report's section-at-a-time projection, `prompt.ts` the per-turn system prompt incl. the tool-order block, `graph.ts` the capped tool loop. Tool inputs never carry a tenant id; tender ids are re-validated per call via `getVisibleTender`. Every tool needs a `Chat.tool.<name>` label in both message catalogs (enforced in `tools.test.ts`) |
 
 ## Collections
 
