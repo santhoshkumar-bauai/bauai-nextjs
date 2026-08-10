@@ -61,23 +61,29 @@ export interface CompanyContextInput {
   } | null;
 }
 
-function line(label: string, value: string | number | null | undefined): string | null {
+// Exported so the match-facet builder (lib/ai/match/facets.ts) renders company
+// data exactly the way the fit prompt does — one formatting convention, so the
+// two can never drift into describing the same company differently.
+export function line(
+  label: string,
+  value: string | number | null | undefined,
+): string | null {
   if (value == null || value === "") return null;
   return `${label}: ${value}`;
 }
 
-function listLine(label: string, values: string[] | undefined): string | null {
+export function listLine(label: string, values: string[] | undefined): string | null {
   if (!values || values.length === 0) return null;
   return `${label}: ${values.join(", ")}`;
 }
 
-function section(title: string, lines: Array<string | null>): string | null {
+export function section(title: string, lines: Array<string | null>): string | null {
   const present = lines.filter((entry): entry is string => entry != null);
   if (present.length === 0) return null;
   return [`## ${title}`, ...present].join("\n");
 }
 
-function truncate(text: string | undefined, max: number): string | null {
+export function truncate(text: string | undefined, max: number): string | null {
   if (!text) return null;
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }

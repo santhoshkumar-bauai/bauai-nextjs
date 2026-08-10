@@ -308,6 +308,14 @@ export interface RelevanceOptions {
   sort?: TenderSort;
   /** Tender _ids to drop from the feed entirely (e.g. rejected by the company). */
   excludeIds?: ObjectId[];
+  /**
+   * Restrict scoring to exactly these tender _ids and skip the CPV/NUTS recall
+   * clause. Used by AI matching to score its own semantically-retrieved
+   * shortlist with the same cpv/geo/time expressions the classic feed uses —
+   * the recall clause would defeat the point, since the whole reason a tender
+   * is in that shortlist may be that CPV and NUTS both missed it.
+   */
+  includeIds?: ObjectId[];
 }
 
 /** Sentinels that park undated tenders at the end of a date-ordered page. */
@@ -457,7 +465,7 @@ function nearestStages(
  * `total` is unaffected. Relevance order needs no stages — the pool is already
  * sorted that way.
  */
-function reorderStages(
+export function reorderStages(
   sort: TenderSort | undefined,
   companyPoint?: { lat: number; lng: number } | null,
 ): Record<string, unknown>[] {
@@ -531,7 +539,10 @@ export function buildRelevancePipeline(
 
   // When the user drives with explicit content filters they are exploring beyond
   // their own profile, so the company-relevance recall must not narrow them out.
+  // An explicit id set (AI matching) does the same, more strongly: the caller
+  // has already decided what the candidates are.
   const explicitContent =
+    Boolean(opts.includeIds) ||
     Boolean(opts.q) ||
     (opts.contractNatures?.length ?? 0) > 0 ||
     (opts.sectors?.length ?? 0) > 0 ||
@@ -578,7 +589,12 @@ export function buildRelevancePipeline(
     countries: { $in: countries },
     $and: and,
   };
-  if (opts.excludeIds?.length) {
+  if (opts.includeIds) {
+    // `$in` and `$nin` on the same field would clobber each other, so exclusion
+    // is folded into the candidate set instead.
+    const excluded = new Set((opts.excludeIds ?? []).map(String));
+    match._id = { $in: opts.includeIds.filter((id) => !excluded.has(String(id))) };
+  } else if (opts.excludeIds?.length) {
     match._id = { $nin: opts.excludeIds };
   }
 

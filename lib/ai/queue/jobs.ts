@@ -89,12 +89,40 @@ export const extractSchemaJobSchema = z.object({
 });
 export type ExtractSchemaJob = z.infer<typeof extractSchemaJobSchema>;
 
+export const companyMatchJobSchema = z.object({
+  kind: z.literal("company_match"),
+  /** Company._id — MUST be derived from server context by the producer (§10.2). */
+  tenantId: objectIdHexSchema,
+  /** The run this job is executing; claimed before enqueue. */
+  runId: objectIdHexSchema,
+  companyDataHash: z.string().min(1),
+  pipelineVersion: z.string().min(1),
+  embeddingModel: z.string().min(1),
+  embeddingVersion: z.string().min(1),
+  actorId: systemActor,
+  correlationId: z.string().min(1),
+  attempt: z.number().int().min(0).default(0),
+});
+export type CompanyMatchJob = z.infer<typeof companyMatchJobSchema>;
+
+export function companyMatchJobId(
+  job: Pick<
+    CompanyMatchJob,
+    "tenantId" | "companyDataHash" | "pipelineVersion" | "embeddingModel" | "embeddingVersion"
+  >,
+): string {
+  // Identity is "this company, this data, this pipeline, these vectors" — an
+  // enqueue that repeats all four is asking for work that is already done.
+  return `match:${job.tenantId}:${job.companyDataHash.slice(0, 16)}:${job.pipelineVersion}:${job.embeddingModel}:${job.embeddingVersion}`;
+}
+
 export type AiJob =
   | NoticeEmbedJob
   | DocChunkJob
   | ChunkEmbedJob
   | ExtractSchemaJob
-  | CompanyDocEmbedJob;
+  | CompanyDocEmbedJob
+  | CompanyMatchJob;
 
 export const aiJobSchema = z.discriminatedUnion("kind", [
   noticeEmbedJobSchema,
@@ -102,6 +130,7 @@ export const aiJobSchema = z.discriminatedUnion("kind", [
   chunkEmbedJobSchema,
   extractSchemaJobSchema,
   companyDocEmbedJobSchema,
+  companyMatchJobSchema,
 ]);
 
 export function noticeEmbedJobId(job: Pick<NoticeEmbedJob, "tenderId" | "embeddingModel" | "embeddingVersion">): string {

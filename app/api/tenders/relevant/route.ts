@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { ObjectId } from "mongodb";
-
 import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
-import { connectMongoose } from "@/lib/db/mongoose";
-import { HIDDEN_STATUSES, TenderDecision } from "@/models/tender-decision";
 import type { TenderDocument } from "@/lib/ingestion/types";
+import { loadCompanyDecisions } from "@/lib/tenders/decisions";
 import { distanceKm, type LatLng } from "@/lib/tenders/distance";
 import { parseTenderFilters } from "@/lib/tenders/filters";
 import { resolveMarkerLocations } from "@/lib/tenders/geocode-cache";
@@ -56,21 +53,8 @@ export async function GET(request: Request) {
   // Decisions the company already made: rejected tenders drop out of the feed,
   // pipeline ones stay but render as "In workspace" instead of offering the
   // action bar again.
-  await connectMongoose();
-  const decisions = await TenderDecision.find({
-    companyId: String(context.company._id),
-  })
-    .select({ tenderId: 1, status: 1 })
-    .lean();
-  const hidden = new Set<string>(HIDDEN_STATUSES);
-  const excludeIds = decisions
-    .filter((decision) => hidden.has(decision.status))
-    .filter((decision) => ObjectId.isValid(decision.tenderId))
-    .map((decision) => new ObjectId(decision.tenderId));
-  const pipelineByTender = new Map(
-    decisions
-      .filter((decision) => !hidden.has(decision.status))
-      .map((decision) => [decision.tenderId, decision.status]),
+  const { excludeIds, pipelineByTender } = await loadCompanyDecisions(
+    String(context.company._id),
   );
 
   const company = context.company;

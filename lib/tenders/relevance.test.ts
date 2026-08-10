@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import { describe, expect, it } from "vitest";
 import type { TenderSort } from "./filters.ts";
 import {
@@ -183,6 +184,60 @@ describe("paging and totals", () => {
 
   it("keeps the total branch independent of the sort", () => {
     expect(facetOf("deadline").total).toEqual([{ $count: "value" }]);
+  });
+});
+
+describe("includeIds (AI matching)", () => {
+  const ids = [new ObjectId(), new ObjectId()];
+  const matchOf = (options: Partial<Parameters<typeof buildRelevancePipeline>[1]> = {}) => {
+    const { pipeline } = buildRelevancePipeline(
+      { companyCpvCodes: ["45000000-7"], nuts: NUTS },
+      { now: NOW, page: 0, pageSize: 20, ...options },
+    );
+    return (pipeline[0] as { $match: Record<string, unknown> }).$match;
+  };
+
+  it("restricts scoring to the supplied candidates", () => {
+    expect(matchOf({ includeIds: ids })._id).toEqual({ $in: ids });
+  });
+
+  it("skips the CPV/NUTS recall clause", () => {
+    // The whole reason a tender reaches the AI shortlist may be that CPV and
+    // NUTS both missed it — re-applying recall here would delete it again.
+    const withIds = matchOf({ includeIds: ids });
+    const withoutIds = matchOf();
+    const recallClause = (match: Record<string, unknown>) =>
+      (match.$and as Record<string, unknown>[]).some((clause) => "$or" in clause &&
+        (clause.$or as Record<string, unknown>[]).some((entry) => "cpvCodes" in entry));
+
+    expect(recallClause(withoutIds)).toBe(true);
+    expect(recallClause(withIds)).toBe(false);
+  });
+
+  it("folds exclusions into the candidate set rather than clobbering it", () => {
+    // `$in` and `$nin` on the same field would overwrite each other.
+    const excluded = ids[0];
+    const match = matchOf({ includeIds: ids, excludeIds: [excluded] });
+    expect(match._id).toEqual({ $in: [ids[1]] });
+  });
+
+  it("leaves the score expressions untouched", () => {
+    const scoreStage = (options: Parameters<typeof buildRelevancePipeline>[1]) =>
+      buildRelevancePipeline({ companyCpvCodes: ["45000000-7"], nuts: NUTS }, options)
+        .pipeline[1];
+
+    expect(
+      scoreStage({ now: NOW, page: 0, pageSize: 20, includeIds: ids }),
+    ).toEqual(scoreStage({ now: NOW, page: 0, pageSize: 20 }));
+  });
+
+  it("still enforces visibility, status and the deadline rule", () => {
+    const match = matchOf({ includeIds: ids });
+    expect(match.isVisible).toBe(true);
+    expect(match.status).toBeDefined();
+    expect(match.$and).toContainEqual({
+      $or: [{ submissionDeadline: null }, { submissionDeadline: { $gte: NOW } }],
+    });
   });
 });
 

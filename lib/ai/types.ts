@@ -417,6 +417,155 @@ export interface TenderReportRunDocument {
 }
 
 /**
+ * The company rendered as query vectors, for AI tender matching.
+ *
+ * Deliberately many small vectors rather than one: a single centroid over
+ * "we build roofs" and "our surety is X" resembles neither, and retrieves
+ * generically. Facets keep the company's distinct capabilities apart, and the
+ * facet that won a match is what the UI shows as "matched via …".
+ *
+ * Lives here rather than as a field on `companies` because ~100KB of floats
+ * would be dragged into every Mongoose company read.
+ */
+export interface CompanyMatchProfileDocument {
+  _id?: ObjectId;
+  /** Company._id. */
+  tenantId: ObjectId;
+  /** hashCompanyData(profile, embeddedDocs) — reused verbatim from lib/ai/fit. */
+  companyDataHash: string;
+  profileVersion: string;
+  embeddingModel: string;
+  embeddingVersion: string;
+  embeddingDimensions: number;
+
+  facets: Array<{
+    /** "capabilities" | "narrative" | `reference:${i}` | `doc:${recordId}` */
+    key: string;
+    kind: "profile" | "document";
+    /** Document filename / reference-project title; shown in "matched via". */
+    label: string | null;
+    weight: number;
+    text: string;
+    sourceHash: string;
+    embedding: number[];
+  }>;
+
+  /** Denormalized so retrieval never has to re-read `companies`. */
+  scope: {
+    countries: string[];
+    nuts: { country: string; nuts1?: string; nuts2?: string; nuts3?: string };
+    /** Check digits stripped, ready to compare against `tenders.cpvCodes`. */
+    cpvCodes: string[];
+  };
+
+  /** What we could not build and why — drives the "improve matching" nudge. */
+  skipped: Array<{ key: string; reason: "too_short" | "absent" }>;
+
+  builtAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * One scored (company, tender) pair — the persisted AI Matched feed.
+ *
+ * Rows are tagged with the `runId` that wrote them and readers pin to the
+ * run's `lastCompletedRunId`, so a refresh can rebuild the whole set
+ * underneath a user who is paging through it without ever showing them a
+ * half-old, half-new page.
+ */
+export interface TenderMatchScoreDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  tenderId: ObjectId;
+  runId: ObjectId;
+  rank: number;
+
+  /** Pre-judge blend of semantic + rule signals, 0..1. */
+  matchScore: number;
+  /** LLM fit, 0..100. Null until the judging phase runs (or if it failed). */
+  fitScore: number | null;
+  /** What the feed sorts on: matchScore alone, or blended with fitScore. */
+  finalScore: number;
+  confidence: "low" | "medium" | "high" | null;
+
+  signals: {
+    semantic: number;
+    /** Raw $meta:"vectorSearchScore" before band normalization — for calibration. */
+    semanticRaw: number;
+    rule: number;
+    cpv: number;
+    geo: number;
+    time: number;
+    fused: number;
+  };
+
+  /** Which company facets retrieved this tender; the explainability payload. */
+  matchedFacets: Array<{
+    key: string;
+    kind: "profile" | "document";
+    label: string | null;
+    score: number;
+  }>;
+
+  /** Written bilingually in one pass so de/en can never disagree. */
+  reasons: { en: string; de: string } | null;
+  matchedCapabilities: string[];
+  concerns: string[];
+
+  /** Staleness triple, mirrored onto the row so a single read can check it. */
+  companyDataHash: string;
+  promptVersion: string;
+  pipelineVersion: string;
+  embeddingIdentity: string;
+  model: { provider: string; providerModel: string } | null;
+
+  computedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * An in-flight (or just-finished) match refresh, one per company.
+ *
+ * Same reasoning as `TenderReportRunDocument`: the work outlives the request
+ * that started it, so "is something running and how far is it" has to be
+ * server state. That is what makes the progress UI resumable across a reload
+ * and what stops two readers from paying for the same refresh twice.
+ *
+ * `updatedAt` doubles as a heartbeat.
+ */
+export interface CompanyMatchRunDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  status: "running" | "done" | "failed";
+  stage: "building_profile" | "retrieving" | "fusing" | "judging" | "finalizing";
+  /** Judge batch progress; meaningless outside the "judging" stage. */
+  progress: { done: number; total: number };
+  trigger: "manual" | "profile_change" | "sweep" | "new_tenders";
+
+  /** The run currently writing rows. */
+  runId: ObjectId;
+  /** What readers pin to. Flipped atomically once the new rows are all in. */
+  lastCompletedRunId: ObjectId | null;
+
+  companyDataHash: string;
+  promptVersion: string;
+  pipelineVersion: string;
+  embeddingIdentity: string;
+
+  scoredCount: number;
+  judgedCount: number;
+  startedByUserId: string | null;
+  /** i18n key ("rate_limited" | "search_unavailable" | "failed"), never raw. */
+  error: string | null;
+  startedAt: Date;
+  finishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
  * Durable ledger for document-derived work (chunking, chunk embedding,
  * classification, extraction). `_id` is the idempotency key (§10.3), e.g.
  * `chunk:doc:{documentRecordId}:{fileSha256}:{chunkerVersion}`.

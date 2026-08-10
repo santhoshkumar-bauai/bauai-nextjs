@@ -13,10 +13,13 @@ const ModelRoleRef = z
   .regex(/^[a-z0-9-]+:[A-Za-z0-9._-]+$/, 'expected "provider:model"');
 
 /** `z.coerce.boolean()` maps "false" → true; env flags need real parsing. */
-const BoolFromEnv = z
-  .enum(["true", "false", "1", "0"])
-  .default("false")
-  .transform((v) => v === "true" || v === "1");
+const boolFromEnv = (fallback: "true" | "false" = "false") =>
+  z
+    .enum(["true", "false", "1", "0"])
+    .default(fallback)
+    .transform((v) => v === "true" || v === "1");
+
+const BoolFromEnv = boolFromEnv();
 
 const AiEnvSchema = z.object({
   /** Embedding model identity — stamped onto every stored vector (§17.1). */
@@ -86,6 +89,32 @@ const AiEnvSchema = z.object({
   /** Company document excerpts fed to the report prompt. */
   reportMaxCompanyChunks: z.coerce.number().int().positive().default(16),
 
+  /**
+   * AI tender matching. The company is embedded as several facet vectors,
+   * each retrieves against the notice vector index, the lists are fused with
+   * the deterministic CPV/geo/time ranking, and the head of the result is
+   * judged by an LLM. Everything here bounds cost or recall.
+   */
+  matchEnabled: boolFromEnv("true"),
+  /** Rows served per company — also the judging depth. */
+  matchRankCap: z.coerce.number().int().positive().default(200),
+  /** Distinct tenders kept after fusion, before scoring. */
+  matchPoolCap: z.coerce.number().int().positive().default(400),
+  /** $vectorSearch `limit` per facet. */
+  matchCandidatesPerFacet: z.coerce.number().int().positive().default(250),
+  /** $vectorSearch `numCandidates`; generous because deadline/isVisible are
+   * post-filters and would otherwise starve the pool. */
+  matchNumCandidates: z.coerce.number().int().positive().default(4000),
+  matchMaxFacets: z.coerce.number().int().positive().default(24),
+  matchJudgeBatch: z.coerce.number().int().positive().default(10),
+  matchJudgeConcurrency: z.coerce.number().int().positive().default(3),
+  /** A finished run older than this is refreshed by the sweep. */
+  matchStaleHours: z.coerce.number().int().positive().default(6),
+  /** Phase-4 BM25 arm over tender_search_documents.text. */
+  matchLexical: BoolFromEnv,
+  matchPipelineVersion: z.string().default("v1"),
+  matchProfileVersion: z.string().default("v1"),
+
   /** Context cap for the retrieval-targeted extraction path. */
   extractionMaxChunks: z.coerce.number().int().positive().default(16),
   /** Context cap for the full-document extraction path. */
@@ -125,6 +154,13 @@ function defaultModelRoles(): Record<string, string> {
      * back to the agent model only so an unconfigured deployment still works.
      */
     report: process.env.AI_REPORT_MODEL || agent,
+    /**
+     * AI matching judges 200 tenders against the whole company profile — the
+     * product's discovery surface, so it gets its own top-tier role rather
+     * than sharing `reasoning` with the pipeline. Falls back through the
+     * report model so an unconfigured deployment still works.
+     */
+    match: process.env.AI_MATCH_MODEL || process.env.AI_REPORT_MODEL || agent,
   };
 }
 
@@ -159,6 +195,18 @@ export function aiEnv(): AiEnv {
     reportReasoningEffort: process.env.AI_REPORT_REASONING,
     reportMaxTenderChunks: process.env.AI_REPORT_MAX_TENDER_CHUNKS,
     reportMaxCompanyChunks: process.env.AI_REPORT_MAX_COMPANY_CHUNKS,
+    matchEnabled: process.env.AI_MATCH_ENABLED,
+    matchRankCap: process.env.AI_MATCH_RANK_CAP,
+    matchPoolCap: process.env.AI_MATCH_POOL_CAP,
+    matchCandidatesPerFacet: process.env.AI_MATCH_CANDIDATES_PER_FACET,
+    matchNumCandidates: process.env.AI_MATCH_NUM_CANDIDATES,
+    matchMaxFacets: process.env.AI_MATCH_MAX_FACETS,
+    matchJudgeBatch: process.env.AI_MATCH_JUDGE_BATCH,
+    matchJudgeConcurrency: process.env.AI_MATCH_JUDGE_CONCURRENCY,
+    matchStaleHours: process.env.AI_MATCH_STALE_HOURS,
+    matchLexical: process.env.AI_MATCH_LEXICAL,
+    matchPipelineVersion: process.env.MATCH_PIPELINE_VERSION,
+    matchProfileVersion: process.env.COMPANY_PROFILE_VERSION,
     extractionMaxChunks: process.env.AI_EXTRACTION_MAX_CHUNKS,
     extractionMaxDocChars: process.env.AI_EXTRACTION_MAX_DOC_CHARS,
     extractionRpm: process.env.AI_EXTRACTION_RPM,

@@ -46,6 +46,18 @@ indexer.registerProcessor("company_doc_embed", async (job) => {
   await processCompanyDocEmbed(job);
 });
 
+const { runCompanyMatchJob } = await import("../lib/ai/match/job.ts");
+
+indexer.registerProcessor("company_match", async (job) => {
+  if (job.kind !== "company_match") return;
+  // The run document was claimed before the enqueue, so this job owns it.
+  // runCompanyMatchJob always drives it to a terminal state.
+  await runCompanyMatchJob({
+    tenantId: new ObjectId(job.tenantId),
+    runId: new ObjectId(job.runId),
+  });
+});
+
 indexer.registerProcessor("extract_schema", async (job) => {
   if (job.kind !== "extract_schema") return;
   const schemaName = EXTRACTION_SCHEMA_NAMES.find((n) => n === job.schemaName);
