@@ -11,7 +11,9 @@ on:
   push:
     branches: [master, main]
     paths:
-      - "lib/ingestion/**"
+      - "lib/**"
+      - "messages/**"
+      - "data/**"
       - "workers/**"
       - "scripts/**"
       - "docker/Dockerfile.worker"
