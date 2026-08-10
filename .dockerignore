@@ -1,18 +1,21 @@
+# Shared by every image in the repo: the web app (./Dockerfile) and the workers
+# (docker/Dockerfile.worker, docker/Dockerfile.documents). The worker images COPY
+# only the paths they need, so anything listed here purely for their benefit would
+# just break the web build — keep this to files no image ever wants.
 node_modules
 .next
 .git
+.github
+.claude
 .env
 .env.*
 !.env.example
 *.tsbuildinfo
 coverage
-app
-components
-public
-messages
-i18n
-data
-models
+docs
+evals
+fixtures
+deploy
 *.csv
 *.md
 !AGENTS.md
