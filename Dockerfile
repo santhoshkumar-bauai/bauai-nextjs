@@ -74,8 +74,9 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Playwright is reached through a dynamic `import("playwright")` on the export
-# path, which file tracing does not reliably follow — copy the packages whole.
+# File tracing does pick up playwright, but only the files it can see statically —
+# it drops ~2 MB of playwright-core that the driver resolves at run time. Overlay
+# the complete packages so the PDF export path cannot fail on a missing file.
 COPY --from=builder /app/node_modules/playwright ./node_modules/playwright
 COPY --from=builder /app/node_modules/playwright-core ./node_modules/playwright-core
 
