@@ -1,6 +1,6 @@
-# Ingestion workers. One image serves every worker class; the compose service
-# picks which entrypoint to run, so the scheduler, ingest, outbox relay, and status
-# updater can never drift apart in dependencies or parser version.
+# Ingestion + AI workers. One image serves every worker class; the compose service
+# picks which entrypoint to run, so the scheduler, ingest, outbox relay, status
+# updater, and AI indexer can never drift apart in dependencies or parser version.
 FROM node:24-alpine AS deps
 
 WORKDIR /app
@@ -25,12 +25,17 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
-COPY lib/ingestion ./lib/ingestion
+# The AI indexer reaches lib/ai → lib/tenders → lib/db/lib/storage, and lib/ai
+# imports messages/*.json for bilingual output, so the whole lib tree ships.
+# Only relative-path imports work here: Node's type stripping does not resolve
+# the "@/" tsconfig alias, so any module using it is web-app-only by definition.
+COPY lib ./lib
+COPY messages ./messages
+COPY data ./data
 COPY workers ./workers
-COPY scripts/ingestion-bootstrap.mts scripts/ingestion-backfill.mts ./scripts/
-COPY scripts/ingestion-replay-dlq.mts scripts/ingestion-parse-fixture.mts ./scripts/
-COPY scripts/ingestion-smoke.mts scripts/fetch-documents.mts ./scripts/
-COPY scripts/inspect-document-url.mts scripts/seed-tenders.mts ./scripts/
+COPY scripts ./scripts
+# seed-cpv-codes.mts reads this catalog from the working directory.
+COPY ["CPV2008en(Annex Ia & Ib).csv", "./"]
 
 # The image ships no .env: secrets come from the orchestrator's secret store (§16).
 USER node

@@ -40,6 +40,14 @@ services:
     restart: "no"
     command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
 
+  # ── One-shot: AI collections, plain indexes, Atlas Search / Vector Search indexes.
+  #    Needs $search/$vectorSearch support on the target MongoDB (Atlas or mongot). ──
+  #   docker compose -f docker-compose.prod.yml run --rm ai-bootstrap
+  ai-bootstrap:
+    <<: *worker
+    restart: "no"
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ai-bootstrap.mts"]
+
   # ══════════════ WORKERS — discover & process ══════════════
   # Exactly one scheduler: leases make more safe but add nothing.
   scheduler:
@@ -66,6 +74,15 @@ services:
   status:
     <<: *worker
     command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/status-updater.mts"]
+
+  # BullMQ consumers + producers for the AI queues: notice/company-doc embedding,
+  # chunking, classification, schema extraction, and company matching. Run
+  # `ai-bootstrap` once before first start.
+  ai-indexer:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/ai-indexer.mts"]
+    ports:
+      - "${AI_INDEXER_METRICS_PORT:-9466}:9464"
 
   # ══════════════ PUBLISHERS — emit outward ══════════════
   # Single replica: a second would duplicate every push without adding durability.

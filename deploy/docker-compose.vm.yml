@@ -1,0 +1,193 @@
+# ALL always-on workers as one stack for a single VM, built FROM THIS CHECKOUT and
+# pointed at an EXTERNAL (production) MongoDB. Redis is bundled; nothing else local.
+#
+# The pipeline end to end: scheduler + ingest discover and persist tenders →
+# documents downloads files into S3/GCS and extracts text → status keeps lifecycle
+# states current → outbox publishes app events → ai-indexer consumes them to embed
+# notices and document chunks, classify, extract schemas, and run company matching.
+#
+#   cd deploy
+#   cp .env.example .env          # fill in MONGODB_URI (prod), S3_*, GEMINI_API_KEY;
+#                                 # REDIS_URL in .env is ignored — the bundled Redis
+#                                 # is pinned below.
+#   docker compose -f docker-compose.vm.yml up -d --build
+#
+# `up -d` runs the one-shot bootstraps first (collections, plain + search indexes);
+# every worker waits on them, so a plain `up -d` after a reboot or `git pull` is
+# always safe. Scale the horizontal tiers:
+#
+#   docker compose -f docker-compose.vm.yml up -d --scale ingest=4 --scale documents=2
+#
+# The target MongoDB must be a REPLICA SET (transactions + change streams) and must
+# support Atlas Search / Vector Search ($search/$vectorSearch: Atlas, or a
+# mongodb-atlas-local deployment with mongot) — ai-bootstrap fails fast otherwise,
+# which holds the AI tier back while the ingestion tier still runs.
+
+name: bauai-workers
+
+x-worker: &worker
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.worker
+  image: bauai/tender-ingestion:local
+  restart: unless-stopped
+  env_file:
+    - ./.env
+  # Pinned here because `environment` wins over env_file: the bundled Redis is only
+  # reachable by service name, so a localhost REDIS_URL left in .env cannot misroute.
+  environment: &worker-env
+    REDIS_URL: redis://redis:6379
+  # Ingestion workers wait only on the ingestion bootstrap; ai-indexer additionally
+  # waits on ai-bootstrap (its own depends_on below), so a failing search-index
+  # bootstrap holds back the AI tier without stopping ingestion.
+  depends_on:
+    redis:
+      condition: service_healthy
+    bootstrap:
+      condition: service_completed_successfully
+  # SIGTERM starts the graceful drain; grace must exceed INGESTION_SHUTDOWN_GRACE_MS.
+  stop_signal: SIGTERM
+  stop_grace_period: 45s
+  logging:
+    driver: json-file
+    options:
+      max-size: "20m"
+      max-file: "5"
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      # The queue is durable transport; a restart must not drop unacked entries.
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # ══════════════ ONE-SHOTS — run to completion on every `up` ══════════════
+  # Ingestion collections, indexes, and source configs. Idempotent.
+  bootstrap:
+    <<: *worker
+    restart: "no"
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ingestion-bootstrap.mts"]
+
+  # AI collections, plain indexes, and Atlas Search / Vector Search indexes. Idempotent.
+  ai-bootstrap:
+    <<: *worker
+    restart: "no"
+    depends_on:
+      redis:
+        condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ai-bootstrap.mts"]
+
+  # ══════════════ WORKERS — always on ══════════════
+  # Exactly one scheduler: leases make more safe but add nothing.
+  scheduler:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/scheduler.mts"]
+    ports:
+      - "${SCHEDULER_METRICS_PORT:-9464}:9464"
+
+  # Horizontally scalable: messages are leased, so replicas never collide.
+  ingest:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/ingest.mts"]
+    deploy:
+      replicas: ${INGEST_REPLICAS:-2}
+
+  # Downloads tender documents and extracts text. Built on the Chromium image so the
+  # headless resolvers (rib-meinauftrag, future SPA portals) work out of the box; to
+  # trade that for a ~3× smaller image, drop this build/image/environment/shm_size
+  # override — the service then inherits the slim worker image and rib rows skip cleanly.
+  documents:
+    <<: *worker
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.documents
+    image: bauai/tender-ingestion-documents:local
+    environment:
+      <<: *worker-env
+      DOCUMENTS_BROWSER_ENABLED: "true"
+    # Chromium maps large pages through /dev/shm; the 64 MB Docker default is too small.
+    shm_size: "1gb"
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/documents.mts"]
+    deploy:
+      replicas: ${DOCUMENT_REPLICAS:-1}
+
+  # Single replica: status transitions off change streams.
+  status:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/status-updater.mts"]
+
+  # Single replica: a second would duplicate every push without adding durability.
+  outbox:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/outbox-relay.mts"]
+    ports:
+      - "${OUTBOX_METRICS_PORT:-9465}:9464"
+
+  # BullMQ consumers + producers for the AI queues: notice/company-doc embedding,
+  # chunking, classification, schema extraction, and company matching.
+  ai-indexer:
+    <<: *worker
+    depends_on:
+      redis:
+        condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
+      ai-bootstrap:
+        condition: service_completed_successfully
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/ai-indexer.mts"]
+    ports:
+      - "${AI_INDEXER_METRICS_PORT:-9466}:9464"
+
+  # ══════════════ TOOLS — run on demand, never auto-started ══════════════
+  #   docker compose -f docker-compose.vm.yml run --rm seed -- --from 2026-01-01
+  seed:
+    <<: *worker
+    restart: "no"
+    profiles: ["tools"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/seed-tenders.mts"]
+
+  # Bounded one-shot document drain (alternative to the long-running `documents`):
+  #   docker compose -f docker-compose.vm.yml run --rm fetch -- --limit 500
+  fetch:
+    <<: *worker
+    restart: "no"
+    profiles: ["tools"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/fetch-documents.mts"]
+
+  # Backfill notice embeddings for tenders that predate the AI tier:
+  #   docker compose -f docker-compose.vm.yml run --rm ai-backfill-notices
+  ai-backfill-notices:
+    <<: *worker
+    restart: "no"
+    profiles: ["tools"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ai-backfill-notices.mts"]
+
+  # Backfill document chunk embeddings (chunk + embed already-fetched documents):
+  #   docker compose -f docker-compose.vm.yml run --rm ai-backfill-chunks
+  ai-backfill-chunks:
+    <<: *worker
+    restart: "no"
+    profiles: ["tools"]
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "scripts/ai-backfill-chunks.mts"]
+
+volumes:
+  redis-data:

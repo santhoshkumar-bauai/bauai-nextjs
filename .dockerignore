@@ -17,5 +17,7 @@ evals
 fixtures
 deploy
 *.csv
+# The worker image ships the CPV catalog so scripts/seed-cpv-codes.mts can run in-container.
+!CPV2008en*.csv
 *.md
 !AGENTS.md

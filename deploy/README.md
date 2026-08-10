@@ -15,8 +15,26 @@ against your **existing MongoDB** + a **Memorystore Redis** (or the local Redis 
 deploy/
 ├── README.md                 ← this runbook
 ├── .env.example              ← copy to .env, fill in (gitignored)
-└── docker-compose.prod.yml   ← workers + publishers, grouped for extension
+├── docker-compose.prod.yml   ← workers + publishers from the GHCR image
+└── docker-compose.vm.yml     ← ALL workers (ingestion + documents + AI) + Redis,
+                                built from the checkout — single-file VM stack
 ```
+
+## Quickstart: everything on one VM, built from source
+
+No GHCR, no Memorystore — clone the repo on the VM, fill in `.env`, and one file runs
+the whole pipeline (scheduler, ingest, documents-with-Chromium, status, outbox,
+ai-indexer) plus a persistent Redis, against your existing MongoDB:
+
+```bash
+cd deploy
+cp .env.example .env        # MONGODB_URI (replica set!), S3_*, GEMINI_API_KEY
+docker compose -f docker-compose.vm.yml up -d --build
+```
+
+The one-shot bootstraps (`bootstrap`, `ai-bootstrap`) run automatically before the
+workers on every `up`. After a `git pull`, the same command rebuilds and restarts.
+The rest of this runbook covers the prebuilt-image path (`docker-compose.prod.yml`).
 
 The image is one binary with many entrypoints; the compose service picks the worker.
 Adding a worker/publisher later = a `workers/<name>.mts` file + a service block under the
@@ -94,13 +112,14 @@ cd deploy
 cp .env.example .env          # then fill in Mongo/Redis/GCS values
 docker compose -f docker-compose.prod.yml pull
 
-# a) one-shot bootstrap FIRST (indexes, collections, source configs)
+# a) one-shot bootstraps FIRST (indexes, collections, source configs, AI search indexes)
 docker compose -f docker-compose.prod.yml run --rm bootstrap
+docker compose -f docker-compose.prod.yml run --rm ai-bootstrap
 
 # b) seed historical tenders (bulk, direct to Mongo, no Redis)
 docker compose -f docker-compose.prod.yml run --rm seed -- --from 2026-01-01
 
-# c) start the continuous stack (scheduler + ingest + outbox + status + documents)
+# c) start the continuous stack (scheduler + ingest + outbox + status + documents + ai-indexer)
 docker compose -f docker-compose.prod.yml up -d --scale ingest=4 --scale documents=2
 ```
 
