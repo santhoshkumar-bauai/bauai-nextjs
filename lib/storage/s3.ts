@@ -26,28 +26,13 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 const UPLOAD_URL_TTL_SECONDS = 5 * 60;
 const DOWNLOAD_URL_TTL_SECONDS = 15 * 60;
 
-/** Max size the API will mint an upload URL for (25 MB). */
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
-
-/** Content types accepted for knowledge-base document uploads. */
-export const ALLOWED_DOCUMENT_CONTENT_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-] as const;
-
-/** Content types accepted for company logo uploads. */
-export const ALLOWED_LOGO_CONTENT_TYPES = [
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/svg+xml",
-] as const;
+// Size/content-type limits live in a client-safe module so the browser can
+// pre-validate a selection without pulling the AWS SDK into its bundle.
+export {
+  ALLOWED_DOCUMENT_CONTENT_TYPES,
+  ALLOWED_LOGO_CONTENT_TYPES,
+  MAX_UPLOAD_BYTES,
+} from "../company/upload-limits.ts";
 
 export type S3Config = {
   bucket: string;

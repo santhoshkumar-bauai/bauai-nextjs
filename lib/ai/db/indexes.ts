@@ -101,6 +101,25 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenantId: 1, tenderId: 1 }, name: "uq_tenant_tender", unique: true },
   ]);
 
+  await c.companyMatchProfiles.createIndexes([
+    { key: { tenantId: 1 }, name: "uq_tenant", unique: true },
+  ]);
+
+  await c.tenderMatchScores.createIndexes([
+    { key: { tenantId: 1, tenderId: 1 }, name: "uq_tenant_tender", unique: true },
+    // Drives the feed. The `_id` tiebreak keeps offset paging stable when
+    // several tenders land on the same score.
+    { key: { tenantId: 1, runId: 1, finalScore: -1, _id: 1 }, name: "ix_tenant_run_score" },
+    // Sweeping rows left behind by a superseded run.
+    { key: { tenantId: 1, runId: 1 }, name: "ix_tenant_run" },
+  ]);
+
+  // Same reasoning as tenderReportRuns: the unique key is what makes claiming
+  // a run safe. One company, one refresh in flight.
+  await c.companyMatchRuns.createIndexes([
+    { key: { tenantId: 1 }, name: "uq_tenant", unique: true },
+  ]);
+
   // AI-owned index on the shared `tenders` collection: drives the embedding
   // sweep without scanning 44k documents. Deliberately created here rather
   // than in lib/ingestion/db/indexes.ts — the ingestion pipeline never reads it.

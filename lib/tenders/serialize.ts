@@ -5,6 +5,30 @@
  */
 import type { RankedTenderRaw } from "@/lib/tenders/relevance";
 
+/**
+ * What the AI Matched feed adds on top of a ranked tender: the blended score,
+ * and — the whole point — why this tender is here.
+ *
+ * An optional field on `SerializedTender` rather than a parallel type, so the
+ * classic feed, the map and `tender-card.tsx` keep working untouched and the
+ * card renders the AI block only when it is present.
+ */
+export interface AiMatchAnnotation {
+  /** Blended retrieval score, 0..1. What the feed sorts on before judging. */
+  matchScore: number;
+  /** LLM fit 0..100; null until the judging phase runs (phase 2). */
+  fitScore: number | null;
+  confidence: "low" | "medium" | "high" | null;
+  /** Already resolved to the requesting user's locale. */
+  reason: string | null;
+  matchedCapabilities: string[];
+  concerns: string[];
+  signals: { semantic: number; cpv: number; geo: number; time: number };
+  /** Which parts of the company profile retrieved this tender. */
+  matchedOn: Array<{ label: string | null; key: string; kind: "profile" | "document" }>;
+  computedAt: string;
+}
+
 export interface SerializedTender {
   id: string;
   title: string | null;
@@ -36,6 +60,8 @@ export interface SerializedTender {
   /** Set when the company already moved this tender into a kanban column. */
   pipelineStatus: string | null;
   sourceUrl: string | null;
+  /** Present only in the AI Matched feed. */
+  aiMatch?: AiMatchAnnotation | null;
 }
 
 const round = (n: number) => Math.round((n ?? 0) * 1000) / 1000;
@@ -46,6 +72,7 @@ export function serializeTender(
     distanceKm?: number | null;
     categories?: string[];
     pipelineStatus?: string | null;
+    aiMatch?: AiMatchAnnotation | null;
   },
 ): SerializedTender {
   return {
@@ -84,5 +111,6 @@ export function serializeTender(
     categories: extra?.categories ?? [],
     pipelineStatus: extra?.pipelineStatus ?? null,
     sourceUrl: raw.sourceUrl ?? null,
+    ...(extra?.aiMatch !== undefined ? { aiMatch: extra.aiMatch } : {}),
   };
 }

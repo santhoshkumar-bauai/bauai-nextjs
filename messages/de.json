@@ -341,13 +341,18 @@
       "view": "Ansehen",
       "delete": "Löschen",
       "add": "Hinzufügen",
+      "retry": "Erneut versuchen",
+      "dismiss": "Ausblenden",
       "tagHint": "Eingeben und Enter drücken"
     },
     "feedback": {
       "saveFailed": "Speichern fehlgeschlagen.",
       "uploadFailed": "Hochladen fehlgeschlagen.",
       "deleteFailed": "Löschen fehlgeschlagen.",
-      "openFailed": "Datei konnte nicht geöffnet werden."
+      "openFailed": "Datei konnte nicht geöffnet werden.",
+      "fileTooLarge": "{name} überschreitet das Limit von {limit} MB.",
+      "unsupportedFileType": "{name} hat ein nicht unterstütztes Dateiformat.",
+      "emptyFile": "{name} ist leer."
     },
     "sections": {
       "companyInfo": {
@@ -493,6 +498,9 @@
     },
     "documents": {
       "empty": "Noch keine Dokumente hochgeladen.",
+      "multipleHint": "Mehrere Dateien gleichzeitig auswählen oder hierher ziehen.",
+      "queued": "Wartet…",
+      "uploadingFile": "Wird hochgeladen…",
       "categories": {
         "general": {
           "label": "Allgemeine Dokumente",
@@ -524,6 +532,66 @@
       "list": "Liste",
       "map": "Karte"
     },
+    "aiMatched": {
+      "tabs": {
+        "ai": "KI-Treffer",
+        "classic": "Alle Treffer",
+        "aiHint": "Sortiert danach, wie gut jede Ausschreibung zu Ihrem Profil und Ihren Dokumenten passt",
+        "classicHint": "Sortiert nach CPV-Codes, Region und Fristen"
+      },
+      "stages": {
+        "building_profile": "Firmenprofil wird gelesen",
+        "retrieving": "Ausschreibungen werden durchsucht",
+        "fusing": "Treffer werden sortiert",
+        "judging": "Eignung wird bewertet",
+        "finalizing": "Ergebnisse werden gespeichert"
+      },
+      "run": {
+        "title": "Ihre KI-Treffer werden erstellt",
+        "description": "Das läuft im Hintergrund — Sie können die Seite verlassen und später zurückkommen.",
+        "judged": "{done} von {total} bewertet",
+        "refresh": "Treffer aktualisieren",
+        "refreshing": "Wird aktualisiert…",
+        "retry": "Erneut versuchen"
+      },
+      "states": {
+        "neverTitle": "Das KI-Matching wurde noch nicht ausgeführt",
+        "neverDescription": "Erstellen Sie Ihre KI-Treffer, um Ausschreibungen danach zu sehen, wie gut sie zu Ihrem Unternehmen passen — nicht nur zu Ihren CPV-Codes.",
+        "neverAction": "KI-Treffer erstellen",
+        "staleTitle": "Ihr Firmenprofil hat sich geändert",
+        "staleDescription": "Diese Treffer stammen von vor Ihrer letzten Änderung. Aktualisieren Sie sie, um sie auf den neuesten Stand zu bringen.",
+        "emptyTitle": "Noch keine KI-Treffer",
+        "emptyDescription": "Im aktuellen Bestand passt nichts eng genug zu Ihrem Profil. Erweitern Sie Ihre Filter.",
+        "unavailableTitle": "KI-Matching ist nicht verfügbar",
+        "unavailableDescription": "Es werden stattdessen alle Treffer angezeigt.",
+        "computedAt": "Ermittelt {date}"
+      },
+      "errors": {
+        "rate_limited": "Der KI-Dienst ist ausgelastet. Bitte versuchen Sie es gleich noch einmal.",
+        "search_unavailable": "Die semantische Suche ist auf dieser Installation nicht verfügbar.",
+        "failed": "Die Aktualisierung der Treffer konnte nicht abgeschlossen werden."
+      },
+      "card": {
+        "matchedVia": "Gefunden über",
+        "concerns": "Zu prüfen",
+        "strengths": "Warum es passt",
+        "semantic": "Profil-Fit",
+        "sources": {
+          "capabilities": "Ihre Leistungen",
+          "qualifications": "Ihre Qualifikationen",
+          "reference": "Referenzprojekt",
+          "document": "Ihr Dokument"
+        }
+      },
+      "coverage": {
+        "title": "Matching verbessern",
+        "signals": "Basiert auf {profileFacets} Profilsignalen und {documentFacets} Dokumenten.",
+        "addDocuments": "Laden Sie Referenzprojekte und Leistungsnachweise hoch, um Ihre Treffer zu schärfen.",
+        "addProfile": "Ergänzen Sie Leistungen, Gewerke und Spezialisierungen, um Ihre Treffer zu schärfen.",
+        "documentsLink": "Dokumente verwalten",
+        "profileLink": "Ausschreibungsdaten bearbeiten"
+      }
+    },
     "filters": {
       "searchPlaceholder": "Titel oder Beschreibung suchen",
       "status": "Status",
@@ -554,7 +622,8 @@
       "options": {
         "relevance": "Beste Übereinstimmung",
         "deadline": "Frist zuerst",
-        "newest": "Neueste zuerst"
+        "newest": "Neueste zuerst",
+        "nearest": "Nächstgelegene zuerst"
       }
     },
     "regionPicker": {
@@ -639,7 +708,7 @@
         "title": "Warum diese Übereinstimmung",
         "cpv": "CPV-Eignung",
         "geo": "Standort",
-        "time": "Aktualität"
+        "time": "Zeitfenster"
       }
     },
     "states": {
@@ -653,7 +722,8 @@
     "pagination": {
       "previous": "Zurück",
       "next": "Weiter",
-      "showing": "{from}–{to} von {total}"
+      "showing": "{from}–{to} von {total}",
+      "showingRanked": "{from}–{to} der {ranked} besten Treffer ({total} insgesamt)"
     },
     "map": {
       "attribution": "Kartendaten © Google",

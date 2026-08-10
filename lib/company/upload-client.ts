@@ -1,5 +1,6 @@
 import type { CompanyFileCategory } from "@/models/company-file";
 import type { SerializedCompanyFile } from "@/lib/company/serialize";
+import { resolveContentType } from "@/lib/company/upload-limits";
 
 /**
  * Browser helper for the presigned upload flow. Keeps the three round-trips
@@ -42,7 +43,7 @@ export async function uploadCompanyFile(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       fileName: file.name,
-      contentType: file.type || "application/octet-stream",
+      contentType: resolveContentType(file) || "application/octet-stream",
       size: file.size,
       category,
     }),
@@ -84,6 +85,61 @@ export async function uploadCompanyFile(
     category: category as Exclude<CompanyFileCategory, "logo">,
     file: data.file as SerializedCompanyFile,
   };
+}
+
+export type BatchUploadOutcome =
+  | { index: number; file: File; status: "done"; result: UploadResult }
+  | { index: number; file: File; status: "failed"; error: string };
+
+/** How many files stream to storage at once — the rest wait their turn. */
+const DEFAULT_UPLOAD_CONCURRENCY = 3;
+
+/**
+ * Uploads several files to the same category with bounded concurrency. One
+ * file failing never cancels the others: every entry resolves to its own
+ * outcome, reported through `onOutcome` as soon as it settles (so a UI can
+ * update per row) and returned in selection order once the batch drains.
+ */
+export async function uploadCompanyFiles(
+  files: readonly File[],
+  category: CompanyFileCategory,
+  options: {
+    signal?: AbortSignal;
+    concurrency?: number;
+    onStart?: (index: number, file: File) => void;
+    onOutcome?: (outcome: BatchUploadOutcome) => void;
+  } = {},
+): Promise<BatchUploadOutcome[]> {
+  const outcomes: BatchUploadOutcome[] = new Array(files.length);
+  const limit = Math.max(1, options.concurrency ?? DEFAULT_UPLOAD_CONCURRENCY);
+  let next = 0;
+
+  const worker = async () => {
+    while (next < files.length) {
+      const index = next++;
+      const file = files[index];
+      options.onStart?.(index, file);
+      try {
+        const result = await uploadCompanyFile(file, category, {
+          signal: options.signal,
+        });
+        outcomes[index] = { index, file, status: "done", result };
+      } catch (error) {
+        outcomes[index] = {
+          index,
+          file,
+          status: "failed",
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+      options.onOutcome?.(outcomes[index]);
+    }
+  };
+
+  await Promise.all(
+    Array.from({ length: Math.min(limit, files.length) }, () => worker()),
+  );
+  return outcomes;
 }
 
 /** Requests a fresh presigned view URL for an existing document. */

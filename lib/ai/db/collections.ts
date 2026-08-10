@@ -7,9 +7,12 @@ import type {
   ChatMessageDocument,
   ChatThreadDocument,
   ChunkDocument,
+  CompanyMatchProfileDocument,
+  CompanyMatchRunDocument,
   DocumentClassificationDocument,
   ExtractionDocument,
   TenderFitRecommendationDocument,
+  TenderMatchScoreDocument,
   TenderOverviewDocument,
   TenderReportDocument,
   TenderReportRunDocument,
@@ -31,6 +34,9 @@ export const aiCollectionNames = {
   tenderVerdicts: "tender_verdicts",
   tenderReports: "tender_reports",
   tenderReportRuns: "tender_report_runs",
+  companyMatchProfiles: "company_match_profiles",
+  tenderMatchScores: "tender_match_scores",
+  companyMatchRuns: "company_match_runs",
 } as const;
 
 export interface AiCollections {
@@ -47,6 +53,9 @@ export interface AiCollections {
   tenderVerdicts: Collection<TenderVerdictDocument>;
   tenderReports: Collection<TenderReportDocument>;
   tenderReportRuns: Collection<TenderReportRunDocument>;
+  companyMatchProfiles: Collection<CompanyMatchProfileDocument>;
+  tenderMatchScores: Collection<TenderMatchScoreDocument>;
+  companyMatchRuns: Collection<CompanyMatchRunDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -68,5 +77,8 @@ export async function getAiCollections(): Promise<AiCollections> {
     tenderVerdicts: db.collection(aiCollectionNames.tenderVerdicts),
     tenderReports: db.collection(aiCollectionNames.tenderReports),
     tenderReportRuns: db.collection(aiCollectionNames.tenderReportRuns),
+    companyMatchProfiles: db.collection(aiCollectionNames.companyMatchProfiles),
+    tenderMatchScores: db.collection(aiCollectionNames.tenderMatchScores),
+    companyMatchRuns: db.collection(aiCollectionNames.companyMatchRuns),
   };
 }

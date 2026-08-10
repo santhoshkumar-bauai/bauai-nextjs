@@ -20,6 +20,8 @@ import { deadlineDaysLeft, deadlineUrgency } from "@/lib/tenders/deadline";
 import type { SerializedTender } from "@/lib/tenders/serialize";
 import { cn } from "@/lib/utils";
 
+import { AiMatchReason } from "./ai-match-reason";
+
 const STATUS_STYLES: Record<string, string> = {
   OPEN: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
   CLOSING_SOON: "bg-amber-50 text-amber-700 ring-amber-600/20",
@@ -182,7 +184,13 @@ export function TenderCard({
 
   const statusStyle =
     STATUS_STYLES[tender.status] ?? "bg-muted text-muted-foreground ring-border";
-  const matchPct = Math.round(tender.score * 100);
+  const aiMatch = tender.aiMatch ?? null;
+  // In AI mode the headline percentage is the blended AI score, so the pill and
+  // the breakdown panel below it are always describing the same ranking.
+  const matchPct = Math.round(
+    (aiMatch ? (aiMatch.fitScore ?? aiMatch.matchScore * 100) / 100 : tender.score) *
+      100,
+  );
   const value = formatValue(
     tender.estimatedValue.amount,
     tender.estimatedValue.currency,
@@ -270,14 +278,23 @@ export function TenderCard({
         {showBreakdown && (
           <div
             onClick={stop}
-            className="flex flex-col gap-1 rounded-lg border border-border bg-muted/30 px-2.5 py-2"
+            className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 px-2.5 py-2"
           >
             <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
               {t("card.breakdown.title")}
             </span>
-            <ScoreBar label={t("card.breakdown.cpv")} value={tender.scoreBreakdown.cpv} />
-            <ScoreBar label={t("card.breakdown.geo")} value={tender.scoreBreakdown.geo} />
-            <ScoreBar label={t("card.breakdown.time")} value={tender.scoreBreakdown.time} />
+            {aiMatch && <AiMatchReason match={aiMatch} />}
+            <div className="flex flex-col gap-1">
+              {aiMatch && (
+                <ScoreBar
+                  label={t("aiMatched.card.semantic")}
+                  value={aiMatch.signals.semantic}
+                />
+              )}
+              <ScoreBar label={t("card.breakdown.cpv")} value={tender.scoreBreakdown.cpv} />
+              <ScoreBar label={t("card.breakdown.geo")} value={tender.scoreBreakdown.geo} />
+              <ScoreBar label={t("card.breakdown.time")} value={tender.scoreBreakdown.time} />
+            </div>
           </div>
         )}
 

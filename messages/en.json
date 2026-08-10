@@ -341,13 +341,18 @@
       "view": "View",
       "delete": "Delete",
       "add": "Add",
+      "retry": "Retry",
+      "dismiss": "Dismiss",
       "tagHint": "Type and press Enter"
     },
     "feedback": {
       "saveFailed": "Save failed.",
       "uploadFailed": "Upload failed.",
       "deleteFailed": "Delete failed.",
-      "openFailed": "Could not open the file."
+      "openFailed": "Could not open the file.",
+      "fileTooLarge": "{name} is larger than the {limit} MB limit.",
+      "unsupportedFileType": "{name} has an unsupported file type.",
+      "emptyFile": "{name} is empty."
     },
     "sections": {
       "companyInfo": {
@@ -493,6 +498,9 @@
     },
     "documents": {
       "empty": "No documents uploaded yet.",
+      "multipleHint": "Select or drop several files at once.",
+      "queued": "Waiting…",
+      "uploadingFile": "Uploading…",
       "categories": {
         "general": {
           "label": "General documents",
@@ -524,6 +532,66 @@
       "list": "List",
       "map": "Map"
     },
+    "aiMatched": {
+      "tabs": {
+        "ai": "AI Matched",
+        "classic": "All matches",
+        "aiHint": "Ranked by how well each tender fits your profile and documents",
+        "classicHint": "Ranked by CPV codes, region and timing"
+      },
+      "stages": {
+        "building_profile": "Reading your company profile",
+        "retrieving": "Searching tenders",
+        "fusing": "Ranking matches",
+        "judging": "Assessing fit",
+        "finalizing": "Saving results"
+      },
+      "run": {
+        "title": "Building your AI matches",
+        "description": "This runs in the background — you can leave this page and come back.",
+        "judged": "{done} of {total} assessed",
+        "refresh": "Refresh matches",
+        "refreshing": "Refreshing…",
+        "retry": "Try again"
+      },
+      "states": {
+        "neverTitle": "AI matching hasn't run yet",
+        "neverDescription": "Build your AI matches to see tenders ranked by how well they fit your company, not just your CPV codes.",
+        "neverAction": "Build my AI matches",
+        "staleTitle": "Your company profile changed",
+        "staleDescription": "These matches were built before your last update. Refresh to bring them up to date.",
+        "emptyTitle": "No AI matches yet",
+        "emptyDescription": "Nothing in the current tender corpus fits your profile closely enough. Try widening your filters.",
+        "unavailableTitle": "AI matching is unavailable",
+        "unavailableDescription": "Showing all matches instead.",
+        "computedAt": "Matched {date}"
+      },
+      "errors": {
+        "rate_limited": "The AI service is busy. Try again in a moment.",
+        "search_unavailable": "Semantic search is not available on this deployment.",
+        "failed": "The match refresh could not be completed."
+      },
+      "card": {
+        "matchedVia": "Matched via",
+        "concerns": "Worth checking",
+        "strengths": "Why it fits",
+        "semantic": "Profile fit",
+        "sources": {
+          "capabilities": "your capabilities",
+          "qualifications": "your qualifications",
+          "reference": "reference project",
+          "document": "your document"
+        }
+      },
+      "coverage": {
+        "title": "Improve your matching",
+        "signals": "Using {profileFacets} profile signals and {documentFacets} documents.",
+        "addDocuments": "Upload reference projects and capability statements to sharpen your matches.",
+        "addProfile": "Fill in your services, trades and specializations to sharpen your matches.",
+        "documentsLink": "Manage documents",
+        "profileLink": "Edit tender information"
+      }
+    },
     "filters": {
       "searchPlaceholder": "Search title or description",
       "status": "Status",
@@ -554,7 +622,8 @@
       "options": {
         "relevance": "Best match",
         "deadline": "Deadline soonest",
-        "newest": "Newest first"
+        "newest": "Newest first",
+        "nearest": "Nearest first"
       }
     },
     "regionPicker": {
@@ -639,7 +708,7 @@
         "title": "Why this match",
         "cpv": "CPV fit",
         "geo": "Location",
-        "time": "Recency"
+        "time": "Timing"
       }
     },
     "states": {
@@ -653,7 +722,8 @@
     "pagination": {
       "previous": "Previous",
       "next": "Next",
-      "showing": "Showing {from}–{to} of {total}"
+      "showing": "Showing {from}–{to} of {total}",
+      "showingRanked": "Showing {from}–{to} of the {ranked} best matches ({total} total)"
     },
     "map": {
       "attribution": "Map data © Google",

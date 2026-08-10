@@ -58,9 +58,22 @@ export class AiIndexer {
         limiter: { max: env.extractionRpm, duration: 60_000 },
       },
     );
+    // A match refresh is one long job per company (profile embed, one ANN
+    // query per facet, then the judge batches), so it runs at concurrency 1
+    // per worker rather than fanning out.
+    const analysisWorker = new Worker(
+      AI_QUEUES.analysis,
+      async (job: Job) => this.process(job, signal),
+      {
+        connection: aiRedisOptions(),
+        prefix: env.redisPrefix,
+        concurrency: 1,
+      },
+    );
     for (const [queue, worker] of [
       [AI_QUEUES.embedding, embeddingWorker],
       [AI_QUEUES.extraction, extractionWorker],
+      [AI_QUEUES.analysis, analysisWorker],
     ] as const) {
       worker.on("failed", (job, error) => {
         log.error("job failed", {
@@ -71,11 +84,11 @@ export class AiIndexer {
         });
       });
     }
-    this.workers = [embeddingWorker, extractionWorker];
+    this.workers = [embeddingWorker, extractionWorker, analysisWorker];
 
     this.healthy = true;
     log.info("ai-indexer started", {
-      queues: [AI_QUEUES.embedding, AI_QUEUES.extraction],
+      queues: [AI_QUEUES.embedding, AI_QUEUES.extraction, AI_QUEUES.analysis],
       concurrency: env.workerConcurrency,
       rpm: env.embeddingRpm,
       producers: this.producers.length,

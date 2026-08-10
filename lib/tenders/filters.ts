@@ -57,11 +57,11 @@ export const GERMAN_REGION_CODES = [
 export const DEADLINE_DAY_OPTIONS = [7, 14, 30, 60] as const;
 
 /**
- * Result ordering. All three reorder the *same* relevance-ranked pool, so a
+ * Result ordering. All of these reorder the *same* relevance-ranked pool, so a
  * deadline sort still means "my most relevant tenders, soonest first" rather
  * than "every tender in the corpus by deadline".
  */
-export const SORT_OPTIONS = ["relevance", "deadline", "newest"] as const;
+export const SORT_OPTIONS = ["relevance", "deadline", "newest", "nearest"] as const;
 export type TenderSort = (typeof SORT_OPTIONS)[number];
 export const DEFAULT_SORT: TenderSort = "relevance";
 
