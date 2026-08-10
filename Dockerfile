@@ -47,6 +47,17 @@ ARG NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=""
 ENV NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY \
     NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=$NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
 
+# Build-only placeholders — NOT configuration, and never carried into the runtime
+# stage. "Collecting page data" imports every route module, and two modules assert
+# on env at import time rather than on first use: lib/db/mongodb.ts throws without
+# MONGODB_URI, and better-auth throws without a secret when NODE_ENV=production
+# (which `next build` sets). No route is prerendered — the whole app is
+# server-rendered on demand — so nothing here is ever dialled or signed with, and
+# only NEXT_PUBLIC_* values get inlined into the bundle. The real MONGODB_URI and
+# BETTER_AUTH_SECRET are read from the environment at run time.
+ENV MONGODB_URI=mongodb://build-time-placeholder:27017/bauai \
+    BETTER_AUTH_SECRET=build-time-placeholder-not-a-real-secret
+
 RUN npm run build
 
 # ---------- runtime ----------
