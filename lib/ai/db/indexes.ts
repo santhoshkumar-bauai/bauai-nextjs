@@ -130,6 +130,14 @@ export async function ensureAiIndexes(): Promise<void> {
       { name: "ix_ai_embedding_sweep" },
     );
 
+  // AI-derived CPV codes (scripts/ai-cpv-derive.mts). MUST exist before the
+  // relevance recall `$or` gains its derivedCpvCodes branches: `$or` only uses
+  // an index union when every branch is indexed, so a missing index here would
+  // silently turn the classic feed's recall into a collection scan.
+  await db
+    .collection("tenders")
+    .createIndex({ derivedCpvCodes: 1 }, { name: "ix_derived_cpv" });
+
   // LangGraph checkpoint collections are created implicitly by MongoDBSaver
   // and read/deleted by thread_id (thread reset) — index them here since the
   // saver never does.

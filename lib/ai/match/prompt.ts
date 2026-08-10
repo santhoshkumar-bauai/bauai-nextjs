@@ -24,6 +24,12 @@ export interface JudgeCandidate {
   contractNature: string | null;
   procedureType: string | null;
   description: string | null;
+  /**
+   * Why retrieval surfaced this tender — facet labels and arm names, OUR
+   * metadata, not notice text. Lets the judge weigh "found via an uploaded
+   * reference project" differently from "found via CPV code overlap".
+   */
+  matchedVia?: string[];
 }
 
 function truncate(text: string | null | undefined, max: number): string {
@@ -34,11 +40,13 @@ function truncate(text: string | null | undefined, max: number): string {
 const RULES = [
   "Rules:",
   "- Judge FIT, not quality: how well this specific company could deliver and win this specific tender.",
+  "- The typed services list can be incomplete or too generic. The excerpts under 'Documents on file' describe work the company has ACTUALLY delivered — treat the trades named there as proven capabilities, even when the services list does not mention them.",
   "- fitScore 0-100. Be discriminating and use the whole range. 80+ means the company's stated capabilities clearly cover the scope AND nothing in the notice rules them out. 40-60 means adjacent work they could plausibly bid. Below 20 means wrong trade, wrong scale, or a disqualifying requirement.",
   "- Scale matters: a two-person firm and a 500-person contractor do not fit the same contract. Use employee count, project size range and reference-project values when they are given.",
   "- concerns: only things that would actually stop them — a certification they do not hold, a scale mismatch, a trade they do not list. Never pad this. An empty list is a correct answer.",
   "- matchedCapabilities: name the company's OWN services, trades or specializations that this tender needs, in the company's own words. Not the tender's words, and never invented ones.",
   "- Base every judgement ONLY on the company profile and the tender text below. If the notice is too vague to judge, say so in the reason and set confidence to low — a hedged answer is better than an invented one.",
+  "- The `Matched via` line above each tender states why OUR retrieval surfaced it (which company facet or ranking arm). It is context, not evidence: still verify the fit from the tender text itself. A tender surfaced only via CPV code overlap deserves extra scrutiny — CPV codes on notices are frequently wrong or missing.",
   "- Return one result per tender, echoing its exact `ref`. Never invent a ref, never merge two tenders, never omit one.",
   "- reasonEn and reasonDe must state the SAME judgement. Write naturally in each language, do not translate word-for-word. One or two sentences.",
 ].join("\n");
@@ -66,7 +74,12 @@ function candidateBlock(candidate: JudgeCandidate): string {
     `Submission deadline: ${candidate.submissionDeadline ?? "—"}`,
     `Description: ${truncate(candidate.description, TENDER_TEXT_CAP)}`,
   ];
-  return `<tender ref="${candidate.ref}">\n${lines.join("\n")}\n</tender>`;
+  // Above the fence, not inside it: this is our own retrieval metadata, and
+  // the fence marks exactly the third-party text the data boundary is about.
+  const matchedVia = candidate.matchedVia?.length
+    ? `Matched via: ${candidate.matchedVia.join("; ")}\n`
+    : "";
+  return `${matchedVia}<tender ref="${candidate.ref}">\n${lines.join("\n")}\n</tender>`;
 }
 
 export function buildMatchJudgePrompt(input: {

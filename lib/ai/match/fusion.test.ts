@@ -12,6 +12,7 @@ import {
   timeFactor,
   TIME_FLOOR,
   W_RULE_ARM,
+  W_TEXT_ARM,
 } from "./fusion.ts";
 import type { FacetHits } from "./retrieve.ts";
 
@@ -81,15 +82,71 @@ describe("fuseCandidates", () => {
   });
 
   it("lets the deterministic arm dominate a single weak facet", () => {
-    // The safety property: a cold-start company degrades toward the classic
-    // ordering rather than toward whatever one thin vector retrieved.
+    // The safety property: a degraded profile decays toward the classic
+    // ordering rather than toward whatever one thin vector retrieved. The
+    // rule arm is no longer the heaviest arm overall (that inverted into
+    // CPV-driven noise), but it still outweighs the weakest facets.
     const fused = fuseCandidates({
       facetHits: [facet("capabilities", ["weak"], 0.35)],
       ruleRankedIds: ["strong"],
       poolCap: 10,
     });
-    expect(W_RULE_ARM).toBeGreaterThan(1);
+    expect(W_RULE_ARM).toBeGreaterThan(0.35);
     expect(fused[0].tenderId).toBe("strong");
+  });
+
+  it("keeps the services-first arms heavier than the rule arm combined", () => {
+    // The point of the reweighting: capabilities (1.0) + text (0.9) must be
+    // able to outvote the CPV/geo rule arm, because CPV is the least
+    // trustworthy input in the system.
+    expect(1.0 + W_TEXT_ARM).toBeGreaterThan(2 * W_RULE_ARM);
+    expect(W_TEXT_ARM).toBeLessThan(1.0);
+  });
+
+  it("lets the text arm surface a tender no other arm returned", () => {
+    // A tender with missing or wrong CPV codes is invisible to the rule arm
+    // and may be missed by ANN — the words in the notice are its only way in.
+    const fused = fuseCandidates({
+      facetHits: [facet("capabilities", ["a"])],
+      ruleRankedIds: ["b"],
+      textRankedIds: ["nocpv", "a"],
+      poolCap: 10,
+    });
+    expect(fused.map((entry) => entry.tenderId)).toContain("nocpv");
+    // "a" is now voted for by two arms and must outrank both single-arm hits.
+    expect(fused[0].tenderId).toBe("a");
+  });
+
+  it("is unchanged when the text arm is empty", () => {
+    const base = {
+      facetHits: [facet("capabilities", ["a", "b"])],
+      ruleRankedIds: ["b", "c"],
+      poolCap: 10,
+    };
+    const without = fuseCandidates(base);
+    const withEmpty = fuseCandidates({ ...base, textRankedIds: [] });
+    expect(withEmpty).toEqual(without);
+  });
+
+  it("honors runtime weight overrides", () => {
+    // The env rollback path: text arm zeroed, rule arm restored to 1.2 must
+    // reproduce the pre-text-arm ordering exactly.
+    const base = {
+      facetHits: [facet("capabilities", ["a"], 0.35)],
+      ruleRankedIds: ["b"],
+      poolCap: 10,
+    };
+    const legacy = fuseCandidates({
+      ...base,
+      textRankedIds: ["a"],
+      weights: { ruleArm: 1.2, textArm: 0 },
+    });
+    const reference = fuseCandidates({
+      ...base,
+      weights: { ruleArm: 1.2 },
+    });
+    expect(legacy).toEqual(reference);
+    expect(legacy[0].tenderId).toBe("b");
   });
 
   it("records which facets retrieved a tender, best first", () => {

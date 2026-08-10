@@ -495,6 +495,12 @@ export interface TenderMatchScoreDocument {
     semanticRaw: number;
     rule: number;
     cpv: number;
+    /**
+     * Rank-decayed notice-text match against the company profile, 0..1.
+     * Optional: rows persisted before the text arm existed do not carry it —
+     * readers must treat absence as 0.
+     */
+    text?: number;
     geo: number;
     time: number;
     fused: number;

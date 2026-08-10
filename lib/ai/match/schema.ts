@@ -5,8 +5,14 @@ import { z } from "zod";
  * resembles what you do" into "you can actually win this, and here is why".
  */
 
-/** Bump to invalidate every judged row and force a re-judge. */
-export const MATCH_JUDGE_PROMPT_VERSION = "match-j1";
+/**
+ * Bump to invalidate every judged row and force a re-judge.
+ *
+ * j2: company context leads with capabilities and carries CPV names +
+ * documents-on-file; candidates carry a "Matched via" retrieval-provenance
+ * line and a rule telling the judge to scrutinize CPV-only hits.
+ */
+export const MATCH_JUDGE_PROMPT_VERSION = "match-j2";
 
 /**
  * Display lengths, enforced by truncation in `judge.ts` — NOT by the schema.

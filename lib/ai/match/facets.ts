@@ -28,8 +28,14 @@ import {
  *
  * v2: document-facet weights share one fixed budget instead of growing with
  * the document count.
+ * v3: facets are category-aware — logo/insurance uploads are no longer
+ * retrieval facets, reference-project uploads carry their own budget. The
+ * bump also forces a rebuild that picks up the fixed CPV-name resolution
+ * (profiles built before the fix have no "Procurement categories" line).
+ * v4: reference-doc budget 1.4 → 2.8 so uploaded evidence can out-vote a
+ * thin typed profile.
  */
-export const MATCH_PROFILE_VERSION = "match-profile-v2";
+export const MATCH_PROFILE_VERSION = "match-profile-v4";
 
 /**
  * Below this a facet is skipped rather than embedded. A three-word facet still
@@ -62,6 +68,8 @@ export interface SkippedFacet {
 export interface DocumentFacetInput {
   documentRecordId: string;
   fileName: string | null;
+  /** User-picked `companyfiles.category`; null/unknown behaves as "general". */
+  category?: string | null;
   text: string;
 }
 
@@ -99,9 +107,32 @@ const WEIGHT_QUALIFICATIONS = 0.35;
  */
 const DOC_WEIGHT_BUDGET = 0.55;
 
+/**
+ * Reference-project uploads get their own, larger budget.
+ *
+ * A reference-project PDF is the closest thing to ground truth about what the
+ * company actually does — for Wirl Ing the uploads say "electrical / TGA
+ * planning office" while the typed profile says "Construction work". The
+ * budget is sized so that a company's reference documents can out-vote a
+ * thin typed profile: evidence of delivered work beats a generic claim.
+ * Measured at 1.4 the four Wirl uploads (0.35 each) lost every fusion round
+ * to capabilities + text + rule (≈2.5 combined) and not one electrical
+ * tender reached the top 30; at 2.8 the offline counterfactual put 13 in.
+ *
+ * Still a budget with a per-doc cap, not a flat per-doc weight: ten uploads
+ * at a flat 0.7 would carry 7.0 of RRF mass and out-vote everything else —
+ * exactly the failure v2 exists to prevent.
+ */
+const REF_DOC_WEIGHT_BUDGET = 2.8;
+
 export function documentFacetWeight(documentCount: number): number {
   if (documentCount <= 0) return 0;
   return DOC_WEIGHT_BUDGET / documentCount;
+}
+
+export function referenceDocFacetWeight(documentCount: number): number {
+  if (documentCount <= 0) return 0;
+  return Math.min(WEIGHT_REFERENCES, REF_DOC_WEIGHT_BUDGET / documentCount);
 }
 
 function clamp(text: string): string {
@@ -233,7 +264,7 @@ export function buildCompanyFacets(input: BuildFacetsInput): BuildFacetsResult {
 
   // Document facets are weighted only once we know how many survive, so the
   // budget is split across the real count rather than the attempted one.
-  const documentDrafts: FacetDraft[] = [];
+  const documentDrafts: Array<{ draft: FacetDraft; isReference: boolean }> = [];
   const documentSkips: SkippedFacet[] = [];
   for (const doc of documents) {
     const key = `doc:${doc.documentRecordId}`;
@@ -247,22 +278,33 @@ export function buildCompanyFacets(input: BuildFacetsInput): BuildFacetsResult {
       continue;
     }
     documentDrafts.push({
-      key,
-      kind: "document",
-      label: doc.fileName,
-      weight: 0,
-      text: clamp(text),
+      draft: {
+        key,
+        kind: "document",
+        label: doc.fileName,
+        weight: 0,
+        text: clamp(text),
+      },
+      isReference: doc.category === "reference-project",
     });
   }
 
   // Profile facets win the budget when it is tight: they are the deliberate
-  // description of the company, documents are whatever happened to be uploaded.
+  // description of the company, documents are whatever happened to be
+  // uploaded. Among documents, reference projects win the room — they are
+  // evidence of delivered work, the rest is paperwork.
   const roomForDocuments = Math.max(0, maxFacets - facets.length);
-  const keptDocuments = documentDrafts.slice(0, roomForDocuments);
-  const docWeight = documentFacetWeight(keptDocuments.length);
+  const keptDocuments = [...documentDrafts]
+    .sort((a, b) => Number(b.isReference) - Number(a.isReference))
+    .slice(0, roomForDocuments);
 
-  for (const draft of keptDocuments) {
-    facets.push({ ...draft, weight: docWeight });
+  const referenceCount = keptDocuments.filter((doc) => doc.isReference).length;
+  const generalCount = keptDocuments.length - referenceCount;
+  const referenceWeight = referenceDocFacetWeight(referenceCount);
+  const generalWeight = documentFacetWeight(generalCount);
+
+  for (const { draft, isReference } of keptDocuments) {
+    facets.push({ ...draft, weight: isReference ? referenceWeight : generalWeight });
   }
   skipped.push(...documentSkips);
 

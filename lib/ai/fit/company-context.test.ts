@@ -47,6 +47,51 @@ describe("buildFullCompanyContext", () => {
     expect(context).not.toContain("undefined");
     expect(context).not.toContain("null");
   });
+
+  it("leads with capabilities and trails with eligibility trivia", () => {
+    // Consumers cap this text and truncation eats the tail — the order
+    // decides what may be lost. Insurance trivia is expendable; what the
+    // company does is not.
+    const context = buildFullCompanyContext(FULL_PROFILE);
+    const order = [
+      "## Capabilities",
+      "## Identity",
+      "## Reference projects",
+      "## Financials",
+      "## Insurance",
+    ].map((heading) => context.indexOf(heading));
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("prefers resolved CPV names over raw codes", () => {
+    const context = buildFullCompanyContext({
+      ...FULL_PROFILE,
+      cpvNames: ["Bauarbeiten / Construction work"],
+    });
+    expect(context).toContain(
+      "Procurement categories: Bauarbeiten / Construction work",
+    );
+    expect(context).not.toContain("CPV codes: 45000000");
+    // Without names the raw codes stay as the fallback.
+    expect(buildFullCompanyContext(FULL_PROFILE)).toContain("CPV codes: 45000000");
+  });
+
+  it("lists uploaded documents as evidence", () => {
+    const context = buildFullCompanyContext({
+      ...FULL_PROFILE,
+      documents: [
+        { fileName: "Turnhalle_Sanierung.docx", category: "reference-project" },
+        { fileName: "HDI_Bestaetigung.pdf", category: "insurance" },
+      ],
+    });
+    expect(context).toContain("## Documents on file");
+    expect(context).toContain("reference-project: Turnhalle_Sanierung.docx");
+    expect(context).toContain("insurance: HDI_Bestaetigung.pdf");
+    expect(buildFullCompanyContext(FULL_PROFILE)).not.toContain(
+      "## Documents on file",
+    );
+  });
 });
 
 describe("hashCompanyData", () => {

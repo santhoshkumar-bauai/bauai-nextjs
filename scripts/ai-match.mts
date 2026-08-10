@@ -142,6 +142,7 @@ for (const company of targets) {
       `${String(index + 1).padStart(3)}. ${(row.finalScore as number).toFixed(3)} ` +
         `fit=${fit}(${row.confidence ?? "-"}) ` +
         `sem=${signals.semantic.toFixed(2)} cpv=${signals.cpv.toFixed(2)} ` +
+        `txt=${(signals.text ?? 0).toFixed(2)} ` +
         `geo=${signals.geo.toFixed(2)} time=${signals.time.toFixed(2)} ` +
         `[${facets || "rule-only"}] ${String(row.title ?? "").slice(0, 70)}`,
     );

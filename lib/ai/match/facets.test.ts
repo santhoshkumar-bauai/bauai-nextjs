@@ -157,3 +157,66 @@ describe("document facets", () => {
     expect(skipped).toContainEqual({ key: "doc:company:thin", reason: "too_short" });
   });
 });
+
+describe("category-aware document weights", () => {
+  const doc = (id: string, category?: string | null): DocumentFacetInput => ({
+    documentRecordId: id,
+    fileName: `${id}.pdf`,
+    category,
+    text: LONG("Referenzprojekt Beschreibung "),
+  });
+
+  it("weights a reference-project upload like a structured reference project", () => {
+    const { facets } = build(FULL_COMPANY, [doc("company:1", "reference-project")]);
+    const facet = facets.find((entry) => entry.key === "doc:company:1");
+    expect(facet?.weight).toBeCloseTo(0.7, 10);
+  });
+
+  it("caps many reference uploads at their shared budget", () => {
+    // 10 uploads at a flat 0.7 would carry 7.0 of RRF mass — the doc-outvoting
+    // bug all over again. The budget holds them to 2.8 total.
+    const documents = Array.from({ length: 10 }, (_, i) =>
+      doc(`company:${i}`, "reference-project"),
+    );
+    const { facets } = build(FULL_COMPANY, documents);
+    const weights = facets
+      .filter((facet) => facet.kind === "document")
+      .map((facet) => facet.weight);
+    expect(weights).toHaveLength(10);
+    for (const weight of weights) expect(weight).toBeCloseTo(2.8 / 10, 10);
+  });
+
+  it("keeps general and certification docs on the small shared budget", () => {
+    const { facets } = build(FULL_COMPANY, [
+      doc("company:ref", "reference-project"),
+      doc("company:gen", "general"),
+      doc("company:cert", "certification"),
+    ]);
+    const byKey = new Map(facets.map((facet) => [facet.key, facet.weight]));
+    expect(byKey.get("doc:company:ref")).toBeCloseTo(0.7, 10);
+    expect(byKey.get("doc:company:gen")).toBeCloseTo(0.55 / 2, 10);
+    expect(byKey.get("doc:company:cert")).toBeCloseTo(0.55 / 2, 10);
+  });
+
+  it("treats a missing category as general", () => {
+    const { facets } = build(FULL_COMPANY, [doc("company:1"), doc("company:2", null)]);
+    const weights = facets
+      .filter((facet) => facet.kind === "document")
+      .map((facet) => facet.weight);
+    for (const weight of weights) expect(weight).toBeCloseTo(0.55 / 2, 10);
+  });
+
+  it("gives reference uploads the room when the facet cap is tight", () => {
+    const documents = [
+      doc("company:gen1", "general"),
+      doc("company:gen2", "general"),
+      doc("company:ref", "reference-project"),
+    ];
+    // Room for exactly one document after the profile facets.
+    const profileFacetCount = build(FULL_COMPANY, []).facets.length;
+    const { facets } = build(FULL_COMPANY, documents, profileFacetCount + 1);
+    const kept = facets.filter((facet) => facet.kind === "document");
+    expect(kept).toHaveLength(1);
+    expect(kept[0].key).toBe("doc:company:ref");
+  });
+});

@@ -191,6 +191,9 @@ export function buildMatchFeedPipeline(query: MatchFeedQuery): Record<string, un
               estimatedValueCurrency: "$estimatedValue.currency",
               score: 1,
               cpvScore: "$match.signals.cpv",
+              // Rows persisted before the text arm existed have no `text`
+              // signal; 0 keeps `RankedTenderRaw.textScore` honest either way.
+              textScore: { $ifNull: ["$match.signals.text", 0] },
               geoScore: "$match.signals.geo",
               timeScore: "$match.signals.time",
               hasCoordinates: {

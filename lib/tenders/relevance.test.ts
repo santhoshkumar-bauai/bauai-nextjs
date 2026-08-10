@@ -102,24 +102,85 @@ describe("buildCpvPrefixSets", () => {
   });
 });
 
+describe("derived CPV integration", () => {
+  const pipelineOf = (codes: string[]) =>
+    buildRelevancePipeline(
+      { companyCpvCodes: codes, nuts: NUTS },
+      { now: NOW, page: 0, pageSize: 20 },
+    ).pipeline;
+
+  const recallOr = (pipeline: Record<string, unknown>[]) => {
+    const match = (pipeline[0] as { $match: { $and: Array<Record<string, unknown>> } })
+      .$match;
+    const clause = match.$and.find((entry) => Array.isArray(entry.$or) &&
+      (entry.$or as Array<Record<string, unknown>>).some((o) => "cpvCodes" in o));
+    return (clause?.$or ?? []) as Array<Record<string, unknown>>;
+  };
+
+  it("recalls tenders through derived codes as well as source codes", () => {
+    const or = recallOr(pipelineOf(["45233120-6"]));
+    expect(or.some((clause) => "derivedCpvCodes" in clause)).toBe(true);
+    // Same code set for both fields — derived codes are a second address for
+    // the same capability, not a different query.
+    const source = or.find((clause) => clause.cpvCodes && "$in" in (clause.cpvCodes as object));
+    const derived = or.find(
+      (clause) => clause.derivedCpvCodes && "$in" in (clause.derivedCpvCodes as object),
+    );
+    expect(derived).toBeDefined();
+    expect((derived?.derivedCpvCodes as { $in: string[] }).$in).toEqual(
+      (source?.cpvCodes as { $in: string[] }).$in,
+    );
+  });
+
+  it("scores derived codes at a discount, taking the max of the two", () => {
+    const pipeline = pipelineOf(["45233120-6"]);
+    const stage = pipeline.find(
+      (entry) =>
+        (entry as { $addFields?: Record<string, unknown> }).$addFields?.cpvScore !==
+        undefined,
+    ) as { $addFields: { cpvScore: { $max: unknown[] } } };
+    const max = stage.$addFields.cpvScore.$max;
+    expect(max).toHaveLength(2);
+    const discounted = max[1] as { $multiply: [number, unknown] };
+    expect(discounted.$multiply[0]).toBeCloseTo(0.8, 10);
+    expect(JSON.stringify(max[0])).toContain("$cpvCodes");
+    expect(JSON.stringify(discounted.$multiply[1])).toContain("$derivedCpvCodes");
+  });
+
+  it("stays inert for a company with no codes", () => {
+    const pipeline = pipelineOf([]);
+    expect(JSON.stringify(pipeline)).not.toContain("derivedCpvCodes");
+  });
+});
+
 describe("score weighting", () => {
-  const scoreExpr = () => {
+  type ScoreTerm = { $multiply: [number, string] };
+
+  // Located by shape, not by index: the pipeline gained a `fitScore` stage
+  // when the notice-text arm landed, and pinning the offset only re-breaks
+  // this test the next time a stage is inserted.
+  const scoreExpr = (): ScoreTerm[] => {
     const { pipeline } = buildRelevancePipeline(
       { companyCpvCodes: ["45233120-6"], nuts: NUTS },
       { now: NOW, page: 0, pageSize: 20 },
     );
-    const stage = pipeline[2] as {
-      $addFields: { score: { $add: Array<{ $multiply: [number, string] }> } };
-    };
+    const stage = pipeline.find(
+      (entry) =>
+        (entry as { $addFields?: Record<string, unknown> }).$addFields?.score !==
+        undefined,
+    ) as { $addFields: { score: { $add: ScoreTerm[] } } } | undefined;
+    if (!stage) throw new Error("no stage computes `score`");
     return stage.$addFields.score.$add;
   };
 
   it("weights fit above timing", () => {
-    const [cpv, geo, time] = scoreExpr();
-    expect(cpv.$multiply[1]).toBe("$cpvScore");
+    const [fit, geo, time] = scoreExpr();
+    // `fitScore`, not `cpvScore`: CPV and notice-text evidence are collapsed
+    // into one capability term before weighting.
+    expect(fit.$multiply[1]).toBe("$fitScore");
     expect(geo.$multiply[1]).toBe("$geoScore");
     expect(time.$multiply[1]).toBe("$timeScore");
-    expect(cpv.$multiply[0]).toBeGreaterThan(geo.$multiply[0]);
+    expect(fit.$multiply[0]).toBeGreaterThan(geo.$multiply[0]);
     expect(geo.$multiply[0]).toBeGreaterThan(time.$multiply[0]);
   });
 

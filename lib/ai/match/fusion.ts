@@ -9,12 +9,31 @@ import type { FacetHits } from "./retrieve.ts";
  */
 
 /**
- * The deterministic arm carries the heaviest single weight on purpose. It buys
- * a safety property: AI mode can never be dramatically worse than the classic
- * feed at the head of the list, and a company with one thin facet degrades
- * toward classic ordering rather than toward noise.
+ * Default arm weights. Runtime values come from `aiEnv()` via the caller
+ * (`AI_MATCH_W_RULE_ARM` / `AI_MATCH_W_TEXT_ARM`) so a ranking regression can
+ * be rolled back without a deploy; these constants are the documented
+ * defaults and what the unit tests pin.
+ *
+ * The rule arm used to carry 1.2 — the heaviest single weight — on the theory
+ * that it made AI mode never much worse than the classic feed. Measured, that
+ * safety property inverted into the failure mode: 49–61% of persisted matches
+ * were retrieved by the CPV/geo arm alone, and CPV is the least trustworthy
+ * input in the system (14% of open tenders carry no code; plenty of the rest
+ * are miscoded). At 0.6 it remains the heaviest *deterministic* arm — a
+ * degraded profile still decays toward classic ordering, not noise — but it
+ * can no longer outvote the capabilities facet (1.0) plus the text arm (0.9),
+ * which together are the services-first signal.
  */
-export const W_RULE_ARM = 1.2;
+export const W_RULE_ARM = 0.6;
+
+/**
+ * The notice-text arm: tenders ranked by how well the notice's own words
+ * match the company's services/trades/specializations (`lib/tenders/text-arm.ts`).
+ * Sits just below the capabilities facet because it is the lexical rendering
+ * of the same signal — and it is the only arm that reaches a tender whose CPV
+ * codes are missing or wrong, which is exactly the case it exists for.
+ */
+export const W_TEXT_ARM = 0.9;
 
 /**
  * Cosine from `$meta:"vectorSearchScore"` lands in a very compressed band, so
@@ -80,23 +99,36 @@ export interface FusedCandidate {
 }
 
 /**
- * Fuse the per-facet ANN lists with the deterministic ranking into one
- * candidate list, capped at `poolCap`.
+ * Fuse the per-facet ANN lists with the deterministic ranking and the
+ * notice-text ranking into one candidate list, capped at `poolCap`.
  *
- * `ruleRankedIds` is the classic feed's ordering for this company. Passing it
- * as an arm — rather than blending its 0..1 score numerically — is what avoids
- * having to calibrate cosine against `cpvScore` at all.
+ * `ruleRankedIds` is the classic feed's ordering for this company, and
+ * `textRankedIds` is the lexical profile-text ordering. Passing each as an
+ * arm — rather than blending their scores numerically — is what avoids having
+ * to calibrate cosine against `cpvScore` against BM25 at all.
  */
 export function fuseCandidates(input: {
   facetHits: FacetHits[];
   ruleRankedIds: string[];
+  /** From the notice-text arm; empty when the profile yields no terms. */
+  textRankedIds?: string[];
   poolCap: number;
+  /** Runtime overrides (env-driven); defaults are the exported constants. */
+  weights?: { ruleArm?: number; textArm?: number };
 }): FusedCandidate[] {
   const { facetHits, ruleRankedIds, poolCap } = input;
+  const textRankedIds = input.textRankedIds ?? [];
+  const ruleWeight = input.weights?.ruleArm ?? W_RULE_ARM;
+  const textWeight = input.weights?.textArm ?? W_TEXT_ARM;
 
   const lists: RankedList[] = [
     ...facetHits.map((facet) => ({ ids: facet.ids, weight: facet.weight })),
-    { ids: ruleRankedIds, weight: W_RULE_ARM },
+    { ids: ruleRankedIds, weight: ruleWeight },
+    // Omitted entirely when empty (not pushed as a zero-length list) so the
+    // no-terms case produces the same `ranks` arrays as before the arm existed.
+    ...(textRankedIds.length > 0 && textWeight > 0
+      ? [{ ids: textRankedIds, weight: textWeight }]
+      : []),
   ];
 
   const fused = fuseRanks(lists);

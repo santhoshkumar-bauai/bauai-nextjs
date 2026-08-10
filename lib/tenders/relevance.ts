@@ -39,6 +39,28 @@ export const W_CPV = 0.45;
 export const W_GEO = 0.35;
 export const W_TIME = 0.2;
 
+/**
+ * Rank at which a text-arm hit is worth half of a perfect CPV match.
+ *
+ * The arm returns rank order, not a comparable score — BM25 totals depend on
+ * term rarity and cannot be compared across two companies, let alone against
+ * `cpvScore`. Converting rank to `k/(k+rank)` sidesteps the calibration
+ * entirely and gives the curve a deliberate shape: the head of the list is
+ * treated as a real capability match, the tail decays to a hint.
+ */
+const TEXT_RANK_HALF_LIFE = 25;
+
+/**
+ * What an AI-derived CPV code is worth relative to a buyer-assigned one.
+ *
+ * Derived codes (`tenders.derivedCpvCodes`) exist only where the notice
+ * carried no codes at all, picked by an enum-constrained model from the
+ * catalog — plausible, but never as trustworthy as what the buyer filed.
+ * The discount keeps a derived-only tender from ever outscoring an
+ * identically-matched properly-coded one.
+ */
+const DERIVED_CPV_DISCOUNT = 0.8;
+
 /** Ranking past a few hundred results is meaningless; this also bounds sort cost. */
 export const RANK_CAP = 500;
 
@@ -158,6 +180,8 @@ export interface RankedTenderRaw {
   estimatedValueCurrency: string | null;
   score: number;
   cpvScore: number;
+  /** Rank-decayed notice-text match, 0 when the text arm did not run. */
+  textScore: number;
   geoScore: number;
   timeScore: number;
   hasCoordinates: boolean;
@@ -316,6 +340,17 @@ export interface RelevanceOptions {
    * is in that shortlist may be that CPV and NUTS both missed it.
    */
   includeIds?: ObjectId[];
+  /**
+   * Tenders ranked by how well the notice text matches the company profile,
+   * best first — see `lib/tenders/text-arm.ts`.
+   *
+   * Both a recall source and a scoring signal, and it is the answer to CPV
+   * being unreliable on the tender side: 14% of open tenders carry no CPV code
+   * at all and cannot be reached by code matching at any threshold, while the
+   * words the buyer wrote are always there. Costs nothing when omitted — the
+   * feed then behaves exactly as it did before.
+   */
+  textRankedIds?: ObjectId[];
 }
 
 /** Sentinels that park undated tenders at the end of a date-ordered page. */
@@ -531,11 +566,20 @@ export function buildRelevancePipeline(
     Boolean,
   ) as string[];
 
+  const textRankedIds = opts.textRankedIds ?? [];
+
   // --- Candidate filter (index-backed) ---------------------------------------
+  // Every branch of this `$or` must stay indexed (`ix_derived_cpv` for the
+  // derived pair) — one unindexed branch turns the whole recall into a scan.
   const recall: Record<string, unknown>[] = [];
   if (exactCodes.length) recall.push({ cpvCodes: { $in: exactCodes } });
   if (familyRegex) recall.push({ cpvCodes: { $regex: familyRegex } });
+  if (exactCodes.length) recall.push({ derivedCpvCodes: { $in: exactCodes } });
+  if (familyRegex) recall.push({ derivedCpvCodes: { $regex: familyRegex } });
   if (nutsCodes.length) recall.push({ regions: { $in: nutsCodes } });
+  // Without this a no-CPV tender in a neighbouring region is unreachable, no
+  // matter how exactly its text describes what the company does.
+  if (textRankedIds.length) recall.push({ _id: { $in: textRankedIds } });
 
   // When the user drives with explicit content filters they are exploring beyond
   // their own profile, so the company-relevance recall must not narrow them out.
@@ -602,55 +646,74 @@ export function buildRelevancePipeline(
   // CPV: how deep the best code match runs, nudged by how much of the tender's
   // scope the company covers.
   const depthScoreExpr = cpvDepthScoreExpr(buildCpvPrefixSets(exactCodes));
+
+  /** The best/breadth blend over one array of tender codes. */
+  const cpvScoreOverField = (fieldPath: string): Record<string, unknown> => ({
+    $let: {
+      vars: {
+        scores: {
+          $map: {
+            input: { $ifNull: [fieldPath, []] },
+            as: "c",
+            in: depthScoreExpr,
+          },
+        },
+      },
+      in: {
+        $add: [
+          {
+            $multiply: [
+              CPV_BEST_WEIGHT,
+              { $ifNull: [{ $max: "$$scores" }, 0] },
+            ],
+          },
+          {
+            $multiply: [
+              CPV_BREADTH_WEIGHT,
+              {
+                $min: [
+                  1,
+                  {
+                    $divide: [
+                      {
+                        $size: {
+                          $filter: {
+                            input: "$$scores",
+                            as: "s",
+                            cond: { $gt: ["$$s", 0] },
+                          },
+                        },
+                      },
+                      CPV_BREADTH_TARGET,
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
+
+  // Source codes at full value, AI-derived codes (`scripts/ai-cpv-derive.mts`,
+  // written only for tenders the buyer left uncoded) at a confidence discount.
+  // Max, not sum: both answer "is this the company's kind of work", and a
+  // tender must never score higher for having been coded twice. Tenders
+  // without the derived field cost one `$ifNull` and score exactly as before.
   const cpvScoreExpr =
     depthScoreExpr === 0
       ? 0
       : {
-          $let: {
-            vars: {
-              scores: {
-                $map: {
-                  input: { $ifNull: ["$cpvCodes", []] },
-                  as: "c",
-                  in: depthScoreExpr,
-                },
-              },
-            },
-            in: {
-              $add: [
-                {
-                  $multiply: [
-                    CPV_BEST_WEIGHT,
-                    { $ifNull: [{ $max: "$$scores" }, 0] },
-                  ],
-                },
-                {
-                  $multiply: [
-                    CPV_BREADTH_WEIGHT,
-                    {
-                      $min: [
-                        1,
-                        {
-                          $divide: [
-                            {
-                              $size: {
-                                $filter: {
-                                  input: "$$scores",
-                                  as: "s",
-                                  cond: { $gt: ["$$s", 0] },
-                                },
-                              },
-                            },
-                            CPV_BREADTH_TARGET,
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
+          $max: [
+            cpvScoreOverField("$cpvCodes"),
+            {
+              $multiply: [
+                DERIVED_CPV_DISCOUNT,
+                cpvScoreOverField("$derivedCpvCodes"),
               ],
             },
-          },
+          ],
         };
 
   // Per-region NUTS tier, then the max across the tender's regions.
@@ -730,6 +793,44 @@ export function buildRelevancePipeline(
     ],
   };
 
+  // Rank in the text arm → 0..1, decaying from the head of the list. `-1` from
+  // `$indexOfArray` means the arm never returned it, which scores zero rather
+  // than penalising: plenty of good matches are found by CPV alone.
+  const textScoreExpr = textRankedIds.length
+    ? {
+        $let: {
+          vars: { rank: { $indexOfArray: [textRankedIds, "$_id"] } },
+          in: {
+            $cond: [
+              { $lt: ["$$rank", 0] },
+              0,
+              {
+                $divide: [
+                  TEXT_RANK_HALF_LIFE,
+                  { $add: [TEXT_RANK_HALF_LIFE, "$$rank"] },
+                ],
+              },
+            ],
+          },
+        },
+      }
+    : 0;
+
+  /**
+   * Capability fit is the better of the two evidence sources, not their sum.
+   *
+   * They are two ways of answering one question — "is this our kind of work?"
+   * — and either can answer it alone. Taking the max means a tender filed with
+   * no CPV code can still score a full capability match on its text, while
+   * every tender that scored well on CPV before scores exactly the same now.
+   * Adding them instead would double-count the tenders where both agree, which
+   * is precisely the well-coded, easy-to-find work that needs no help.
+   */
+  const fitScoreExpr =
+    textScoreExpr === 0
+      ? "$cpvScore"
+      : { $max: ["$cpvScore", "$textScore"] };
+
   const rankCap = opts.rankCap ?? RANK_CAP;
   const skip = opts.page * opts.pageSize;
 
@@ -740,15 +841,17 @@ export function buildRelevancePipeline(
     {
       $addFields: {
         cpvScore: cpvScoreExpr,
+        textScore: textScoreExpr,
         geoScore: geoScoreExpr,
         timeScore: timeScoreExpr,
       },
     },
+    { $addFields: { fitScore: fitScoreExpr } },
     {
       $addFields: {
         score: {
           $add: [
-            { $multiply: [W_CPV, "$cpvScore"] },
+            { $multiply: [W_CPV, "$fitScore"] },
             { $multiply: [W_GEO, "$geoScore"] },
             { $multiply: [W_TIME, "$timeScore"] },
           ],
@@ -798,6 +901,7 @@ export function buildRelevancePipeline(
               estimatedValueCurrency: "$estimatedValue.currency",
               score: 1,
               cpvScore: 1,
+              textScore: 1,
               geoScore: 1,
               timeScore: 1,
               hasCoordinates: {

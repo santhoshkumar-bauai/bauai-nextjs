@@ -8,6 +8,7 @@ import { distanceKm, type LatLng } from "@/lib/tenders/distance";
 import { parseTenderFilters } from "@/lib/tenders/filters";
 import { resolveMarkerLocations } from "@/lib/tenders/geocode-cache";
 import { resolveCompanyNuts } from "@/lib/tenders/nuts";
+import { rankProfileText } from "@/lib/tenders/profile-text-rank";
 import {
   buildRelevancePipeline,
   DEFAULT_PAGE_SIZE,
@@ -75,6 +76,20 @@ export async function GET(request: Request) {
       ? { lat: companyLat, lng: companyLng }
       : null;
 
+  // The notice-text arm. This is what makes the feed work for a company that
+  // has uploaded nothing and has no embeddings yet — and what stops a tender
+  // filed with a wrong CPV code, or none at all, from being invisible. It is
+  // best-effort by design: a deployment without Atlas Search, or a profile too
+  // thin to yield terms, simply falls through to CPV and geography.
+  const searchCountries = countries.length ? countries : [nuts.country];
+  const textRankedIds = await rankProfileText({
+    company,
+    countries: searchCountries,
+    nuts,
+    contractNatures: filters.contractNatures,
+    statuses: filters.statuses,
+  });
+
   const { pipeline } = buildRelevancePipeline(
     {
       companyCpvCodes: company.cpvCodes ?? [],
@@ -83,6 +98,7 @@ export async function GET(request: Request) {
       companyPoint,
     },
     {
+      textRankedIds,
       now: new Date(),
       page,
       pageSize,

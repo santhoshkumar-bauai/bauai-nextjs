@@ -2,10 +2,16 @@ import { ObjectId } from "mongodb";
 
 import { getIngestionDb } from "../../ingestion/db/client.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
+import { buildProfileTerms, hasUsableTerms } from "../../tenders/profile-terms.ts";
 import { buildRelevancePipeline } from "../../tenders/relevance.ts";
+import { rankTendersByProfileText } from "../../tenders/text-arm.ts";
+import { getCompanyFilesCollection } from "../company/doc-embedder.ts";
 import { aiEnv } from "../config/env.ts";
 import { getAiCollections } from "../db/collections.ts";
-import { buildFullCompanyContext } from "../fit/company-context.ts";
+import {
+  buildFullCompanyContext,
+  type CompanyContextInput,
+} from "../fit/company-context.ts";
 import type { CompanyMatchProfileDocument, TenderMatchScoreDocument } from "../types.ts";
 import {
   buildMatchProfile,
@@ -14,7 +20,7 @@ import {
   getMatchProfileState,
   toCompanyContext,
 } from "./company-profile.ts";
-import { resolveCpvNameMap } from "./cpv.ts";
+import { resolveCpvNameMap, resolveCpvNames } from "./cpv.ts";
 import { finalScore, fuseCandidates, matchScore } from "./fusion.ts";
 import { judgeCandidates } from "./judge.ts";
 import type { JudgeCandidate } from "./prompt.ts";
@@ -46,6 +52,7 @@ interface ScoredRow {
   _id: ObjectId;
   score: number;
   cpvScore: number;
+  textScore: number;
   geoScore: number;
   timeScore: number;
   title?: string | null;
@@ -74,6 +81,7 @@ async function runRelevance(input: {
   now: Date;
   limit: number;
   includeIds?: ObjectId[];
+  textRankedIds?: ObjectId[];
 }): Promise<ScoredRow[]> {
   const db = await getIngestionDb();
   const { pipeline } = buildRelevancePipeline(
@@ -89,6 +97,7 @@ async function runRelevance(input: {
       pageSize: input.limit,
       rankCap: input.limit,
       includeIds: input.includeIds,
+      textRankedIds: input.textRankedIds,
     },
   );
 
@@ -103,6 +112,110 @@ export interface RefreshResult {
   scoredCount: number;
   judgedCount: number;
   facetCount: number;
+}
+
+/**
+ * Uploaded files for the judge's "Documents on file" section — with the
+ * opening of each document's extracted text, joined from the profile facets
+ * that already carry it. The excerpt is what lets the judge see that a file
+ * named "Abbenrode_Anbau_Feuerwehr.docx" describes electrical/TGA work; a
+ * bare filename proved to be worth nothing (the judge scored every tender
+ * the documents matched at fit≤20 for "wrong trade").
+ *
+ * Logos prove nothing about capability and are skipped; insurance stays —
+ * for the judge it is eligibility evidence, even though it is excluded from
+ * retrieval facets.
+ */
+async function listJudgeDocuments(
+  tenantId: ObjectId,
+  profile: CompanyMatchProfileDocument,
+): Promise<Array<{ fileName: string; category: string; excerpt?: string }>> {
+  try {
+    const excerpts = new Map<string, string>(
+      profile.facets
+        .filter((facet) => facet.kind === "document")
+        .map((facet) => [facet.key, facet.text]),
+    );
+    const companyFiles = await getCompanyFilesCollection();
+    const rows = await companyFiles
+      .find({ companyId: tenantId, category: { $ne: "logo" } })
+      .project<{ _id: ObjectId; fileName: string; category: string }>({
+        fileName: 1,
+        category: 1,
+      })
+      .limit(12)
+      .toArray();
+    return rows.map((row) => ({
+      fileName: row.fileName,
+      category: row.category,
+      excerpt: excerpts.get(`doc:company:${row._id.toHexString()}`),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Human-readable retrieval provenance for one candidate — the judge's
+ * "Matched via" line. Facet labels first (strongest evidence first is already
+ * the `matchedFacets` order), then the deterministic arms.
+ */
+function matchedViaLabels(
+  candidate: { matchedFacets: Array<{ key: string; kind: string; label: string | null }> },
+  arms: { fromRuleArm: boolean; fromTextArm: boolean },
+): string[] {
+  const labels = candidate.matchedFacets.map((facet) => {
+    if (facet.kind === "document") {
+      return `uploaded document: ${facet.label ?? "unnamed"}`;
+    }
+    if (facet.key.startsWith("reference:")) {
+      return `reference project: ${facet.label ?? "unnamed"}`;
+    }
+    if (facet.key === "qualifications") return "company qualifications";
+    return "company capabilities";
+  });
+  if (arms.fromTextArm) labels.push("notice text matches your services");
+  if (arms.fromRuleArm) labels.push("CPV/region ranking");
+  return labels;
+}
+
+/**
+ * The notice-text arm for the AI matcher: the company's services, trades and
+ * specializations run as a lexical search against what each notice actually
+ * says (`sx_tenders`). This is the arm that reaches a tender whose CPV codes
+ * are missing or wrong — the case the whole services-first change exists for —
+ * and it needs no uploads and no embeddings, so it works from the first
+ * refresh after signup.
+ *
+ * Deliberately NOT `lib/tenders/profile-text-rank.ts`: that wrapper pulls in
+ * `@/`-aliased modules and the Next.js Mongo client, neither of which survives
+ * the BullMQ worker's strip-types loader. Same building blocks, worker-safe
+ * plumbing.
+ *
+ * Best-effort by contract: a thin profile or a deployment without Atlas
+ * Search degrades to an empty arm, never a failed refresh.
+ */
+async function runTextArm(
+  company: CompanyContextInput,
+  profile: CompanyMatchProfileDocument,
+): Promise<ObjectId[]> {
+  const terms = await buildProfileTerms(company).catch(() => []);
+  if (!hasUsableTerms(terms)) return [];
+
+  const nutsCodes = [profile.scope.nuts.nuts2, profile.scope.nuts.nuts1].filter(
+    (code): code is string => Boolean(code),
+  );
+
+  try {
+    const db = await getIngestionDb();
+    return await rankTendersByProfileText(db, terms, {
+      countries: profile.scope.countries,
+      nutsCodes,
+    });
+  } catch (error) {
+    if (isSearchUnavailable(error)) return [];
+    throw error;
+  }
 }
 
 /**
@@ -131,11 +244,19 @@ export async function refreshCompanyMatches(input: {
     const profile = state.stale ? await buildMatchProfile(tenantId) : state.profile;
     if (!profile) throw new Error("match profile could not be built");
 
+    // One read serves the text arm, the judge context and the doc listing.
+    const companies = await getCompaniesCollection();
+    const companyRow = await companies.findOne({ _id: tenantId });
+    const companyContextInput = companyRow ? toCompanyContext(companyRow) : null;
+
     // ---- 2. retrieval ----------------------------------------------------
     await markStage(tenantId, "retrieving");
-    const [facetHits, ruleRows] = await Promise.all([
+    const [facetHits, ruleRows, textRankedIds] = await Promise.all([
       retrieveByFacets(profile),
       runRelevance({ profile, now, limit: RULE_ARM_DEPTH }),
+      companyContextInput
+        ? runTextArm(companyContextInput, profile)
+        : Promise.resolve<ObjectId[]>([]),
     ]);
 
     // ---- 3. fusion -------------------------------------------------------
@@ -143,7 +264,9 @@ export async function refreshCompanyMatches(input: {
     const candidates = fuseCandidates({
       facetHits,
       ruleRankedIds: ruleRows.map((row) => row._id.toHexString()),
+      textRankedIds: textRankedIds.map((id) => id.toHexString()),
       poolCap: env.matchPoolCap,
+      weights: { ruleArm: env.matchRuleArmWeight, textArm: env.matchTextArmWeight },
     });
 
     if (candidates.length === 0) {
@@ -154,11 +277,15 @@ export async function refreshCompanyMatches(input: {
     // Re-score the fused pool through the shared pipeline. This is also what
     // re-verifies status/isVisible/deadline against `tenders` — the vector
     // index's `filters.*` are a snapshot from embedding time and can lag.
+    // `textRankedIds` goes into this call only, NOT the rule-arm call above:
+    // the text ranking already votes as its own RRF arm, and letting it also
+    // reshape the rule arm would count one signal twice.
     const scored = await runRelevance({
       profile,
       now,
       limit: candidates.length,
       includeIds: candidates.map((candidate) => new ObjectId(candidate.tenderId)),
+      textRankedIds,
     });
     const scoredById = new Map(scored.map((row) => [row._id.toHexString(), row]));
 
@@ -194,39 +321,63 @@ export async function refreshCompanyMatches(input: {
       total: Math.ceil(ranked.length / env.matchJudgeBatch),
     });
 
-    const companies = await getCompaniesCollection();
-    const companyRow = await companies.findOne({ _id: tenantId });
-    const companyContext = companyRow
-      ? buildFullCompanyContext(toCompanyContext(companyRow))
+    // The judge sees the company as capabilities-first prose: CPV codes
+    // resolved to names, and the uploaded files listed as evidence. Both are
+    // best-effort — a failed lookup degrades to the raw profile.
+    const [companyCpvNames, companyDocuments] = companyContextInput
+      ? await Promise.all([
+          resolveCpvNames(companyContextInput.cpvCodes ?? []).catch(
+            () => [] as string[],
+          ),
+          listJudgeDocuments(tenantId, profile),
+        ])
+      : [[], []];
+
+    const companyContext = companyContextInput
+      ? buildFullCompanyContext({
+          ...companyContextInput,
+          cpvNames: companyCpvNames,
+          documents: companyDocuments,
+        })
       : "";
 
     const cpvNames = await resolveCpvNameMap(
       ranked.flatMap(({ row }) => row.cpvCodes ?? []),
     );
 
-    const judgeCandidateList: JudgeCandidate[] = ranked.map(({ row }, index) => ({
-      ref: index,
-      title: row.title ?? null,
-      buyerName: row.buyer?.name ?? null,
-      categories: [
-        ...new Set(
-          (row.cpvCodes ?? []).flatMap((code) => {
-            const name = cpvNames.get(code);
-            return name ? [name] : [];
-          }),
-        ),
-      ],
-      regions: row.regions ?? [],
-      submissionDeadline: row.submissionDeadline
-        ? new Date(row.submissionDeadline).toISOString().slice(0, 10)
-        : null,
-      estimatedValue: row.estimatedValueAmount
-        ? `${row.estimatedValueAmount} ${row.estimatedValueCurrency ?? ""}`.trim()
-        : null,
-      contractNature: row.contractNature ?? null,
-      procedureType: row.procedureType ?? null,
-      description: row.description ?? null,
-    }));
+    // Retrieval provenance per candidate — which arms actually surfaced it.
+    const ruleIdSet = new Set(ruleRows.map((row) => row._id.toHexString()));
+    const textIdSet = new Set(textRankedIds.map((id) => id.toHexString()));
+
+    const judgeCandidateList: JudgeCandidate[] = ranked.map(
+      ({ row, candidate }, index) => ({
+        ref: index,
+        title: row.title ?? null,
+        buyerName: row.buyer?.name ?? null,
+        categories: [
+          ...new Set(
+            (row.cpvCodes ?? []).flatMap((code) => {
+              const name = cpvNames.get(code);
+              return name ? [name] : [];
+            }),
+          ),
+        ],
+        regions: row.regions ?? [],
+        submissionDeadline: row.submissionDeadline
+          ? new Date(row.submissionDeadline).toISOString().slice(0, 10)
+          : null,
+        estimatedValue: row.estimatedValueAmount
+          ? `${row.estimatedValueAmount} ${row.estimatedValueCurrency ?? ""}`.trim()
+          : null,
+        contractNature: row.contractNature ?? null,
+        procedureType: row.procedureType ?? null,
+        description: row.description ?? null,
+        matchedVia: matchedViaLabels(candidate, {
+          fromRuleArm: ruleIdSet.has(candidate.tenderId),
+          fromTextArm: textIdSet.has(candidate.tenderId),
+        }),
+      }),
+    );
 
     const judged = companyContext
       ? await judgeCandidates({
@@ -273,6 +424,7 @@ export async function refreshCompanyMatches(input: {
           semanticRaw: candidate.semanticRaw,
           rule: row.score,
           cpv: row.cpvScore,
+          text: row.textScore,
           geo: row.geoScore,
           time: row.timeScore,
           fused: candidate.fused,

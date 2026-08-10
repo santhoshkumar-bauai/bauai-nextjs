@@ -112,7 +112,14 @@ const AiEnvSchema = z.object({
   matchStaleHours: z.coerce.number().int().positive().default(6),
   /** Phase-4 BM25 arm over tender_search_documents.text. */
   matchLexical: BoolFromEnv,
-  matchPipelineVersion: z.string().default("v1"),
+  /**
+   * Fusion arm weights, exposed as env so a ranking regression can be rolled
+   * back without a deploy: `AI_MATCH_W_TEXT_ARM=0 AI_MATCH_W_RULE_ARM=1.2`
+   * restores the pre-text-arm ordering exactly.
+   */
+  matchRuleArmWeight: z.coerce.number().min(0).default(0.6),
+  matchTextArmWeight: z.coerce.number().min(0).default(0.9),
+  matchPipelineVersion: z.string().default("v2"),
   matchProfileVersion: z.string().default("v1"),
 
   /** Context cap for the retrieval-targeted extraction path. */
@@ -205,6 +212,8 @@ export function aiEnv(): AiEnv {
     matchJudgeConcurrency: process.env.AI_MATCH_JUDGE_CONCURRENCY,
     matchStaleHours: process.env.AI_MATCH_STALE_HOURS,
     matchLexical: process.env.AI_MATCH_LEXICAL,
+    matchRuleArmWeight: process.env.AI_MATCH_W_RULE_ARM,
+    matchTextArmWeight: process.env.AI_MATCH_W_TEXT_ARM,
     matchPipelineVersion: process.env.MATCH_PIPELINE_VERSION,
     matchProfileVersion: process.env.COMPANY_PROFILE_VERSION,
     extractionMaxChunks: process.env.AI_EXTRACTION_MAX_CHUNKS,

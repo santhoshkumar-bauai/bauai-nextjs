@@ -14,9 +14,23 @@ export interface CompanyContextInput {
   employeeCount?: number | null;
   services?: string[];
   cpvCodes?: string[];
+  /**
+   * `cpvCodes` resolved to catalog names ("Bauleistungen im Hochbau / Building
+   * construction work"). When present they replace the raw codes in the
+   * rendered context: "45210000-2" tells the model nothing, the name is the
+   * capability. Optional so existing call sites keep their exact output.
+   */
+  cpvNames?: string[];
   trade?: string[];
   specializations?: string[];
   certifications?: string[];
+  /**
+   * Uploaded documents on file, as evidence that capability claims are
+   * backed by paperwork. `excerpt` carries the opening of the document's
+   * extracted text — without it the judge sees only a filename and cannot
+   * know that "Abbenrode_Anbau_Feuerwehr.docx" describes electrical work.
+   */
+  documents?: Array<{ fileName: string; category: string; excerpt?: string }>;
   projectSizeRange?: { min?: string; max?: string } | null;
   insurances?: Array<{ type?: string; amount?: string; details?: string }>;
   referenceProjects?: Array<{
@@ -91,7 +105,23 @@ export function truncate(text: string | undefined, max: number): string | null {
 export function buildFullCompanyContext(company: CompanyContextInput): string {
   const kb = company.knowledgeBase ?? {};
 
+  // Capabilities lead and the money/insurance trivia trails: consumers cap
+  // this text (the match judge at 6000 chars) and truncation eats the TAIL,
+  // so the order is also a statement about what may be lost. Losing the GL
+  // carrier is harmless; losing the reference projects would blind the judge
+  // to what the company actually does.
   const sections = [
+    section("Capabilities", [
+      listLine("Services", company.services),
+      listLine("Trades", company.trade),
+      listLine("Specializations", company.specializations),
+      // Names when the caller resolved them — the code list is a fallback,
+      // not an equal: "45210000-2" carries no meaning for the judge.
+      company.cpvNames?.length
+        ? listLine("Procurement categories", company.cpvNames)
+        : listLine("CPV codes", company.cpvCodes),
+      truncate(kb.technicalNarratives?.capabilitiesStatement, 800),
+    ]),
     section("Identity", [
       line("Name", company.name),
       line("Business domain", company.businessDomain),
@@ -109,15 +139,38 @@ export function buildFullCompanyContext(company: CompanyContextInput): string {
         : null,
       truncate(kb.companyExtended?.description, 600),
     ]),
-    section("Capabilities", [
-      listLine("Services", company.services),
-      listLine("Trades", company.trade),
-      listLine("Specializations", company.specializations),
-      listLine("CPV codes", company.cpvCodes),
-      truncate(kb.technicalNarratives?.capabilitiesStatement, 800),
-    ]),
+    section("Reference projects",
+      (company.referenceProjects ?? []).map((project) =>
+        line(
+          project.title ?? "Project",
+          [
+            project.client && `client: ${project.client}`,
+            project.year && `year: ${project.year}`,
+            project.value && `value: ${project.value}`,
+            project.description && truncate(project.description, 200),
+          ]
+            .filter(Boolean)
+            .join("; "),
+        ),
+      ),
+    ),
+    section(
+      "Documents on file",
+      (company.documents ?? [])
+        .slice(0, 12)
+        .flatMap((doc) => [
+          line(doc.category, doc.fileName),
+          // Indented so the excerpt reads as belonging to the file above it.
+          doc.excerpt ? `  ${truncate(doc.excerpt.replace(/\s+/g, " "), 350)}` : null,
+        ]),
+    ),
     section("Certifications", [
       listLine("Certifications", company.certifications),
+    ]),
+    section("Track record & quality", [
+      truncate(kb.technicalNarratives?.pastPerformanceSummary, 600),
+      truncate(kb.technicalNarratives?.qualityControlProcess, 400),
+      truncate(kb.technicalNarratives?.safetyApproach, 400),
     ]),
     section("Financials", [
       line("Revenue (current year)", kb.financialInfo?.revenueCurrent),
@@ -142,27 +195,6 @@ export function buildFullCompanyContext(company: CompanyContextInput): string {
       line("Surety", kb.bonding?.suretyCompany),
       line("Bonding capacity", kb.bonding?.bondingCapacity),
       line("Single project limit", kb.bonding?.singleProjectLimit),
-    ]),
-    section(
-      "Reference projects",
-      (company.referenceProjects ?? []).map((project) =>
-        line(
-          project.title ?? "Project",
-          [
-            project.client && `client: ${project.client}`,
-            project.year && `year: ${project.year}`,
-            project.value && `value: ${project.value}`,
-            project.description && truncate(project.description, 200),
-          ]
-            .filter(Boolean)
-            .join("; "),
-        ),
-      ),
-    ),
-    section("Track record & quality", [
-      truncate(kb.technicalNarratives?.pastPerformanceSummary, 600),
-      truncate(kb.technicalNarratives?.qualityControlProcess, 400),
-      truncate(kb.technicalNarratives?.safetyApproach, 400),
     ]),
   ];
 

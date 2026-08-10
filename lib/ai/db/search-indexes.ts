@@ -1,5 +1,6 @@
 import type { Collection, Document } from "mongodb";
 
+import { getIngestionDb } from "../../ingestion/db/client.ts";
 import { aiEnv } from "../config/env.ts";
 import { getAiCollections } from "./collections.ts";
 
@@ -14,6 +15,7 @@ export const searchIndexNames = {
   noticeVectors: "vx_tender_search_documents",
   chunkVectors: "vx_chunks",
   chunkText: "sx_chunks",
+  tenderText: "sx_tenders",
 } as const;
 
 interface SearchIndexSpec {
@@ -96,6 +98,68 @@ const chunkTextSpec: SearchIndexSpec = {
   },
 };
 
+/**
+ * Full-text index over the notice's own words, on `tenders` itself.
+ *
+ * This is the cold-start arm: a company that has signed up and uploaded
+ * nothing has no embeddings, so the only thing left to match on is what the
+ * notice says. CPV cannot carry that job — 14% of open tenders carry no CPV
+ * code at all, and the ones that do are frequently filed under a division that
+ * has little to do with the actual scope. The words in the title and the lot
+ * descriptions are what the buyer actually wrote.
+ *
+ * Both analyzers are indexed per field. `lucene.german` does the stemming and
+ * decompounding that makes "Elektroinstallationsarbeiten" reachable from
+ * "Elektroinstallation"; the `standard` multi keeps the 17% of the corpus that
+ * is not German (TED publishes in every member-state language) searchable at
+ * all. Queries hit both and take the better hit.
+ */
+const tenderTextSpec: SearchIndexSpec = {
+  name: searchIndexNames.tenderText,
+  type: "search",
+  definition: {
+    mappings: {
+      dynamic: false,
+      fields: {
+        title: {
+          type: "string",
+          analyzer: "lucene.german",
+          multi: { std: { type: "string", analyzer: "lucene.standard" } },
+        },
+        description: {
+          type: "string",
+          analyzer: "lucene.german",
+          multi: { std: { type: "string", analyzer: "lucene.standard" } },
+        },
+        lots: {
+          type: "document",
+          fields: {
+            title: {
+              type: "string",
+              analyzer: "lucene.german",
+              multi: { std: { type: "string", analyzer: "lucene.standard" } },
+            },
+            description: {
+              type: "string",
+              analyzer: "lucene.german",
+              multi: { std: { type: "string", analyzer: "lucene.standard" } },
+            },
+          },
+        },
+        // Filters, so the lexical arm can be narrowed to biddable work in the
+        // company's country before scoring rather than after.
+        isVisible: { type: "boolean" },
+        status: { type: "token" },
+        businessCategory: { type: "token" },
+        countries: { type: "token" },
+        regions: { type: "token" },
+        contractNature: { type: "token" },
+        submissionDeadline: { type: "date" },
+      },
+    },
+  },
+};
+
 async function listSearchIndexes(
   collection: Collection<Document>,
 ): Promise<Map<string, { status?: string; queryable?: boolean }>> {
@@ -160,11 +224,13 @@ export async function ensureAiSearchIndexes(
 
   const notices = c.tenderSearchDocuments as unknown as Collection<Document>;
   const chunks = c.chunks as unknown as Collection<Document>;
+  const tenders = (await getIngestionDb()).collection("tenders");
 
   try {
     await ensureIndex(notices, noticeVectorSpec(dimensions), log);
     await ensureIndex(chunks, chunkVectorSpec(dimensions), log);
     await ensureIndex(chunks, chunkTextSpec, log);
+    await ensureIndex(tenders, tenderTextSpec, log);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/SearchNotEnabled|Unrecognized pipeline stage|no such command|CommandNotSupported/i.test(message)) {
@@ -188,4 +254,5 @@ export async function ensureAiSearchIndexes(
     log,
     timeoutMs,
   );
+  await waitQueryable(tenders, [searchIndexNames.tenderText], log, timeoutMs);
 }

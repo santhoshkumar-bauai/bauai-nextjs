@@ -6,6 +6,7 @@ import { getIngestionDb } from "../../ingestion/db/client.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
 import { resolveCompanyNuts } from "../../tenders/nuts.ts";
 import { stripCheckDigit } from "../../tenders/relevance.ts";
+import { getCompanyFilesCollection } from "../company/doc-embedder.ts";
 import { aiEnv } from "../config/env.ts";
 import { getAiCollections } from "../db/collections.ts";
 import { hashCompanyData, listEmbeddedCompanyDocs } from "../fit/company-hash.ts";
@@ -54,9 +55,62 @@ export async function getCompaniesCollection() {
 }
 
 /**
+ * Categories whose documents must never become retrieval facets. What a file
+ * *is* decides what its text is evidence of: an insurance certificate proves
+ * eligibility, but embedded as a query it retrieves insurance-services
+ * tenders (measured — Wirl Ing's HDI certificate pulled in
+ * Versicherungsdienstleistungen notices). Logos have no text worth querying.
+ * Insurance stays represented through the structured `insurances` fields in
+ * the qualifications facet, where it belongs.
+ */
+const EXCLUDED_FACET_CATEGORIES = new Set(["logo", "insurance"]);
+
+/** `documentRecordId` is `company:{fileId}` — recover the file id. */
+function fileIdFromRecordId(documentRecordId: string): string | null {
+  return documentRecordId.startsWith("company:")
+    ? documentRecordId.slice("company:".length)
+    : null;
+}
+
+/**
+ * Embedded-doc identities with the user-picked category folded into the sha
+ * field. `hashCompanyData` only string-joins the pair, so this makes a
+ * category edit change the company-data hash — without it, re-categorizing a
+ * file (say insurance → reference-project) would silently keep the old
+ * facets forever, because neither the profile fields nor the file bytes
+ * changed.
+ */
+async function listEmbeddedDocsWithCategory(
+  tenantId: ObjectId,
+): Promise<Array<{ documentRecordId: string; fileSha256: string }>> {
+  const docs = await listEmbeddedCompanyDocs(tenantId);
+  const fileIds = docs
+    .map((doc) => fileIdFromRecordId(doc.documentRecordId))
+    .filter((id): id is string => id != null && ObjectId.isValid(id));
+  const companyFiles = await getCompanyFilesCollection();
+  const categories = new Map<string, string>(
+    (
+      await companyFiles
+        .find({ _id: { $in: fileIds.map((id) => new ObjectId(id)) } })
+        .project<{ _id: ObjectId; category: string }>({ category: 1 })
+        .toArray()
+    ).map((file) => [file._id.toHexString(), file.category]),
+  );
+  return docs.map((doc) => {
+    const fileId = fileIdFromRecordId(doc.documentRecordId);
+    const category = (fileId && categories.get(fileId)) || "general";
+    return { ...doc, fileSha256: `${doc.fileSha256}:${category}` };
+  });
+}
+
+/**
  * The company's own documents, one text per document, assembled from the
  * chunks that were already extracted and embedded for the fit analysis. No S3
  * read and no re-chunking — the text is right there.
+ *
+ * Joined against `companyfiles` for the user-picked category: it is the one
+ * piece of intent we have about what each upload IS, and it decides whether
+ * the document becomes a retrieval facet at all and at what weight.
  */
 async function loadDocumentTexts(tenantId: ObjectId): Promise<DocumentFacetInput[]> {
   const { chunks } = await getAiCollections();
@@ -81,11 +135,33 @@ async function loadDocumentTexts(tenantId: ObjectId): Promise<DocumentFacetInput
     byDocument.set(row.documentRecordId, entry);
   }
 
+  const fileIds = [...byDocument.keys()]
+    .map(fileIdFromRecordId)
+    .filter((id): id is string => id != null && ObjectId.isValid(id));
+  const companyFiles = await getCompanyFilesCollection();
+  const categories = new Map<string, string>(
+    (
+      await companyFiles
+        .find({ _id: { $in: fileIds.map((id) => new ObjectId(id)) } })
+        .project<{ _id: ObjectId; category: string }>({ category: 1 })
+        .toArray()
+    ).map((file) => [file._id.toHexString(), file.category]),
+  );
+
   return [...byDocument.entries()]
+    .map(([documentRecordId, entry]) => {
+      const fileId = fileIdFromRecordId(documentRecordId);
+      // A missing file row means the upload was deleted but its chunks
+      // linger; "general" keeps it usable without granting it extra weight.
+      const category = (fileId && categories.get(fileId)) || "general";
+      return { documentRecordId, entry, category };
+    })
+    .filter(({ category }) => !EXCLUDED_FACET_CATEGORIES.has(category))
     .slice(0, MAX_DOCUMENT_FACETS)
-    .map(([documentRecordId, entry]) => ({
+    .map(({ documentRecordId, entry, category }) => ({
       documentRecordId,
       fileName: entry.fileName,
+      category,
       // Leading chunks, in document order: the front of a reference-project
       // PDF or a capability statement is where the scope is described.
       text: entry.parts.join("\n\n").slice(0, DOC_FACET_CHARS),
@@ -116,7 +192,7 @@ export async function getMatchProfileState(
   const company = await companies.findOne({ _id: tenantId });
   if (!company) throw new Error(`company ${tenantId.toHexString()} not found`);
 
-  const embeddedDocs = await listEmbeddedCompanyDocs(tenantId);
+  const embeddedDocs = await listEmbeddedDocsWithCategory(tenantId);
   const companyDataHash = hashCompanyData(toCompanyContext(company), embeddedDocs);
 
   const profile = await companyMatchProfiles.findOne({ tenantId });
@@ -174,7 +250,7 @@ export async function buildMatchProfile(
   const [cpvNames, documents, embeddedDocs] = await Promise.all([
     resolveCpvNames(company.cpvCodes ?? []),
     loadDocumentTexts(tenantId),
-    listEmbeddedCompanyDocs(tenantId),
+    listEmbeddedDocsWithCategory(tenantId),
   ]);
 
   const { facets, skipped } = buildCompanyFacets({
