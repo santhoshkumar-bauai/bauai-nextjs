@@ -191,6 +191,7 @@
       },
       "tenderCountValue": "{count, plural, one {# Ausschreibung} other {# Ausschreibungen}}",
       "refresh": "Board aktualisieren",
+      "openTender": "{title} öffnen, Dokumente ansehen",
       "unassigned": "Nicht zugewiesen",
       "assignTo": "Zuweisen an",
       "unassign": "Zuweisung entfernen",
@@ -1191,6 +1192,130 @@
       "document": "Dokument",
       "tender": "Ausschreibung",
       "company": "Unternehmen"
+    }
+  },
+  "DocumentFiller": {
+    "tabs": {
+      "documents": "Meine Dokumente",
+      "tenders": "Ausschreibungen"
+    },
+    "tenders": {
+      "openDocuments": "Dokumente ansehen →",
+      "back": "Alle Ausschreibungen im Workspace",
+      "openTender": "Ausschreibung öffnen",
+      "workingCopies": "Ihre Arbeitskopien",
+      "continueEditing": "Weiter bearbeiten",
+      "tenderFiles": "Veröffentlichte Vergabeunterlagen",
+      "editCopy": "Kopie bearbeiten",
+      "download": "Herunterladen",
+      "copyFailed": "Die Arbeitskopie konnte nicht erstellt werden.",
+      "fetch": "Unterlagen abrufen",
+      "refetch": "Unterlagen erneut abrufen",
+      "fetchRunning": "Wird abgerufen…",
+      "fetchProgress": "{done} von {total} verarbeitet",
+      "fetchError": "Die Unterlagen konnten nicht abgerufen werden. Bitte versuchen Sie es erneut.",
+      "noFilesYet": "Für diese Ausschreibung wurden noch keine Dateien heruntergeladen. Rufen Sie sie ab, um eine Arbeitskopie zu erstellen.",
+      "noFilesFound": "Es wurden keine herunterladbaren Dateien gefunden. Das Vergabeportal erfordert möglicherweise eine Anmeldung.",
+      "empty": {
+        "title": "Noch keine Ausschreibungen im Workspace",
+        "description": "Ausschreibungen, die Sie auf das Kanban-Board ziehen, erscheinen hier mit allen Unterlagen — bereit zur Bearbeitung.",
+        "action": "Ausschreibungen entdecken"
+      }
+    },
+    "library": {
+      "eyebrow": "Angebotsvorbereitung",
+      "title": "Dokumentassistent",
+      "subtitle": "Bearbeiten Sie Arbeitskopien von Ausschreibungen gemeinsam mit Ihrem Team und Dora.",
+      "upload": "Dokument hochladen",
+      "uploading": "Wird hochgeladen…",
+      "sizeHint": "Max. {mb} MB · DOCX, XLSX, PDF",
+      "filter": {
+        "all": "Alle Dokumente",
+        "tender": "Arbeitskopien",
+        "upload": "Direkt hochgeladen"
+      },
+      "source": {
+        "tender": "Arbeitskopie einer Ausschreibung",
+        "upload": "Hochgeladenes Dokument"
+      },
+      "state": {
+        "ready": "Bereit",
+        "converting": "Wird konvertiert…",
+        "conversionFailed": "Konvertierung fehlgeschlagen"
+      },
+      "version": "v{n}",
+      "empty": {
+        "title": "Noch keine Dokumente",
+        "description": "Laden Sie ein Dokument hoch oder erstellen Sie im Tab „Dokumente“ einer Ausschreibung eine Arbeitskopie einer ihrer Dateien."
+      },
+      "errors": {
+        "fileTooLarge": "Dateien dürfen höchstens 100 MB groß sein.",
+        "unsupportedType": "Wählen Sie eine DOC-, DOCX-, XLS-, XLSX- oder PDF-Datei.",
+        "uploadFailed": "Der Upload ist fehlgeschlagen.",
+        "uploadStartFailed": "Der Upload konnte nicht gestartet werden.",
+        "uploadConfirmFailed": "Der Upload konnte nicht bestätigt werden.",
+        "renameFailed": "Das Dokument konnte nicht umbenannt werden.",
+        "deleteFailed": "Das Dokument konnte nicht gelöscht werden. Es ist möglicherweise noch im Editor geöffnet.",
+        "restoreFailed": "Die Version konnte nicht wiederhergestellt werden. Schließen Sie aktive Editoren und versuchen Sie es erneut."
+      },
+      "actions": {
+        "rename": "Umbenennen",
+        "download": "Herunterladen",
+        "versions": "Versionsverlauf",
+        "delete": "Löschen"
+      },
+      "rename": {
+        "title": "Dokument umbenennen",
+        "description": "Wählen Sie einen neuen Namen für dieses Dokument.",
+        "label": "Dokumentname",
+        "cancel": "Abbrechen",
+        "save": "Speichern"
+      },
+      "delete": {
+        "title": "Dokument löschen?",
+        "description": "„{name}“ und alle gespeicherten Versionen werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+        "cancel": "Abbrechen",
+        "confirm": "Löschen"
+      },
+      "versions": {
+        "title": "Versionsverlauf",
+        "version": "Version {n}",
+        "empty": "Noch keine früheren Versionen.",
+        "restore": "Diese Version wiederherstellen",
+        "restoreTitle": "Diese Version wiederherstellen?",
+        "restoreDescription": "Version {n} wird zur neuen aktuellen Version. Es wird nichts gelöscht — die aktuelle Version bleibt im Verlauf erhalten.",
+        "restoreCancel": "Abbrechen",
+        "restoreConfirm": "Wiederherstellen"
+      }
+    },
+    "editor": {
+      "back": "Zurück zum Dokumentassistenten",
+      "download": "Herunterladen",
+      "versions": "Versionsverlauf",
+      "versionsEmpty": "Noch keine früheren Versionen.",
+      "close": "Schließen",
+      "version": "Version {n}",
+      "restore": "Diese Version wiederherstellen",
+      "restoreTitle": "Diese Version wiederherstellen?",
+      "restoreDescription": "Version {n} wird zum aktuellen Dokument. Es wird nichts gelöscht — die aktuelle Version bleibt im Verlauf erhalten.",
+      "restoreCancel": "Abbrechen",
+      "restoreConfirm": "Wiederherstellen",
+      "status": {
+        "connecting": "Verbindung wird hergestellt…",
+        "ready": "Bereit",
+        "editing": "Wird bearbeitet…",
+        "saved": "Gespeichert",
+        "error": "Editorfehler"
+      },
+      "configError": "Der Editor konnte nicht konfiguriert werden.",
+      "openError": "Der Editor konnte nicht geöffnet werden",
+      "retry": "Erneut versuchen",
+      "loadingEditor": "Editor wird geladen…",
+      "loadError": {
+        "script": "Das ONLYOFFICE-API-Skript konnte nicht geladen werden.",
+        "init": "Der ONLYOFFICE-Editor konnte nicht initialisiert werden.",
+        "unsupported": "Der ONLYOFFICE-Editor wird von diesem Browser nicht unterstützt."
+      }
     }
   },
   "Chat": {

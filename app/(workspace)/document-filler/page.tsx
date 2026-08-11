@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { DocumentLibrary } from "@/components/onlyoffice/document-library";
+import { DocumentFillerWorkspace } from "@/components/onlyoffice/document-filler-workspace";
 import { buildDashboardCopy } from "@/lib/dashboard/shell-copy";
 import { getCompanyContext } from "@/lib/company/context";
 import { serializeWorkspaceDocument } from "@/lib/onlyoffice/serialize";
@@ -25,7 +25,7 @@ export default async function DocumentFillerPage() {
       dateLabel=""
       copy={copy}
       workspaceContent={
-        <DocumentLibrary
+        <DocumentFillerWorkspace
           initialDocuments={documents.map(serializeWorkspaceDocument)}
           canDelete={context.role === "admin"}
         />

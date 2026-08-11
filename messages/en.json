@@ -191,6 +191,7 @@
       },
       "tenderCountValue": "{count, plural, one {# tender} other {# tenders}}",
       "refresh": "Refresh board",
+      "openTender": "Open {title}, view documents",
       "unassigned": "Unassigned",
       "assignTo": "Assign to",
       "unassign": "Clear assignee",
@@ -1191,6 +1192,130 @@
       "document": "document",
       "tender": "tender",
       "company": "company"
+    }
+  },
+  "DocumentFiller": {
+    "tabs": {
+      "documents": "My documents",
+      "tenders": "Tender workspace"
+    },
+    "tenders": {
+      "openDocuments": "View documents →",
+      "back": "All workspace tenders",
+      "openTender": "Open tender",
+      "workingCopies": "Your working copies",
+      "continueEditing": "Continue editing",
+      "tenderFiles": "Published tender files",
+      "editCopy": "Edit a copy",
+      "download": "Download",
+      "copyFailed": "The working copy could not be created.",
+      "fetch": "Fetch documents",
+      "refetch": "Re-fetch documents",
+      "fetchRunning": "Fetching…",
+      "fetchProgress": "{done} of {total} processed",
+      "fetchError": "The documents could not be fetched. Please try again.",
+      "noFilesYet": "No files have been downloaded for this tender yet. Fetch them to start a working copy.",
+      "noFilesFound": "No downloadable files were found. The procurement portal may require a login.",
+      "empty": {
+        "title": "No tenders in your workspace yet",
+        "description": "Tenders you move onto the kanban board show up here with all of their documents, ready to work on.",
+        "action": "Explore tenders"
+      }
+    },
+    "library": {
+      "eyebrow": "Bid preparation",
+      "title": "Document Filler",
+      "subtitle": "Edit tender working copies with your team and Dora.",
+      "upload": "Upload document",
+      "uploading": "Uploading…",
+      "sizeHint": "{mb} MB max · DOCX, XLSX, PDF",
+      "filter": {
+        "all": "All documents",
+        "tender": "Tender working copies",
+        "upload": "Direct uploads"
+      },
+      "source": {
+        "tender": "Tender working copy",
+        "upload": "Uploaded document"
+      },
+      "state": {
+        "ready": "Ready",
+        "converting": "Converting…",
+        "conversionFailed": "Conversion failed"
+      },
+      "version": "v{n}",
+      "empty": {
+        "title": "No documents yet",
+        "description": "Upload a document, or open a tender's Documents tab to create a working copy of one of its files."
+      },
+      "errors": {
+        "fileTooLarge": "Files must be 100 MB or smaller.",
+        "unsupportedType": "Choose a DOC, DOCX, XLS, XLSX, or PDF file.",
+        "uploadFailed": "Upload failed.",
+        "uploadStartFailed": "The upload could not be started.",
+        "uploadConfirmFailed": "The upload could not be confirmed.",
+        "renameFailed": "The document could not be renamed.",
+        "deleteFailed": "The document could not be deleted. It may still be open in the editor.",
+        "restoreFailed": "The version could not be restored. Close active editors and try again."
+      },
+      "actions": {
+        "rename": "Rename",
+        "download": "Download",
+        "versions": "Version history",
+        "delete": "Delete"
+      },
+      "rename": {
+        "title": "Rename document",
+        "description": "Choose a new name for this document.",
+        "label": "Document name",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "delete": {
+        "title": "Delete document?",
+        "description": "This permanently deletes \"{name}\" and every saved version. This cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      },
+      "versions": {
+        "title": "Version history",
+        "version": "Version {n}",
+        "empty": "No earlier versions yet.",
+        "restore": "Restore this version",
+        "restoreTitle": "Restore this version?",
+        "restoreDescription": "Version {n} becomes the new current version. Nothing is deleted — the version you're on now stays in the history.",
+        "restoreCancel": "Cancel",
+        "restoreConfirm": "Restore"
+      }
+    },
+    "editor": {
+      "back": "Back to Document Filler",
+      "download": "Download",
+      "versions": "Version history",
+      "versionsEmpty": "No earlier versions yet.",
+      "close": "Close",
+      "version": "Version {n}",
+      "restore": "Restore this version",
+      "restoreTitle": "Restore this version?",
+      "restoreDescription": "Version {n} becomes the current document. Nothing is deleted — the version you're on now stays in the history.",
+      "restoreCancel": "Cancel",
+      "restoreConfirm": "Restore",
+      "status": {
+        "connecting": "Connecting…",
+        "ready": "Ready",
+        "editing": "Editing…",
+        "saved": "Saved",
+        "error": "Editor error"
+      },
+      "configError": "Unable to configure the editor.",
+      "openError": "The editor could not be opened",
+      "retry": "Try again",
+      "loadingEditor": "Loading editor…",
+      "loadError": {
+        "script": "The ONLYOFFICE API script could not be loaded.",
+        "init": "The ONLYOFFICE editor could not be initialized.",
+        "unsupported": "The ONLYOFFICE editor is not supported by this browser."
+      }
     }
   },
   "Chat": {

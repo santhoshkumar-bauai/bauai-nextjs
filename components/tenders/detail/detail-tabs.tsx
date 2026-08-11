@@ -25,6 +25,7 @@ export function TenderDetailTabs({
   className,
   listWrapperClassName,
   panelClassName,
+  initialTab = "about",
 }: {
   tenderId: string | null;
   detail: SerializedTenderDetail;
@@ -33,11 +34,13 @@ export function TenderDetailTabs({
   className?: string;
   listWrapperClassName?: string;
   panelClassName?: string;
+  /** Which tab opens first — e.g. "documents" when launched from the kanban board. */
+  initialTab?: "about" | "documents" | "schedule" | "ai";
 }) {
   const t = useTranslations("Tenders");
 
   return (
-    <Tabs defaultValue="about" className={className}>
+    <Tabs defaultValue={initialTab} className={className}>
       <div className={listWrapperClassName}>
         <TabsList className="w-full">
           <TabsTrigger value="about">{t("detail.tabs.about")}</TabsTrigger>

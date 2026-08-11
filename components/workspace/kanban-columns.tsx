@@ -19,6 +19,8 @@ import {
   useState,
   type CSSProperties,
   type DragEvent,
+  type KeyboardEvent,
+  type MouseEvent,
 } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
@@ -27,6 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { TenderDetailDialog } from "@/components/tenders/tender-detail-dialog";
 import { cn } from "@/lib/utils";
 import { RemoveTenderDialog } from "./remove-tender-dialog";
 import styles from "./workspace-pages.module.css";
@@ -100,6 +103,10 @@ export function KanbanBoardClient({
   const [dragging, setDragging] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [removing, setRemoving] = useState<PipelineItem | null>(null);
+  // Which card's full tender detail is open — opened straight to the
+  // Documents tab, so "click a card" doubles as "see its files and start a
+  // working copy" without leaving the board.
+  const [viewing, setViewing] = useState<string | null>(null);
 
   const load = useCallback((signal?: AbortSignal) => {
     return fetch("/api/tenders/pipeline", { signal })
@@ -282,7 +289,18 @@ export function KanbanBoardClient({
                         {columnItems.map((item) => (
                           <article
                             key={item.tenderId}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={t("openTender", { title: item.title ?? "" })}
                             draggable
+                            onClick={() => setViewing(item.tenderId)}
+                            onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+                              if (event.target !== event.currentTarget) return;
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setViewing(item.tenderId);
+                              }
+                            }}
                             onDragStart={(event) => {
                               event.dataTransfer.setData("text/plain", item.tenderId);
                               event.dataTransfer.effectAllowed = "move";
@@ -293,7 +311,7 @@ export function KanbanBoardClient({
                               setDropTarget(null);
                             }}
                             className={cn(
-                              "group flex cursor-grab flex-col gap-1.5 rounded-xl border border-[#e8eaf0] bg-white p-3 shadow-[0_2px_8px_rgba(25,31,49,.04)] active:cursor-grabbing",
+                              "group flex cursor-grab flex-col gap-1.5 rounded-xl border border-[#e8eaf0] bg-white p-3 shadow-[0_2px_8px_rgba(25,31,49,.04)] transition-shadow active:cursor-grabbing hover:border-primary/30 hover:shadow-[0_4px_14px_rgba(25,31,49,.09)] focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
                               dragging === item.tenderId && "opacity-50",
                               busy === item.tenderId && "opacity-60",
                             )}
@@ -304,7 +322,10 @@ export function KanbanBoardClient({
                               </strong>
                               <button
                                 type="button"
-                                onClick={() => setRemoving(item)}
+                                onClick={(event: MouseEvent) => {
+                                  event.stopPropagation();
+                                  setRemoving(item);
+                                }}
                                 aria-label={t("remove.trigger")}
                                 className="shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0.5 text-[#9aa0ad] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[#d33a26] focus-visible:opacity-100"
                               >
@@ -327,21 +348,25 @@ export function KanbanBoardClient({
                               </span>
                             )}
 
-                            <AssigneePicker
-                              item={item}
-                              members={members}
-                              assignee={
-                                item.assigneeUserId
-                                  ? (memberById.get(item.assigneeUserId) ?? null)
-                                  : null
-                              }
-                              onAssign={(userId) =>
-                                patch(item.tenderId, {
-                                  status: item.status,
-                                  assigneeUserId: userId,
-                                })
-                              }
-                            />
+                            <span
+                              onClick={(event: MouseEvent) => event.stopPropagation()}
+                            >
+                              <AssigneePicker
+                                item={item}
+                                members={members}
+                                assignee={
+                                  item.assigneeUserId
+                                    ? (memberById.get(item.assigneeUserId) ?? null)
+                                    : null
+                                }
+                                onAssign={(userId) =>
+                                  patch(item.tenderId, {
+                                    status: item.status,
+                                    assigneeUserId: userId,
+                                  })
+                                }
+                              />
+                            </span>
                           </article>
                         ))}
                       </div>
@@ -365,6 +390,15 @@ export function KanbanBoardClient({
             status: permanent ? "deleted" : "deadzone",
           });
         }}
+      />
+
+      {/* Opens straight to the Documents tab — from here a working copy can be
+          created and edited in the Document Filler without leaving the board. */}
+      <TenderDetailDialog
+        tenderId={viewing}
+        onClose={() => setViewing(null)}
+        initialTab="documents"
+        onDecided={() => void load()}
       />
     </div>
   );
