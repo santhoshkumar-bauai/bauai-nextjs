@@ -9,6 +9,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 | [docs/INGESTION_WORKER.md](docs/INGESTION_WORKER.md) | Tender notice ingestion pipeline |
 | [docs/DOCUMENT_RESOLVERS.md](docs/DOCUMENT_RESOLVERS.md) | Tender document acquisition (portal resolvers) |
 | [docs/COMPANY_DETAILS_AND_UPLOADS.md](docs/COMPANY_DETAILS_AND_UPLOADS.md) | Company profile + document uploads |
+| [docs/ONLYOFFICE/](docs/ONLYOFFICE/README.md) | ONLYOFFICE developer guide: integration architecture, UI customization & branding, plugins, AI paths (Dora et al.), server APIs |
 | [BAU_AI_AGENTIC_TENDER_ROADMAP.md](BAU_AI_AGENTIC_TENDER_ROADMAP.md) | The one-month agentic platform roadmap (Clara/Dora/Nova) |
 
 Dev quickstart: `docker compose -f docker/docker-compose.yml up -d mongo redis`
