@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # Production image for the Next.js web app — and only the web app. The ingestion
 # and document workers keep their own images under docker/; nothing in here runs
 # a queue consumer or a cron entrypoint.
@@ -25,8 +27,10 @@ COPY package.json package-lock.json ./
 # lightningcss, the SWC and Turbopack targets — resolve for this platform. The
 # committed lock is generated on Windows and omits them, which makes strict
 # `npm ci` fail in this image. Dev dependencies stay: `next build` needs
-# TypeScript and Tailwind.
-RUN npm install --no-audit --no-fund && npm cache clean --force
+# TypeScript and Tailwind. The cache mount keeps ~/.npm across builds and lives
+# outside the layer, so no `npm cache clean` is needed to keep the image small.
+RUN --mount=type=cache,id=npm,target=/root/.npm \
+    npm install --no-audit --no-fund
 
 # ---------- build: next build -> .next/standalone ----------
 FROM node:24-bookworm-slim AS builder
@@ -58,7 +62,10 @@ ENV NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY \
 ENV MONGODB_URI=mongodb://build-time-placeholder:27017/bauai \
     BETTER_AUTH_SECRET=build-time-placeholder-not-a-real-secret
 
-RUN npm run build
+# Persisting .next/cache across builds is what makes `next build` incremental —
+# it is a build artifact only; nothing from this mount lands in the image.
+RUN --mount=type=cache,id=next-build,target=/app/.next/cache \
+    npm run build
 
 # ---------- runtime ----------
 FROM node:24-bookworm-slim AS runtime
@@ -78,18 +85,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends dumb-init ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# The standalone bundle ships its own minimal node_modules (only the files the
-# server actually traced). `public` and `.next/static` are deliberately left out
-# of it by the build and have to be copied in beside it.
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-
-# File tracing does pick up playwright, but only the files it can see statically —
-# it drops ~2 MB of playwright-core that the driver resolves at run time. Overlay
-# the complete packages so the PDF export path cannot fail on a missing file.
-COPY --from=builder /app/node_modules/playwright ./node_modules/playwright
-COPY --from=builder /app/node_modules/playwright-core ./node_modules/playwright-core
+# ===== Everything from here to the standalone COPY is keyed on package-lock.json
+# only. Playwright is pulled from `deps`, not `builder`, so a source-only change
+# cannot invalidate the Chromium layer below — previously it sat after the .next
+# copies and re-downloaded Chromium on every deploy.
+COPY --from=deps /app/node_modules/playwright ./node_modules/playwright
+COPY --from=deps /app/node_modules/playwright-core ./node_modules/playwright-core
 
 ARG WITH_CHROMIUM=true
 # Installed from the locked package (not `npx playwright`, which would fetch the
@@ -100,6 +101,18 @@ RUN if [ "$WITH_CHROMIUM" = "true" ]; then \
       && chmod -R a+rX "$PLAYWRIGHT_BROWSERS_PATH" \
       && rm -rf /var/lib/apt/lists/*; \
     fi
+
+# ===== Everything below changes on every commit — keep it last. =====
+# The standalone bundle ships its own minimal node_modules (only the files the
+# server actually traced). `public` and `.next/static` are deliberately left out
+# of it by the build and have to be copied in beside it. Tracing copies a strict
+# subset of byte-identical files from the same node_modules, so landing standalone
+# on top of the full playwright packages above is a no-op overwrite — the ~2 MB of
+# playwright-core files that tracing drops (resolved at run time by the driver)
+# survive underneath.
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
 
 # Next writes its response/ISR cache under .next/cache at run time.
 RUN mkdir -p .next/cache && chown -R node:node .next
