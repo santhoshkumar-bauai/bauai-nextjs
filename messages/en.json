@@ -1201,6 +1201,7 @@
     },
     "tenders": {
       "openDocuments": "View documents →",
+      "openTenderDocuments": "View documents for {title}",
       "back": "All workspace tenders",
       "openTender": "Open tender",
       "workingCopies": "Your working copies",

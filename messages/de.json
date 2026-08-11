@@ -1201,6 +1201,7 @@
     },
     "tenders": {
       "openDocuments": "Dokumente ansehen →",
+      "openTenderDocuments": "Dokumente zu {title} ansehen",
       "back": "Alle Ausschreibungen im Workspace",
       "openTender": "Ausschreibung öffnen",
       "workingCopies": "Ihre Arbeitskopien",
