@@ -67,6 +67,13 @@ export async function ensureAiIndexes(): Promise<void> {
       unique: true,
       partialFilterExpression: { kind: "tender" },
     },
+    {
+      // One Dora thread per (tenant, workspace document) — same reasoning.
+      key: { tenantId: 1, documentId: 1, agent: 1 },
+      name: "uq_document_thread",
+      unique: true,
+      partialFilterExpression: { kind: "document" },
+    },
     { key: { tenantId: 1, ownerUserId: 1, kind: 1, lastMessageAt: -1 }, name: "ix_owner_recent" },
     { key: { threadKey: 1 }, name: "ix_thread_key", unique: true },
   ]);
@@ -118,6 +125,21 @@ export async function ensureAiIndexes(): Promise<void> {
   // a run safe. One company, one refresh in flight.
   await c.companyMatchRuns.createIndexes([
     { key: { tenantId: 1 }, name: "uq_tenant", unique: true },
+  ]);
+
+  await c.documentBriefs.createIndexes([
+    { key: { tenantId: 1, documentId: 1 }, name: "uq_tenant_document", unique: true },
+  ]);
+
+  // Unique claim key — one brief generation in flight per document.
+  await c.documentBriefRuns.createIndexes([
+    { key: { tenantId: 1, documentId: 1 }, name: "uq_tenant_document", unique: true },
+  ]);
+
+  // Cache rows are keyed by string _id (wdoc:{documentId}:{sha}); this index
+  // serves the per-document pruning and delete-on-document-removal paths.
+  await c.workspaceDocumentTexts.createIndexes([
+    { key: { documentId: 1 }, name: "ix_document" },
   ]);
 
   // AI-owned index on the shared `tenders` collection: drives the embedding

@@ -205,23 +205,28 @@ export interface TenderVerdictDocument {
 }
 
 /**
- * A Clara chat thread. Two kinds share this collection:
- * - "tender": company-shared, exactly one per (tenant, tender) — enforced by
- *   a partial unique index. `tenderId` set, `ownerUserId` null.
- * - "global": private per user, many per user. `tenderId` null, `ownerUserId`
- *   set, `title` from the first message (renameable).
- * `threadKey` is the LangGraph checkpoint id; the tender format
- * (`clara:{tenant}:{tender}`) is frozen — changing it orphans checkpoints.
+ * An agent chat thread. Three kinds share this collection:
+ * - "tender" (Clara): company-shared, exactly one per (tenant, tender) —
+ *   enforced by a partial unique index. `tenderId` set, `ownerUserId` null.
+ * - "global" (Clara): private per user, many per user. `tenderId` null,
+ *   `ownerUserId` set, `title` from the first message (renameable).
+ * - "document" (Dora): company-shared, exactly one per (tenant, workspace
+ *   document) — partial unique index. `documentId` set, others null.
+ * `threadKey` is the LangGraph checkpoint id; the formats
+ * (`clara:{tenant}:{tender}`, `dora:{tenant}:{document}`) are frozen —
+ * changing one orphans checkpoints.
  */
 export interface ChatThreadDocument {
   _id?: ObjectId;
   tenantId: ObjectId;
-  kind: "tender" | "global";
+  kind: "tender" | "global" | "document";
   tenderId: ObjectId | null;
+  /** Workspace document a "document" (Dora) thread is bound to; else null. */
+  documentId?: ObjectId | null;
   ownerUserId: string | null;
   threadKey: string;
   title: string | null;
-  agent: "clara";
+  agent: "clara" | "dora";
   createdBy: string;
   graphVersion: string;
   lastMessageAt: Date;
@@ -414,6 +419,97 @@ export interface TenderReportRunDocument {
   finishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Dora's Document Brief: the structured "what is this file and what must you
+ * do" analysis of ONE workspace document, grounded in the linked tender's
+ * corpus and the company profile. One per (tenant, document), replaced
+ * wholesale on regeneration. Stale when `versionSha256` no longer matches the
+ * document's current committed version (computed lazily at read time — the
+ * ONLYOFFICE callback path is never hooked).
+ */
+export interface DocumentBriefDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  /** WorkspaceDocument _id. */
+  documentId: ObjectId;
+  /** The committed version the brief analyzed. */
+  versionId: ObjectId;
+  versionSha256: string;
+  storageRevision: number;
+  /**
+   * BriefContent per UI language (lib/ai/dora/brief-schema.ts). Written in
+   * the requesting user's locale and translated into the other; a language is
+   * absent only when its translation pass failed.
+   */
+  brief: Partial<Record<"en" | "de", Record<string, unknown>>>;
+  /** Evidence id → ChatCitation, resolved server-side after generation. */
+  citations: Record<string, Record<string, unknown>>;
+  /** How the document text was obtained; drives UI limitation notices. */
+  textInfo: {
+    status: "ready" | "unsupported" | "failed";
+    source: "native" | "converted-csv" | null;
+    note: string | null;
+    chars: number;
+    truncated: boolean;
+  };
+  model: { provider: string; providerModel: string; promptVersion: string };
+  generatedByUserId: string;
+  generatedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * An in-flight (or just-finished) brief generation, one per (tenant,
+ * document). Same design as TenderReportRunDocument: the run outlives the
+ * request, `updatedAt` doubles as the heartbeat, and the unique index makes
+ * claiming race-safe.
+ */
+export interface DocumentBriefRunDocument {
+  _id?: ObjectId;
+  tenantId: ObjectId;
+  documentId: ObjectId;
+  status: "running" | "done" | "failed";
+  /** Which step the run is on; meaningless unless `status` is "running". */
+  stage:
+    | "saving_editor"
+    | "extracting"
+    | "grounding"
+    | "analyzing"
+    | "translating"
+    | "saving";
+  startedByUserId: string;
+  /** i18n key ("rate_limited" | "invalid_output" | "failed"), never raw. */
+  error: string | null;
+  startedAt: Date;
+  finishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Extracted text of one committed workspace-document version, cached so Dora
+ * re-reads are free. `_id` is the idempotency key `wdoc:{documentId}:{sha256}`
+ * — a new version has a new sha and therefore a new row; old rows are pruned
+ * on write (latest few kept for quick version flips).
+ */
+export interface WorkspaceDocumentTextDocument {
+  _id: string;
+  tenantId: ObjectId;
+  documentId: ObjectId;
+  versionId: ObjectId;
+  sha256: string;
+  status: "ready" | "unsupported" | "failed";
+  /** "native" = unpdf/mammoth; "converted-csv" = spreadsheet via DS converter. */
+  source: "native" | "converted-csv" | null;
+  /** Limitation marker ("no_text_layer" | "first_sheet_only" | error slug). */
+  note: string | null;
+  text: string;
+  chars: number;
+  truncated: boolean;
+  extractedAt: Date;
 }
 
 /**

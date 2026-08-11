@@ -22,6 +22,7 @@ export function ChatInput({
   disabled,
   density = "compact",
   placeholder,
+  allowAttachments = true,
 }: {
   onSend: (text: string, attachments?: PendingAttachment[]) => void;
   onStop: () => void;
@@ -29,6 +30,8 @@ export function ChatInput({
   disabled?: boolean;
   density?: ChatDensity;
   placeholder?: string;
+  /** Dora's document chat takes no attachments — the document IS the subject. */
+  allowAttachments?: boolean;
 }) {
   const t = useTranslations("Chat");
   const [text, setText] = useState("");
@@ -156,16 +159,19 @@ export function ChatInput({
       )}
 
       <div className="flex items-end gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          hidden
-          onChange={(event) => {
-            uploadFiles(event.target.files);
-            event.target.value = "";
-          }}
-        />
+        {allowAttachments && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            hidden
+            onChange={(event) => {
+              uploadFiles(event.target.files);
+              event.target.value = "";
+            }}
+          />
+        )}
+        {allowAttachments && (
         <button
           type="button"
           aria-label={t("attach.button")}
@@ -179,6 +185,7 @@ export function ChatInput({
         >
           <Paperclip className={comfortable ? "size-4" : "size-3.5"} />
         </button>
+        )}
         <textarea
           value={text}
           onChange={(event) => setText(event.target.value)}

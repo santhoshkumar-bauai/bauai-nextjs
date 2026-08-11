@@ -24,7 +24,14 @@ const STATUS_VARIANT = {
  * expand button or by linking straight to /tenders/{id}. Same data, same tabs,
  * same decision actions — just the whole viewport instead of a popup.
  */
-export function TenderDetailPage({ tenderId }: { tenderId: string }) {
+export function TenderDetailPage({
+  tenderId,
+  initialTab,
+}: {
+  tenderId: string;
+  /** Which tab opens first — e.g. "documents" when linked from the kanban board. */
+  initialTab?: "about" | "documents" | "schedule" | "ai";
+}) {
   const t = useTranslations("Tenders");
   const tReport = useTranslations("Tenders.report");
   const { detail, files, decision, setDecision, loading, error, fit, docFetch } =
@@ -100,6 +107,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: string }) {
             className="flex flex-col gap-0"
             listWrapperClassName="border-b border-border px-4 py-3 sm:px-6"
             panelClassName="px-4 py-5 sm:px-6"
+            initialTab={initialTab}
           />
         </div>
       )}

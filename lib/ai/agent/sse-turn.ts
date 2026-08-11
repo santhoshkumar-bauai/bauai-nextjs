@@ -1,7 +1,11 @@
 import type { ChatThreadDocument } from "../types.ts";
 import { claimChatAttachments } from "./attachments.ts";
 import type { AgentRunContext, TenderAgentRunContext } from "./context.ts";
-import { runChatTurn, serializeChatMessage } from "./service.ts";
+import {
+  runChatTurn,
+  serializeChatMessage,
+  type CompiledAgentGraph,
+} from "./service.ts";
 import { setThreadTitleIfEmpty } from "./threads.ts";
 import type { ClaraSseEvent } from "./wire.ts";
 
@@ -27,6 +31,8 @@ export function streamChatTurnResponse(input: {
   thread: ChatThreadDocument;
   body: ChatTurnBody;
   request: Request;
+  /** Graph override for non-Clara agents; see runChatTurn. */
+  buildGraph?: () => Promise<CompiledAgentGraph>;
 }): Response {
   const { ctx, thread, body, request } = input;
   const encoder = new TextEncoder();
@@ -109,6 +115,7 @@ export function streamChatTurnResponse(input: {
             threadKey: thread.threadKey,
             userText: body.message,
             attachments,
+            buildGraph: input.buildGraph,
             signal: turnController.signal,
             callbacks: {
               onReady: (userMessage) =>

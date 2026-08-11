@@ -14,6 +14,9 @@ import type { WireChatMessage } from "./wire.ts";
 
 const log = logger.child("ai.clara");
 
+/** A compiled agent graph, as produced by buildClaraGraph / buildDoraGraph. */
+export type CompiledAgentGraph = Awaited<ReturnType<typeof buildClaraGraph>>;
+
 export interface ChatTurnCallbacks {
   /** Fired as soon as the user message is persisted, before the model runs. */
   onReady?: (userMessage: ChatMessageDocument) => void;
@@ -67,6 +70,11 @@ export async function runChatTurn(input: {
   attachments?: ChatAttachmentDocument[];
   signal?: AbortSignal;
   callbacks?: ChatTurnCallbacks;
+  /**
+   * Graph override for non-Clara agents (a thunk — the caller closes over its
+   * own richer context). Defaults to Clara's graph on `ctx`.
+   */
+  buildGraph?: () => Promise<CompiledAgentGraph>;
 }): Promise<{ userMessage: ChatMessageDocument; assistantMessage: ChatMessageDocument }> {
   const { ctx, threadId, userText, signal, callbacks } = input;
   const attachments = input.attachments ?? [];
@@ -96,7 +104,7 @@ export async function runChatTurn(input: {
   // resolves to base64 at model-call time.
   const turnContent = buildUserTurnContent(userText, attachments);
 
-  const graph = await buildClaraGraph(ctx);
+  const graph = input.buildGraph ? await input.buildGraph() : await buildClaraGraph(ctx);
   const config = {
     configurable: { thread_id: input.threadKey },
     signal,

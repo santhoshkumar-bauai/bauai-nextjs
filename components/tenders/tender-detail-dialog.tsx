@@ -24,11 +24,14 @@ export function TenderDetailDialog({
   tenderId,
   onClose,
   onDecided,
+  initialTab,
 }: {
   tenderId: string | null;
   onClose: () => void;
   /** Fired when the popup's action bar changes this tender's pipeline state. */
   onDecided?: (tenderId: string, status: DecisionStatus | null) => void;
+  /** Which tab opens first — e.g. "documents" when launched from the kanban board. */
+  initialTab?: "about" | "documents" | "schedule" | "ai";
 }) {
   const t = useTranslations("Tenders");
   const { detail, files, decision, setDecision, loading, error, fit, docFetch } =
@@ -82,6 +85,7 @@ export function TenderDetailDialog({
             className="flex min-h-0 flex-1 flex-col gap-0"
             listWrapperClassName="border-b border-border px-6 py-3"
             panelClassName="min-h-0 flex-1 overflow-y-auto px-6 py-4"
+            initialTab={initialTab}
           />
         )}
 

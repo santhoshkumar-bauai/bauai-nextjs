@@ -1,6 +1,8 @@
+import { ObjectId } from "mongodb";
 import { isValidObjectId } from "mongoose";
 import { NextResponse } from "next/server";
 
+import { forCompanyContext } from "@/lib/ai/tenant/repository";
 import { getCompanyContext } from "@/lib/company/context";
 import { serializeWorkspaceDocument } from "@/lib/onlyoffice/serialize";
 import { deleteObject } from "@/lib/storage/s3";
@@ -69,6 +71,16 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     await Promise.all(versions.map((version) => deleteObject(version.s3Key)));
     await WorkspaceDocumentVersion.deleteMany({ documentId: document._id });
     await document.deleteOne();
+    // Best-effort: Dora's thread, brief, run and cached text for this document.
+    try {
+      const { purgeDoraDocumentData } = await import("@/lib/ai/dora/threads");
+      await purgeDoraDocumentData(
+        forCompanyContext(context).value,
+        new ObjectId(documentId),
+      );
+    } catch (error) {
+      console.error("Dora data cleanup failed", error);
+    }
     return NextResponse.json({ ok: true, id: documentId });
   } catch (error) {
     document.state = "ready";

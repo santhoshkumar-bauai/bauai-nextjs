@@ -14,13 +14,21 @@ import { AccountProfile } from "@/models/account-profile";
  * on /tenders. Gating mirrors the listing page; the tender itself is loaded
  * client-side from /api/tenders/[id], the same endpoint the popup uses.
  */
+const TAB_VALUES = new Set(["about", "documents", "schedule", "ai"]);
+
 export default async function TenderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
   if (!ObjectId.isValid(id)) notFound();
+  const { tab } = await searchParams;
+  const initialTab = TAB_VALUES.has(tab ?? "")
+    ? (tab as "about" | "documents" | "schedule" | "ai")
+    : undefined;
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) redirect("/login");
@@ -44,7 +52,7 @@ export default async function TenderPage({
       fullName={fullName}
       email={session.user.email}
       dateLabel=""
-      workspaceContent={<TenderDetailPage tenderId={id} />}
+      workspaceContent={<TenderDetailPage tenderId={id} initialTab={initialTab} />}
       copy={copy}
     />
   );

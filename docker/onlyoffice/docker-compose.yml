@@ -2,10 +2,7 @@ name: bauai-onlyoffice
 
 services:
   documentserver:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: bau-ai/onlyoffice-documentserver:9.4.0-plugin-v1
+    image: onlyoffice/documentserver:9.4.0
     restart: unless-stopped
     stop_signal: SIGTERM
     stop_grace_period: 120s

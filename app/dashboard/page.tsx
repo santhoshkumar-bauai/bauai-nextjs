@@ -89,7 +89,9 @@ export default async function DashboardPage() {
       role: t("agents.dora.role"),
       description: t("agents.dora.description"),
       image: "/agents/dora.svg",
-      available: false,
+      available: true,
+      remaining,
+      href: "/document-filler",
     },
     {
       name: "Dario",

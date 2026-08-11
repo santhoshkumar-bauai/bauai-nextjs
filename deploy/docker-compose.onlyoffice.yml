@@ -1,9 +1,6 @@
 services:
   onlyoffice:
-    build:
-      context: ../docker/onlyoffice
-      dockerfile: Dockerfile
-    image: bau-ai/onlyoffice-documentserver:9.4.0-plugin-v1
+    image: onlyoffice/documentserver:9.4.0
     restart: unless-stopped
     stop_grace_period: 120s
     mem_limit: 4g

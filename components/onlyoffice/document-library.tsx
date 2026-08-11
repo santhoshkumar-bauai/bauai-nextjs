@@ -1,19 +1,84 @@
 "use client";
 
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  FileType2,
+  History,
+  Loader2,
+  Pencil,
+  RotateCcw,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import Link from "next/link";
-import { Download, FileSpreadsheet, FileText, FileType2, History, Loader2, Pencil, RotateCcw, Trash2, Upload } from "lucide-react";
-import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useRef, useState, type DragEvent } from "react";
+import { useTranslations } from "next-intl";
 
-import type { SerializedWorkspaceDocument, SerializedWorkspaceVersion } from "@/lib/onlyoffice/serialize";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WORKSPACE_ACCEPT, WORKSPACE_MAX_FILE_BYTES, validateWorkspaceFile } from "@/lib/onlyoffice/formats";
+import type { SerializedWorkspaceDocument, SerializedWorkspaceVersion } from "@/lib/onlyoffice/serialize";
+import { cn } from "@/lib/utils";
 
-function icon(type: SerializedWorkspaceDocument["documentType"]) {
+import { ConfirmDialog } from "./confirm-dialog";
+
+type SourceFilter = "all" | "tender" | "upload";
+type VersionItem = SerializedWorkspaceVersion & { restorable: boolean };
+
+function TypeIcon({ type }: { type: SerializedWorkspaceDocument["documentType"] }) {
   if (type === "cell") return <FileSpreadsheet className="text-emerald-600" />;
   if (type === "pdf") return <FileType2 className="text-red-600" />;
   return <FileText className="text-blue-600" />;
 }
 
+function StateBadge({
+  state,
+  t,
+}: {
+  state: SerializedWorkspaceDocument["state"];
+  t: ReturnType<typeof useTranslations>;
+}) {
+  if (state === "converting") {
+    return (
+      <Badge variant="warning">
+        <Loader2 className="animate-spin" />
+        {t("state.converting")}
+      </Badge>
+    );
+  }
+  if (state === "conversion_failed") {
+    return <Badge variant="danger">{t("state.conversionFailed")}</Badge>;
+  }
+  if (state === "ready") {
+    return <Badge variant="success">{t("state.ready")}</Badge>;
+  }
+  return <Badge variant="neutral">{state}</Badge>;
+}
+
+function formatDate(iso: string | null) {
+  return iso ? new Date(iso).toLocaleString() : "";
+}
+
+/**
+ * The Document Filler landing page — every working copy and direct upload the
+ * company has, with upload, rename, download, version history, and delete.
+ * Tender working copies also start life here once created from a tender's
+ * Documents tab (see `DocumentsTab` and the kanban board).
+ */
 export function DocumentLibrary({
   initialDocuments,
   canDelete,
@@ -21,97 +86,421 @@ export function DocumentLibrary({
   initialDocuments: SerializedWorkspaceDocument[];
   canDelete: boolean;
 }) {
+  const t = useTranslations("DocumentFiller.library");
   const [documents, setDocuments] = useState(initialDocuments);
-  const [sourceFilter, setSourceFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
-  const [versions, setVersions] = useState<{ document: SerializedWorkspaceDocument; items: Array<SerializedWorkspaceVersion & { restorable: boolean }> } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [versions, setVersions] = useState<{
+    document: SerializedWorkspaceDocument;
+    items: VersionItem[];
+  } | null>(null);
+  const [renaming, setRenaming] = useState<SerializedWorkspaceDocument | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [deleting, setDeleting] = useState<SerializedWorkspaceDocument | null>(null);
+  const [restoring, setRestoring] = useState<{
+    documentId: string;
+    versionId: string;
+    storageRevision: number;
+  } | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const upload = async (file: File) => {
     const validation = validateWorkspaceFile({ fileName: file.name, size: file.size });
     if ("error" in validation) {
-      setError(validation.error === "file_too_large" ? "Files must be 100 MB or smaller." : "Choose a DOC, DOCX, XLS, XLSX, or PDF file.");
+      setError(
+        validation.error === "file_too_large" ? t("errors.fileTooLarge") : t("errors.unsupportedType"),
+      );
       return;
     }
-    setBusy("upload"); setError("");
+    setBusy("upload");
+    setError("");
     try {
       const intentResponse = await fetch("/api/workspace-documents/upload-url", {
-        method: "POST", headers: { "content-type": "application/json" },
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ fileName: file.name, contentType: file.type, size: file.size }),
       });
-      const intent = (await intentResponse.json()) as { uploadUrl?: string; uploadToken?: string; headers?: Record<string, string>; error?: string };
-      if (!intentResponse.ok || !intent.uploadUrl || !intent.uploadToken) throw new Error(intent.error || "Upload could not be started.");
+      const intent = (await intentResponse.json()) as {
+        uploadUrl?: string;
+        uploadToken?: string;
+        headers?: Record<string, string>;
+        error?: string;
+      };
+      if (!intentResponse.ok || !intent.uploadUrl || !intent.uploadToken) {
+        throw new Error(intent.error || t("errors.uploadStartFailed"));
+      }
       const put = await fetch(intent.uploadUrl, { method: "PUT", headers: intent.headers, body: file });
-      if (!put.ok) throw new Error("The file could not be uploaded.");
+      if (!put.ok) throw new Error(t("errors.uploadFailed"));
       const confirm = await fetch("/api/workspace-documents", {
-        method: "POST", headers: { "content-type": "application/json" },
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ uploadToken: intent.uploadToken }),
       });
       const result = (await confirm.json()) as { document?: SerializedWorkspaceDocument; error?: string };
-      if (!confirm.ok || !result.document) throw new Error(result.error || "The upload could not be confirmed.");
+      if (!confirm.ok || !result.document) throw new Error(result.error || t("errors.uploadConfirmFailed"));
       setDocuments((current) => [result.document!, ...current]);
       router.refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Upload failed.");
-    } finally { setBusy(""); }
+      setError(reason instanceof Error ? reason.message : t("errors.uploadFailed"));
+    } finally {
+      setBusy("");
+    }
   };
+
   const download = async (documentId: string, versionId?: string) => {
     setBusy(`download:${versionId ?? documentId}`);
-    const response = await fetch(`/api/workspace-documents/${documentId}/download${versionId ? `?versionId=${versionId}` : ""}`);
+    const response = await fetch(
+      `/api/workspace-documents/${documentId}/download${versionId ? `?versionId=${versionId}` : ""}`,
+    );
     const body = (await response.json()) as { downloadUrl?: string };
     if (body.downloadUrl) window.open(body.downloadUrl, "_blank", "noopener,noreferrer");
     setBusy("");
   };
+
   const loadVersions = async (document: SerializedWorkspaceDocument) => {
     setBusy(`versions:${document.id}`);
     const response = await fetch(`/api/workspace-documents/${document.id}/versions`, { cache: "no-store" });
-    const body = (await response.json()) as { items?: Array<SerializedWorkspaceVersion & { restorable: boolean }> };
+    const body = (await response.json()) as { items?: VersionItem[] };
     if (response.ok) setVersions({ document, items: body.items ?? [] });
     setBusy("");
   };
-  const rename = async (document: SerializedWorkspaceDocument) => {
-    const fileName = prompt("Document name", document.fileName);
-    if (!fileName) return;
-    const response = await fetch(`/api/workspace-documents/${document.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ fileName }) });
-    const body = (await response.json()) as { document?: SerializedWorkspaceDocument };
-    if (body.document) setDocuments((current) => current.map((item) => item.id === document.id ? body.document! : item));
+
+  const openRename = (document: SerializedWorkspaceDocument) => {
+    setRenameValue(document.fileName);
+    setRenaming(document);
   };
-  const remove = async (document: SerializedWorkspaceDocument) => {
-    if (!confirm(`Permanently delete ${document.fileName} and every saved version?`)) return;
-    setBusy(`delete:${document.id}`);
-    const response = await fetch(`/api/workspace-documents/${document.id}`, { method: "DELETE" });
-    if (response.ok) setDocuments((current) => current.filter((item) => item.id !== document.id));
-    else setError("The document could not be deleted. It may still be open in the editor.");
+  const submitRename = async () => {
+    if (!renaming) return;
+    const fileName = renameValue.trim();
+    if (!fileName) return;
+    setBusy(`rename:${renaming.id}`);
+    const response = await fetch(`/api/workspace-documents/${renaming.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ fileName }),
+    });
+    const body = (await response.json()) as { document?: SerializedWorkspaceDocument; error?: string };
+    if (body.document) {
+      setDocuments((current) => current.map((item) => (item.id === renaming.id ? body.document! : item)));
+      setRenaming(null);
+    } else {
+      setError(body.error || t("errors.renameFailed"));
+    }
     setBusy("");
   };
-  const restore = async (documentId: string, versionId: string) => {
-    if (!confirm("Restore this version as a new current version?")) return;
-    setBusy(`restore:${versionId}`);
-    const response = await fetch(`/api/workspace-documents/${documentId}/versions/${versionId}/restore`, { method: "POST" });
-    if (response.ok) { setVersions(null); router.refresh(); }
-    else setError("The version could not be restored. Close active editors and try again.");
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setBusy(`delete:${deleting.id}`);
+    const response = await fetch(`/api/workspace-documents/${deleting.id}`, { method: "DELETE" });
+    if (response.ok) {
+      setDocuments((current) => current.filter((item) => item.id !== deleting.id));
+      setDeleting(null);
+    } else {
+      setError(t("errors.deleteFailed"));
+    }
+    setBusy("");
+  };
+
+  const confirmRestore = async () => {
+    if (!restoring) return;
+    setBusy(`restore:${restoring.versionId}`);
+    const response = await fetch(
+      `/api/workspace-documents/${restoring.documentId}/versions/${restoring.versionId}/restore`,
+      { method: "POST" },
+    );
+    if (response.ok) {
+      setRestoring(null);
+      setVersions(null);
+      router.refresh();
+    } else {
+      setError(t("errors.restoreFailed"));
+    }
     setBusy("");
   };
 
   const shown = documents.filter((document) =>
     sourceFilter === "all" ? true : sourceFilter === "tender" ? Boolean(document.tenderId) : !document.tenderId,
   );
+
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragOver(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) void upload(file);
+  };
+
   return (
-    <div className="h-full overflow-y-auto p-5 sm:p-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-xs font-bold uppercase tracking-[.14em] text-primary">Bid preparation</p><h1 className="mt-1 text-2xl font-bold">Document Filler</h1><p className="mt-1 text-sm text-muted-foreground">Edit tender working copies with your team and Clara.</p></div>
-          <><input ref={input} className="hidden" type="file" accept={WORKSPACE_ACCEPT} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) void upload(file); }} /><button disabled={busy === "upload"} onClick={() => input.current?.click()} className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">{busy === "upload" ? <Loader2 className="animate-spin" /> : <Upload />} Upload document</button></>
-        </header>
-        <div className="mt-7 flex items-center justify-between gap-3"><select value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)} className="h-9 rounded-lg border bg-white px-3 text-sm"><option value="all">All documents</option><option value="tender">Tender working copies</option><option value="upload">Direct uploads</option></select><span className="text-xs text-muted-foreground">{WORKSPACE_MAX_FILE_BYTES / 1_000_000} MB max · DOCX, XLSX, PDF</span></div>
-        {error && <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
-        <div className="mt-4 overflow-hidden rounded-2xl border bg-white shadow-sm">
-          {shown.length === 0 ? <div className="grid place-items-center px-6 py-20 text-center"><FileText className="mb-3 size-9 text-muted-foreground" /><h2 className="font-semibold">No documents yet</h2><p className="mt-1 text-sm text-muted-foreground">Upload a document or create a working copy from a tender.</p></div> : <ul className="divide-y">{shown.map((document) => <li key={document.id} className="flex items-center gap-3 p-4 hover:bg-muted/30"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted">{icon(document.documentType)}</span><div className="min-w-0 flex-1"><Link href={document.state === "ready" ? `/document-filler/${document.id}` : "#"} className="block truncate text-sm font-semibold hover:text-primary">{document.fileName}</Link><p className="text-xs text-muted-foreground">{document.tenderId ? "Tender working copy" : "Uploaded document"} · <span className="capitalize">{document.state.replaceAll("_", " ")}</span> · v{document.storageRevision}</p></div><div className="flex gap-1"><button onClick={() => void rename(document)} className="grid size-8 place-items-center rounded-lg hover:bg-muted" title="Rename"><Pencil /></button><button onClick={() => void download(document.id)} className="grid size-8 place-items-center rounded-lg hover:bg-muted" title="Download"><Download /></button><button onClick={() => void loadVersions(document)} className="grid size-8 place-items-center rounded-lg hover:bg-muted" title="Versions">{busy === `versions:${document.id}` ? <Loader2 className="animate-spin" /> : <History />}</button>{canDelete && <button onClick={() => void remove(document)} className="grid size-8 place-items-center rounded-lg text-red-600 hover:bg-red-50" title="Delete">{busy === `delete:${document.id}` ? <Loader2 className="animate-spin" /> : <Trash2 />}</button>}</div></li>)}</ul>}
+    <div
+      className="flex flex-col gap-4"
+      onDragOver={(event) => {
+        event.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node)) return;
+        setDragOver(false);
+      }}
+      onDrop={onDrop}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Tabs value={sourceFilter} onValueChange={(value) => setSourceFilter(value as SourceFilter)}>
+          <TabsList>
+            <TabsTrigger value="all">{t("filter.all")}</TabsTrigger>
+            <TabsTrigger value="tender">{t("filter.tender")}</TabsTrigger>
+            <TabsTrigger value="upload">{t("filter.upload")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div className="flex items-center gap-3">
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            {t("sizeHint", { mb: WORKSPACE_MAX_FILE_BYTES / 1_000_000 })}
+          </span>
+          <input
+            ref={input}
+            className="hidden"
+            type="file"
+            accept={WORKSPACE_ACCEPT}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void upload(file);
+            }}
+          />
+          <Button disabled={busy === "upload"} onClick={() => input.current?.click()}>
+            {busy === "upload" ? <Loader2 className="animate-spin" /> : <Upload />}
+            {busy === "upload" ? t("uploading") : t("upload")}
+          </Button>
         </div>
       </div>
-      {versions && <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" onClick={() => setVersions(null)}><section className="max-h-[80vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}><h2 className="font-semibold">Version history · {versions.document.fileName}</h2><ul className="mt-4 grid gap-2">{versions.items.map((version) => <li key={version.id} className="flex items-center gap-3 rounded-xl border p-3"><div className="flex-1"><strong className="text-sm">Version {version.storageRevision}</strong><p className="text-xs capitalize text-muted-foreground">{version.reason} · {version.createdAt ? new Date(version.createdAt).toLocaleString() : ""}</p></div><button onClick={() => void download(versions.document.id, version.id)} className="grid size-8 place-items-center rounded-lg hover:bg-muted"><Download /></button>{version.restorable && <button onClick={() => void restore(versions.document.id, version.id)} className="grid size-8 place-items-center rounded-lg hover:bg-muted">{busy === `restore:${version.id}` ? <Loader2 className="animate-spin" /> : <RotateCcw />}</button>}</li>)}</ul></section></div>}
+
+      {error && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      )}
+
+      <div>
+        <div
+          className={cn(
+            "overflow-hidden rounded-2xl border bg-card shadow-xs transition-colors",
+            dragOver ? "border-primary/50 bg-primary/5" : "border-border",
+          )}
+        >
+          {shown.length === 0 ? (
+            <div
+              className={cn(
+                "m-3 grid place-items-center gap-3 rounded-xl border-2 border-dashed px-6 py-20 text-center",
+                dragOver ? "border-primary/50" : "border-border",
+              )}
+            >
+              <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
+                <FileText className="size-5" />
+              </span>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">{t("empty.title")}</h2>
+                <p className="mt-1 max-w-sm text-sm text-muted-foreground">{t("empty.description")}</p>
+              </div>
+              <Button variant="outline" onClick={() => input.current?.click()}>
+                <Upload />
+                {t("upload")}
+              </Button>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {shown.map((document) => (
+                <li
+                  key={document.id}
+                  className="flex items-center gap-3 p-4 transition-colors hover:bg-muted/40"
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted">
+                    <TypeIcon type={document.documentType} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    {document.state === "ready" ? (
+                      <Link
+                        href={`/document-filler/${document.id}`}
+                        className="block truncate text-sm font-semibold text-foreground hover:text-primary"
+                      >
+                        {document.fileName}
+                      </Link>
+                    ) : (
+                      <span className="block truncate text-sm font-semibold text-muted-foreground">
+                        {document.fileName}
+                      </span>
+                    )}
+                    <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <span>{document.tenderId ? t("source.tender") : t("source.upload")}</span>
+                      <StateBadge state={document.state} t={t} />
+                      <span>{t("version", { n: document.storageRevision })}</span>
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t("actions.rename")}
+                      aria-label={t("actions.rename")}
+                      onClick={() => openRename(document)}
+                    >
+                      <Pencil />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t("actions.download")}
+                      aria-label={t("actions.download")}
+                      disabled={busy === `download:${document.id}`}
+                      onClick={() => void download(document.id)}
+                    >
+                      {busy === `download:${document.id}` ? <Loader2 className="animate-spin" /> : <Download />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t("actions.versions")}
+                      aria-label={t("actions.versions")}
+                      onClick={() => void loadVersions(document)}
+                    >
+                      {busy === `versions:${document.id}` ? <Loader2 className="animate-spin" /> : <History />}
+                    </Button>
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={t("actions.delete")}
+                        aria-label={t("actions.delete")}
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeleting(document)}
+                      >
+                        {busy === `delete:${document.id}` ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={renaming !== null} onOpenChange={(open) => !open && setRenaming(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("rename.title")}</DialogTitle>
+            <DialogDescription>{t("rename.description")}</DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-foreground" htmlFor="document-rename">
+              {t("rename.label")}
+              <Input
+                id="document-rename"
+                value={renameValue}
+                autoFocus
+                onChange={(event) => setRenameValue(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") void submitRename();
+                }}
+              />
+            </label>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenaming(null)}>
+              {t("rename.cancel")}
+            </Button>
+            <Button
+              onClick={() => void submitRename()}
+              disabled={!renameValue.trim() || busy === `rename:${renaming?.id}`}
+            >
+              {busy === `rename:${renaming?.id}` && <Loader2 className="animate-spin" />}
+              {t("rename.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={t("delete.title")}
+        description={deleting ? t("delete.description", { name: deleting.fileName }) : ""}
+        confirmLabel={t("delete.confirm")}
+        cancelLabel={t("delete.cancel")}
+        destructive
+        busy={busy === `delete:${deleting?.id}`}
+        onConfirm={() => void confirmDelete()}
+      />
+
+      <ConfirmDialog
+        open={restoring !== null}
+        onOpenChange={(open) => !open && setRestoring(null)}
+        title={t("versions.restoreTitle")}
+        description={
+          restoring ? t("versions.restoreDescription", { n: restoring.storageRevision }) : ""
+        }
+        confirmLabel={t("versions.restoreConfirm")}
+        cancelLabel={t("versions.restoreCancel")}
+        busy={busy === `restore:${restoring?.versionId}`}
+        onConfirm={() => void confirmRestore()}
+      />
+
+      <Dialog open={versions !== null} onOpenChange={(open) => !open && setVersions(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("versions.title")}</DialogTitle>
+            <DialogDescription>{versions?.document.fileName}</DialogDescription>
+          </DialogHeader>
+          <DialogBody>
+            {versions && versions.items.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{t("versions.empty")}</p>
+            ) : (
+              <ul className="grid gap-2">
+                {versions?.items.map((version) => (
+                  <li key={version.id} className="flex items-center gap-3 rounded-xl border border-border p-3">
+                    <div className="min-w-0 flex-1">
+                      <strong className="text-sm text-foreground">
+                        {t("versions.version", { n: version.storageRevision })}
+                      </strong>
+                      <p className="mt-0.5 text-xs text-muted-foreground capitalize">
+                        {version.reason} · {formatDate(version.createdAt)}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={t("actions.download")}
+                      aria-label={t("actions.download")}
+                      disabled={busy === `download:${version.id}`}
+                      onClick={() => void download(versions!.document.id, version.id)}
+                    >
+                      {busy === `download:${version.id}` ? <Loader2 className="animate-spin" /> : <Download />}
+                    </Button>
+                    {version.restorable && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={t("versions.restore")}
+                        aria-label={t("versions.restore")}
+                        onClick={() =>
+                          setRestoring({
+                            documentId: versions!.document.id,
+                            versionId: version.id,
+                            storageRevision: version.storageRevision,
+                          })
+                        }
+                      >
+                        <RotateCcw />
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

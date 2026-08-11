@@ -50,11 +50,15 @@ async function loadOwnedThread(
   threadIdHex: string,
 ): Promise<ChatThreadDocument | null> {
   if (!ObjectId.isValid(threadIdHex)) return null;
-  return getOwnedThread({
+  const thread = await getOwnedThread({
     tenantId: forCompanyContext(context).value,
     userId: context.userId,
     threadId: new ObjectId(threadIdHex),
   });
+  // This route is Clara's; Dora document threads have their own endpoint under
+  // /api/workspace-documents and must not run with Clara's graph or tools.
+  if (thread && thread.agent !== "clara") return null;
+  return thread;
 }
 
 /** Context for the thread's mode; null when a tender thread's tender is gone. */

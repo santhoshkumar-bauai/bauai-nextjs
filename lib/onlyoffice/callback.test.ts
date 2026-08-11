@@ -11,7 +11,7 @@ describe("ONLYOFFICE callback URL normalization", () => {
     process.env.INTERNAL_APP_URL = "http://web:3000";
     process.env.PUBLIC_APP_URL = "https://app.example.test";
     process.env.OO_JWT_SECRET = "test-onlyoffice-secret-32-characters";
-    process.env.OO_AI_JWT_SECRET = "test-plugin-secret-32-characters-long";
+    process.env.OO_APP_JWT_SECRET = "test-app-secret-32-characters-long!!";
   });
   afterEach(() => {
     process.env = { ...original };

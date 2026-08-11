@@ -28,6 +28,11 @@ function summarize(
   thread: ChatThreadDocument,
   tenderTitles: Map<string, string | null>,
 ): WireThreadSummary {
+  if (thread.kind === "document") {
+    // Unreachable: every query in threads.ts filters agent:"clara", and Dora
+    // "document" threads never carry that agent. Guarded for the type system.
+    throw new Error("Document threads do not appear in the Clara sidebar");
+  }
   return {
     id: String(thread._id),
     kind: thread.kind,
