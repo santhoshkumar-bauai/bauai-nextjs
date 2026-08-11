@@ -16,7 +16,6 @@ import { AccountProfile } from "@/models/account-profile";
 // app/(workspace)/settings, which takes precedence over this dynamic segment.
 const sectionKeys = {
   tenders: "tenders",
-  "document-filler": "documentFiller",
   tutorial: "tutorial",
   notifications: "notifications",
   pricing: "pricing",

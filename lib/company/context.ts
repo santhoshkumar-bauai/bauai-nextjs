@@ -12,6 +12,7 @@ import type { HydratedDocument } from "mongoose";
 
 export type CompanyContext = {
   userId: string;
+  name: string;
   email: string;
   role: CompanyMemberRole;
   company: HydratedDocument<CompanyDocument>;
@@ -53,6 +54,7 @@ export async function getCompanyContext(options?: {
 
   return {
     userId: session.user.id,
+    name: session.user.name?.trim() || session.user.email.split("@")[0],
     email: session.user.email,
     role: member?.role ?? profile.role,
     company,

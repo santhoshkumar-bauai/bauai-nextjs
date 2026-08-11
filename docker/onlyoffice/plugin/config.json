@@ -1,0 +1,20 @@
+{
+  "name": "Clara — BAU AI",
+  "guid": "asc.{A6F63B3B-0B0D-4A44-8F54-BA0A10000001}",
+  "version": "1.0.0",
+  "baseUrl": "",
+  "variations": [
+    {
+      "description": "Reviewable tender-document assistance from Clara",
+      "url": "index.html",
+      "isViewer": false,
+      "EditorsSupport": ["word", "cell", "pdf"],
+      "isVisual": true,
+      "isModal": false,
+      "isInsideMode": true,
+      "initDataType": "none",
+      "initData": "",
+      "buttons": []
+    }
+  ]
+}

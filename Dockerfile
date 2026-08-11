@@ -44,12 +44,14 @@ COPY . .
 
 # NEXT_PUBLIC_* values are inlined into the browser bundle at build time, so they
 # must be present now — setting them at run time has no effect. Both are public
-# Google Maps browser keys (restrict them by HTTP referrer), not secrets; no
-# server-side secret is needed to build.
+# These values are public browser origins/keys (restrict Maps keys by HTTP
+# referrer), never server-side secrets.
 ARG NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY=""
 ARG NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=""
+ARG NEXT_PUBLIC_DS_URL=""
 ENV NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY \
-    NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=$NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID
+    NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=$NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID \
+    NEXT_PUBLIC_DS_URL=$NEXT_PUBLIC_DS_URL
 
 # Build-only placeholders — NOT configuration, and never carried into the runtime
 # stage. "Collecting page data" imports every route module, and two modules assert
