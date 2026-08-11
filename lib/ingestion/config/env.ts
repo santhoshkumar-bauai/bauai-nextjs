@@ -104,12 +104,12 @@ export const ingestionEnv = {
     maxConcurrentPerHost: integer("DOCUMENTS_CONCURRENCY_PER_HOST", 2),
     /**
      * Budget for the on-demand "Fetch documents" button, where a user is
-     * actively waiting. A short burst for one tender is what a bidder's own
-     * browser produces when downloading a document set, so it can be far more
-     * generous than the unattended crawl rate above.
+     * actively waiting. Effectively unthrottled: one tender's documents are a
+     * single short burst, so speed is limited by bandwidth and extraction, not
+     * pacing. Dial down if a portal ever starts answering 429/403.
      */
-    onDemandRequestsPerMinutePerHost: integer("DOCUMENTS_ONDEMAND_RATE_PER_HOST", 60),
-    onDemandConcurrentPerHost: integer("DOCUMENTS_ONDEMAND_CONCURRENCY_PER_HOST", 4),
+    onDemandRequestsPerMinutePerHost: integer("DOCUMENTS_ONDEMAND_RATE_PER_HOST", 600),
+    onDemandConcurrentPerHost: integer("DOCUMENTS_ONDEMAND_CONCURRENCY_PER_HOST", 8),
     requestTimeoutMs: integer("DOCUMENTS_REQUEST_TIMEOUT_MS", 120_000),
     maxAttempts: integer("DOCUMENTS_MAX_ATTEMPTS", 4),
     maxFileBytes: integer("DOCUMENTS_MAX_FILE_BYTES", 100_000_000),
