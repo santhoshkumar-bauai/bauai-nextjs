@@ -84,6 +84,11 @@ services:
     ports:
       - "${AI_INDEXER_METRICS_PORT:-9466}:9464"
 
+  # Legacy DOC/XLS conversion plus interrupted-save reconciliation.
+  onlyoffice-worker:
+    <<: *worker
+    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/onlyoffice.mts"]
+
   # ══════════════ PUBLISHERS — emit outward ══════════════
   # Single replica: a second would duplicate every push without adding durability.
   outbox:

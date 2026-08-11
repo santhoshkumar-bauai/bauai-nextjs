@@ -1,4 +1,5 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
@@ -81,7 +82,7 @@ export function s3Config(): S3Config {
   return cachedConfig;
 }
 
-function s3(): S3Client {
+export function s3Client(): S3Client {
   if (cachedClient) return cachedClient;
   const config = s3Config();
   assertS3Configured(config);
@@ -148,6 +149,7 @@ export async function createUploadUrl(params: {
   key: string;
   contentType: string;
   contentLength?: number;
+  expiresIn?: number;
 }): Promise<{ uploadUrl: string; expiresIn: number }> {
   const command = new PutObjectCommand({
     Bucket: s3Config().bucket,
@@ -155,32 +157,38 @@ export async function createUploadUrl(params: {
     ContentType: params.contentType,
     ...(params.contentLength ? { ContentLength: params.contentLength } : {}),
   });
-  const uploadUrl = await getSignedUrl(s3(), command, {
-    expiresIn: UPLOAD_URL_TTL_SECONDS,
+  const expiresIn = params.expiresIn ?? UPLOAD_URL_TTL_SECONDS;
+  const uploadUrl = await getSignedUrl(s3Client(), command, {
+    expiresIn,
   });
-  return { uploadUrl, expiresIn: UPLOAD_URL_TTL_SECONDS };
+  return { uploadUrl, expiresIn };
 }
 
 /** Mints a short-lived URL the browser can GET a single object from. */
 export async function createDownloadUrl(params: {
   key: string;
   fileName?: string;
+  expiresIn?: number;
+  disposition?: "inline" | "attachment";
 }): Promise<{ downloadUrl: string; expiresIn: number }> {
+  const asciiName = params.fileName
+    ? sanitizeFileName(params.fileName).replace(/"/g, "")
+    : null;
+  const disposition = params.disposition ?? "inline";
   const command = new GetObjectCommand({
     Bucket: s3Config().bucket,
     Key: params.key,
     ...(params.fileName
       ? {
-          ResponseContentDisposition: `inline; filename="${sanitizeFileName(
-            params.fileName,
-          )}"`,
+          ResponseContentDisposition: `${disposition}; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(params.fileName)}`,
         }
       : {}),
   });
-  const downloadUrl = await getSignedUrl(s3(), command, {
-    expiresIn: DOWNLOAD_URL_TTL_SECONDS,
+  const expiresIn = params.expiresIn ?? DOWNLOAD_URL_TTL_SECONDS;
+  const downloadUrl = await getSignedUrl(s3Client(), command, {
+    expiresIn,
   });
-  return { downloadUrl, expiresIn: DOWNLOAD_URL_TTL_SECONDS };
+  return { downloadUrl, expiresIn };
 }
 
 /**
@@ -192,7 +200,7 @@ export async function headObject(
   key: string,
 ): Promise<{ contentLength: number; contentType?: string } | null> {
   try {
-    const result = await s3().send(
+    const result = await s3Client().send(
       new HeadObjectCommand({ Bucket: s3Config().bucket, Key: key }),
     );
     return {
@@ -207,7 +215,7 @@ export async function headObject(
 }
 
 export async function deleteObject(key: string): Promise<void> {
-  await s3().send(
+  await s3Client().send(
     new DeleteObjectCommand({ Bucket: s3Config().bucket, Key: key }),
   );
 }
@@ -218,7 +226,7 @@ export async function putObjectBuffer(
   body: Buffer,
   contentType: string,
 ): Promise<void> {
-  await s3().send(
+  await s3Client().send(
     new PutObjectCommand({
       Bucket: s3Config().bucket,
       Key: key,
@@ -230,8 +238,31 @@ export async function putObjectBuffer(
 
 /** Downloads an object's bytes (company-document text extraction). */
 export async function getObjectBuffer(key: string): Promise<Buffer> {
-  const result = await s3().send(
+  const result = await s3Client().send(
     new GetObjectCommand({ Bucket: s3Config().bucket, Key: key }),
   );
   return Buffer.from(await result.Body!.transformToByteArray());
+}
+
+/** Server-side copy without exposing immutable tender-source bytes to a client. */
+export async function copyObject(params: {
+  sourceBucket: string;
+  sourceKey: string;
+  targetKey: string;
+  contentType?: string;
+}): Promise<void> {
+  const copySource = encodeURIComponent(`${params.sourceBucket}/${params.sourceKey}`).replace(
+    /%2F/gi,
+    "/",
+  );
+  await s3Client().send(
+    new CopyObjectCommand({
+      Bucket: s3Config().bucket,
+      Key: params.targetKey,
+      CopySource: copySource,
+      ...(params.contentType
+        ? { ContentType: params.contentType, MetadataDirective: "REPLACE" }
+        : {}),
+    }),
+  );
 }

@@ -795,6 +795,9 @@
       "filesHeading": "Tender files",
       "linksHeading": "External links",
       "fileNotReadable": "Not machine-readable",
+      "createWorkingCopy": "Edit a copy",
+      "workingCopyFailed": "The working copy could not be created.",
+      "downloadFile": "Download file",
       "fetch": {
         "button": "Fetch documents",
         "refresh": "Re-fetch documents",

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Clara — BAU AI</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="../v1/plugins.js"></script>
+  </head>
+  <body>
+    <main>
+      <header><span class="mark">C</span><div><strong>Clara</strong><small>BAU AI document assistant</small></div></header>
+      <label for="task">Task</label>
+      <select id="task"><option value="prefill">Prefill fields</option><option value="rewrite">Rewrite selection</option><option value="review">Review selection</option></select>
+      <label for="instruction">Instruction</label>
+      <textarea id="instruction" rows="4" placeholder="What should Clara prepare or check?"></textarea>
+      <button id="propose" class="primary">Create proposals</button>
+      <p id="status" role="status"></p>
+      <section id="proposals" hidden><div class="section-title"><strong>Proposed changes</strong><button id="toggle">Select all</button></div><div id="proposal-list"></div><button id="apply" class="primary">Apply selected changes</button></section>
+    </main>
+    <script src="plugin.js"></script>
+  </body>
+</html>

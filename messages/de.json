@@ -795,6 +795,9 @@
       "filesHeading": "Vergabeunterlagen",
       "linksHeading": "Externe Links",
       "fileNotReadable": "Nicht maschinenlesbar",
+      "createWorkingCopy": "Kopie bearbeiten",
+      "workingCopyFailed": "Die Arbeitskopie konnte nicht erstellt werden.",
+      "downloadFile": "Datei herunterladen",
       "fetch": {
         "button": "Dokumente abrufen",
         "refresh": "Dokumente erneut abrufen",
