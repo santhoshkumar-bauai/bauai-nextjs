@@ -25,9 +25,13 @@ const log = logger.child("documents.resolver.evergabe-online");
  *     this page instead collects the portal's own client-software installers
  *     (eVergabeApp, Signatur-Client, OBA), which is exactly the wrong answer.
  *
- * The page offers `zipDownloadButton`, one archive containing every document, so that
- * is preferred over 28 separate Wicket requests. Real file names live in the `title`
- * attribute of each row's anchor, since the callback URL carries none.
+ * The page offers `zipDownloadButton`, one archive containing every document, and
+ * per-file Wicket links. The individual links are preferred: the ZIP endpoint has
+ * been seen serving a non-archive response ("Failed to read ZIP archive", id 878791,
+ * 2026-08-11), and as the resolver's only file that single failure sank the whole
+ * tender. The ZIP remains the fallback for pages without a file table. Real file
+ * names live in the `title` attribute of each row's anchor, since the callback URL
+ * carries none.
  */
 const ZIP_BUTTON = /zipDownloadButton/i;
 const DOWNLOAD_LINK = /-downloadLink(\b|&|$)/i;
@@ -57,29 +61,6 @@ export const evergabeOnlineResolver: DocumentResolver = {
       }
     };
 
-    const zipHref = $("a[href]")
-      .toArray()
-      .map((element) => $(element).attr("href") ?? "")
-      .find((href) => ZIP_BUTTON.test(href));
-
-    if (zipHref) {
-      const zipUrl = absolute(zipHref);
-      if (zipUrl) {
-        log.debug("evergabe-online zip archive found", { url: zipUrl });
-        return {
-          files: [
-            {
-              url: zipUrl,
-              // The response's Content-Disposition supplies the real archive name.
-              fileName: null,
-              label: "Alle Vergabeunterlagen (ZIP)",
-              referer: page.finalUrl,
-            },
-          ],
-        };
-      }
-    }
-
     const files: ResolvedFile[] = [];
     const seen = new Set<string>();
 
@@ -103,6 +84,28 @@ export const evergabeOnlineResolver: DocumentResolver = {
     );
 
     if (files.length) return { files };
+
+    const zipHref = $("a[href]")
+      .toArray()
+      .map((element) => $(element).attr("href") ?? "")
+      .find((href) => ZIP_BUTTON.test(href));
+    if (zipHref) {
+      const zipUrl = absolute(zipHref);
+      if (zipUrl) {
+        log.debug("evergabe-online falling back to zip archive", { url: zipUrl });
+        return {
+          files: [
+            {
+              url: zipUrl,
+              // The response's Content-Disposition supplies the real archive name.
+              fileName: null,
+              label: "Alle Vergabeunterlagen (ZIP)",
+              referer: page.finalUrl,
+            },
+          ],
+        };
+      }
+    }
 
     if (looksLoginGated(page.body, 0)) return { skip: "LOGIN_REQUIRED" };
     return { skip: "NO_FILES_FOUND" };
