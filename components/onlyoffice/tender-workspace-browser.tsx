@@ -21,7 +21,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { workspaceFormat } from "@/lib/onlyoffice/formats";
 import type { SerializedWorkspaceDocument } from "@/lib/onlyoffice/serialize";
@@ -125,10 +125,10 @@ export function TenderWorkspaceBrowser() {
             {t("empty.description")}
           </p>
         </div>
-        <Button variant="outline" render={<Link href="/tenders" />}>
+        <Link href="/tenders" className={buttonVariants({ variant: "outline" })}>
           <Search />
           {t("empty.action")}
-        </Button>
+        </Link>
       </div>
     );
   }
@@ -369,14 +369,13 @@ function TenderDocuments({
           </span>
         </p>
         <div className="pt-1">
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link href={`/tenders/${tenderId}`} />}
+          <Link
+            href={`/tenders/${tenderId}`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             <ExternalLink />
             {t("openTender")}
-          </Button>
+          </Link>
         </div>
       </header>
 
@@ -432,14 +431,13 @@ function TenderDocuments({
                       <Badge variant="danger">{tLibrary("state.conversionFailed")}</Badge>
                     )}
                     {copy.state === "ready" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        render={<Link href={`/document-filler/${copy.id}`} />}
+                      <Link
+                        href={`/document-filler/${copy.id}`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
                       >
                         <FilePenLine />
                         {t("continueEditing")}
-                      </Button>
+                      </Link>
                     )}
                   </li>
                 ))}
@@ -498,19 +496,14 @@ function TenderDocuments({
                           {t("editCopy")}
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      <a
+                        href={`/api/tenders/${tenderId}/documents?record=${encodeURIComponent(file.recordId)}&file=${file.fileIndex}`}
                         title={t("download")}
                         aria-label={t("download")}
-                        render={
-                          <a
-                            href={`/api/tenders/${tenderId}/documents?record=${encodeURIComponent(file.recordId)}&file=${file.fileIndex}`}
-                          />
-                        }
+                        className={buttonVariants({ variant: "ghost", size: "icon" })}
                       >
                         <Download />
-                      </Button>
+                      </a>
                     </li>
                   );
                 })}
