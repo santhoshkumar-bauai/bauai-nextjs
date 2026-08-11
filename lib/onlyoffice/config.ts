@@ -6,8 +6,8 @@ import type { WorkspaceDocumentDocument } from "@/models/workspace-document";
 import { WorkspaceDocumentVersion } from "@/models/workspace-document-version";
 import type { HydratedDocument } from "mongoose";
 
-import { onlyOfficeAiEnabled, onlyOfficeEnv } from "./env";
-import { signEditorGrant, signOnlyOfficeConfig } from "./tokens";
+import { onlyOfficeEnv } from "./env";
+import { signOnlyOfficeConfig } from "./tokens";
 
 export async function buildOnlyOfficeConfig(input: {
   document: HydratedDocument<WorkspaceDocumentDocument>;
@@ -31,20 +31,6 @@ export async function buildOnlyOfficeConfig(input: {
   });
   const companyId = String(input.context.company._id);
   const documentId = String(input.document._id);
-  const pluginOptions = onlyOfficeAiEnabled()
-    ? {
-        [env.pluginGuid]: {
-          editorGrant: await signEditorGrant({
-            companyId,
-            userId: input.context.userId,
-            documentId,
-          }),
-          documentId,
-          gatewayUrl: `${env.publicAppUrl}/api/onlyoffice/ai`,
-          locale: input.locale,
-        },
-      }
-    : undefined;
 
   const unsigned = {
     type: "desktop",
@@ -89,15 +75,6 @@ export async function buildOnlyOfficeConfig(input: {
         help: false,
         spellcheck: true,
       },
-      ...(onlyOfficeAiEnabled()
-        ? {
-            plugins: {
-              autostart: [env.pluginGuid],
-              pluginsData: [`${env.publicUrl}/sdkjs-plugins/bau-ai/config.json`],
-              options: pluginOptions,
-            },
-          }
-        : {}),
     },
   } satisfies Config;
 

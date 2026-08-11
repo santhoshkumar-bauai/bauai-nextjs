@@ -2,17 +2,30 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Download, History, Loader2, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Download, History, Loader2, RotateCcw, Sparkles, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
+import { DoraPanel } from "@/components/dora/dora-panel";
 import type { SerializedWorkspaceVersion } from "@/lib/onlyoffice/serialize";
+import { cn } from "@/lib/utils";
 
 import { OnlyOfficeEditorClient } from "./editor-client";
 
-export function EditorWorkspace({ documentId, fileName }: { documentId: string; fileName: string }) {
+export function EditorWorkspace({
+  documentId,
+  fileName,
+  aiAvailable = false,
+}: {
+  documentId: string;
+  fileName: string;
+  aiAvailable?: boolean;
+}) {
+  const t = useTranslations("Dora");
   const [state, setState] = useState("connecting");
   const [versions, setVersions] = useState<Array<SerializedWorkspaceVersion & { restorable: boolean }> | null>(null);
   const [busy, setBusy] = useState("");
+  const [doraOpen, setDoraOpen] = useState(true);
 
   const loadVersions = async () => {
     setBusy("versions");
@@ -57,10 +70,32 @@ export function EditorWorkspace({ documentId, fileName }: { documentId: string; 
         <button onClick={() => void loadVersions()} className="grid size-8 place-items-center rounded-lg hover:bg-muted" title="Version history">
           {busy === "versions" ? <Loader2 className="animate-spin" /> : <History />}
         </button>
+        <button
+          onClick={() => setDoraOpen(!doraOpen)}
+          className={cn(
+            "hidden h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium md:flex",
+            doraOpen ? "border-primary/30 bg-primary/5 text-primary" : "hover:bg-muted",
+          )}
+          title={t("title")}
+        >
+          <Sparkles className="size-3.5" />
+          {t("title")}
+        </button>
       </header>
-      <section className="min-h-0 flex-1">
-        <OnlyOfficeEditorClient documentId={documentId} onStateChange={setState} />
-      </section>
+      <div className="flex min-h-0 flex-1">
+        <section className="min-h-0 min-w-0 flex-1">
+          <OnlyOfficeEditorClient documentId={documentId} onStateChange={setState} />
+        </section>
+        {doraOpen && (
+          <aside className="hidden w-[400px] shrink-0 border-l border-border md:block">
+            <DoraPanel
+              documentId={documentId}
+              aiAvailable={aiAvailable}
+              onClose={() => setDoraOpen(false)}
+            />
+          </aside>
+        )}
+      </div>
       {versions && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/25" onClick={() => setVersions(null)}>
           <aside className="h-full w-full max-w-md overflow-y-auto bg-white p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>

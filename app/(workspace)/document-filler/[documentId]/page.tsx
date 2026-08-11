@@ -20,5 +20,18 @@ export default async function DocumentEditorPage({
     deletedAt: null,
   }).lean();
   if (!document) notFound();
-  return <EditorWorkspace documentId={documentId} fileName={document.fileName} />;
+  // Same provider gate the chat routes enforce; computed server-side so the
+  // panel can explain itself instead of failing on first use.
+  const aiAvailable = Boolean(
+    process.env.GEMINI_API_KEY ||
+      process.env.OPENAI_API_KEY ||
+      process.env.ANTHROPIC_API_KEY,
+  );
+  return (
+    <EditorWorkspace
+      documentId={documentId}
+      fileName={document.fileName}
+      aiAvailable={aiAvailable}
+    />
+  );
 }

@@ -75,12 +75,12 @@ const PROFILE_CAP = 6_000;
 /** Whole-file reads are the fallback when chunk search has no coverage. */
 const FILE_READ_CAP = 20_000;
 
-function cap(text: string | null | undefined, max: number): string {
+export function cap(text: string | null | undefined, max: number): string {
   if (!text) return "";
   return text.length > max ? `${text.slice(0, max)}…` : text;
 }
 
-function wrapDocument(text: string): string {
+export function wrapDocument(text: string): string {
   return `<document>${text}</document>`;
 }
 
@@ -128,10 +128,12 @@ const tenderIdInput = z
   .describe("The 24-char tender id, e.g. from find_tenders results.");
 
 // ---------------------------------------------------------------------------
-// Shared renderers — one implementation behind both tool modes.
+// Shared renderers — one implementation behind both tool modes. The tender
+// renderers are exported for reuse by Dora's tool registry (lib/ai/dora),
+// which resolves the same AgentTenderScope from its document's linked tender.
 // ---------------------------------------------------------------------------
 
-function renderTenderNotice(scope: AgentTenderScope): string {
+export function renderTenderNotice(scope: AgentTenderScope): string {
   const d = scope.tenderDetail;
   return JSON.stringify({
     tenderId: scope.tenderId.toHexString(),
@@ -164,7 +166,7 @@ function renderTenderNotice(scope: AgentTenderScope): string {
   });
 }
 
-async function renderOverview(ctx: AgentRunContext, scope: AgentTenderScope): Promise<string> {
+export async function renderOverview(ctx: AgentRunContext, scope: AgentTenderScope): Promise<string> {
   const record = await getTenderOverview(scope.tenderId);
   if (!record) return JSON.stringify({ notGenerated: true });
   const overview = record.overview as Record<string, Record<string, unknown>>;
@@ -181,7 +183,7 @@ async function renderOverview(ctx: AgentRunContext, scope: AgentTenderScope): Pr
   });
 }
 
-async function renderExtractions(
+export async function renderExtractions(
   ctx: AgentRunContext,
   scope: AgentTenderScope,
   schemaName?: (typeof EXTRACTION_SCHEMA_NAMES)[number],
@@ -238,7 +240,7 @@ async function renderExtractions(
   });
 }
 
-async function renderTenderSearch(
+export async function renderTenderSearch(
   ctx: AgentRunContext,
   scope: AgentTenderScope,
   input: { query: string; docClass?: (typeof DOC_CLASSES)[number]; k: number },
@@ -272,7 +274,7 @@ async function renderTenderSearch(
   );
 }
 
-async function renderTenderFiles(scope: AgentTenderScope): Promise<string> {
+export async function renderTenderFiles(scope: AgentTenderScope): Promise<string> {
   const files = await listFetchedTenderFiles(scope.tenderId);
   if (files.length === 0) {
     return JSON.stringify({
@@ -291,7 +293,7 @@ async function renderTenderFiles(scope: AgentTenderScope): Promise<string> {
   );
 }
 
-async function renderReadTenderDocument(
+export async function renderReadTenderDocument(
   ctx: AgentRunContext,
   scope: AgentTenderScope,
   fileName: string,

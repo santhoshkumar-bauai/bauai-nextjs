@@ -9,6 +9,8 @@ import type {
   ChunkDocument,
   CompanyMatchProfileDocument,
   CompanyMatchRunDocument,
+  DocumentBriefDocument,
+  DocumentBriefRunDocument,
   DocumentClassificationDocument,
   ExtractionDocument,
   TenderFitRecommendationDocument,
@@ -18,6 +20,7 @@ import type {
   TenderReportRunDocument,
   TenderSearchDocument,
   TenderVerdictDocument,
+  WorkspaceDocumentTextDocument,
 } from "../types.ts";
 
 export const aiCollectionNames = {
@@ -37,6 +40,9 @@ export const aiCollectionNames = {
   companyMatchProfiles: "company_match_profiles",
   tenderMatchScores: "tender_match_scores",
   companyMatchRuns: "company_match_runs",
+  documentBriefs: "document_briefs",
+  documentBriefRuns: "document_brief_runs",
+  workspaceDocumentTexts: "workspace_document_texts",
 } as const;
 
 export interface AiCollections {
@@ -56,6 +62,9 @@ export interface AiCollections {
   companyMatchProfiles: Collection<CompanyMatchProfileDocument>;
   tenderMatchScores: Collection<TenderMatchScoreDocument>;
   companyMatchRuns: Collection<CompanyMatchRunDocument>;
+  documentBriefs: Collection<DocumentBriefDocument>;
+  documentBriefRuns: Collection<DocumentBriefRunDocument>;
+  workspaceDocumentTexts: Collection<WorkspaceDocumentTextDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -80,5 +89,8 @@ export async function getAiCollections(): Promise<AiCollections> {
     companyMatchProfiles: db.collection(aiCollectionNames.companyMatchProfiles),
     tenderMatchScores: db.collection(aiCollectionNames.tenderMatchScores),
     companyMatchRuns: db.collection(aiCollectionNames.companyMatchRuns),
+    documentBriefs: db.collection(aiCollectionNames.documentBriefs),
+    documentBriefRuns: db.collection(aiCollectionNames.documentBriefRuns),
+    workspaceDocumentTexts: db.collection(aiCollectionNames.workspaceDocumentTexts),
   };
 }

@@ -143,8 +143,8 @@
         "description": "Zeitpläne verwalten, Fortschritte verfolgen und Aufgaben effizient koordinieren."
       },
       "dora": {
-        "role": "Vertrags- & Spezifikationsagent",
-        "description": "Verträge prüfen, Risiken markieren und Anforderungen aus Dokumenten extrahieren."
+        "role": "Dokumenten-Agentin",
+        "description": "Analysiert das Dokument, das Sie bearbeiten, sagt Ihnen, was zu tun ist, und schlägt Eintragungen vor."
       },
       "clara": {
         "role": "Ausschreibungsagentin",
@@ -1146,6 +1146,53 @@
       }
     }
   },
+  "Dora": {
+    "title": "Dora",
+    "subtitle": "Dokumenten-Assistentin",
+    "analyzeLatest": "Neu analysieren",
+    "clearChat": "Verlauf löschen",
+    "close": "Panel schließen",
+    "loading": "Dokumentanalyse wird geladen…",
+    "chatLoading": "Verlauf wird geladen…",
+    "chatEmpty": "Fragen Sie Dora zu diesem Dokument — was einzutragen ist, was eine Klausel bedeutet oder was noch fehlt.",
+    "chatError": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "rateLimited": "Die KI ist ausgelastet — bitte gleich erneut versuchen.",
+    "placeholder": "Frage zu diesem Dokument…",
+    "thinking": "Dora denkt nach…",
+    "noProvider": "Kein KI-Anbieter konfiguriert — Dora ist nicht verfügbar.",
+    "failed": "Die Analyse ist fehlgeschlagen.",
+    "retry": "Erneut versuchen",
+    "notReady": "Das Dokument hat noch keine gespeicherte Version — bitte zuerst speichern.",
+    "stale": "Das Dokument wurde seit dieser Analyse geändert.",
+    "reanalyze": "Neu analysieren",
+    "noTextLayer": "Dieses PDF hat keine Textebene (gescanntes Dokument). Dora hat es nur aus dem Ausschreibungskontext analysiert.",
+    "textUnavailable": "Der Dokumenttext konnte nicht gelesen werden; die Analyse stützt sich auf den Ausschreibungskontext.",
+    "firstSheetOnly": "Tabelle: Nur das erste Blatt wurde gelesen.",
+    "copyValue": "Wert kopieren",
+    "stages": {
+      "title": "Dokument wird analysiert…",
+      "saving_editor": "Editor-Änderungen werden gespeichert",
+      "extracting": "Dokument wird gelesen",
+      "grounding": "Ausschreibungs- und Unternehmenskontext wird gesammelt",
+      "analyzing": "Analyse läuft",
+      "translating": "Übersetzung läuft",
+      "saving": "Analyse wird gespeichert"
+    },
+    "cards": {
+      "about": "Was dieses Dokument ist",
+      "actions": "Was zu tun ist",
+      "values": "Vorgeschlagene Werte",
+      "deadlines": "Fristen",
+      "requirements": "Zentrale Anforderungen",
+      "risks": "Risiken",
+      "missing": "Noch zu klären"
+    },
+    "source": {
+      "document": "Dokument",
+      "tender": "Ausschreibung",
+      "company": "Unternehmen"
+    }
+  },
   "Chat": {
     "clear": "Verlauf löschen",
     "loading": "Verlauf wird geladen…",
@@ -1187,7 +1234,11 @@
       "list_relevant_tenders": "Lade Ihre relevanten Ausschreibungen…",
       "list_workspace_tenders": "Prüfe Ihre Angebots-Pipeline…",
       "list_tender_reports": "Lade Ihre Berichte…",
-      "lookup_cpv_codes": "Schlage CPV-Codes nach…"
+      "lookup_cpv_codes": "Schlage CPV-Codes nach…",
+      "read_current_document": "Lese das geöffnete Dokument…",
+      "get_document_brief": "Lade die Dokumentanalyse…",
+      "get_document_info": "Prüfe den Dokumentstatus…",
+      "get_tender_context": "Lade den Ausschreibungskontext…"
     },
     "verdict": {
       "recommendation": {

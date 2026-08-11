@@ -14,7 +14,7 @@ import {
   workspaceVersionKey,
 } from "./storage";
 
-type ConversionResponse = {
+export type ConversionResponse = {
   endConvert?: boolean;
   fileUrl?: string;
   percent?: number;
@@ -30,7 +30,9 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function requestConversion(body: Record<string, unknown>, key: string) {
+/** Signed request to the Document Server converter (shared with Dora's
+ * spreadsheet→csv text extraction). */
+export async function requestConversion(body: Record<string, unknown>, key: string) {
   const env = onlyOfficeEnv();
   const token = await signOnlyOfficeConfig(body);
   const response = await fetch(`${env.internalUrl}/converter?shardkey=${encodeURIComponent(key)}`, {

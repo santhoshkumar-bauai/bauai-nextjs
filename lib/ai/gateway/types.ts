@@ -15,7 +15,9 @@ export type ModelRole =
   /** Long-form tender report — the most demanding synthesis in the product. */
   | "report"
   /** AI tender matching: judges the company against 200 candidate tenders. */
-  | "match";
+  | "match"
+  /** Dora, the document assistant: brief generation + editor-side chat. */
+  | "dora";
 
 /** Mirrors the retrieval asymmetry of embedding models: documents and
  * queries are embedded with different task hints. */

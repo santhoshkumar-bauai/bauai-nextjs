@@ -46,6 +46,11 @@ const TOOL_LABEL_KEYS = [
   "list_tender_reports",
   "lookup_cpv_codes",
   "verdict",
+  // Dora's document tools (labels live in the same Chat.tool catalog).
+  "read_current_document",
+  "get_document_brief",
+  "get_document_info",
+  "get_tender_context",
 ] as const;
 
 const VERDICT_STAGES = ["loading_artifacts", "retrieving_gaps", "drafting"] as const;
@@ -58,10 +63,12 @@ function ThinkingIndicator({
   activeTool,
   activeStage,
   density,
+  thinkingText,
 }: {
   activeTool: string | null;
   activeStage: string | null;
   density: ChatDensity;
+  thinkingText?: string;
 }) {
   const t = useTranslations("Chat");
   const stageKey = VERDICT_STAGES.find((stage) => stage === activeStage);
@@ -72,7 +79,7 @@ function ThinkingIndicator({
       ? t(`tool.${toolKey}`)
       : activeTool
         ? t("tool.generic")
-        : t("thinking");
+        : (thinkingText ?? t("thinking"));
 
   return (
     <div className="flex items-start">
@@ -195,6 +202,7 @@ export function MessageList({
   activeTool = null,
   activeStage = null,
   liveTenderRefs = [],
+  thinkingText,
 }: {
   messages: WireChatMessage[];
   streamingText: string;
@@ -206,6 +214,8 @@ export function MessageList({
   pending?: boolean;
   activeTool?: string | null;
   activeStage?: string | null;
+  /** Agent-specific idle label ("Dora is thinking…"); defaults to Clara's. */
+  thinkingText?: string;
   /**
    * Tenders the running turn has surfaced so far. Shown while the turn is in
    * flight; the finished message carries the same list persistently.
@@ -261,6 +271,7 @@ export function MessageList({
           activeTool={activeTool}
           activeStage={activeStage}
           density={density}
+          thinkingText={thinkingText}
         />
       )}
       {(pending || streamingText !== "") && liveTenderRefs.length > 0 && (

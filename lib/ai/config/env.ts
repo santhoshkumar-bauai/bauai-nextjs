@@ -168,6 +168,12 @@ function defaultModelRoles(): Record<string, string> {
      * report model so an unconfigured deployment still works.
      */
     match: process.env.AI_MATCH_MODEL || process.env.AI_REPORT_MODEL || agent,
+    /**
+     * Dora reads the open workspace document and guides the user through it —
+     * a flagship surface, so it gets its own role. Falls back through the
+     * report model so an unconfigured deployment still works.
+     */
+    dora: process.env.AI_DORA_MODEL || process.env.AI_REPORT_MODEL || agent,
   };
 }
 

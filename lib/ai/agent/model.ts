@@ -41,7 +41,7 @@ type ReasoningEffort = "none" | "low" | "medium" | "high";
 
 export interface ChatModelOptions extends AgentModelOptions {
   /** Defaults to "agent". */
-  role?: Extract<ModelRole, "agent" | "report">;
+  role?: Extract<ModelRole, "agent" | "report" | "dora">;
   /** Overrides the env-configured effort for this role. */
   reasoningEffort?: ReasoningEffort;
 }

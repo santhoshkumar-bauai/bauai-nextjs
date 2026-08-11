@@ -143,8 +143,8 @@
         "description": "Manage timelines, track progress, and coordinate tasks efficiently."
       },
       "dora": {
-        "role": "Contract & Spec Agent",
-        "description": "Review contracts, flag risks, and extract requirements from your documents."
+        "role": "Document Agent",
+        "description": "Analyzes the document you are editing, tells you what to do, and suggests what to fill in."
       },
       "clara": {
         "role": "Tender Agent",
@@ -1146,6 +1146,53 @@
       }
     }
   },
+  "Dora": {
+    "title": "Dora",
+    "subtitle": "Document assistant",
+    "analyzeLatest": "Analyze latest",
+    "clearChat": "Clear conversation",
+    "close": "Close panel",
+    "loading": "Loading the document brief…",
+    "chatLoading": "Loading conversation…",
+    "chatEmpty": "Ask Dora about this document — what to fill in, what a clause means, or what is still missing.",
+    "chatError": "Something went wrong. Try again.",
+    "rateLimited": "The AI is rate limited — try again in a moment.",
+    "placeholder": "Ask about this document…",
+    "thinking": "Dora is thinking…",
+    "noProvider": "No AI provider is configured, so Dora is unavailable.",
+    "failed": "The analysis failed.",
+    "retry": "Retry",
+    "notReady": "The document has no saved version yet — save it first.",
+    "stale": "The document changed since this analysis.",
+    "reanalyze": "Re-analyze",
+    "noTextLayer": "This PDF has no text layer (scanned document). Dora analyzed it from the tender context only.",
+    "textUnavailable": "The document's text could not be read; the analysis relies on the tender context.",
+    "firstSheetOnly": "Spreadsheet: only the first sheet was read.",
+    "copyValue": "Copy value",
+    "stages": {
+      "title": "Analyzing the document…",
+      "saving_editor": "Saving your editor changes",
+      "extracting": "Reading the document",
+      "grounding": "Gathering tender and company context",
+      "analyzing": "Analyzing",
+      "translating": "Translating",
+      "saving": "Saving the brief"
+    },
+    "cards": {
+      "about": "What this document is",
+      "actions": "What to do",
+      "values": "Suggested values",
+      "deadlines": "Deadlines",
+      "requirements": "Key requirements",
+      "risks": "Risks",
+      "missing": "Still to clarify"
+    },
+    "source": {
+      "document": "document",
+      "tender": "tender",
+      "company": "company"
+    }
+  },
   "Chat": {
     "clear": "Clear conversation",
     "loading": "Loading conversation…",
@@ -1187,7 +1234,11 @@
       "list_relevant_tenders": "Loading your relevant tenders…",
       "list_workspace_tenders": "Checking your bid pipeline…",
       "list_tender_reports": "Loading your reports…",
-      "lookup_cpv_codes": "Looking up CPV codes…"
+      "lookup_cpv_codes": "Looking up CPV codes…",
+      "read_current_document": "Reading the open document…",
+      "get_document_brief": "Loading the document brief…",
+      "get_document_info": "Checking the document status…",
+      "get_tender_context": "Loading the tender context…"
     },
     "verdict": {
       "recommendation": {
