@@ -1,0 +1,48 @@
+name: bauai-onlyoffice
+
+services:
+  documentserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bau-ai/onlyoffice-documentserver:9.4.0-plugin-v1
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 120s
+    mem_limit: 4g
+    shm_size: 1gb
+    environment:
+      JWT_ENABLED: "true"
+      JWT_SECRET: ${OO_JWT_SECRET:?OO_JWT_SECRET is required}
+      JWT_HEADER: Authorization
+      JWT_IN_BODY: "true"
+      ALLOW_PRIVATE_IP_ADDRESS: "true"
+      LARGER_FILE_LIMITS: "true"
+    expose:
+      - "80"
+    volumes:
+      - onlyoffice_data:/var/www/onlyoffice/Data
+      - onlyoffice_logs:/var/log/onlyoffice
+      - onlyoffice_lib:/var/lib/onlyoffice
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    networks:
+      - dokploy-network
+
+volumes:
+  onlyoffice_data:
+  onlyoffice_logs:
+  onlyoffice_lib:
+
+networks:
+  dokploy-network:
+    external: true
