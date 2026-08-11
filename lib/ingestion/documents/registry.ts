@@ -1,6 +1,7 @@
 import { aumassResolver } from "./resolvers/aumass.ts";
 import { cosinexResolver } from "./resolvers/cosinex.ts";
 import { directFileResolver } from "./resolvers/direct-file.ts";
+import { evergabeResolver } from "./resolvers/evergabe.ts";
 import { evergabeOnlineResolver } from "./resolvers/evergabe-online.ts";
 import { netserverResolver } from "./resolvers/netserver.ts";
 import { ribMeinauftragResolver } from "./resolvers/rib-meinauftrag.ts";
@@ -19,6 +20,7 @@ import type { DocumentResolver } from "./types.ts";
 const resolvers: DocumentResolver[] = [
   cosinexResolver,
   evergabeOnlineResolver,
+  evergabeResolver,
   netserverResolver,
   aumassResolver,
   staatsanzeigerResolver,

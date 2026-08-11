@@ -794,7 +794,16 @@
       },
       "filesHeading": "Tender files",
       "linksHeading": "External links",
-      "fileNotReadable": "Not machine-readable"
+      "fileNotReadable": "Not machine-readable",
+      "fetch": {
+        "button": "Fetch documents",
+        "refresh": "Re-fetch documents",
+        "running": "Fetching…",
+        "hint": "Download the tender files from the procurement portal.",
+        "progress": "{done} of {total, plural, one {# source} other {# sources}} processed",
+        "error": "The documents could not be fetched. Please try again.",
+        "noneFound": "No downloadable files were found. The portal may require a login."
+      }
     },
     "report": {
       "navTitle": "Full report",

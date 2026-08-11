@@ -8,6 +8,7 @@ import type { SerializedTenderDetail } from "@/lib/tenders/detail";
 import type { SerializedTenderFile } from "@/lib/tenders/document-files";
 import { AboutTab } from "./about-tab";
 import { DocumentsTab } from "./documents-tab";
+import type { DocumentFetchState } from "./use-tender-detail";
 import { ExtractionsSection } from "./extractions-section";
 import { ScheduleTab } from "./schedule-tab";
 
@@ -20,6 +21,7 @@ export function TenderDetailTabs({
   tenderId,
   detail,
   files,
+  docFetch,
   className,
   listWrapperClassName,
   panelClassName,
@@ -27,6 +29,7 @@ export function TenderDetailTabs({
   tenderId: string | null;
   detail: SerializedTenderDetail;
   files: SerializedTenderFile[];
+  docFetch?: DocumentFetchState;
   className?: string;
   listWrapperClassName?: string;
   panelClassName?: string;
@@ -51,7 +54,7 @@ export function TenderDetailTabs({
           <AboutTab detail={detail} />
         </TabsContent>
         <TabsContent value="documents" className="pt-2">
-          <DocumentsTab detail={detail} files={files} />
+          <DocumentsTab detail={detail} files={files} docFetch={docFetch} />
         </TabsContent>
         <TabsContent value="schedule" className="pt-2">
           <ScheduleTab detail={detail} />

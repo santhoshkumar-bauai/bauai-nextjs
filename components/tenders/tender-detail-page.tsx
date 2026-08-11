@@ -27,7 +27,7 @@ const STATUS_VARIANT = {
 export function TenderDetailPage({ tenderId }: { tenderId: string }) {
   const t = useTranslations("Tenders");
   const tReport = useTranslations("Tenders.report");
-  const { detail, files, decision, setDecision, loading, error, fit } =
+  const { detail, files, decision, setDecision, loading, error, fit, docFetch } =
     useTenderDetail(tenderId);
 
   const statusVariant =
@@ -96,6 +96,7 @@ export function TenderDetailPage({ tenderId }: { tenderId: string }) {
             tenderId={tenderId}
             detail={detail}
             files={files}
+            docFetch={docFetch}
             className="flex flex-col gap-0"
             listWrapperClassName="border-b border-border px-4 py-3 sm:px-6"
             panelClassName="px-4 py-5 sm:px-6"

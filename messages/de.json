@@ -794,7 +794,16 @@
       },
       "filesHeading": "Vergabeunterlagen",
       "linksHeading": "Externe Links",
-      "fileNotReadable": "Nicht maschinenlesbar"
+      "fileNotReadable": "Nicht maschinenlesbar",
+      "fetch": {
+        "button": "Dokumente abrufen",
+        "refresh": "Dokumente erneut abrufen",
+        "running": "Wird abgerufen…",
+        "hint": "Vergabeunterlagen vom Vergabeportal herunterladen.",
+        "progress": "{done} von {total, plural, one {# Quelle} other {# Quellen}} verarbeitet",
+        "error": "Die Dokumente konnten nicht abgerufen werden. Bitte versuchen Sie es erneut.",
+        "noneFound": "Es wurden keine herunterladbaren Dateien gefunden. Das Portal erfordert möglicherweise eine Anmeldung."
+      }
     },
     "report": {
       "navTitle": "Vollständiger Bericht",

@@ -31,7 +31,7 @@ export function TenderDetailDialog({
   onDecided?: (tenderId: string, status: DecisionStatus | null) => void;
 }) {
   const t = useTranslations("Tenders");
-  const { detail, files, decision, setDecision, loading, error, fit } =
+  const { detail, files, decision, setDecision, loading, error, fit, docFetch } =
     useTenderDetail(tenderId);
 
   return (
@@ -78,6 +78,7 @@ export function TenderDetailDialog({
             tenderId={tenderId}
             detail={detail}
             files={files}
+            docFetch={docFetch}
             className="flex min-h-0 flex-1 flex-col gap-0"
             listWrapperClassName="border-b border-border px-6 py-3"
             panelClassName="min-h-0 flex-1 overflow-y-auto px-6 py-4"

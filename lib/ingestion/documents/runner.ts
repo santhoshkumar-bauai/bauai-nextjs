@@ -1,3 +1,5 @@
+import type { ObjectId } from "mongodb";
+
 import { ingestionEnv } from "../config/env.ts";
 import { IngestionError } from "../http/errors.ts";
 import { describeError, logger } from "../observability/logger.ts";
@@ -45,6 +47,17 @@ export interface DocumentRunOptions {
   concurrency: number;
   /** Restrict to one host, which is how a new resolver gets exercised in isolation. */
   host?: string;
+  /** Restrict to one tender, which is how the on-demand API route fetches. */
+  tenderId?: ObjectId;
+  /**
+   * Files of one row downloaded concurrently. Defaults to 1 — the worker's
+   * historical strictly-sequential order. The per-host limiter still governs
+   * the true request rate, so raising this only removes dead time between
+   * files; the on-demand path pairs it with a faster limiter.
+   */
+  fileConcurrency?: number;
+  /** Replaces the default client; the on-demand path passes a faster one. */
+  http?: DocumentHttpClient;
   signal?: AbortSignal;
   counters?: DocumentRunCounters;
   /** Return once the queue is empty instead of waiting for more work. */
@@ -63,7 +76,7 @@ export async function runDocumentFetch(
   options: DocumentRunOptions,
 ): Promise<DocumentRunCounters> {
   const counters = options.counters ?? emptyDocumentCounters();
-  const http = new DocumentHttpClient();
+  const http = options.http ?? new DocumentHttpClient();
 
   await releaseStaleLeases();
 
@@ -84,7 +97,7 @@ async function worker(
     if (options.signal?.aborted) return;
     if (options.limit !== null && counters.claimed >= options.limit) return;
 
-    const row = await claimNext(options.host);
+    const row = await claimNext(options.host, options.tenderId);
     if (!row) {
       if (options.exitWhenDrained) return;
       await sleep(ingestionEnv.documents.pollIntervalMs, options.signal);
@@ -97,7 +110,7 @@ async function worker(
     }, Math.max(30_000, Math.floor(ingestionEnv.documents.leaseTtlMs / 4)));
 
     try {
-      await processRow(row, http, counters, options.signal);
+      await processRow(row, http, counters, options);
     } catch (error) {
       await recordFailure(row, error, counters);
     } finally {
@@ -110,8 +123,9 @@ async function processRow(
   row: TenderDocumentRecord,
   http: DocumentHttpClient,
   counters: DocumentRunCounters,
-  signal?: AbortSignal,
+  options: DocumentRunOptions,
 ): Promise<void> {
+  const signal = options.signal;
   const url = new URL(row.sourceUrl);
   const resolver = resolverFor(url);
   const startedAt = Date.now();
@@ -149,57 +163,92 @@ async function processRow(
   const stored: StoredDocumentFile[] = [];
   const failed: FailedDocumentFile[] = [];
   let totalBytes = 0;
+  let nextIndex = 0;
 
-  for (const file of files) {
-    if (signal?.aborted) break;
-    if (totalBytes >= ingestionEnv.documents.maxTotalBytesPerTender) {
-      log.warn("tender document budget exhausted", {
-        canonicalKey: row.canonicalKey,
-        totalBytes,
-      });
-      // Recorded rather than dropped, so the audit trail shows the budget stopped
-      // these files rather than the portal refusing them.
-      failed.push({
-        url: file.url,
-        fileName: file.fileName ?? null,
-        label: file.label ?? null,
-        errorClass: "TENDER_BUDGET_EXHAUSTED",
-        error: `Stopped after ${totalBytes} bytes for this tender`,
-        retryable: false,
-        attemptedAt: new Date(),
-      });
-      continue;
-    }
+  // Progress snapshots: every stored file is visible on the row while the rest
+  // still download, so the Documents tab fills in live instead of jumping from
+  // empty to complete. Writes are chained so concurrent pool workers cannot
+  // interleave a shorter snapshot after a longer one; the final $set below
+  // remains the authoritative full write.
+  let snapshotChain = Promise.resolve();
+  const snapshotProgress = () => {
+    const snapshot = [...stored];
+    snapshotChain = snapshotChain
+      .then(async () => {
+        const store = await documentStore();
+        await store.updateOne(
+          { _id: row._id, status: "RESOLVING" },
+          { $set: { files: snapshot, updatedAt: new Date() } },
+        );
+      })
+      .catch(() => undefined);
+  };
 
-    try {
-      const results = await fetchAndStore(row, file, http, signal);
-      for (const result of results) {
-        stored.push(result);
-        totalBytes += result.byteLength;
+  // Files download through a small pool (default 1, i.e. the historical
+  // sequential order). Under concurrency the byte-budget check is best-effort:
+  // in-flight files can overshoot it by at most poolSize - 1 files.
+  const downloadNext = async (): Promise<void> => {
+    for (;;) {
+      if (signal?.aborted) return;
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= files.length) return;
+      const file = files[index];
+
+      if (totalBytes >= ingestionEnv.documents.maxTotalBytesPerTender) {
+        log.warn("tender document budget exhausted", {
+          canonicalKey: row.canonicalKey,
+          totalBytes,
+        });
+        // Recorded rather than dropped, so the audit trail shows the budget stopped
+        // these files rather than the portal refusing them.
+        failed.push({
+          url: file.url,
+          fileName: file.fileName ?? null,
+          label: file.label ?? null,
+          errorClass: "TENDER_BUDGET_EXHAUSTED",
+          error: `Stopped after ${totalBytes} bytes for this tender`,
+          retryable: false,
+          attemptedAt: new Date(),
+        });
+        continue;
       }
-    } catch (error) {
-      // One bad file must not fail the document — the others are still archived — but
-      // it must still be recorded, or a partial success would look like a full one.
-      const described = describeError(error);
-      failed.push({
-        url: file.url,
-        fileName: file.fileName ?? null,
-        label: file.label ?? null,
-        errorClass: error instanceof IngestionError ? error.failureClass : described.name,
-        error: described.message.slice(0, 600),
-        retryable: error instanceof IngestionError ? error.retryable : true,
-        attemptedAt: new Date(),
-      });
-      log.warn("file could not be retrieved", {
-        url: file.url,
-        error: described.message.slice(0, 200),
-      });
-      metrics.increment("ingestion_document_file_failures_total", {
-        host: row.host,
-        errorClass: error instanceof IngestionError ? error.failureClass : described.name,
-      });
+
+      try {
+        const results = await fetchAndStore(row, file, http, signal);
+        for (const result of results) {
+          stored.push(result);
+          totalBytes += result.byteLength;
+        }
+        if (results.length) snapshotProgress();
+      } catch (error) {
+        // One bad file must not fail the document — the others are still archived — but
+        // it must still be recorded, or a partial success would look like a full one.
+        const described = describeError(error);
+        failed.push({
+          url: file.url,
+          fileName: file.fileName ?? null,
+          label: file.label ?? null,
+          errorClass: error instanceof IngestionError ? error.failureClass : described.name,
+          error: described.message.slice(0, 600),
+          retryable: error instanceof IngestionError ? error.retryable : true,
+          attemptedAt: new Date(),
+        });
+        log.warn("file could not be retrieved", {
+          url: file.url,
+          error: described.message.slice(0, 200),
+        });
+        metrics.increment("ingestion_document_file_failures_total", {
+          host: row.host,
+          errorClass: error instanceof IngestionError ? error.failureClass : described.name,
+        });
+      }
     }
-  }
+  };
+
+  const poolSize = Math.max(1, Math.min(options.fileConcurrency ?? 1, files.length));
+  await Promise.all(Array.from({ length: poolSize }, () => downloadNext()));
+  await snapshotChain;
 
   if (!stored.length) {
     await markSkipped(
@@ -413,7 +462,10 @@ function guessMimeType(path: string): string {
 /* Claiming                                                                   */
 /* -------------------------------------------------------------------------- */
 
-async function claimNext(host?: string): Promise<TenderDocumentRecord | null> {
+async function claimNext(
+  host?: string,
+  tenderId?: ObjectId,
+): Promise<TenderDocumentRecord | null> {
   const store = await documentStore();
   const now = new Date();
 
@@ -422,6 +474,7 @@ async function claimNext(host?: string): Promise<TenderDocumentRecord | null> {
       status: "PENDING",
       nextAttemptAt: { $lte: now },
       ...(host ? { host } : {}),
+      ...(tenderId ? { tenderId } : {}),
     },
     {
       $set: {

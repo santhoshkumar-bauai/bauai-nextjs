@@ -1,11 +1,20 @@
 "use client";
 
-import { Download, ExternalLink, FileText, Globe } from "lucide-react";
+import {
+  Download,
+  DownloadCloud,
+  ExternalLink,
+  FileText,
+  Globe,
+  Loader2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { SerializedTenderDetail } from "@/lib/tenders/detail";
 import type { SerializedTenderFile } from "@/lib/tenders/document-files";
+import type { DocumentFetchState } from "./use-tender-detail";
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -16,13 +25,23 @@ function formatBytes(bytes: number): string {
 export function DocumentsTab({
   detail,
   files = [],
+  docFetch,
 }: {
   detail: SerializedTenderDetail;
   files?: SerializedTenderFile[];
+  docFetch?: DocumentFetchState;
 }) {
   const t = useTranslations("Tenders");
 
+  const summary = docFetch?.summary ?? null;
+  // Rows in tender_documents come from the notice's document links, so with no
+  // links (and no pre-existing rows) there is nothing a fetch could retrieve.
+  const canFetch =
+    Boolean(docFetch) &&
+    (detail.documents.length > 0 || (summary?.total ?? 0) > 0);
+
   if (
+    !canFetch &&
     files.length === 0 &&
     detail.documents.length === 0 &&
     detail.sourceLinks.length === 0
@@ -34,8 +53,44 @@ export function DocumentsTab({
     );
   }
 
+  const active = docFetch?.active ?? false;
+  const busy = active || (docFetch?.starting ?? false);
+  const done = summary
+    ? summary.fetched + summary.skipped + summary.failed
+    : 0;
+
   return (
     <div className="flex flex-col gap-2">
+      {canFetch && docFetch && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-border px-3 py-2">
+          <span className="min-w-0 text-xs text-muted-foreground">
+            {active && summary
+              ? t("detail.fetch.progress", { done, total: summary.total })
+              : docFetch.error || (summary?.stalled ?? 0) > 0
+                ? t("detail.fetch.error")
+                : docFetch.finished && files.length === 0
+                  ? t("detail.fetch.noneFound")
+                  : t("detail.fetch.hint")}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={docFetch.start}
+          >
+            {busy ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <DownloadCloud />
+            )}
+            {busy
+              ? t("detail.fetch.running")
+              : files.length > 0
+                ? t("detail.fetch.refresh")
+                : t("detail.fetch.button")}
+          </Button>
+        </div>
+      )}
       {files.length > 0 && (
         <p className="pt-1 pb-0.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
           {t("detail.filesHeading")}

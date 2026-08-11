@@ -46,25 +46,34 @@ const MAX_COOKIES_PER_HOST = 25;
 /** Bounds memory when a long run touches hundreds of portals. */
 const MAX_TRACKED_HOSTS = 1_000;
 
-function hostState(host: string): HostState {
-  let state = hosts.get(host);
+interface HostLimits {
+  requestsPerMinutePerHost: number;
+  maxConcurrentPerHost: number;
+}
+
+function hostStateFrom(
+  map: Map<string, HostState>,
+  host: string,
+  limits: HostLimits,
+): HostState {
+  let state = map.get(host);
   if (!state) {
-    if (hosts.size >= MAX_TRACKED_HOSTS) {
+    if (map.size >= MAX_TRACKED_HOSTS) {
       // Oldest entry first; a host that has not been touched in a long time is the
       // cheapest to forget, and losing its cookies only costs one extra handshake.
-      const oldest = hosts.keys().next().value;
-      if (oldest !== undefined) hosts.delete(oldest);
+      const oldest = map.keys().next().value;
+      if (oldest !== undefined) map.delete(oldest);
     }
     state = {
       limiter: new RateLimiter(
-        ingestionEnv.documents.requestsPerMinutePerHost,
-        ingestionEnv.documents.maxConcurrentPerHost,
+        limits.requestsPerMinutePerHost,
+        limits.maxConcurrentPerHost,
       ),
       consecutiveFailures: 0,
       blockedUntil: 0,
       cookies: new Map(),
     };
-    hosts.set(host, state);
+    map.set(host, state);
   }
   return state;
 }
@@ -87,11 +96,12 @@ async function fetchFollowing(
   initialUrl: string,
   init: RequestInit,
   headers: Record<string, string>,
+  stateFor: (host: string) => HostState,
 ): Promise<Response> {
   let currentUrl = initialUrl;
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    const state = hostState(new URL(currentUrl).host);
+    const state = stateFor(new URL(currentUrl).host);
     const cookieHeader = [...state.cookies]
       .map(([name, value]) => `${name}=${value}`)
       .join("; ");
@@ -156,6 +166,17 @@ export interface DownloadResult {
   status: number;
 }
 
+export interface DocumentHttpOptions {
+  /**
+   * Overrides the shared per-host budget with a private, faster one — used by
+   * the on-demand fetch where a user is actively waiting. A client without
+   * overrides shares the module-wide host state (limits, backoff, cookies)
+   * with every other default client in the process.
+   */
+  requestsPerMinutePerHost?: number;
+  maxConcurrentPerHost?: number;
+}
+
 export class DocumentHttpClient implements DocumentFetcher {
   /**
    * Present only when the headless browser is available, so `http.render?.(…)` in a
@@ -164,11 +185,33 @@ export class DocumentHttpClient implements DocumentFetcher {
   render?: DocumentFetcher["render"];
   capture?: DocumentFetcher["capture"];
 
-  constructor() {
+  private readonly limits: HostLimits;
+  private readonly hosts: Map<string, HostState>;
+
+  constructor(options: DocumentHttpOptions = {}) {
+    const custom =
+      options.requestsPerMinutePerHost !== undefined ||
+      options.maxConcurrentPerHost !== undefined;
+    this.limits = {
+      requestsPerMinutePerHost:
+        options.requestsPerMinutePerHost ??
+        ingestionEnv.documents.requestsPerMinutePerHost,
+      maxConcurrentPerHost:
+        options.maxConcurrentPerHost ?? ingestionEnv.documents.maxConcurrentPerHost,
+    };
+    // A custom budget gets its own host map so its limiters cannot be diluted
+    // by (or dilute) the shared crawl budget. Backoff and cookies are then
+    // per-client too, which is fine for a short-lived on-demand run.
+    this.hosts = custom ? new Map() : hosts;
+
     if (browserAvailable()) {
       this.render = (url, options) => this.renderUnderLimit(url, options);
       this.capture = (url, options) => this.captureUnderLimit(url, options);
     }
+  }
+
+  private hostState(host: string): HostState {
+    return hostStateFrom(this.hosts, host, this.limits);
   }
 
   /** Runs a browser navigation under the same per-host slot as an HTTP request. */
@@ -192,7 +235,7 @@ export class DocumentHttpClient implements DocumentFetcher {
     run: () => Promise<T>,
   ): Promise<T> {
     const host = new URL(url).host;
-    const state = hostState(host);
+    const state = this.hostState(host);
     if (state.blockedUntil > Date.now()) {
       throw rateLimited(`${host} is backed off`, state.blockedUntil - Date.now());
     }
@@ -339,7 +382,7 @@ export class DocumentHttpClient implements DocumentFetcher {
     body?: string,
   ): Promise<Response> {
     const host = new URL(url).host;
-    const state = hostState(host);
+    const state = this.hostState(host);
 
     if (state.blockedUntil > Date.now()) {
       const waitMs = state.blockedUntil - Date.now();
@@ -365,6 +408,7 @@ export class DocumentHttpClient implements DocumentFetcher {
           "accept-language": "de-DE,de;q=0.9,en;q=0.8",
           ...extraHeaders,
         },
+        (redirectHost) => this.hostState(redirectHost),
       );
 
       metrics.observe("ingestion_document_request_ms", Date.now() - startedAt, {

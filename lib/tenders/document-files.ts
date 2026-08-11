@@ -42,9 +42,13 @@ export async function listFetchedTenderFiles(
   tenderId: ObjectId,
 ): Promise<SerializedTenderFile[]> {
   const db = await getIngestionDb();
+  // Not only FETCHED: a RESOLVING row carries progress snapshots (files stored
+  // so far), so an in-flight fetch shows its files as they land. Matching on
+  // files rather than status also keeps partial results from a failed or
+  // retrying row visible — those files are already safely in S3.
   const records = await db
     .collection<TenderDocumentRecord>("tender_documents")
-    .find({ tenderId, status: "FETCHED" })
+    .find({ tenderId, "files.0": { $exists: true } })
     .toArray();
   return flatten(records);
 }
