@@ -1,0 +1,202 @@
+{
+  "_readme": [
+    "Human decisions about which legacy tenants migrate. Hand-maintained and checked in.",
+    "This file is an INPUT to `npm run migrate:cohort`; the generated report in",
+    "reports/cohort.json is overwritten on every run, so decisions must live here.",
+    "",
+    "Key each entry by company id (safest) or by the exact cleaned name shown in",
+    "reports/cohort-review.md. An override outranks every scoring rule; a key that",
+    "matches nothing is reported as a warning rather than ignored.",
+    "",
+    "decision: \"include\" | \"exclude\"  ·  reason: why  ·  by: who decided",
+    "",
+    "signedOffBy names the person accountable for this cohort. Phases 3-7 refuse",
+    "to run while it is null. It lives here rather than in the generated report",
+    "so that re-running the cohort script cannot silently drop the signature."
+  ],
+  "signedOffBy": "Santhosh Kumar",
+  "overrides": {
+    "schrobsdorff.ag": {
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "berlin-bausanierung.de": {
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "koblenzer-wohnbau.de": {
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "ass-bauberatung.de": {
+      "decision": "include",
+      "reason": "real construction consultancy; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "hansabauteam.de": {
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "bmf-engineering.de": {
+      "decision": "include",
+      "reason": "real engineering firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "ib-burak.de": {
+      "decision": "include",
+      "reason": "real engineering office (Ingenieurbüro); signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "knapp-kubitza.de": {
+      "decision": "include",
+      "reason": "real engineering/architecture practice; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "roewert.de": {
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "vatter.de": {
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "zed-group.eu": {
+      "decision": "include",
+      "reason": "real firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "bc-u.at": {
+      "decision": "include",
+      "reason": "real Austrian firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "f-e.de": {
+      "decision": "include",
+      "reason": "real firm; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "peter-kalkmann.de": {
+      "decision": "include",
+      "reason": "real sole trader in the trade; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+    "kilianprikryl.de": {
+      "decision": "include",
+      "reason": "real sole trader in the trade; signup named it after the email domain",
+      "by": "Santhosh"
+    },
+
+    "aad4695c-2595-4686-a90d-e518fb86fd34": {
+      "decision": "exclude",
+      "reason": "johann-bunte.de — only account is baufirm@baufirmatest.de; an internal signup against a real firm's website, not a customer",
+      "by": "Santhosh"
+    },
+    "9ef0a085-35b0-4c8f-b4f4-d6b7063404ab": {
+      "decision": "exclude",
+      "reason": "ipb-thale.de — only account is admin@test.net; internal signup, not a customer",
+      "by": "Santhosh"
+    },
+    "92c4394e-6bb8-4db5-9873-da8cf4ed33c7": {
+      "decision": "exclude",
+      "reason": "grebner-ingenieure.de — only account is a disposable mailbox (amupx.com); not a customer",
+      "by": "Santhosh"
+    },
+
+    "buildingradar.com": {
+      "decision": "exclude",
+      "reason": "construction-tech vendor evaluating the product, not a customer",
+      "by": "Santhosh"
+    },
+    "newdigitalcraft.com": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "thinkmates.in": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "spaceera.de": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "local1.net": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "daui.info": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "catrin.com": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "emma.de": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "olipii.com": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "yzcalo.com": {
+      "decision": "exclude",
+      "reason": "not a construction customer",
+      "by": "Santhosh"
+    },
+    "bau.co": {
+      "decision": "exclude",
+      "reason": "generic throwaway signup",
+      "by": "Santhosh"
+    },
+    "bau.eu": {
+      "decision": "exclude",
+      "reason": "generic throwaway signup (duplicate of bau.co)",
+      "by": "Santhosh"
+    },
+    "proton.me": {
+      "decision": "exclude",
+      "reason": "personal mail domain, no identifiable firm",
+      "by": "Santhosh"
+    },
+    "yahoo.de": {
+      "decision": "exclude",
+      "reason": "personal mail domain, no identifiable firm",
+      "by": "Santhosh"
+    },
+    "ro12121.eu": {
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm",
+      "by": "Santhosh"
+    },
+    "yycc.eu": {
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm",
+      "by": "Santhosh"
+    },
+    "bltiwd.com": {
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm",
+      "by": "Santhosh"
+    },
+    "bwmyga.com": {
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm",
+      "by": "Santhosh"
+    }
+  }
+}

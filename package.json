@@ -41,7 +41,16 @@
     "fetch:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/fetch-documents.mts",
     "documents:inspect": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/inspect-document-url.mts",
     "ai:match": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-match.mts",
-    "ai:cpv:derive": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-cpv-derive.mts"
+    "ai:cpv:derive": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-cpv-derive.mts",
+    "migrate:cohort": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-01-cohort.mts",
+    "migrate:tenders": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-02-tenders.mts",
+    "migrate:companies": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-03-companies.mts",
+    "migrate:users": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-04-users.mts",
+    "migrate:decisions": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-05-decisions.mts",
+    "migrate:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-06-documents.mts",
+    "migrate:misc": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-07-misc.mts",
+    "migrate:verify": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-08-verify.mts",
+    "migrate:prune": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-prune.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1103.0",

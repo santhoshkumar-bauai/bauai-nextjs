@@ -1,0 +1,6805 @@
+{
+  "generatedAt": "2026-08-12T18:40:36.978Z",
+  "totals": {
+    "sourceCompanies": 268,
+    "sourceProfiles": 450,
+    "include": 34,
+    "review": 0,
+    "exclude": 234,
+    "usersInCohort": 64
+  },
+  "signedOffBy": "Santhosh Kumar",
+  "entries": [
+    {
+      "companyId": "d434f12d-e929-4753-820e-1da1620ebfaa",
+      "name": "WIRL INGENIEURE GMBH",
+      "cleanedName": "WIRL INGENIEURE GMBH",
+      "domain": "wirl.net",
+      "createdAt": "2025-02-26T00:03:43.244606+00:00",
+      "decision": "include",
+      "reason": "active (740 signals)",
+      "activityTotal": 740,
+      "activity": {
+        "savedTenders": 31,
+        "dislikedTenders": 18,
+        "workspaceTenders": 238,
+        "chatSessions": 404,
+        "documents": 45,
+        "savedFilters": 4,
+        "extractedDocuments": 1412
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "65ff2994-c4cc-4feb-b4fe-fe258302d46e",
+      "name": "BAU AI GmbH",
+      "cleanedName": "BAU AI GmbH",
+      "domain": "bauai.eu",
+      "createdAt": "2025-02-26T12:30:16.997553+00:00",
+      "decision": "include",
+      "reason": "active (307 signals)",
+      "activityTotal": 307,
+      "activity": {
+        "savedTenders": 8,
+        "dislikedTenders": 1,
+        "workspaceTenders": 58,
+        "chatSessions": 239,
+        "documents": 1,
+        "savedFilters": 0,
+        "extractedDocuments": 144
+      },
+      "membership": {
+        "members": 15,
+        "signedIn": 13,
+        "recentlyActive": 9,
+        "onboarded": 12
+      }
+    },
+    {
+      "companyId": "098b68ab-e3d1-44bc-8466-fc15e1f43787",
+      "name": "Wirl Ingenieure GmbH",
+      "cleanedName": "Wirl Ingenieure GmbH",
+      "domain": "wirl-ing.de",
+      "createdAt": "2026-01-12T09:05:46.089315+00:00",
+      "decision": "include",
+      "reason": "active (211 signals)",
+      "activityTotal": 211,
+      "activity": {
+        "savedTenders": 5,
+        "dislikedTenders": 16,
+        "workspaceTenders": 40,
+        "chatSessions": 148,
+        "documents": 0,
+        "savedFilters": 2,
+        "extractedDocuments": 211
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "mergeInto": "d434f12d-e929-4753-820e-1da1620ebfaa"
+    },
+    {
+      "companyId": "c934efcc-82b1-4f75-a8a4-2745fa731a9f",
+      "name": "Graebert",
+      "cleanedName": "Graebert",
+      "domain": "raytechnologie.com",
+      "createdAt": "2025-03-10T18:29:59.141901+00:00",
+      "decision": "include",
+      "reason": "active (97 signals)",
+      "activityTotal": 97,
+      "activity": {
+        "savedTenders": 2,
+        "dislikedTenders": 0,
+        "workspaceTenders": 3,
+        "chatSessions": 88,
+        "documents": 2,
+        "savedFilters": 2,
+        "extractedDocuments": 158
+      },
+      "membership": {
+        "members": 11,
+        "signedIn": 7,
+        "recentlyActive": 3,
+        "onboarded": 11
+      }
+    },
+    {
+      "companyId": "479f49a9-5b5a-4a3e-9d7b-02fd441a5d47",
+      "name": "Impressum &#038; Datenschutz &#8211; Hansa Bauunternehmung GmbH",
+      "cleanedName": "Hansa Bauunternehmung GmbH",
+      "domain": "bundesreinigung.de",
+      "createdAt": "2025-04-05T20:18:21.596907+00:00",
+      "decision": "include",
+      "reason": "active (93 signals)",
+      "activityTotal": 93,
+      "activity": {
+        "savedTenders": 2,
+        "dislikedTenders": 0,
+        "workspaceTenders": 15,
+        "chatSessions": 76,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 119
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 1,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "1f54fa71-4e1d-46d6-836d-d9fe6b5f63c0",
+      "name": "CARBOCON GMBH",
+      "cleanedName": "CARBOCON GMBH",
+      "domain": "carbocon-gmbh.de",
+      "createdAt": "2026-05-19T14:07:39.496555+00:00",
+      "decision": "include",
+      "reason": "active (76 signals)",
+      "activityTotal": 76,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 58,
+        "workspaceTenders": 8,
+        "chatSessions": 10,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "93870e4d-4168-4829-a287-380ff2572018",
+      "name": "Brueninghoff Group",
+      "cleanedName": "Brueninghoff Group",
+      "domain": "brueninghoff.de",
+      "createdAt": "2026-03-02T07:08:23.388816+00:00",
+      "decision": "include",
+      "reason": "active (72 signals)",
+      "activityTotal": 72,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 71,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "8cb3a762-57ba-4562-b966-43952eeddeee",
+      "name": "seg architekten PartGmbB",
+      "cleanedName": "seg architekten PartGmbB",
+      "domain": "se-g.com",
+      "createdAt": "2025-08-29T09:11:04.342884+00:00",
+      "decision": "include",
+      "reason": "active (54 signals)",
+      "activityTotal": 54,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 47,
+        "workspaceTenders": 4,
+        "chatSessions": 1,
+        "documents": 1,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "ac51e0e7-e8db-4360-96d1-59ea7bbab2f1",
+      "name": "ABMP Architektur und Generalplanung",
+      "cleanedName": "ABMP Architektur und Generalplanung",
+      "domain": "abmp-architektur.de",
+      "createdAt": "2026-07-27T09:37:11.772305+00:00",
+      "decision": "include",
+      "reason": "active (46 signals)",
+      "activityTotal": 46,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 37,
+        "workspaceTenders": 5,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 29
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "533a35e8-87e8-4ec5-80e3-e73d6333ac3b",
+      "name": "testtw.de",
+      "cleanedName": "testtw.de",
+      "domain": "testtw.de",
+      "createdAt": "2026-04-21T11:27:04.482367+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 34,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 6,
+        "chatSessions": 28,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "2c5e86a3-5ba3-4e4e-8771-a92c0f847c3f",
+      "name": "hns-bau-gmbh.de",
+      "cleanedName": "hns-bau-gmbh.de",
+      "domain": "hns-bau-gmbh.de",
+      "createdAt": "2026-06-19T08:08:16.118554+00:00",
+      "decision": "include",
+      "reason": "identified via duplicate \"HNS Bau GmbH\"",
+      "activityTotal": 15,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 2,
+        "workspaceTenders": 13,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 2,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "1a23c112-da65-40b2-ab41-c9070c62f45e",
+      "name": "newdigitalcraft.com",
+      "cleanedName": "newdigitalcraft.com",
+      "domain": "newdigitalcraft.com",
+      "createdAt": "2026-06-24T13:53:22.71697+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 9,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 1,
+        "workspaceTenders": 6,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "bd34e211-d4d6-4e89-8a37-b9ea2091ef8a",
+      "name": "hansabauteam.de",
+      "cleanedName": "hansabauteam.de",
+      "domain": "hansabauteam.de",
+      "createdAt": "2026-04-24T09:55:14.140016+00:00",
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 8,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 8,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "9f351678-a113-4a3a-90de-5d3166b11fdb",
+      "name": "Ingenieurgesellschaft TGA Palmert&Grässle",
+      "cleanedName": "Ingenieurgesellschaft TGA Palmert&Grässle",
+      "domain": "ig-pg.de",
+      "createdAt": "2025-05-08T06:18:59.856164+00:00",
+      "decision": "include",
+      "reason": "active (7 signals)",
+      "activityTotal": 7,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 4,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 4
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 1,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "f6e1fe6b-aeae-4a6e-8984-6979585fc673",
+      "name": "ro12121.eu",
+      "cleanedName": "ro12121.eu",
+      "domain": "ro12121.eu",
+      "createdAt": "2026-06-24T15:30:13.745809+00:00",
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm (override by Santhosh)",
+      "activityTotal": 7,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 7,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "461fc878-6dbe-4b6a-abeb-0d41c87a8941",
+      "name": "Company (chat.de)",
+      "cleanedName": "Company (chat.de)",
+      "domain": "chat.de",
+      "createdAt": "2026-01-03T09:36:04.277109+00:00",
+      "decision": "include",
+      "reason": "active (6 signals)",
+      "activityTotal": 6,
+      "activity": {
+        "savedTenders": 5,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b54fcde1-835e-4b02-b0e8-d6e1474d2feb",
+      "name": "admi Kommunal GmbH",
+      "cleanedName": "admi Kommunal GmbH",
+      "domain": "admi.de",
+      "createdAt": "2026-04-09T10:36:36.355378+00:00",
+      "decision": "include",
+      "reason": "active (6 signals)",
+      "activityTotal": 6,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 3,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 57
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "7116c923-9b83-4ad9-9570-1f5b636f41b1",
+      "name": "architekttest.de",
+      "cleanedName": "architekttest.de",
+      "domain": "architekttest.de",
+      "createdAt": "2026-04-21T11:25:08.688321+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 6,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 6,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 8
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "6fcb8d64-f785-4a32-8255-77612f2137ec",
+      "name": "proton.me",
+      "cleanedName": "proton.me",
+      "domain": "proton.me",
+      "createdAt": "2026-04-27T09:56:16.759793+00:00",
+      "decision": "exclude",
+      "reason": "personal mail domain, no identifiable firm (override by Santhosh)",
+      "activityTotal": 6,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 5,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 3
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "b380aebb-3648-4db5-8972-0b946f0f2af0",
+      "name": "yahoo.de",
+      "cleanedName": "yahoo.de",
+      "domain": "yahoo.de",
+      "createdAt": "2026-06-29T13:43:21.195047+00:00",
+      "decision": "exclude",
+      "reason": "personal mail domain, no identifiable firm (override by Santhosh)",
+      "activityTotal": 6,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 6,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "eefc787a-ad1b-4893-95c9-4f3c39063353",
+      "name": "catrin.com",
+      "cleanedName": "catrin.com",
+      "domain": "catrin.com",
+      "createdAt": "2026-04-12T13:27:47.186186+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 5,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 1,
+        "workspaceTenders": 2,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "aad4695c-2595-4686-a90d-e518fb86fd34",
+      "name": "Bauunternehmung SE",
+      "cleanedName": "Bauunternehmung SE",
+      "domain": "baufirmatest.de",
+      "createdAt": "2026-04-21T11:20:26.046301+00:00",
+      "decision": "exclude",
+      "reason": "johann-bunte.de — only account is baufirm@baufirmatest.de; an internal signup against a real firm's website, not a customer (override by Santhosh)",
+      "activityTotal": 5,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 3,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "6c9eda58-3e3f-43ef-86bd-71fb29faebfe",
+      "name": "tushar.com",
+      "cleanedName": "tushar.com",
+      "domain": "tushar.com",
+      "createdAt": "2026-08-08T11:10:42.575243+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 5,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 3,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "eb1d395d-679b-4f80-aa98-f554f0c17781",
+      "name": "olipii.com",
+      "cleanedName": "olipii.com",
+      "domain": "olipii.com",
+      "createdAt": "2026-08-03T10:01:51.159774+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 5,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 2,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 4,
+        "signedIn": 4,
+        "recentlyActive": 4,
+        "onboarded": 4
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "eeff52a6-0c7b-4a27-83b0-f36d1c7b15cd",
+      "name": "Test Company",
+      "cleanedName": "Test Company",
+      "domain": "gmail.com",
+      "createdAt": "2025-03-10T20:21:33.90092+00:00",
+      "decision": "exclude",
+      "reason": "signup fallback bucket (110 members)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 2,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 110,
+        "signedIn": 14,
+        "recentlyActive": 7,
+        "onboarded": 25
+      }
+    },
+    {
+      "companyId": "a25f3576-eb7e-4165-abd4-060f666d17df",
+      "name": "Lavette GmbH",
+      "cleanedName": "Lavette GmbH",
+      "domain": "lavette-group.de",
+      "createdAt": "2026-04-07T15:20:02.355557+00:00",
+      "decision": "include",
+      "reason": "active (4 signals)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 4,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 47
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 2,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "8870cab6-fb9d-436b-923a-c567df978cfc",
+      "name": "",
+      "cleanedName": "",
+      "domain": "local.net",
+      "createdAt": "2026-02-09T19:34:08.60094+00:00",
+      "decision": "exclude",
+      "reason": "no company name",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 4,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 4
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c003c556-794a-4900-8679-0497f35a0a61",
+      "name": "roewert.de",
+      "cleanedName": "roewert.de",
+      "domain": "roewert.de",
+      "createdAt": "2026-04-22T08:37:58.600001+00:00",
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 4,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 7
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "4b89a72b-8289-42dc-977e-a0751b7c1718",
+      "name": "thinkmates.in",
+      "cleanedName": "thinkmates.in",
+      "domain": "thinkmates.in",
+      "createdAt": "2026-06-21T17:41:24.687813+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 2,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "a9aeac21-c26e-45e6-a873-4552748a0a0b",
+      "name": "zed-group.eu",
+      "cleanedName": "zed-group.eu",
+      "domain": "zed-group.eu",
+      "createdAt": "2026-06-29T10:30:02.732646+00:00",
+      "decision": "include",
+      "reason": "real firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 2,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "04d87af0-03ed-4c78-9bc1-2e7ff6da0a63",
+      "name": "spaceera.de",
+      "cleanedName": "spaceera.de",
+      "domain": "spaceera.de",
+      "createdAt": "2026-07-01T11:08:33.416539+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 19
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "f49f9cbe-bd1a-490a-abea-4943bee17d57",
+      "name": "bc-u.at",
+      "cleanedName": "bc-u.at",
+      "domain": "bc-u.at",
+      "createdAt": "2026-08-03T13:58:41.487802+00:00",
+      "decision": "include",
+      "reason": "real Austrian firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 4,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 4,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "fd66fb9d-e9a5-4cad-99ce-63de2f765ba8",
+      "name": "emma.de",
+      "cleanedName": "emma.de",
+      "domain": "emma.de",
+      "createdAt": "2026-08-07T16:00:36.533545+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 3,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "4d79d28d-77cf-4b3a-8a5c-aac47cb5a3dc",
+      "name": "local1.net",
+      "cleanedName": "local1.net",
+      "domain": "local1.net",
+      "createdAt": "2026-04-12T12:43:52.548014+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 2,
+        "extractedDocuments": 20
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "baca4d37-1271-4cfe-b7ca-bfe88dcf4167",
+      "name": "Terras Holding GmbH",
+      "cleanedName": "Terras Holding GmbH",
+      "domain": "terras-tiefbau.group",
+      "createdAt": "2025-06-02T13:04:57.337257+00:00",
+      "decision": "include",
+      "reason": "active (3 signals)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "604f0a0a-99e1-4f93-a23b-9dfe25d69dfb",
+      "name": "tushar123.com",
+      "cleanedName": "tushar123.com",
+      "domain": "tushar123.com",
+      "createdAt": "2026-08-08T16:23:54.871081+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 2,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "92c4394e-6bb8-4db5-9873-da8cf4ed33c7",
+      "name": "GREBNER Ingenieure GmbH",
+      "cleanedName": "GREBNER Ingenieure GmbH",
+      "domain": "amupx.com",
+      "createdAt": "2026-08-04T11:06:40.655448+00:00",
+      "decision": "exclude",
+      "reason": "grebner-ingenieure.de — only account is a disposable mailbox (amupx.com); not a customer (override by Santhosh)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 2,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "de6b611c-115d-4e39-89db-819731fceb76",
+      "name": "schrobsdorff.ag",
+      "cleanedName": "schrobsdorff.ag",
+      "domain": "schrobsdorff.ag",
+      "createdAt": "2026-08-07T10:09:35.754448+00:00",
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 2,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 12
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "9dfa9a8b-66e9-4b6c-b08a-f90edc8bea67",
+      "name": "daui.info",
+      "cleanedName": "daui.info",
+      "domain": "daui.info",
+      "createdAt": "2026-06-26T09:59:51.764085+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "4b12f09e-428f-4100-b05c-dae7a543fe3d",
+      "name": "yycc.eu",
+      "cleanedName": "yycc.eu",
+      "domain": "yycc.eu",
+      "createdAt": "2026-06-24T11:56:40.15208+00:00",
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm (override by Santhosh)",
+      "activityTotal": 3,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 3,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "1af89d03-22f4-408e-b41f-8b0ed861e9e2",
+      "name": "anirban.com",
+      "cleanedName": "anirban.com",
+      "domain": "anirban.com",
+      "createdAt": "2026-02-27T05:19:45.819524+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 4
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b06dd8c5-8e0a-4d6f-b5df-08be472fdc37",
+      "name": "testoli.com",
+      "cleanedName": "testoli.com",
+      "domain": "testoli.com",
+      "createdAt": "2026-07-24T08:07:54.30029+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "f56c33fe-20dc-4ee3-8386-e977a91d3d57",
+      "name": "holzbaufirmatest.de",
+      "cleanedName": "holzbaufirmatest.de",
+      "domain": "holzbaufirmatest.de",
+      "createdAt": "2026-04-21T14:35:27.18201+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 2
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "ade84d16-adb0-4c5b-8aa7-8fff4dee2aa9",
+      "name": "lavettegruppe.com",
+      "cleanedName": "lavettegruppe.com",
+      "domain": "lavettegruppe.com",
+      "createdAt": "2026-03-30T14:11:49.912581+00:00",
+      "decision": "include",
+      "reason": "identified via duplicate \"Lavette GmbH\"",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 38
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "mergeInto": "a25f3576-eb7e-4165-abd4-060f666d17df"
+    },
+    {
+      "companyId": "28d41f52-b17f-40ac-88e8-f00b583e0a68",
+      "name": "berlin-bausanierung.de",
+      "cleanedName": "berlin-bausanierung.de",
+      "domain": "berlin-bausanierung.de",
+      "createdAt": "2026-07-26T11:08:19.920831+00:00",
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "7b0583f8-281f-4c9a-8398-b89bef20c6eb",
+      "name": "bau.co",
+      "cleanedName": "bau.co",
+      "domain": "bau.co",
+      "createdAt": "2026-06-25T15:57:46.054713+00:00",
+      "decision": "exclude",
+      "reason": "generic throwaway signup (override by Santhosh)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "1dca4a6f-86c7-4944-97a6-027b41188590",
+      "name": "bltiwd.com",
+      "cleanedName": "bltiwd.com",
+      "domain": "bltiwd.com",
+      "createdAt": "2026-08-04T16:26:49.923685+00:00",
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm (override by Santhosh)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 2,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "3f9a3580-0302-4aec-b522-523d63d57fff",
+      "name": "bmf-engineering.de",
+      "cleanedName": "bmf-engineering.de",
+      "domain": "bmf-engineering.de",
+      "createdAt": "2026-08-04T08:41:08.475945+00:00",
+      "decision": "include",
+      "reason": "real engineering firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "7c7a2eb3-d4a4-4cf1-b401-f197e300c022",
+      "name": "f-e.de",
+      "cleanedName": "f-e.de",
+      "domain": "f-e.de",
+      "createdAt": "2026-08-11T07:10:09.4337+00:00",
+      "decision": "include",
+      "reason": "real firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "0a6d1f1d-ad23-4675-a47c-b2f7a30c0c9e",
+      "name": "bwmyga.com",
+      "cleanedName": "bwmyga.com",
+      "domain": "bwmyga.com",
+      "createdAt": "2026-08-01T13:29:00.926187+00:00",
+      "decision": "exclude",
+      "reason": "throwaway signup, not a real firm (override by Santhosh)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 2,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 2,
+        "onboarded": 2
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "826f76db-f10a-485b-a5b0-d8896ec8b9ef",
+      "name": "Impressum &#8211; HNS Bau GmbH",
+      "cleanedName": "HNS Bau GmbH",
+      "domain": "test123.com",
+      "createdAt": "2026-06-19T14:48:29.116779+00:00",
+      "decision": "include",
+      "reason": "active (2 signals)",
+      "activityTotal": 2,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "mergeInto": "2c5e86a3-5ba3-4e4e-8771-a92c0f847c3f"
+    },
+    {
+      "companyId": "48c487f2-2e11-4f0c-84ee-e3c8667ecf6c",
+      "name": "vatter.de",
+      "cleanedName": "vatter.de",
+      "domain": "vatter.de",
+      "createdAt": "2026-02-07T08:56:20.54984+00:00",
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "723e0bf5-4c5f-46c4-8c0a-677b8ed8087b",
+      "name": "kilianprikryl.de",
+      "cleanedName": "kilianprikryl.de",
+      "domain": "kilianprikryl.de",
+      "createdAt": "2026-04-09T13:39:20.720456+00:00",
+      "decision": "include",
+      "reason": "real sole trader in the trade; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "b4c2e8ae-a2b1-4f39-a048-d2c0425d2046",
+      "name": "BAU AI (test)",
+      "cleanedName": "BAU AI (test)",
+      "domain": "account.lll",
+      "createdAt": "2026-04-10T13:09:27.292105+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "28e26a46-f1d7-4eac-8107-2aaafaedc03b",
+      "name": "AWD Ingenieurgesellschaft mbH",
+      "cleanedName": "AWD Ingenieurgesellschaft mbH",
+      "domain": "awd-ingenieure.de",
+      "createdAt": "2025-07-03T15:22:43.79728+00:00",
+      "decision": "include",
+      "reason": "active (1 signals)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 1,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 0,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "8ac933d2-67f4-4475-81c0-4e207562e2c7",
+      "name": "peter-kalkmann.de",
+      "cleanedName": "peter-kalkmann.de",
+      "domain": "peter-kalkmann.de",
+      "createdAt": "2026-05-31T10:06:55.585136+00:00",
+      "decision": "include",
+      "reason": "real sole trader in the trade; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "6edbe9b1-6f1e-4e9a-8e2b-ff2b1eedf4b9",
+      "name": "buildingradar.com",
+      "cleanedName": "buildingradar.com",
+      "domain": "buildingradar.com",
+      "createdAt": "2026-02-02T11:46:23.51184+00:00",
+      "decision": "exclude",
+      "reason": "construction-tech vendor evaluating the product, not a customer (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 0
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "4dc86293-0a8f-4622-a961-5632a46bb4a4",
+      "name": "BAU AI",
+      "cleanedName": "BAU AI",
+      "domain": "bauai.co",
+      "createdAt": "2026-02-03T06:33:39.256157+00:00",
+      "decision": "include",
+      "reason": "active (1 signals)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 2
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      },
+      "mergeInto": "65ff2994-c4cc-4feb-b4fe-fe258302d46e"
+    },
+    {
+      "companyId": "bfdacb24-6faa-438f-9100-37405ac46afa",
+      "name": "ib-burak.de",
+      "cleanedName": "ib-burak.de",
+      "domain": "ib-burak.de",
+      "createdAt": "2026-02-05T17:59:52.72155+00:00",
+      "decision": "include",
+      "reason": "real engineering office (Ingenieurbüro); signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "9ef0a085-35b0-4c8f-b4f4-d6b7063404ab",
+      "name": "IPB – Ingenieurbüro für Bauplanung und Beratung GmbH",
+      "cleanedName": "IPB – Ingenieurbüro für Bauplanung und Beratung GmbH",
+      "domain": "test.net",
+      "createdAt": "2026-02-17T15:45:13.169482+00:00",
+      "decision": "exclude",
+      "reason": "ipb-thale.de — only account is admin@test.net; internal signup, not a customer (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "48b6eb75-db28-43cc-8072-5fab64a90555",
+      "name": "koblenzer-wohnbau.de",
+      "cleanedName": "koblenzer-wohnbau.de",
+      "domain": "koblenzer-wohnbau.de",
+      "createdAt": "2026-07-06T12:58:37.955072+00:00",
+      "decision": "include",
+      "reason": "real construction firm; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "a5a79171-56ad-4342-8c8e-6e151b891415",
+      "name": "test9.com",
+      "cleanedName": "test9.com",
+      "domain": "test9.com",
+      "createdAt": "2026-06-10T15:45:37.894339+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "08aca886-88eb-4213-9770-9427ba20e797",
+      "name": "knapp-kubitza.de",
+      "cleanedName": "knapp-kubitza.de",
+      "domain": "knapp-kubitza.de",
+      "createdAt": "2026-06-29T06:40:18.342375+00:00",
+      "decision": "include",
+      "reason": "real engineering/architecture practice; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 1
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "f567c400-d759-41ce-8ef5-299fe7594de1",
+      "name": "bau.eu",
+      "cleanedName": "bau.eu",
+      "domain": "bau.eu",
+      "createdAt": "2026-06-19T12:28:06.643193+00:00",
+      "decision": "exclude",
+      "reason": "generic throwaway signup (duplicate of bau.co) (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "92a4e7be-4668-461a-add4-bfa165e846cf",
+      "name": "ass-bauberatung.de",
+      "cleanedName": "ass-bauberatung.de",
+      "domain": "ass-bauberatung.de",
+      "createdAt": "2026-07-03T11:17:36.484904+00:00",
+      "decision": "include",
+      "reason": "real construction consultancy; signup named it after the email domain (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "925ffab6-a3a3-4cfc-9685-b926f71c4673",
+      "name": "yzcalo.com",
+      "cleanedName": "yzcalo.com",
+      "domain": "yzcalo.com",
+      "createdAt": "2026-08-08T10:48:13.251918+00:00",
+      "decision": "exclude",
+      "reason": "not a construction customer (override by Santhosh)",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 1,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 4,
+        "signedIn": 4,
+        "recentlyActive": 4,
+        "onboarded": 4
+      },
+      "overriddenBy": "Santhosh"
+    },
+    {
+      "companyId": "9001b338-f7df-4b34-b851-23642c1a2d55",
+      "name": "devtest10.com",
+      "cleanedName": "devtest10.com",
+      "domain": "devtest10.com",
+      "createdAt": "2026-07-31T16:55:13.483027+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 1,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "e9a69edd-8564-4754-907f-0ce2f139c115",
+      "name": "testingdev.com",
+      "cleanedName": "testingdev.com",
+      "domain": "testingdev.com",
+      "createdAt": "2026-07-31T17:57:35.529068+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 1,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 1,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "47646d25-3e24-4bee-9835-586f62b52b57",
+      "name": "twp.mountholly.nj.us",
+      "cleanedName": "twp.mountholly.nj.us",
+      "domain": "twp.mountholly.nj.us",
+      "createdAt": "2026-05-28T17:20:50.299563+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "5e41db1f-37f3-46f1-9243-cfe68ec8ed03",
+      "name": "cadinr.com",
+      "cleanedName": "cadinr.com",
+      "domain": "cadinr.com",
+      "createdAt": "2026-05-06T10:30:31.231099+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c1ccf52f-0e86-4635-ada0-6be7943246e2",
+      "name": "50.com",
+      "cleanedName": "50.com",
+      "domain": "50.com",
+      "createdAt": "2026-07-22T09:09:59.357787+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "0163c87c-bd0d-4e2d-82e7-cb84b7a27e0e",
+      "name": "publicstorage.ca",
+      "cleanedName": "publicstorage.ca",
+      "domain": "publicstorage.ca",
+      "createdAt": "2026-05-29T16:43:36.387652+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7ae820cc-35fc-429a-b90d-5a613fc1a109",
+      "name": "a7goldinvest.ru",
+      "cleanedName": "a7goldinvest.ru",
+      "domain": "a7goldinvest.ru",
+      "createdAt": "2026-05-31T08:56:34.582336+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "54256eef-f943-46c2-9224-14a6b7e3053c",
+      "name": "mba2025.hbs.edu",
+      "cleanedName": "mba2025.hbs.edu",
+      "domain": "mba2025.hbs.edu",
+      "createdAt": "2026-05-31T16:35:36.067746+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "8492f029-b1b7-4951-a255-2f14771a3cdc",
+      "name": "Gutthann Hiw Architekten",
+      "cleanedName": "Gutthann Hiw Architekten",
+      "domain": "gutthann-hiw-architekten.de",
+      "createdAt": "2025-07-09T16:31:46.023989+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "d1ba9483-db73-4d5b-965e-fbd81dba9944",
+      "name": "msn.com",
+      "cleanedName": "msn.com",
+      "domain": "msn.com",
+      "createdAt": "2026-05-22T20:02:28.781866+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "755ca122-46f5-48da-8579-2236a4609654",
+      "name": "BSG Bau-Service GmbH",
+      "cleanedName": "BSG Bau-Service GmbH",
+      "domain": "bau-service-gmbh.de",
+      "createdAt": "2025-11-26T15:00:51.843796+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "77280aee-f293-4b15-b3d7-8d18c056fef3",
+      "name": "outlook.com",
+      "cleanedName": "outlook.com",
+      "domain": "outlook.com",
+      "createdAt": "2026-05-23T10:05:50.430172+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "da2be424-7a55-450d-8648-52bc4f8cc444",
+      "name": "homeremodelingcenter.com",
+      "cleanedName": "homeremodelingcenter.com",
+      "domain": "homeremodelingcenter.com",
+      "createdAt": "2026-05-24T18:41:02.189373+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "f7881e65-8a7b-4463-939a-c23e52d4da80",
+      "name": "t-online.de",
+      "cleanedName": "t-online.de",
+      "domain": "t-online.de",
+      "createdAt": "2026-05-25T04:28:20.442935+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c387a8fd-d681-4d57-9217-dcc9dec860d4",
+      "name": "me.com",
+      "cleanedName": "me.com",
+      "domain": "me.com",
+      "createdAt": "2026-05-25T09:52:41.827154+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "f8267f3a-af99-4512-b293-de32a4a0bfea",
+      "name": "spacex.com",
+      "cleanedName": "spacex.com",
+      "domain": "spacex.com",
+      "createdAt": "2026-05-25T12:16:18.331082+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c59c0464-cfc0-4e77-a175-be904e30648e",
+      "name": "aol.com",
+      "cleanedName": "aol.com",
+      "domain": "aol.com",
+      "createdAt": "2026-05-25T14:55:19.978892+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 6,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "8917edf6-3b7b-40a3-b57e-c08cb586c9cc",
+      "name": "rivercityrush.com",
+      "cleanedName": "rivercityrush.com",
+      "domain": "rivercityrush.com",
+      "createdAt": "2026-05-25T16:46:14.339246+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "e184ff35-785a-4fdf-be01-2f8a483705d7",
+      "name": "a7gi.ru",
+      "cleanedName": "a7gi.ru",
+      "domain": "a7gi.ru",
+      "createdAt": "2026-05-26T15:30:24.392635+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 3,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "da6838e4-ffc1-4b01-a96f-5dc7cd76d0ae",
+      "name": "chameleongroup.co",
+      "cleanedName": "chameleongroup.co",
+      "domain": "chameleongroup.co",
+      "createdAt": "2026-05-26T16:35:04.036417+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 8,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "8f849b11-bdab-4cf4-b19f-2f8b250d5e1c",
+      "name": "sbcglobal.net",
+      "cleanedName": "sbcglobal.net",
+      "domain": "sbcglobal.net",
+      "createdAt": "2026-05-27T00:05:56.773151+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1c9ea7b2-f3bb-4b93-8ac7-7bb0970e4d29",
+      "name": "Company (gmai.com)",
+      "cleanedName": "Company (gmai.com)",
+      "domain": "gmai.com",
+      "createdAt": "2026-01-19T09:20:38.002921+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1fdffaa8-a421-42e8-8157-6eb3fa89cc79",
+      "name": "Tembau",
+      "cleanedName": "Tembau",
+      "domain": "tembau.net",
+      "createdAt": "2025-02-26T00:04:30.181223+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "4d00d2bd-1908-4ae2-960e-fbc1f47dd0fb",
+      "name": "Company (adityamohan.com)",
+      "cleanedName": "Company (adityamohan.com)",
+      "domain": "adityamohan.com",
+      "createdAt": "2026-01-04T15:03:02.380956+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "4f82cf88-d35d-4932-9188-20bb0f07e884",
+      "name": "ray",
+      "cleanedName": "ray",
+      "domain": "ray.tech",
+      "createdAt": "2025-12-04T09:26:30.737922+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "56b49aa0-eba7-4a0f-9b5a-6a19fdeac4e3",
+      "name": "anirban2.com",
+      "cleanedName": "anirban2.com",
+      "domain": "anirban2.com",
+      "createdAt": "2026-02-27T15:04:33.44807+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "5e6b3c11-3208-40b1-a66d-b4f99f17d3a9",
+      "name": "test",
+      "cleanedName": "test",
+      "domain": "hotmail.com",
+      "createdAt": "2025-05-06T18:13:14.196244+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 11,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "6349483e-ac98-424f-9c30-0dcdcb18e527",
+      "name": "olaar.de",
+      "cleanedName": "olaar.de",
+      "domain": "olaar.de",
+      "createdAt": "2026-02-20T12:34:29.666825+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "70406675-6224-44ca-b5d7-fad3c4e83e33",
+      "name": "Student",
+      "cleanedName": "Student",
+      "domain": "student.htw-berkin.de",
+      "createdAt": "2025-08-21T21:34:31.460156+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "80600273-51a1-4142-8162-8704d0e8e761",
+      "name": "yahoo.com",
+      "cleanedName": "yahoo.com",
+      "domain": "yahoo.com",
+      "createdAt": "2026-05-27T02:13:40.110995+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 12,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "b9f929b8-5be4-4be5-a68a-c11d5b35d20c",
+      "name": "lignoalp.com",
+      "cleanedName": "lignoalp.com",
+      "domain": "lignoalp.com",
+      "createdAt": "2026-06-23T13:25:49.32616+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "4c8df710-0b88-428b-afc3-e693972d6c21",
+      "name": "halo.com",
+      "cleanedName": "halo.com",
+      "domain": "halo.com",
+      "createdAt": "2026-05-29T21:07:03.84714+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "3bb12f50-2fc8-4fe0-9f29-faa870e2d12c",
+      "name": "bau.com",
+      "cleanedName": "bau.com",
+      "domain": "bau.com",
+      "createdAt": "2026-05-28T08:48:39.80118+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "22e192cf-1f4d-4b6f-b4b2-08d899091162",
+      "name": "trt.eu",
+      "cleanedName": "trt.eu",
+      "domain": "trt.eu",
+      "createdAt": "2026-06-19T08:09:33.680874+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "dcd37cfa-680d-4aa5-93d2-8a273cdd18fe",
+      "name": "gebr-silbe.de",
+      "cleanedName": "gebr-silbe.de",
+      "domain": "gebr-silbe.de",
+      "createdAt": "2026-05-31T20:05:07.447164+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7ab12be3-3d7e-4677-b58f-567fba708648",
+      "name": "pricing1.com",
+      "cleanedName": "pricing1.com",
+      "domain": "pricing1.com",
+      "createdAt": "2026-05-06T15:59:15.797148+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "38ac2691-17ac-40ab-b2d2-d31df643d160",
+      "name": "keiner",
+      "cleanedName": "keiner",
+      "domain": "mac.com",
+      "createdAt": "2025-12-26T12:53:38.283294+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "514fbb19-577b-4f2c-9ac7-e62e197325a0",
+      "name": "bcdtravel.ch",
+      "cleanedName": "bcdtravel.ch",
+      "domain": "bcdtravel.ch",
+      "createdAt": "2026-06-01T01:31:17.760204+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "047d25a3-30aa-46ad-92de-23b0989de034",
+      "name": "anirban3.com",
+      "cleanedName": "anirban3.com",
+      "domain": "anirban3.com",
+      "createdAt": "2026-02-27T15:07:16.541858+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "50b98223-0155-4fec-bebc-ccef6d1aec5d",
+      "name": "pricing152.com",
+      "cleanedName": "pricing152.com",
+      "domain": "pricing152.com",
+      "createdAt": "2026-05-07T12:42:30.915813+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "2c51009b-e8d3-4081-8868-8325abc801ce",
+      "name": "bauaiai.eu",
+      "cleanedName": "bauaiai.eu",
+      "domain": "bauaiai.eu",
+      "createdAt": "2026-05-27T09:29:00.673366+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "195dd705-7b1f-41e6-b1e8-2cb1d190ae72",
+      "name": "cricket.com",
+      "cleanedName": "cricket.com",
+      "domain": "cricket.com",
+      "createdAt": "2026-02-24T09:55:59.322925+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "ef18a402-c173-41b8-a20d-7e0823340ac0",
+      "name": "sigizmundgrp.com",
+      "cleanedName": "sigizmundgrp.com",
+      "domain": "sigizmundgrp.com",
+      "createdAt": "2026-06-10T11:24:28.820984+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "08db4ff1-2ee6-43d5-bab0-5b3e142fd620",
+      "name": "demo12345.com",
+      "cleanedName": "demo12345.com",
+      "domain": "demo12345.com",
+      "createdAt": "2026-02-09T14:48:17.765873+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "94bcc392-fbcf-4ac0-b4dc-e24dbbaf7dc7",
+      "name": "anirban10.com",
+      "cleanedName": "anirban10.com",
+      "domain": "anirban10.com",
+      "createdAt": "2026-03-09T10:40:34.854981+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "503f8056-784a-4dd8-b433-b2703fc965a0",
+      "name": "GFM Ingenieure GmbH & Co. KG",
+      "cleanedName": "GFM Ingenieure GmbH & Co. KG",
+      "domain": "gfm.com",
+      "createdAt": "2026-04-08T14:23:02.549483+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 76
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "10dc8184-4269-43a5-945d-d05af44f2cce",
+      "name": "dietrich-bergler.de",
+      "cleanedName": "dietrich-bergler.de",
+      "domain": "dietrich-bergler.de",
+      "createdAt": "2026-02-12T07:00:09.574699+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "38d7b91b-115d-446a-8636-ecee33a477a4",
+      "name": "take2games.com",
+      "cleanedName": "take2games.com",
+      "domain": "take2games.com",
+      "createdAt": "2026-06-01T07:55:02.778016+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "52bac4c4-e47c-47bc-833d-ea2a145917c6",
+      "name": "graebert.com",
+      "cleanedName": "graebert.com",
+      "domain": "graebert.com",
+      "createdAt": "2026-02-09T12:51:21.8055+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "e0da7a80-49e5-48e4-89b3-2917da9dd48d",
+      "name": "test12.ccdd",
+      "cleanedName": "test12.ccdd",
+      "domain": "test12.ccdd",
+      "createdAt": "2026-04-08T16:30:14.084278+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 7
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "941b2d01-4b22-47f4-abeb-05cd1c27bdb3",
+      "name": "ug-behnen.com",
+      "cleanedName": "ug-behnen.com",
+      "domain": "ug-behnen.com",
+      "createdAt": "2026-06-01T08:51:25.418224+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "0d26cf1c-388c-4763-8a24-cdbdb4a8bec6",
+      "name": "amax-online.de",
+      "cleanedName": "amax-online.de",
+      "domain": "amax-online.de",
+      "createdAt": "2026-03-13T08:06:03.219299+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "480ce297-4290-4c70-b988-be65c914b777",
+      "name": "talktalk.net",
+      "cleanedName": "talktalk.net",
+      "domain": "talktalk.net",
+      "createdAt": "2026-06-01T18:56:26.501551+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "d7e13cbb-c085-403d-8d83-a70aef5b049a",
+      "name": "mcgill.ca",
+      "cleanedName": "mcgill.ca",
+      "domain": "mcgill.ca",
+      "createdAt": "2026-05-27T13:20:48.130033+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "9e56be95-da5a-46bc-911b-d365a3da4748",
+      "name": "bauaidev.com",
+      "cleanedName": "bauaidev.com",
+      "domain": "bauaidev.com",
+      "createdAt": "2026-03-10T10:16:37.156363+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "d93cd465-9623-4855-a8d7-cab1bb3b7bb5",
+      "name": "vimeo.com",
+      "cleanedName": "vimeo.com",
+      "domain": "vimeo.com",
+      "createdAt": "2026-06-02T09:08:02.171476+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "17bf013a-e597-435b-b3b3-af64361d2b6a",
+      "name": "serverius.net",
+      "cleanedName": "serverius.net",
+      "domain": "serverius.net",
+      "createdAt": "2026-06-03T02:17:24.487009+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7e5754d3-ae3f-4bd7-8cd4-c968bab2d76b",
+      "name": "bekbg.com",
+      "cleanedName": "bekbg.com",
+      "domain": "bekbg.com",
+      "createdAt": "2026-06-09T12:37:08.744502+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c550c632-fa09-408e-b996-5185b1fba6bd",
+      "name": "bellsouth.net",
+      "cleanedName": "bellsouth.net",
+      "domain": "bellsouth.net",
+      "createdAt": "2026-05-27T23:42:49.902986+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "f2219a0b-0418-4273-af80-951ba4b5e0d2",
+      "name": "gaddysurveydesign.com",
+      "cleanedName": "gaddysurveydesign.com",
+      "domain": "gaddysurveydesign.com",
+      "createdAt": "2026-06-09T19:35:06.009681+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c7ae4c56-5d58-482d-8659-900fefc57903",
+      "name": "assetliving.com",
+      "cleanedName": "assetliving.com",
+      "domain": "assetliving.com",
+      "createdAt": "2026-06-10T05:33:49.590441+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "3c6debf5-5ca3-4c34-8e5b-8ea5b9c5d7bb",
+      "name": "buckner.com",
+      "cleanedName": "buckner.com",
+      "domain": "buckner.com",
+      "createdAt": "2026-06-10T14:51:50.842973+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c4a85523-3666-49d5-9372-4d7a17912a62",
+      "name": "hk-fe.de",
+      "cleanedName": "hk-fe.de",
+      "domain": "hk-fe.de",
+      "createdAt": "2026-06-26T18:38:02.927756+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "85fa7f85-1259-4882-8c80-887b925df5c7",
+      "name": "anirb",
+      "cleanedName": "anirb",
+      "domain": "demo111.com",
+      "createdAt": "2026-02-06T13:25:17.548579+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2424e3c3-42ab-4e57-91d8-1e5c2acc35f5",
+      "name": "lean.pm.gmbh",
+      "cleanedName": "lean.pm.gmbh",
+      "domain": "lean.pm.gmbh",
+      "createdAt": "2026-02-17T14:06:58.561194+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "a37b8ed6-641c-4daf-9515-6529ed702cec",
+      "name": "renolit.com",
+      "cleanedName": "renolit.com",
+      "domain": "renolit.com",
+      "createdAt": "2026-06-09T14:13:11.817256+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "85b332af-6a1c-4a8c-92b2-6d84c5b6c075",
+      "name": "Terravis Biogas",
+      "cleanedName": "Terravis Biogas",
+      "domain": "terravis-biogas.de",
+      "createdAt": "2025-04-24T13:17:00.075434+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "86943cde-5aaa-4b83-9986-d0b13ba51553",
+      "name": "ZukunftsHaus Sanierung & Energie GmbH & Co.KG",
+      "cleanedName": "ZukunftsHaus Sanierung & Energie GmbH & Co.KG",
+      "domain": "zukunfts.haus",
+      "createdAt": "2025-03-14T19:41:14.71042+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "875b10e8-5095-472c-bad0-3023d7fad320",
+      "name": "Company (dyproject.ch)",
+      "cleanedName": "Company (dyproject.ch)",
+      "domain": "dyproject.ch",
+      "createdAt": "2026-01-06T11:51:47.993914+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "cb3e4dfd-fd92-469b-9762-31e96f830836",
+      "name": "barkhaus.com",
+      "cleanedName": "barkhaus.com",
+      "domain": "barkhaus.com",
+      "createdAt": "2026-06-09T23:24:06.443822+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "8f4a3f18-f043-4627-8bb0-104161f06314",
+      "name": "Company (test.com)",
+      "cleanedName": "Company (test.com)",
+      "domain": "test.com",
+      "createdAt": "2026-01-19T08:31:31.946233+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b48cac7c-1350-46e3-b6e4-e1b2fd03e341",
+      "name": "implenia.com",
+      "cleanedName": "implenia.com",
+      "domain": "implenia.com",
+      "createdAt": "2026-02-03T00:50:26.752838+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "136e68de-e1ca-4018-b468-5f7f0a832b6b",
+      "name": "verizon.net",
+      "cleanedName": "verizon.net",
+      "domain": "verizon.net",
+      "createdAt": "2026-06-10T17:08:21.078842+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "b779b827-7f5e-4a13-9aa5-f07c4bc5fd63",
+      "name": "A Company3",
+      "cleanedName": "A Company3",
+      "domain": "demoai.com",
+      "createdAt": "2026-01-26T12:32:19.836384+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "ffea4f3b-a217-4037-aeee-7f6bd1c1686c",
+      "name": "Wi",
+      "cleanedName": "Wi",
+      "domain": "demo0000.com",
+      "createdAt": "2026-02-09T15:05:33.044741+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7ddeee0c-fa17-44a8-8331-58ab5bf2f664",
+      "name": "GFM Ingenieure GmbH",
+      "cleanedName": "GFM Ingenieure GmbH",
+      "domain": "demo0099.com",
+      "createdAt": "2026-02-09T15:08:57.762118+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2cc1a1c6-e54f-44ec-aa97-d386ba382382",
+      "name": "bncinema.com",
+      "cleanedName": "bncinema.com",
+      "domain": "bncinema.com",
+      "createdAt": "2026-06-09T15:49:23.346483+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "d2168320-64fe-47e8-8234-86bf212e3f04",
+      "name": "ddd.ttt",
+      "cleanedName": "ddd.ttt",
+      "domain": "ddd.ttt",
+      "createdAt": "2026-06-10T11:34:23.525369+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "77264e8e-5f00-476f-b2ed-56ae30e617ed",
+      "name": "brentwoodindustries.com",
+      "cleanedName": "brentwoodindustries.com",
+      "domain": "brentwoodindustries.com",
+      "createdAt": "2026-06-10T15:10:03.554099+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "ce062645-f7e6-482b-b83f-2985d6904d12",
+      "name": "burgessniple.com",
+      "cleanedName": "burgessniple.com",
+      "domain": "burgessniple.com",
+      "createdAt": "2026-06-10T23:30:12.892689+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c68a12f2-eb02-46f9-a3ab-874182df6385",
+      "name": "oncor.com",
+      "cleanedName": "oncor.com",
+      "domain": "oncor.com",
+      "createdAt": "2026-06-11T04:29:14.49195+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "17332608-49dd-46fc-835f-034145de9b9c",
+      "name": "melior-gmbh.de",
+      "cleanedName": "melior-gmbh.de",
+      "domain": "melior-gmbh.de",
+      "createdAt": "2026-07-06T09:08:18.106755+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "a53e6668-a554-40be-a1bf-929600e341ff",
+      "name": "new",
+      "cleanedName": "new",
+      "domain": "demo4.com",
+      "createdAt": "2026-01-26T12:54:08.485262+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "ee1107fd-52da-4589-89fd-eccfbd601158",
+      "name": "lean-pm.gmbh",
+      "cleanedName": "lean-pm.gmbh",
+      "domain": "lean-pm.gmbh",
+      "createdAt": "2026-02-17T14:08:07.818925+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "b3500adb-916b-43e4-ad9f-0c26f74171fb",
+      "name": "buv-gmbh.de",
+      "cleanedName": "buv-gmbh.de",
+      "domain": "buv-gmbh.de",
+      "createdAt": "2026-06-11T09:21:48.951812+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "00bc9af4-e3f8-4c4b-ba84-4d27b0fac490",
+      "name": "schryver.com",
+      "cleanedName": "schryver.com",
+      "domain": "schryver.com",
+      "createdAt": "2026-06-11T10:28:13.842134+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "d8f01565-2beb-48c6-a30f-36146d0e382c",
+      "name": "weiss-technik.com",
+      "cleanedName": "weiss-technik.com",
+      "domain": "weiss-technik.com",
+      "createdAt": "2026-06-11T13:08:58.514758+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7c5e97d5-0661-4847-bd21-1b2ca147d9c5",
+      "name": "werkbank-digital.de",
+      "cleanedName": "werkbank-digital.de",
+      "domain": "werkbank-digital.de",
+      "createdAt": "2026-07-08T06:59:03.611184+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2e98085d-3bea-4510-90f0-d05bd452da6d",
+      "name": "testfit.com",
+      "cleanedName": "testfit.com",
+      "domain": "testfit.com",
+      "createdAt": "2026-06-12T08:55:23.659035+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "a0f331da-164c-4125-aa09-f65191113513",
+      "name": "zweim.ch",
+      "cleanedName": "zweim.ch",
+      "domain": "zweim.ch",
+      "createdAt": "2026-07-22T11:42:14.404459+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1a43e76b-dd0a-4ad8-ad9e-9368d9e11cfe",
+      "name": "Pending Setup",
+      "cleanedName": "Pending Setup",
+      "domain": "johann-bunte.de",
+      "createdAt": "2026-01-26T21:20:25.241812+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "271740b9-0932-4b34-8850-4f2c8b1ba526",
+      "name": "demo0000888.com",
+      "cleanedName": "demo0000888.com",
+      "domain": "demo0000888.com",
+      "createdAt": "2026-02-09T15:38:17.5554+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7dafe471-513a-4a55-889c-b4bfb62727a0",
+      "name": "demo112.com",
+      "cleanedName": "demo112.com",
+      "domain": "demo112.com",
+      "createdAt": "2026-02-05T10:31:24.982767+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "90947f81-7a32-4dac-8507-0ac402b0ed6d",
+      "name": "hpmc Projektmanagement & Consulting GmbH",
+      "cleanedName": "hpmc Projektmanagement & Consulting GmbH",
+      "domain": "hansepmc.de",
+      "createdAt": "2025-12-19T09:29:37.399263+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "90ae5a9c-92ae-4445-8562-64cf0a43524a",
+      "name": "Value Plan",
+      "cleanedName": "Value Plan",
+      "domain": "valueplan.net",
+      "createdAt": "2025-02-28T12:50:03.090427+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "94390d07-82a9-428f-9642-790d6f854534",
+      "name": "A Company C",
+      "cleanedName": "A Company C",
+      "domain": "demo.com",
+      "createdAt": "2026-01-26T11:38:02.844491+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "9788d610-5af0-4207-ac94-b3e09be48d4a",
+      "name": "anirban4.com",
+      "cleanedName": "anirban4.com",
+      "domain": "anirban4.com",
+      "createdAt": "2026-02-27T15:08:47.024413+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "ade3f802-553f-45b8-ba45-3082c986775f",
+      "name": "Company (trade.eu)",
+      "cleanedName": "Company (trade.eu)",
+      "domain": "trade.eu",
+      "createdAt": "2026-01-03T09:35:23.763513+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b922f4a0-e9a9-4e42-b25a-9437d979ebf4",
+      "name": "Rhein&Rur Design / ProBuildAi",
+      "cleanedName": "Rhein&Rur Design / ProBuildAi",
+      "domain": "rheinrurdesign.org",
+      "createdAt": "2025-06-14T01:06:41.161799+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "6afd7d36-3070-469f-9341-55f66303ea47",
+      "name": "badgerhole.com",
+      "cleanedName": "badgerhole.com",
+      "domain": "badgerhole.com",
+      "createdAt": "2026-05-08T11:49:45.094821+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "d8503d35-b536-4cc8-827a-65a8cb0ae342",
+      "name": "gmx.de",
+      "cleanedName": "gmx.de",
+      "domain": "gmx.de",
+      "createdAt": "2026-05-18T08:19:12.678977+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 5,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1e8791da-37e6-4190-8f71-054e67e533a5",
+      "name": "baubuild.com",
+      "cleanedName": "baubuild.com",
+      "domain": "baubuild.com",
+      "createdAt": "2026-08-07T17:21:09.504865+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "ad6ba5e8-ed27-48f3-b6cc-ef0e5f58ec2e",
+      "name": "testaaa.com",
+      "cleanedName": "testaaa.com",
+      "domain": "testaaa.com",
+      "createdAt": "2026-05-08T07:57:53.144645+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "d489b99e-4e66-4b77-b84b-63b56ee673f7",
+      "name": "immo-bau.biz",
+      "cleanedName": "immo-bau.biz",
+      "domain": "immo-bau.biz",
+      "createdAt": "2026-05-17T09:10:11.562084+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "9dcc4af6-6ef5-4808-9b87-51768e353e31",
+      "name": "Wirl Ingenieure G",
+      "cleanedName": "Wirl Ingenieure G",
+      "domain": "demo7.com",
+      "createdAt": "2026-01-29T09:54:28.774883+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c838ecb8-2d5b-4c6d-84bf-abd0c27461f9",
+      "name": "Company Test Name ",
+      "cleanedName": "Company Test Name",
+      "domain": "auth.com",
+      "createdAt": "2026-01-19T09:43:29.453064+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 3
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "5e5e714a-7e24-414c-8fe4-99288c9cb929",
+      "name": "guerrillamailblock.com",
+      "cleanedName": "guerrillamailblock.com",
+      "domain": "guerrillamailblock.com",
+      "createdAt": "2026-05-18T11:24:25.686095+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "ba10fa19-ac6d-4bfe-aa1e-a6f16774185e",
+      "name": "nwer.nwer",
+      "cleanedName": "nwer.nwer",
+      "domain": "nwer.nwer",
+      "createdAt": "2026-05-27T15:43:39.176714+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "9dcc8807-54aa-4eae-9a9b-7937e98f323a",
+      "name": "buve-gmbh.de",
+      "cleanedName": "buve-gmbh.de",
+      "domain": "buve-gmbh.de",
+      "createdAt": "2026-06-11T09:22:23.578929+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "09a87cb8-2068-4c6f-8d58-10ac4d15edc0",
+      "name": "bauai.com",
+      "cleanedName": "bauai.com",
+      "domain": "bauai.com",
+      "createdAt": "2026-07-06T13:28:34.583073+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "f10edf9d-7c8b-4ae2-9e80-97bae0b86e8d",
+      "name": "diehl-bauunternehmen.de",
+      "cleanedName": "diehl-bauunternehmen.de",
+      "domain": "diehl-bauunternehmen.de",
+      "createdAt": "2026-07-24T15:52:36.954206+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2cb52e6b-64aa-4541-840c-e52daeeb5290",
+      "name": "demo435.com",
+      "cleanedName": "demo435.com",
+      "domain": "demo435.com",
+      "createdAt": "2026-02-09T19:33:35.696591+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "b2d80628-00bc-4e09-b7a6-2fb1650b7d2e",
+      "name": "Anirban's Company",
+      "cleanedName": "Anirban's Company",
+      "domain": "demo8.com",
+      "createdAt": "2026-01-29T10:03:18.542917+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "cc363ab9-20fe-419f-82c5-4b97932676ed",
+      "name": "Otto House Manufactur L.L.C.",
+      "cleanedName": "Otto House Manufactur L.L.C.",
+      "domain": "otto-house.de",
+      "createdAt": "2025-03-17T14:31:09.611395+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "cec6252d-782f-413f-8fdb-059a81dcc014",
+      "name": "Test Bau Firma",
+      "cleanedName": "Test Bau Firma",
+      "domain": "bauunternehmen.de",
+      "createdAt": "2025-03-09T11:11:38.329644+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "d1ef8bfb-fc82-4101-8615-0c25fbd8681b",
+      "name": "Bürokrates",
+      "cleanedName": "Bürokrates",
+      "domain": "icloud.com",
+      "createdAt": "2025-05-28T03:55:35.653127+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 7,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "da6d2382-26fc-4ec5-b8d6-18309ad53626",
+      "name": "Test GmbH",
+      "cleanedName": "Test GmbH",
+      "domain": "student.htw-berlin.de",
+      "createdAt": "2025-10-24T14:00:10.81107+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "dca24b87-9fee-4922-a7fb-a2c3500dca4f",
+      "name": "AWD Engineers",
+      "cleanedName": "AWD Engineers",
+      "domain": "awd.net",
+      "createdAt": "2025-02-28T12:58:18.976471+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "e21a1d4b-e80b-4484-bd28-befbcf963c35",
+      "name": "YASH",
+      "cleanedName": "YASH",
+      "domain": "email.com",
+      "createdAt": "2025-12-08T12:19:23.78635+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "e582b97f-1e8e-49db-a32c-c365d1c9ecd2",
+      "name": "demo777.com",
+      "cleanedName": "demo777.com",
+      "domain": "demo777.com",
+      "createdAt": "2026-02-09T17:55:51.322633+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "e63542d5-303c-41d5-bb0d-d379c89612c4",
+      "name": "Simon Wübbels Architekt",
+      "cleanedName": "Simon Wübbels Architekt",
+      "domain": "mowustudio.com",
+      "createdAt": "2025-12-05T10:18:31.659247+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "f5e3a520-fbac-489b-8205-9ebbb2eb3829",
+      "name": "anirbannnnnnn",
+      "cleanedName": "anirbannnnnnn",
+      "domain": "demoooo.com",
+      "createdAt": "2026-02-06T13:48:45.73828+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 0,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "fe5935ce-adf7-4f03-8569-91a226523320",
+      "name": "Company (business.com)",
+      "cleanedName": "Company (business.com)",
+      "domain": "business.com",
+      "createdAt": "2026-01-03T07:54:17.721408+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 2,
+        "recentlyActive": 0,
+        "onboarded": 2
+      }
+    },
+    {
+      "companyId": "4ebc5cfe-7b7f-4dd2-a6b3-12cd16014721",
+      "name": "evoqon.com",
+      "cleanedName": "evoqon.com",
+      "domain": "evoqon.com",
+      "createdAt": "2026-06-12T22:41:12.616502+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "243c901c-b11e-4eba-bfda-1e6dd30d1ce7",
+      "name": "123prcing.com",
+      "cleanedName": "123prcing.com",
+      "domain": "123prcing.com",
+      "createdAt": "2026-05-08T07:12:01.414722+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "56d75db1-16a5-423c-b175-593684527406",
+      "name": "Acme",
+      "cleanedName": "Acme",
+      "domain": "demo9.com",
+      "createdAt": "2026-01-29T12:08:58.872763+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "5e0eebc4-2b33-4998-84d6-0df453a22415",
+      "name": "7-11.com",
+      "cleanedName": "7-11.com",
+      "domain": "7-11.com",
+      "createdAt": "2026-06-03T16:04:36.444103+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "793b52d0-7514-4780-92b9-9e8efe548d33",
+      "name": "Company (demo5.com)",
+      "cleanedName": "Company (demo5.com)",
+      "domain": "demo5.com",
+      "createdAt": "2026-01-27T11:43:58.250842+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "529bfb79-48fd-4f23-9130-54eda580345e",
+      "name": "wittconstruction.com",
+      "cleanedName": "wittconstruction.com",
+      "domain": "wittconstruction.com",
+      "createdAt": "2026-06-04T01:54:26.633651+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c5a1871c-1b2d-4fbd-9540-e6a8d2324e90",
+      "name": "securitydelta.nl",
+      "cleanedName": "securitydelta.nl",
+      "domain": "securitydelta.nl",
+      "createdAt": "2026-06-04T05:49:10.903175+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "946c4bd1-ff0a-4732-9fc3-1904cabde2dd",
+      "name": "jor-mac.com",
+      "cleanedName": "jor-mac.com",
+      "domain": "jor-mac.com",
+      "createdAt": "2026-06-08T07:36:15.782821+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "3001dadb-b350-43d4-9b39-13d1304f9fc1",
+      "name": "test.eu",
+      "cleanedName": "test.eu",
+      "domain": "test.eu",
+      "createdAt": "2026-06-04T11:44:32.692156+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "5dcb669b-c681-494f-83ef-bb00c819ae81",
+      "name": "web.de",
+      "cleanedName": "web.de",
+      "domain": "web.de",
+      "createdAt": "2026-04-24T10:57:41.114266+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c558d162-dba0-45b6-97e5-4e9555854dcb",
+      "name": "hacknapp.com",
+      "cleanedName": "hacknapp.com",
+      "domain": "hacknapp.com",
+      "createdAt": "2026-04-24T12:52:28.430645+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "37f5ce4f-ac5c-41b2-b500-4d4d1e3385c0",
+      "name": "kimballne.org",
+      "cleanedName": "kimballne.org",
+      "domain": "kimballne.org",
+      "createdAt": "2026-06-04T17:04:42.958382+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "19a2add3-b0da-40e8-b705-727a412e8368",
+      "name": "ambling.com",
+      "cleanedName": "ambling.com",
+      "domain": "ambling.com",
+      "createdAt": "2026-06-05T01:36:38.046984+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1d9ec4d3-17df-45df-9aa5-ad5194fd84bc",
+      "name": "mindsquare.de",
+      "cleanedName": "mindsquare.de",
+      "domain": "mindsquare.de",
+      "createdAt": "2026-06-05T06:33:54.736884+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "a665194a-20af-4de0-aac6-ead8aba62333",
+      "name": "comcast.net",
+      "cleanedName": "comcast.net",
+      "domain": "comcast.net",
+      "createdAt": "2026-06-05T18:29:36.300288+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "16d32d74-9d5b-43df-8c40-4fe3405cb3be",
+      "name": "tuta.com",
+      "cleanedName": "tuta.com",
+      "domain": "tuta.com",
+      "createdAt": "2026-06-06T16:40:35.220893+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "b2085e32-94dc-46b7-b86b-586e5a432fca",
+      "name": "raytechnologie.co",
+      "cleanedName": "raytechnologie.co",
+      "domain": "raytechnologie.co",
+      "createdAt": "2026-04-29T16:47:18.672025+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "9fc0f05b-0d92-431d-9bb9-fd902b8c88bd",
+      "name": "gmx.net",
+      "cleanedName": "gmx.net",
+      "domain": "gmx.net",
+      "createdAt": "2026-06-07T06:32:32.952384+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2dd1efba-4c6d-42f8-8020-34c1e6590da4",
+      "name": "80i.com",
+      "cleanedName": "80i.com",
+      "domain": "80i.com",
+      "createdAt": "2026-06-07T20:57:40.437812+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "bef04492-5b27-463b-a56a-1857f450c53f",
+      "name": "recom-power.com",
+      "cleanedName": "recom-power.com",
+      "domain": "recom-power.com",
+      "createdAt": "2026-06-08T12:10:07.155235+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "275e7d02-dc0d-4402-a44f-c1a90c10e77e",
+      "name": "roer.eu",
+      "cleanedName": "roer.eu",
+      "domain": "roer.eu",
+      "createdAt": "2026-06-24T12:10:27.404455+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2515f74f-57cf-40af-9b11-cca38c788c2f",
+      "name": "logabau-gmbh.de",
+      "cleanedName": "logabau-gmbh.de",
+      "domain": "logabau-gmbh.de",
+      "createdAt": "2026-06-09T07:27:58.791112+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "55a4775e-82d2-408b-b248-86b26c840a2c",
+      "name": "pesalliance.org",
+      "cleanedName": "pesalliance.org",
+      "domain": "pesalliance.org",
+      "createdAt": "2026-06-09T10:50:12.657512+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "0a31b4fb-789d-4ded-8c2d-7b8624f29e17",
+      "name": "live.com",
+      "cleanedName": "live.com",
+      "domain": "live.com",
+      "createdAt": "2026-06-08T12:53:06.244998+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "3aa4957e-8368-452b-ad51-860dbf23ca3c",
+      "name": "pricingp1.com",
+      "cleanedName": "pricingp1.com",
+      "domain": "pricingp1.com",
+      "createdAt": "2026-05-06T16:10:32.447012+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b9becab6-3d8e-4349-8a23-7e43553116a5",
+      "name": "trial.nnn",
+      "cleanedName": "trial.nnn",
+      "domain": "trial.nnn",
+      "createdAt": "2026-06-17T04:30:40.390195+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "f8f394de-4e0c-4b56-8c85-13efc89b3f7a",
+      "name": "demooo23.com",
+      "cleanedName": "demooo23.com",
+      "domain": "demooo23.com",
+      "createdAt": "2026-02-09T20:02:37.023878+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "215052b1-bf6e-4228-9f1b-320c2a88157c",
+      "name": "chimphaven.org",
+      "cleanedName": "chimphaven.org",
+      "domain": "chimphaven.org",
+      "createdAt": "2026-06-04T03:41:44.319907+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "bf6fc2a9-2260-42e7-b8f9-6b99536db14b",
+      "name": "bauai.er",
+      "cleanedName": "bauai.er",
+      "domain": "bauai.er",
+      "createdAt": "2026-06-04T07:47:48.174195+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "6b5cd1d2-d293-4e98-9ad1-d4f8d977d46a",
+      "name": "hotmail.de",
+      "cleanedName": "hotmail.de",
+      "domain": "hotmail.de",
+      "createdAt": "2026-06-08T20:11:38.491938+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1fcd8919-4d7b-45e5-938b-87549af6dee0",
+      "name": "anirbananirban.com",
+      "cleanedName": "anirbananirban.com",
+      "domain": "anirbananirban.com",
+      "createdAt": "2026-06-11T14:06:05.481996+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "0207e415-0cf8-425f-a3ca-0a3a49db1f0d",
+      "name": "rrr.ccc",
+      "cleanedName": "rrr.ccc",
+      "domain": "rrr.ccc",
+      "createdAt": "2026-06-19T07:57:42.539266+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "f9c0d311-52d5-417a-a3cc-57fb23e43cbd",
+      "name": "final.com",
+      "cleanedName": "final.com",
+      "domain": "final.com",
+      "createdAt": "2026-06-18T13:42:32.380421+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "d560f3c0-fdd2-4fe0-8119-80715019f5b1",
+      "name": "priniting.com",
+      "cleanedName": "priniting.com",
+      "domain": "priniting.com",
+      "createdAt": "2026-06-18T14:23:26.836998+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "04f70df7-5cc1-49b9-95b1-4f4f01676a0a",
+      "name": "gu.com",
+      "cleanedName": "gu.com",
+      "domain": "gu.com",
+      "createdAt": "2026-06-12T15:55:26.308959+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "584a7e6a-e890-49b6-95f6-ba101eb3cf9d",
+      "name": "eastsunshineventures.com",
+      "cleanedName": "eastsunshineventures.com",
+      "domain": "eastsunshineventures.com",
+      "createdAt": "2026-03-29T22:23:42.678436+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "2f840707-0a8b-4f6e-ac91-40d03db6bec9",
+      "name": "horizonsatellite.com",
+      "cleanedName": "horizonsatellite.com",
+      "domain": "horizonsatellite.com",
+      "createdAt": "2026-06-11T14:42:21.018663+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "e855265f-cb9e-4f2c-92b5-28d19b41dc52",
+      "name": "ida-ing.de",
+      "cleanedName": "ida-ing.de",
+      "domain": "ida-ing.de",
+      "createdAt": "2026-06-04T15:25:31.563686+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "6e4ad52c-111d-4183-bc56-8a659369364b",
+      "name": "kittytester.com",
+      "cleanedName": "kittytester.com",
+      "domain": "kittytester.com",
+      "createdAt": "2026-06-03T17:44:03.59844+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "52f65146-c455-4752-a42d-9aed78afda36",
+      "name": "bersqey.com",
+      "cleanedName": "bersqey.com",
+      "domain": "bersqey.com",
+      "createdAt": "2026-06-03T22:57:52.830534+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "27fc9000-6d10-40b5-8ea9-2afe6dc94555",
+      "name": "outlook.de",
+      "cleanedName": "outlook.de",
+      "domain": "outlook.de",
+      "createdAt": "2026-06-10T11:14:55.772743+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "868c0b5d-a989-494c-bbea-d70ba547df7d",
+      "name": "miligrant.com",
+      "cleanedName": "miligrant.com",
+      "domain": "miligrant.com",
+      "createdAt": "2026-07-07T14:10:12.915074+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "d00a1708-7055-4e34-ad08-be5208de9123",
+      "name": "rogers.com",
+      "cleanedName": "rogers.com",
+      "domain": "rogers.com",
+      "createdAt": "2026-06-11T15:29:19.66439+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "e9ca15b8-c8d7-4522-bbc7-18662efb97d9",
+      "name": "testziio.com",
+      "cleanedName": "testziio.com",
+      "domain": "testziio.com",
+      "createdAt": "2026-06-10T09:25:04.043099+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "4ee5cdb5-11d0-4801-8705-1ad7e57e9748",
+      "name": "wieser.it",
+      "cleanedName": "wieser.it",
+      "domain": "wieser.it",
+      "createdAt": "2026-07-08T12:52:05.988599+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "1a9fabe7-6670-4177-99bb-a9aae2f7a9da",
+      "name": "testte.eu",
+      "cleanedName": "testte.eu",
+      "domain": "testte.eu",
+      "createdAt": "2026-06-19T10:18:22.673785+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "e1367272-de7e-4a7a-86dd-11633e4d7148",
+      "name": "vaf.com",
+      "cleanedName": "vaf.com",
+      "domain": "vaf.com",
+      "createdAt": "2026-06-20T06:38:47.879347+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "71d5ca09-d91d-42f4-ab07-9cfafe3e3afd",
+      "name": "hagemeyer-gmbh.de",
+      "cleanedName": "hagemeyer-gmbh.de",
+      "domain": "hagemeyer-gmbh.de",
+      "createdAt": "2026-07-09T09:21:26.499757+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "e803cd89-8223-49d9-a214-993809ac6e4b",
+      "name": "glitsch-gs.de",
+      "cleanedName": "glitsch-gs.de",
+      "domain": "glitsch-gs.de",
+      "createdAt": "2026-07-09T23:38:57.13463+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "a7baa1fa-2579-41f2-881a-88d9d3eb6fc7",
+      "name": "crusher.com",
+      "cleanedName": "crusher.com",
+      "domain": "crusher.com",
+      "createdAt": "2026-06-19T06:54:11.080953+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "17eafe6f-d93b-40d0-8696-e6f4f4bf1acb",
+      "name": "bbg-immobilien.com",
+      "cleanedName": "bbg-immobilien.com",
+      "domain": "bbg-immobilien.com",
+      "createdAt": "2026-06-17T11:08:19.470279+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "02109ad6-d1cf-479a-9ec0-009dae5d2bcc",
+      "name": "aleph-alpha.com",
+      "cleanedName": "aleph-alpha.com",
+      "domain": "aleph-alpha.com",
+      "createdAt": "2026-06-16T11:36:27.231249+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "aae59084-809a-42a8-b3ea-2a61984beadc",
+      "name": "pricing.com",
+      "cleanedName": "pricing.com",
+      "domain": "pricing.com",
+      "createdAt": "2026-05-06T15:56:12.366158+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "8dac78c7-1c04-4a7a-bdc8-ba1c1d625d91",
+      "name": "baf.com",
+      "cleanedName": "baf.com",
+      "domain": "baf.com",
+      "createdAt": "2026-06-19T11:36:22.749571+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "d8582fe7-d94c-4800-a3a8-6f1a1eac383c",
+      "name": "pricingtesting.com",
+      "cleanedName": "pricingtesting.com",
+      "domain": "pricingtesting.com",
+      "createdAt": "2026-06-18T13:09:26.249218+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b2e222b6-6530-4ebb-9150-0bf61c6b42af",
+      "name": "demo.co.in",
+      "cleanedName": "demo.co.in",
+      "domain": "demo.co.in",
+      "createdAt": "2026-06-29T08:29:03.351171+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "12fcc22a-f34b-4e48-90a3-11a4f1854042",
+      "name": "vapi.eu",
+      "cleanedName": "vapi.eu",
+      "domain": "vapi.eu",
+      "createdAt": "2026-06-29T07:47:21.69142+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "cafad2b1-cd24-4201-8a22-afbe4de471fc",
+      "name": "elektro-wagner.online",
+      "cleanedName": "elektro-wagner.online",
+      "domain": "elektro-wagner.online",
+      "createdAt": "2026-06-23T15:02:39.594925+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "246fe418-254d-4780-8475-48683b75afc1",
+      "name": "un.eu",
+      "cleanedName": "un.eu",
+      "domain": "un.eu",
+      "createdAt": "2026-06-29T07:51:29.762679+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "61aedb0d-8764-4eed-8c1a-4df74720e0a0",
+      "name": "ere.com",
+      "cleanedName": "ere.com",
+      "domain": "ere.com",
+      "createdAt": "2026-06-29T13:19:53.172441+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "b8aa4f9a-18a4-47a7-bf2c-b653d55e4513",
+      "name": "ozsaip.com",
+      "cleanedName": "ozsaip.com",
+      "domain": "ozsaip.com",
+      "createdAt": "2026-08-09T08:33:51.912585+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "9d40a5dd-0bfa-4bec-b482-bb6bb84150c3",
+      "name": "zwei15.com",
+      "cleanedName": "zwei15.com",
+      "domain": "zwei15.com",
+      "createdAt": "2026-07-01T09:31:45.746924+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "dc7c40c4-1375-4f3b-a0a1-31ee958448b7",
+      "name": "anqerra.com",
+      "cleanedName": "anqerra.com",
+      "domain": "anqerra.com",
+      "createdAt": "2026-07-10T09:39:05.943825+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "c73cf010-68b8-429f-aa89-2e5c771816c2",
+      "name": "biancaschroeder.ai",
+      "cleanedName": "biancaschroeder.ai",
+      "domain": "biancaschroeder.ai",
+      "createdAt": "2026-08-04T18:43:44.095755+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "0ad5f604-ef5b-40b6-8548-4c19533c720a",
+      "name": "forliion.com",
+      "cleanedName": "forliion.com",
+      "domain": "forliion.com",
+      "createdAt": "2026-07-11T17:19:24.896555+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 0,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "7983c2c5-9ef2-413d-85ff-e81856e6271f",
+      "name": "ipg95.de",
+      "cleanedName": "ipg95.de",
+      "domain": "ipg95.de",
+      "createdAt": "2026-07-29T11:08:21.586938+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "37e10109-0e40-4a90-9994-a62b4da75d38",
+      "name": "june.com",
+      "cleanedName": "june.com",
+      "domain": "june.com",
+      "createdAt": "2026-06-29T11:05:04.6935+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "c6e8e355-a44d-44ad-9682-cab5809d0bbf",
+      "name": "sb-bau.de",
+      "cleanedName": "sb-bau.de",
+      "domain": "sb-bau.de",
+      "createdAt": "2026-07-31T07:34:00.629401+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "16619090-f829-4805-8f9b-36e94518385c",
+      "name": "minitts.net",
+      "cleanedName": "minitts.net",
+      "domain": "minitts.net",
+      "createdAt": "2026-08-01T12:36:00.931214+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "dbd2bf22-2a1f-4147-ada2-d0809411c778",
+      "name": "ruutukf.com",
+      "cleanedName": "ruutukf.com",
+      "domain": "ruutukf.com",
+      "createdAt": "2026-08-09T14:00:47.543153+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "6d3c7424-23e7-4d4a-afb9-cff490410a1c",
+      "name": "franz-traub.de",
+      "cleanedName": "franz-traub.de",
+      "domain": "franz-traub.de",
+      "createdAt": "2026-07-15T06:11:16.057711+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "de5f5eec-22f2-4d6d-b8df-9f7853833364",
+      "name": "elektro-kamphausen.de",
+      "cleanedName": "elektro-kamphausen.de",
+      "domain": "elektro-kamphausen.de",
+      "createdAt": "2026-07-15T08:23:52.205535+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    },
+    {
+      "companyId": "57a3f2c0-3141-4c28-b779-6a2c188b1b33",
+      "name": "testing15.com",
+      "cleanedName": "testing15.com",
+      "domain": "testing15.com",
+      "createdAt": "2026-06-18T13:16:53.074283+00:00",
+      "decision": "exclude",
+      "reason": "test/demo name pattern",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "95af783a-6b55-4306-abf3-ffed5aef1b09",
+      "name": "lnovic.com",
+      "cleanedName": "lnovic.com",
+      "domain": "lnovic.com",
+      "createdAt": "2026-08-09T14:22:45.335151+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "f8a44baa-b5e5-4bfa-89b5-23bd9a4fd2f8",
+      "name": "heinekamp.com",
+      "cleanedName": "heinekamp.com",
+      "domain": "heinekamp.com",
+      "createdAt": "2026-08-07T13:40:06.14576+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "e5a18d17-a2c4-4169-88bb-65a73fa2c60e",
+      "name": "rpaintel.com",
+      "cleanedName": "rpaintel.com",
+      "domain": "rpaintel.com",
+      "createdAt": "2026-08-09T14:49:16.922051+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 2,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "0564762b-fe43-486f-9ad1-529d3e998f88",
+      "name": "diete-siepmann.de",
+      "cleanedName": "diete-siepmann.de",
+      "domain": "diete-siepmann.de",
+      "createdAt": "2026-07-20T13:13:39.729439+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "f2f9b758-011f-4b60-918b-9d77ce33c304",
+      "name": "primetor.com",
+      "cleanedName": "primetor.com",
+      "domain": "primetor.com",
+      "createdAt": "2026-08-09T14:57:26.233846+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 1,
+        "recentlyActive": 1,
+        "onboarded": 1
+      }
+    },
+    {
+      "companyId": "7ba2abfc-faa0-4cb7-9098-e81c730cca54",
+      "name": "aon.at",
+      "cleanedName": "aon.at",
+      "domain": "aon.at",
+      "createdAt": "2026-07-20T14:28:29.270749+00:00",
+      "decision": "exclude",
+      "reason": "no activity",
+      "activityTotal": 0,
+      "activity": {
+        "savedTenders": 0,
+        "dislikedTenders": 0,
+        "workspaceTenders": 0,
+        "chatSessions": 0,
+        "documents": 0,
+        "savedFilters": 0,
+        "extractedDocuments": 0
+      },
+      "membership": {
+        "members": 1,
+        "signedIn": 0,
+        "recentlyActive": 0,
+        "onboarded": 0
+      }
+    }
+  ],
+  "mergeProposals": [
+    {
+      "survivorId": "65ff2994-c4cc-4feb-b4fe-fe258302d46e",
+      "survivorName": "BAU AI GmbH",
+      "preferredName": "BAU AI GmbH",
+      "absorbedIds": [
+        "4dc86293-0a8f-4622-a961-5632a46bb4a4"
+      ],
+      "absorbedNames": [
+        "BAU AI"
+      ],
+      "matchKey": "bauai"
+    },
+    {
+      "survivorId": "2c5e86a3-5ba3-4e4e-8771-a92c0f847c3f",
+      "survivorName": "hns-bau-gmbh.de",
+      "preferredName": "HNS Bau GmbH",
+      "absorbedIds": [
+        "826f76db-f10a-485b-a5b0-d8896ec8b9ef"
+      ],
+      "absorbedNames": [
+        "HNS Bau GmbH"
+      ],
+      "matchKey": "hnsbau"
+    },
+    {
+      "survivorId": "a25f3576-eb7e-4165-abd4-060f666d17df",
+      "survivorName": "Lavette GmbH",
+      "preferredName": "Lavette GmbH",
+      "absorbedIds": [
+        "ade84d16-adb0-4c5b-8aa7-8fff4dee2aa9"
+      ],
+      "absorbedNames": [
+        "lavettegruppe.com"
+      ],
+      "matchKey": "lavette"
+    },
+    {
+      "survivorId": "d434f12d-e929-4753-820e-1da1620ebfaa",
+      "survivorName": "WIRL INGENIEURE GMBH",
+      "preferredName": "WIRL INGENIEURE GMBH",
+      "absorbedIds": [
+        "098b68ab-e3d1-44bc-8466-fc15e1f43787"
+      ],
+      "absorbedNames": [
+        "Wirl Ingenieure GmbH"
+      ],
+      "matchKey": "wirlingenieure"
+    }
+  ],
+  "warnings": []
+}

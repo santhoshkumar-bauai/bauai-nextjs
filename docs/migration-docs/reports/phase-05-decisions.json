@@ -1,0 +1,32 @@
+{
+  "phase": "05-decisions",
+  "ranAt": "2026-08-13T08:27:06.116Z",
+  "signedOffBy": "Santhosh Kumar",
+  "totals": {
+    "resolved": 514,
+    "written": 484,
+    "skipped": 1
+  },
+  "bySource": {
+    "workspace": 263,
+    "saved": 7,
+    "disliked": 244
+  },
+  "statuses": {
+    "interested": 203,
+    "lost": 6,
+    "won": 8,
+    "submitted": 5,
+    "preparing": 8,
+    "deadzone": 254
+  },
+  "skipReasons": {
+    "tender not in corpus": 1
+  },
+  "skipped": [
+    {
+      "legacyTenderId": "d05073a5-6800-471e-b71f-771aabe826c4",
+      "reason": "tender not in corpus"
+    }
+  ]
+}

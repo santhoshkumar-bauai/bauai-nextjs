@@ -17,17 +17,23 @@ export function useDoraBrief(documentId: string, aiAvailable: boolean) {
   const [error, setError] = useState<string | null>(null);
   const autoTriggered = useRef(false);
 
-  const load = useCallback(async (): Promise<WireBriefStatus | null> => {
+  /** Pure fetch — no state. Kept separate so the mount effect can decide for
+   * itself whether a late response is still wanted. */
+  const fetchStatus = useCallback(async (): Promise<WireBriefStatus | null> => {
     try {
       const response = await fetch(endpoint, { cache: "no-store" });
       if (!response.ok) return null;
-      const json = (await response.json()) as WireBriefStatus;
-      setStatus(json);
-      return json;
+      return (await response.json()) as WireBriefStatus;
     } catch {
       return null;
     }
   }, [endpoint]);
+
+  const load = useCallback(async (): Promise<WireBriefStatus | null> => {
+    const json = await fetchStatus();
+    if (json) setStatus(json);
+    return json;
+  }, [fetchStatus]);
 
   const generate = useCallback(
     async (refresh: boolean) => {
@@ -50,9 +56,19 @@ export function useDoraBrief(documentId: string, aiAvailable: boolean) {
     [endpoint, load],
   );
 
+  // Mount load. The await inside the IIFE is what keeps the state update out of
+  // the effect body itself, and `ignore` stops a slow response for a previous
+  // documentId from landing on top of a newer one.
   useEffect(() => {
-    void load();
-  }, [load]);
+    let ignore = false;
+    void (async () => {
+      const json = await fetchStatus();
+      if (!ignore && json) setStatus(json);
+    })();
+    return () => {
+      ignore = true;
+    };
+  }, [fetchStatus]);
 
   const running = status?.run?.status === "running";
   useEffect(() => {

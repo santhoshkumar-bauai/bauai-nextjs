@@ -64,7 +64,6 @@ describe.skipIf(!enabled)("Dora chat turn (integration)", () => {
         callbacks: { onToolStart: (name) => tools.push(name) },
       });
 
-      // eslint-disable-next-line no-console
       console.log("[dora-chat-integration]", {
         status: assistantMessage.status,
         tools,
