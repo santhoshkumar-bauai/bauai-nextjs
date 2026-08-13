@@ -3,7 +3,10 @@ import { betterAuth } from "better-auth/minimal";
 import { after } from "next/server";
 
 import { mongoClient, mongoDatabase } from "@/lib/db/mongodb";
-import { sendVerificationEmail } from "@/lib/email/resend";
+import {
+  sendResetPasswordEmail,
+  sendVerificationEmail,
+} from "@/lib/email/resend";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 
 const trustedOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
@@ -24,6 +27,25 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    // A reset is how someone locked out of the account takes it back. Assume the
+    // old password leaked and drop every session the previous holder still has.
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }, request) => {
+      const locale = resolveRequestLocale(request);
+      after(async () => {
+        try {
+          await sendResetPasswordEmail({
+            to: user.email,
+            name: user.name,
+            resetUrl: url,
+            locale,
+          });
+        } catch (error) {
+          console.error("Failed to send password reset email", error);
+        }
+      });
+    },
   },
   emailVerification: {
     sendOnSignUp: true,
