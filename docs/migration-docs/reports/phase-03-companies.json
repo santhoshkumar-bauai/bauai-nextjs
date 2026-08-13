@@ -1,0 +1,416 @@
+{
+  "phase": "03-companies",
+  "ranAt": "2026-08-12T18:51:41.835Z",
+  "dryRun": false,
+  "signedOffBy": "Santhosh Kumar",
+  "totals": {
+    "cohortRows": 34,
+    "targetCompanies": 30,
+    "prepared": 30,
+    "written": 30,
+    "skipped": 0,
+    "protectedLive": 0,
+    "adopted": 0
+  },
+  "adopted": [],
+  "companies": [
+    {
+      "domain": "wirl-ing.de",
+      "name": "WIRL INGENIEURE GMBH",
+      "legacyIds": [
+        "d434f12d-e929-4753-820e-1da1620ebfaa",
+        "098b68ab-e3d1-44bc-8466-fc15e1f43787"
+      ],
+      "issues": [
+        "address columns disagree, chose wirl-ing.de — rejected wirl.net (1), spaceera.de (1)"
+      ],
+      "services": 6,
+      "cpvCodes": 2,
+      "businessDomain": "ENGINEERING"
+    },
+    {
+      "domain": "bauai.eu",
+      "name": "BAU AI GmbH",
+      "legacyIds": [
+        "65ff2994-c4cc-4feb-b4fe-fe258302d46e",
+        "4dc86293-0a8f-4622-a961-5632a46bb4a4"
+      ],
+      "issues": [
+        "address columns disagree, chose bauai.eu — rejected bauai.co (2)"
+      ],
+      "services": 4,
+      "cpvCodes": 3,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "graebert.com",
+      "name": "Graebert",
+      "legacyIds": [
+        "c934efcc-82b1-4f75-a8a4-2745fa731a9f"
+      ],
+      "issues": [
+        "address columns disagree, chose graebert.com — rejected raytechnologie.com (1)"
+      ],
+      "services": 10,
+      "cpvCodes": 2,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "hansa-bauunternehmung.de",
+      "name": "Hansa Bauunternehmung GmbH",
+      "legacyIds": [
+        "479f49a9-5b5a-4a3e-9d7b-02fd441a5d47"
+      ],
+      "issues": [
+        "6 CPV entries had no parsable code",
+        "address columns disagree, chose hansa-bauunternehmung.de — rejected bundesreinigung.de (1)"
+      ],
+      "services": 9,
+      "cpvCodes": 0,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "carbocon.de",
+      "name": "CARBOCON GMBH",
+      "legacyIds": [
+        "1f54fa71-4e1d-46d6-836d-d9fe6b5f63c0"
+      ],
+      "issues": [
+        "no trade/services — AI matching will have little to work with",
+        "address columns disagree, chose carbocon.de — rejected carbocon-gmbh.de (1)"
+      ],
+      "services": 0,
+      "cpvCodes": 1,
+      "businessDomain": "ENGINEERING"
+    },
+    {
+      "domain": "brueninghoff.de",
+      "name": "Brueninghoff Group",
+      "legacyIds": [
+        "93870e4d-4168-4829-a287-380ff2572018"
+      ],
+      "issues": [],
+      "services": 2,
+      "cpvCodes": 10,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "se-g.com",
+      "name": "seg architekten PartGmbB",
+      "legacyIds": [
+        "8cb3a762-57ba-4562-b966-43952eeddeee"
+      ],
+      "issues": [],
+      "services": 4,
+      "cpvCodes": 10,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "abmp-architektur.de",
+      "name": "ABMP Architektur und Generalplanung",
+      "legacyIds": [
+        "ac51e0e7-e8db-4360-96d1-59ea7bbab2f1"
+      ],
+      "issues": [
+        "knowledge base groups dropped: reference_projects"
+      ],
+      "services": 1,
+      "cpvCodes": 10,
+      "businessDomain": "ARCHITECTURE"
+    },
+    {
+      "domain": "hns-bau-gmbh.de",
+      "name": "HNS Bau GmbH",
+      "legacyIds": [
+        "2c5e86a3-5ba3-4e4e-8771-a92c0f847c3f",
+        "826f76db-f10a-485b-a5b0-d8896ec8b9ef"
+      ],
+      "issues": [
+        "address columns disagree, chose hns-bau-gmbh.de — rejected hns-bau.de (2), test123.com (1)"
+      ],
+      "services": 29,
+      "cpvCodes": 24,
+      "businessDomain": "HANDWERK"
+    },
+    {
+      "domain": "hansabauteam.de",
+      "name": "Hansabauteam",
+      "legacyIds": [
+        "bd34e211-d4d6-4e89-8a37-b9ea2091ef8a"
+      ],
+      "issues": [
+        "renamed \"hansabauteam.de\" → \"Hansabauteam\"",
+        "region missing — defaulted to Deutschland"
+      ],
+      "services": 1,
+      "cpvCodes": 1,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "ig-pg.de",
+      "name": "Ingenieurgesellschaft TGA Palmert&Grässle",
+      "legacyIds": [
+        "9f351678-a113-4a3a-90de-5d3166b11fdb"
+      ],
+      "issues": [],
+      "services": 10,
+      "cpvCodes": 1,
+      "businessDomain": "ENGINEERING"
+    },
+    {
+      "domain": "chat.de",
+      "name": "Company (chat.de)",
+      "legacyIds": [
+        "461fc878-6dbe-4b6a-abeb-0d41c87a8941"
+      ],
+      "issues": [
+        "no trade/services — AI matching will have little to work with"
+      ],
+      "services": 0,
+      "cpvCodes": 3,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "admi.de",
+      "name": "admi Kommunal GmbH",
+      "legacyIds": [
+        "b54fcde1-835e-4b02-b0e8-d6e1474d2feb"
+      ],
+      "issues": [],
+      "services": 5,
+      "cpvCodes": 2,
+      "businessDomain": "ENGINEERING"
+    },
+    {
+      "domain": "lavette-group.de",
+      "name": "Lavette GmbH",
+      "legacyIds": [
+        "a25f3576-eb7e-4165-abd4-060f666d17df",
+        "ade84d16-adb0-4c5b-8aa7-8fff4dee2aa9"
+      ],
+      "issues": [
+        "address columns disagree, chose lavette-group.de — rejected lavettegruppe.com (1)"
+      ],
+      "services": 2,
+      "cpvCodes": 2,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "roewert.de",
+      "name": "Roewert",
+      "legacyIds": [
+        "c003c556-794a-4900-8679-0497f35a0a61"
+      ],
+      "issues": [
+        "renamed \"roewert.de\" → \"Roewert\""
+      ],
+      "services": 5,
+      "cpvCodes": 10,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "zed-group.eu",
+      "name": "Zed Group",
+      "legacyIds": [
+        "a9aeac21-c26e-45e6-a873-4552748a0a0b"
+      ],
+      "issues": [
+        "renamed \"zed-group.eu\" → \"Zed Group\""
+      ],
+      "services": 4,
+      "cpvCodes": 10,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "bc-u.at",
+      "name": "Bc U",
+      "legacyIds": [
+        "f49f9cbe-bd1a-490a-abea-4943bee17d57"
+      ],
+      "issues": [
+        "renamed \"bc-u.at\" → \"Bc U\""
+      ],
+      "services": 13,
+      "cpvCodes": 10,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "terras.com",
+      "name": "Terras Holding GmbH",
+      "legacyIds": [
+        "baca4d37-1271-4cfe-b7ca-bfe88dcf4167"
+      ],
+      "issues": [
+        "address columns disagree, chose terras.com — rejected terras-tiefbau.group (1)"
+      ],
+      "services": 7,
+      "cpvCodes": 1,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "schrobsdorff.ag",
+      "name": "Schrobsdorff",
+      "legacyIds": [
+        "de6b611c-115d-4e39-89db-819731fceb76"
+      ],
+      "issues": [
+        "renamed \"schrobsdorff.ag\" → \"Schrobsdorff\""
+      ],
+      "services": 1,
+      "cpvCodes": 2,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "berlin-bausanierung.de",
+      "name": "Berlin Bausanierung",
+      "legacyIds": [
+        "28d41f52-b17f-40ac-88e8-f00b583e0a68"
+      ],
+      "issues": [
+        "renamed \"berlin-bausanierung.de\" → \"Berlin Bausanierung\""
+      ],
+      "services": 10,
+      "cpvCodes": 10,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "bmf-engineering.de",
+      "name": "Bmf Engineering",
+      "legacyIds": [
+        "3f9a3580-0302-4aec-b522-523d63d57fff"
+      ],
+      "issues": [
+        "renamed \"bmf-engineering.de\" → \"Bmf Engineering\"",
+        "address columns disagree, chose bmf-engineering.de — rejected fassaden-engineering.de (1)"
+      ],
+      "services": 2,
+      "cpvCodes": 10,
+      "businessDomain": "ENGINEERING"
+    },
+    {
+      "domain": "f-e.de",
+      "name": "F E",
+      "legacyIds": [
+        "7c7a2eb3-d4a4-4cf1-b401-f197e300c022"
+      ],
+      "issues": [
+        "renamed \"f-e.de\" → \"F E\"",
+        "address columns disagree, chose f-e.de — rejected eggersmann-group.com (1)"
+      ],
+      "services": 1,
+      "cpvCodes": 10,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "vatter.de",
+      "name": "Vatter",
+      "legacyIds": [
+        "48c487f2-2e11-4f0c-84ee-e3c8667ecf6c"
+      ],
+      "issues": [
+        "renamed \"vatter.de\" → \"Vatter\"",
+        "region missing — defaulted to Deutschland"
+      ],
+      "services": 4,
+      "cpvCodes": 1,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "kilianprikryl.de",
+      "name": "Kilianprikryl",
+      "legacyIds": [
+        "723e0bf5-4c5f-46c4-8c0a-677b8ed8087b"
+      ],
+      "issues": [
+        "renamed \"kilianprikryl.de\" → \"Kilianprikryl\""
+      ],
+      "services": 4,
+      "cpvCodes": 2,
+      "businessDomain": "HANDWERK"
+    },
+    {
+      "domain": "awd-ingenieure.info",
+      "name": "AWD Ingenieurgesellschaft mbH",
+      "legacyIds": [
+        "28e26a46-f1d7-4eac-8107-2aaafaedc03b"
+      ],
+      "issues": [
+        "6 CPV entries had no parsable code",
+        "address columns disagree, chose awd-ingenieure.info — rejected awd-ingenieure.de (1)"
+      ],
+      "services": 6,
+      "cpvCodes": 0,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "peter-kalkmann.de",
+      "name": "Peter Kalkmann",
+      "legacyIds": [
+        "8ac933d2-67f4-4475-81c0-4e207562e2c7"
+      ],
+      "issues": [
+        "renamed \"peter-kalkmann.de\" → \"Peter Kalkmann\"",
+        "address columns disagree, chose peter-kalkmann.de — rejected peter-kalkmanns.de (1)"
+      ],
+      "services": 7,
+      "cpvCodes": 10,
+      "businessDomain": "CONSTRUCTION"
+    },
+    {
+      "domain": "ib-burak.de",
+      "name": "Ib Burak",
+      "legacyIds": [
+        "bfdacb24-6faa-438f-9100-37405ac46afa"
+      ],
+      "issues": [
+        "renamed \"ib-burak.de\" → \"Ib Burak\"",
+        "region missing — defaulted to Deutschland"
+      ],
+      "services": 3,
+      "cpvCodes": 1,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "koblenzer-wohnbau.de",
+      "name": "Koblenzer Wohnbau",
+      "legacyIds": [
+        "48b6eb75-db28-43cc-8072-5fab64a90555"
+      ],
+      "issues": [
+        "renamed \"koblenzer-wohnbau.de\" → \"Koblenzer Wohnbau\""
+      ],
+      "services": 1,
+      "cpvCodes": 1,
+      "businessDomain": "OTHER"
+    },
+    {
+      "domain": "knapp-kubitza.de",
+      "name": "Knapp Kubitza",
+      "legacyIds": [
+        "08aca886-88eb-4213-9770-9427ba20e797"
+      ],
+      "issues": [
+        "renamed \"knapp-kubitza.de\" → \"Knapp Kubitza\"",
+        "address columns disagree, chose knapp-kubitza.de — rejected knapp-kubitza-architekten.de (1)"
+      ],
+      "services": 1,
+      "cpvCodes": 10,
+      "businessDomain": "ARCHITECTURE"
+    },
+    {
+      "domain": "ass-bauberatung.de",
+      "name": "Ass Bauberatung",
+      "legacyIds": [
+        "92a4e7be-4668-461a-add4-bfa165e846cf"
+      ],
+      "issues": [
+        "renamed \"ass-bauberatung.de\" → \"Ass Bauberatung\""
+      ],
+      "services": 1,
+      "cpvCodes": 1,
+      "businessDomain": "OTHER"
+    }
+  ],
+  "skipped": [],
+  "protectedLive": []
+}

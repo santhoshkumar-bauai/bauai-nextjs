@@ -1,0 +1,259 @@
+{
+  "phase": "04-users",
+  "ranAt": "2026-08-12T18:51:44.761Z",
+  "dryRun": false,
+  "locale": "de",
+  "signedOffBy": "Santhosh Kumar",
+  "totals": {
+    "profiles": 64,
+    "created": 3,
+    "reused": 61,
+    "skipped": 0,
+    "promotedAdmins": 21,
+    "unverifiedEmails": 6,
+    "testAccountAdmins": 0
+  },
+  "companies": [
+    {
+      "domain": "kilianprikryl.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403d1",
+      "unverified": 0
+    },
+    {
+      "domain": "brueninghoff.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403d2",
+      "unverified": 0
+    },
+    {
+      "domain": "lavette-group.de",
+      "members": 3,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403d3",
+      "unverified": 0
+    },
+    {
+      "domain": "roewert.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403d6",
+      "unverified": 0
+    },
+    {
+      "domain": "ig-pg.de",
+      "members": 2,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403d8",
+      "unverified": 0
+    },
+    {
+      "domain": "admi.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403d9",
+      "unverified": 0
+    },
+    {
+      "domain": "hansabauteam.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403db",
+      "unverified": 0
+    },
+    {
+      "domain": "hansa-bauunternehmung.de",
+      "members": 2,
+      "admins": 2,
+      "createdBy": "6a7cbc209f869da4c4c403dc",
+      "unverified": 0
+    },
+    {
+      "domain": "carbocon.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403de",
+      "unverified": 0
+    },
+    {
+      "domain": "bauai.eu",
+      "members": 16,
+      "admins": 10,
+      "createdBy": "6a7cbc209f869da4c4c403df",
+      "unverified": 2
+    },
+    {
+      "domain": "vatter.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403ef",
+      "unverified": 0
+    },
+    {
+      "domain": "wirl-ing.de",
+      "members": 3,
+      "admins": 2,
+      "createdBy": "6a7cc0c04a7e5bdfc8939cc7",
+      "unverified": 0
+    },
+    {
+      "domain": "graebert.com",
+      "members": 11,
+      "admins": 11,
+      "createdBy": "6a7cbc209f869da4c4c403f3",
+      "unverified": 4
+    },
+    {
+      "domain": "peter-kalkmann.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403fc",
+      "unverified": 0
+    },
+    {
+      "domain": "ib-burak.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403fd",
+      "unverified": 0
+    },
+    {
+      "domain": "terras.com",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c403fe",
+      "unverified": 0
+    },
+    {
+      "domain": "awd-ingenieure.info",
+      "members": 2,
+      "admins": 2,
+      "createdBy": "6a7cbc209f869da4c4c403ff",
+      "unverified": 0
+    },
+    {
+      "domain": "se-g.com",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c40401",
+      "unverified": 0
+    },
+    {
+      "domain": "chat.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c40402",
+      "unverified": 0
+    },
+    {
+      "domain": "hns-bau-gmbh.de",
+      "members": 3,
+      "admins": 1,
+      "createdBy": "6a7cbc209f869da4c4c40403",
+      "unverified": 0
+    },
+    {
+      "domain": "knapp-kubitza.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c40406",
+      "unverified": 0
+    },
+    {
+      "domain": "zed-group.eu",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c40407",
+      "unverified": 0
+    },
+    {
+      "domain": "ass-bauberatung.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c40408",
+      "unverified": 0
+    },
+    {
+      "domain": "koblenzer-wohnbau.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c40409",
+      "unverified": 0
+    },
+    {
+      "domain": "berlin-bausanierung.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c4040a",
+      "unverified": 0
+    },
+    {
+      "domain": "abmp-architektur.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c4040b",
+      "unverified": 0
+    },
+    {
+      "domain": "schrobsdorff.ag",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c4040c",
+      "unverified": 0
+    },
+    {
+      "domain": "bc-u.at",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c4040d",
+      "unverified": 0
+    },
+    {
+      "domain": "bmf-engineering.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c4040e",
+      "unverified": 0
+    },
+    {
+      "domain": "f-e.de",
+      "members": 1,
+      "admins": 1,
+      "createdBy": "6a7cbc219f869da4c4c40410",
+      "unverified": 0
+    }
+  ],
+  "promoted": [
+    "kp@kilianprikryl.de (kilianprikryl.de)",
+    "paul.schenk@brueninghoff.de (brueninghoff.de)",
+    "info@lavettegruppe.com (lavette-group.de)",
+    "it@roewert.de (roewert.de)",
+    "freddi.lange@admi.de (admi.de)",
+    "t.festerling@hansabauteam.de (hansabauteam.de)",
+    "boening@carbocon-gmbh.de (carbocon.de)",
+    "e.schell@vatter.de (vatter.de)",
+    "info@peter-kalkmann.de (peter-kalkmann.de)",
+    "info@ib-burak.de (ib-burak.de)",
+    "tf@hns-bau-gmbh.de (hns-bau-gmbh.de)",
+    "g.uehlein@knapp-kubitza.de (knapp-kubitza.de)",
+    "ludwig@zed-group.eu (zed-group.eu)",
+    "j.liebenow@ass-bauberatung.de (ass-bauberatung.de)",
+    "edv@koblenzer-wohnbau.de (koblenzer-wohnbau.de)",
+    "info@berlin-bausanierung.de (berlin-bausanierung.de)",
+    "olenik@abmp-architektur.de (abmp-architektur.de)",
+    "f.giebler@schrobsdorff.ag (schrobsdorff.ag)",
+    "office@bc-u.at (bc-u.at)",
+    "info@bmf-engineering.de (bmf-engineering.de)",
+    "m.backs@f-e.de (f-e.de)"
+  ],
+  "testAccountAdmins": [],
+  "skipped": [],
+  "createdUsers": [
+    "stephanie.albrecht@wirl-ing.de",
+    "projektanfrage@wirl-ing.de",
+    "admin@wirl.net"
+  ],
+  "note": "No credential accounts were created. Better Auth's reset-password route creates one on first use, so every migrated user must set a password via the reset flow before they can sign in."
+}

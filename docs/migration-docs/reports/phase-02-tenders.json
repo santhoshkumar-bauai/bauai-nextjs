@@ -1,0 +1,19 @@
+{
+  "phase": "02-tenders",
+  "ranAt": "2026-08-12T19:18:00.104Z",
+  "signedOffBy": "Santhosh Kumar",
+  "totals": {
+    "referenced": 505,
+    "alreadyPresent": 169,
+    "ingested": 335,
+    "quarantined": 0,
+    "failed": 1
+  },
+  "quarantined": [],
+  "failures": [
+    {
+      "sourceNoticeId": "cebff94f-29e9-400b-a576-6dd12d57fffa",
+      "reason": "HTTP 404 from https://oeffentlichevergabe.de/api/notices/cebff94f-29e9-400b-a576-6dd12d57fffa"
+    }
+  ]
+}

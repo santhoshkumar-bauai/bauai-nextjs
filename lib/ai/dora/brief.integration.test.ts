@@ -54,7 +54,6 @@ describe.skipIf(!enabled)("generateBrief (integration)", () => {
 
     const { getWorkspaceDocumentText } = await import("./document-text.ts");
     const text = await getWorkspaceDocumentText(ctx!.document, ctx!.tenantId);
-    // eslint-disable-next-line no-console
     console.log("[dora-integration] text:", {
       file: ctx!.document.fileName,
       tenderLinked: Boolean(ctx!.tender),
@@ -89,7 +88,6 @@ describe.skipIf(!enabled)("generateBrief (integration)", () => {
 
     const { serializeBrief } = await import("./brief.ts");
     const wire = serializeBrief(state!.doc, state!.stale, "en");
-    // eslint-disable-next-line no-console
     console.log("[dora-integration] brief:", {
       documentType: wire.documentType,
       purpose: wire.purpose,

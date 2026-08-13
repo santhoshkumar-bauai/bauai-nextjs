@@ -1,0 +1,31 @@
+{
+  "phase": "prune",
+  "ranAt": "2026-08-12T18:40:49.754Z",
+  "removals": [
+    {
+      "domain": "johann-bunte.de",
+      "companyId": "6a7cb9ad183059a3dbf331d4",
+      "users": [
+        "6a7cbc209f869da4c4c403da"
+      ],
+      "keptUsers": []
+    },
+    {
+      "domain": "grebner-ingenieure.de",
+      "companyId": "6a7cb9ad183059a3dbf331da",
+      "users": [
+        "6a7cbc219f869da4c4c4040f"
+      ],
+      "keptUsers": []
+    },
+    {
+      "domain": "ipb-thale.de",
+      "companyId": "6a7cb9ad183059a3dbf331e4",
+      "users": [
+        "6a7cbc209f869da4c4c403f0"
+      ],
+      "keptUsers": []
+    }
+  ],
+  "refused": []
+}

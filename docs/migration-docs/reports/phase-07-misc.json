@@ -1,0 +1,1145 @@
+{
+  "phase": "07-misc",
+  "ranAt": "2026-08-13T13:53:01.235Z",
+  "dryRun": false,
+  "signedOffBy": "Santhosh Kumar",
+  "savedFilters": {
+    "decision": "exported, not migrated — the legacy and target filter models do not overlap",
+    "total": 14,
+    "withKeyword": 4,
+    "migrated": 0,
+    "profiles": [
+      {
+        "legacyId": "13356e76-3964-4741-9a1b-0d050c6cd57d",
+        "name": "Triefbau",
+        "domain": "graebert.com",
+        "legacyUserId": "48b19253-84ec-45d4-a41c-ccb3dfe34767",
+        "keyword": "Tiefbau",
+        "lostSettings": [
+          "valueRange",
+          "previousProjects",
+          "matchScore"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "distance": [
+            0
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "",
+          "procedureType": [],
+          "serviceKeywords": "Tiefbau",
+          "aiRecommendation": [],
+          "previousProjects": false,
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "91f79612-7402-44d8-94fa-75dc52364947",
+        "name": "Location Profile",
+        "domain": "graebert.com",
+        "legacyUserId": "0ca36746-f382-4152-8027-7469e70e46f3",
+        "keyword": null,
+        "lostSettings": [
+          "city",
+          "cityPlaceId",
+          "cityCoordinates",
+          "distance",
+          "valueRange",
+          "previousProjects",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "Berlin",
+          "state": "",
+          "distance": [
+            497
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "cityPlaceId": "ChIJAVkDPzdOqEcRcDteW0YgIQQ",
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "cityCoordinates": {
+            "lat": 52.52000659999999,
+            "lng": 13.404954
+          },
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "previousProjects": false,
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "156eba91-74c6-433f-8123-b838f25e1815",
+        "name": "Suchprofil",
+        "domain": "wirl-ing.de",
+        "legacyUserId": "ed4d5241-e312-4639-969f-6cfd60b80f51",
+        "keyword": null,
+        "lostSettings": [
+          "distance",
+          "valueRange",
+          "previousProjects",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "distance": [
+            150
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "previousProjects": false,
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "1d656b50-aa9c-428f-a83a-e23c7fecd6fd",
+        "name": "NULL",
+        "domain": "se-g.com",
+        "legacyUserId": "81ba1161-6ee2-4854-8dc2-7006868c8141",
+        "keyword": null,
+        "lostSettings": [
+          "valueRange",
+          "previousProjects",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "distance": [
+            0
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "previousProjects": false,
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "495925e2-cccb-492c-a5d2-e27e8de7ac9c",
+        "name": "Bau",
+        "domain": "brueninghoff.de",
+        "legacyUserId": "ca24a1ba-6f73-4e40-800a-6a5675853750",
+        "keyword": "Generalunternehmer",
+        "lostSettings": [
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "serviceCategories",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "distance": [
+            0
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "Generalunternehmer",
+          "aiRecommendation": [],
+          "previousProjects": false,
+          "serviceCategories": [
+            "45000000-7"
+          ]
+        }
+      },
+      {
+        "legacyId": "2219c3c8-9f11-4e9a-8831-b519fd5283c5",
+        "name": "Negative",
+        "domain": "hns-bau-gmbh.de",
+        "legacyUserId": "146fcc58-5aab-407e-8811-6a21a486d604",
+        "keyword": null,
+        "lostSettings": [
+          "valueRange",
+          "negativeKeywords",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "distance": [
+            0
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "Hochbau",
+          "previousProjects": false,
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "2b3f8bc4-92e1-4628-b434-c00a7cdb56db",
+        "name": "Suche GP, Architektur",
+        "domain": "abmp-architektur.de",
+        "legacyUserId": "a73a505b-535f-46c2-ae6d-8e6c9a94849e",
+        "keyword": null,
+        "lostSettings": [
+          "distance",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "distance": [
+            200
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "209286c4-2698-4918-a7ad-db39d435bfe9",
+        "name": "Negative Filter",
+        "domain": "wirl-ing.de",
+        "legacyUserId": "ed4d5241-e312-4639-969f-6cfd60b80f51",
+        "keyword": null,
+        "lostSettings": [
+          "distance",
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "negativeKeywords",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "region": "Magdeburg",
+          "distance": [
+            150
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "Tragwerksplanung, Generalplanungsleistungen, Landschaft, Objektplanung, Generalplanung, Trinkwasser",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 52.1131758,
+            "lng": 11.6080863
+          },
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "a64152ea-440a-416f-8e3f-abf4d6520b2a",
+        "name": "Fassaden Auschreibungen",
+        "domain": "bmf-engineering.de",
+        "legacyUserId": "b921e4ae-381a-4979-bc43-04c57897b122",
+        "keyword": null,
+        "lostSettings": [
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "region": "Frankfurt am Main",
+          "distance": [
+            0
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 50.1109221,
+            "lng": 8.6821267
+          },
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "1b9f8c69-9e0d-485f-a9bb-6c970b949d1c",
+        "name": "1000000",
+        "domain": "wirl-ing.de",
+        "legacyUserId": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "keyword": null,
+        "lostSettings": [
+          "distance",
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "region": "Bayreuth",
+          "distance": [
+            100000
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 49.9456399,
+            "lng": 11.5713346
+          },
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "e28a19d9-2b7a-4639-b20c-ffa5e3efe053",
+        "name": "swd and 100000",
+        "domain": "wirl-ing.de",
+        "legacyUserId": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "keyword": "swd",
+        "lostSettings": [
+          "distance",
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "region": "Bayreuth",
+          "distance": [
+            100000
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "swd",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 49.9456399,
+            "lng": 11.5713346
+          },
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "c813e81c-6e22-4f44-a037-06da78f37a5a",
+        "name": "neubau",
+        "domain": "wirl-ing.de",
+        "legacyUserId": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "keyword": "neubau",
+        "lostSettings": [
+          "distance",
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "region": "Bayreuth",
+          "distance": [
+            1000
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "neubau",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 49.9456399,
+            "lng": 11.5713346
+          },
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "526ced1c-2541-43d6-b51e-f248481ee0b0",
+        "name": "BERLIN 200",
+        "domain": "wirl-ing.de",
+        "legacyUserId": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "keyword": null,
+        "lostSettings": [
+          "city",
+          "cityPlaceId",
+          "cityCoordinates",
+          "distance",
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "Berlin",
+          "state": "",
+          "region": "Bayreuth",
+          "distance": [
+            200
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "cityPlaceId": "ChIJAVkDPzdOqEcRcDteW0YgIQQ",
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "cityCoordinates": {
+            "lat": 52.52000659999999,
+            "lng": 13.404954
+          },
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 49.9456399,
+            "lng": 11.5713346
+          },
+          "serviceCategories": []
+        }
+      },
+      {
+        "legacyId": "622f1bc0-b599-4615-9d3a-57a69f7188be",
+        "name": "Brückenbau Paderbon",
+        "domain": "f-e.de",
+        "legacyUserId": "d217c4a2-a892-4633-92d8-8e31abc05840",
+        "keyword": null,
+        "lostSettings": [
+          "region",
+          "regionCoordinates",
+          "valueRange",
+          "previousProjects",
+          "profileOverride",
+          "matchScore",
+          "deadlineType"
+        ],
+        "legacyConfig": {
+          "city": "",
+          "state": "",
+          "region": "Paderborn",
+          "distance": [
+            0
+          ],
+          "buyerName": "",
+          "matchScore": [
+            100
+          ],
+          "tenderType": [],
+          "valueRange": [
+            0,
+            10000000
+          ],
+          "deadlineType": "any-term",
+          "procedureType": [],
+          "profileOverride": false,
+          "serviceKeywords": "",
+          "aiRecommendation": [],
+          "negativeKeywords": "",
+          "previousProjects": false,
+          "regionCoordinates": {
+            "lat": 51.7189205,
+            "lng": 8.757509299999999
+          },
+          "serviceCategories": []
+        }
+      }
+    ]
+  },
+  "cpvDivisions": {
+    "decision": "not migrated — the shipped onboarding catalog already carries this mapping",
+    "total": 18,
+    "domainsOutsideCatalog": [],
+    "rows": [
+      {
+        "company_domain": "CONSTRUCTION",
+        "cpv_division": "45",
+        "note": "Construction work (primary)"
+      },
+      {
+        "company_domain": "CONSTRUCTION",
+        "cpv_division": "44",
+        "note": "Construction structures and materials"
+      },
+      {
+        "company_domain": "EQUIPMENT_SUPPLIER",
+        "cpv_division": "42",
+        "note": "Industrial machinery"
+      },
+      {
+        "company_domain": "EQUIPMENT_SUPPLIER",
+        "cpv_division": "43",
+        "note": "Mining, quarrying and construction machinery"
+      },
+      {
+        "company_domain": "EQUIPMENT_SUPPLIER",
+        "cpv_division": "31",
+        "note": "Electrical machinery, apparatus and equipment"
+      },
+      {
+        "company_domain": "EQUIPMENT_SUPPLIER",
+        "cpv_division": "34",
+        "note": "Transport equipment and auxiliary products"
+      },
+      {
+        "company_domain": "MATERIAL_SUPPLIER",
+        "cpv_division": "44",
+        "note": "Construction structures and materials"
+      },
+      {
+        "company_domain": "MATERIAL_SUPPLIER",
+        "cpv_division": "14",
+        "note": "Mining, basic metals and related products"
+      },
+      {
+        "company_domain": "MATERIAL_SUPPLIER",
+        "cpv_division": "24",
+        "note": "Chemical products"
+      },
+      {
+        "company_domain": "HANDWERK",
+        "cpv_division": "45",
+        "note": "Construction work"
+      },
+      {
+        "company_domain": "HANDWERK",
+        "cpv_division": "50",
+        "note": "Repair and maintenance services"
+      },
+      {
+        "company_domain": "HANDWERK",
+        "cpv_division": "51",
+        "note": "Installation services"
+      },
+      {
+        "company_domain": "ARCHITECTURE",
+        "cpv_division": "71",
+        "note": "Architectural, construction, engineering and inspection services"
+      },
+      {
+        "company_domain": "ENGINEERING",
+        "cpv_division": "71",
+        "note": "Architectural, construction, engineering and inspection services"
+      },
+      {
+        "company_domain": "ENGINEERING",
+        "cpv_division": "73",
+        "note": "Research and development services"
+      },
+      {
+        "company_domain": "SUBCONTRACTOR",
+        "cpv_division": "45",
+        "note": "Construction work"
+      },
+      {
+        "company_domain": "SUBCONTRACTOR",
+        "cpv_division": "50",
+        "note": "Repair and maintenance services"
+      },
+      {
+        "company_domain": "SUBCONTRACTOR",
+        "cpv_division": "51",
+        "note": "Installation services"
+      }
+    ]
+  },
+  "feedback": {
+    "decision": "exported only — user-authored, no target collection",
+    "total": 54,
+    "rows": [
+      {
+        "id": "3a826092-f89c-4d57-a501-e7a2d5e34536",
+        "user_id": "197cd4c9-3230-4843-abd4-db0fc000abb8",
+        "content": "Test feedback",
+        "type": "general",
+        "rating": null,
+        "created_at": "2025-02-26T11:38:04.552879+00:00"
+      },
+      {
+        "id": "470b20ce-2149-4207-9641-de83f569f81a",
+        "user_id": "197cd4c9-3230-4843-abd4-db0fc000abb8",
+        "content": "Test feature request",
+        "type": "feature_request",
+        "rating": null,
+        "created_at": "2025-02-26T11:38:56.76566+00:00"
+      },
+      {
+        "id": "88cce2ed-371a-42fd-9123-2987df608960",
+        "user_id": "197cd4c9-3230-4843-abd4-db0fc000abb8",
+        "content": "Test bug report",
+        "type": "bug_report",
+        "rating": null,
+        "created_at": "2025-02-26T11:39:29.834963+00:00"
+      },
+      {
+        "id": "7adc190f-ef13-46a2-8cb8-5e0bbf2a42c3",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "Test feedback 2",
+        "type": "feature_request",
+        "rating": null,
+        "created_at": "2025-02-27T15:10:12.346027+00:00"
+      },
+      {
+        "id": "c3afb06b-8a74-4514-be90-62e75ed1a34c",
+        "user_id": "197cd4c9-3230-4843-abd4-db0fc000abb8",
+        "content": "TEST Report! ",
+        "type": "bug_report",
+        "rating": null,
+        "created_at": "2025-02-28T13:17:05.579127+00:00"
+      },
+      {
+        "id": "f848b5a5-2239-4749-acf9-ec8ffa50a105",
+        "user_id": "56c21b5e-ac22-4c18-adff-bbebf9ea3b1c",
+        "content": "Notifications for immediate actions hould appear on the dashboard. It might be too complex to find the paths and click through ",
+        "type": "general",
+        "rating": null,
+        "created_at": "2025-03-06T09:51:23.220684+00:00"
+      },
+      {
+        "id": "8eb28fc1-e989-4530-ab60-edb7275679db",
+        "user_id": "197cd4c9-3230-4843-abd4-db0fc000abb8",
+        "content": "test",
+        "type": "feature_request",
+        "rating": null,
+        "created_at": "2025-05-20T01:13:13.491142+00:00"
+      },
+      {
+        "id": "3a4d4722-317d-4541-97a6-c7b3f3026929",
+        "user_id": "6d043540-c50c-4a74-9d85-a1f1eb86efec",
+        "content": "Project Description isn't updating.\n",
+        "type": "general",
+        "rating": null,
+        "created_at": "2025-08-05T15:05:26.858236+00:00"
+      },
+      {
+        "id": "52fb5790-d7ac-47eb-a17f-325503960d9d",
+        "user_id": "6d043540-c50c-4a74-9d85-a1f1eb86efec",
+        "content": "Project Descrption isn't updating.",
+        "type": "general",
+        "rating": null,
+        "created_at": "2025-08-05T15:06:16.563172+00:00"
+      },
+      {
+        "id": "d6e277ed-a169-410a-81e7-d7e0038966d6",
+        "user_id": "6d043540-c50c-4a74-9d85-a1f1eb86efec",
+        "content": "Project Description Update issue.",
+        "type": "general",
+        "rating": null,
+        "created_at": "2025-08-05T15:11:40.321459+00:00"
+      },
+      {
+        "id": "4f7c2952-a501-452d-ac7a-1f080e634dae",
+        "user_id": "197cd4c9-3230-4843-abd4-db0fc000abb8",
+        "content": "Test bug\n",
+        "type": "bug_report",
+        "rating": null,
+        "created_at": "2025-08-08T08:02:32.16115+00:00"
+      },
+      {
+        "id": "a63b326f-2254-4ef1-98c4-ea5b41226873",
+        "user_id": "d0b8aa87-2f7d-4af2-b5fb-26e9ecf594cb",
+        "content": "Feedback form test message. ",
+        "type": "general",
+        "rating": null,
+        "created_at": "2026-01-14T15:06:58.817684+00:00"
+      },
+      {
+        "id": "d2b92e8a-ffff-4973-9ab4-72eeeed1c2fa",
+        "user_id": "00cb0798-e03f-4836-9215-294f5f775751",
+        "content": "developer",
+        "type": "general",
+        "rating": null,
+        "created_at": "2026-01-16T13:41:38.440526+00:00"
+      },
+      {
+        "id": "4bd3926b-6662-4385-8fdf-24e3fc52e600",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "Test feedback",
+        "type": "general",
+        "rating": 8,
+        "created_at": "2026-07-30T11:39:41.67839+00:00"
+      },
+      {
+        "id": "4d5abebc-d9f0-4bd0-ac8d-a81a8a914b74",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "Test",
+        "type": "bug_report",
+        "rating": 5,
+        "created_at": "2026-07-30T11:42:55.552852+00:00"
+      },
+      {
+        "id": "d55dfb83-d6cc-420e-ab3c-81e508e8f341",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "rr",
+        "type": "feature_request",
+        "rating": 6,
+        "created_at": "2026-07-30T11:50:57.670037+00:00"
+      },
+      {
+        "id": "ff2ce8be-ffa4-45fd-b156-cacd0ca1d69a",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "...",
+        "type": "bug_report",
+        "rating": 8,
+        "created_at": "2026-07-30T11:51:04.797668+00:00"
+      },
+      {
+        "id": "d64ff64d-eed5-498e-8a35-3e9b30098913",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "hello",
+        "type": "general",
+        "rating": 6,
+        "created_at": "2026-07-31T02:41:06.517924+00:00"
+      },
+      {
+        "id": "5fc9d4bc-dc71-40c9-8134-0330a2e04f3a",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "general",
+        "rating": 9,
+        "created_at": "2026-07-31T03:08:31.128327+00:00"
+      },
+      {
+        "id": "0ada6750-a5c8-4de9-80fb-38fafc37388d",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "very good",
+        "type": "feature_request",
+        "rating": 10,
+        "created_at": "2026-07-31T03:08:31.967111+00:00"
+      },
+      {
+        "id": "370ae9f7-a181-4487-845c-b14d535ccc31",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "nice",
+        "type": "bug_report",
+        "rating": 5,
+        "created_at": "2026-07-31T03:08:33.557854+00:00"
+      },
+      {
+        "id": "a465bdf9-0b5a-4564-9ac2-d19d6cfaa93c",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "better",
+        "type": "bug_report",
+        "rating": 4,
+        "created_at": "2026-07-31T03:12:53.249252+00:00"
+      },
+      {
+        "id": "79c6f275-bbb5-4470-92db-f8ecf4993c68",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "great",
+        "type": "general",
+        "rating": 8,
+        "created_at": "2026-07-31T03:18:53.071838+00:00"
+      },
+      {
+        "id": "c8ee7c4a-1160-40db-a48f-e15f5f742cb7",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "feature_request",
+        "rating": 9,
+        "created_at": "2026-07-31T03:18:54.080823+00:00"
+      },
+      {
+        "id": "c5876c1d-7310-4919-b062-cdd3410d0084",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "no issues ",
+        "type": "bug_report",
+        "rating": 5,
+        "created_at": "2026-07-31T03:18:54.864212+00:00"
+      },
+      {
+        "id": "36aa04e9-01b5-4c50-9ec4-e998af1e88e2",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "great",
+        "type": "general",
+        "rating": 2,
+        "created_at": "2026-07-31T11:29:29.554071+00:00"
+      },
+      {
+        "id": "8cc2f2e8-33a7-4759-ac71-4705224ecb61",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "nice",
+        "type": "feature_request",
+        "rating": 7,
+        "created_at": "2026-07-31T11:29:30.49933+00:00"
+      },
+      {
+        "id": "f97f342f-586c-4dee-b093-5795224ecbf2",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "bug_report",
+        "rating": 10,
+        "created_at": "2026-07-31T11:29:31.3845+00:00"
+      },
+      {
+        "id": "f0c8926e-b9cb-4f36-8266-fbaa2c389dcb",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "nice",
+        "type": "general",
+        "rating": 2,
+        "created_at": "2026-07-31T11:36:00.378754+00:00"
+      },
+      {
+        "id": "601042d4-0aba-4163-9541-1524c6feec1f",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "feature_request",
+        "rating": 6,
+        "created_at": "2026-07-31T11:36:01.374209+00:00"
+      },
+      {
+        "id": "05e9994b-fe26-4721-892c-fdf842fae614",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "greatttttttt",
+        "type": "bug_report",
+        "rating": 9,
+        "created_at": "2026-07-31T11:36:02.221117+00:00"
+      },
+      {
+        "id": "06f565a8-5ee2-46d1-9870-0e863c1a563c",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "gg",
+        "type": "general",
+        "rating": 3,
+        "created_at": "2026-08-01T16:17:49.37851+00:00"
+      },
+      {
+        "id": "2c56b32d-80e6-4ab6-96b7-adb8a2851106",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "dd",
+        "type": "general",
+        "rating": 3,
+        "created_at": "2026-08-02T12:07:01.972128+00:00"
+      },
+      {
+        "id": "d40df826-48dc-4013-a5a2-a25fdb8192f2",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "ss",
+        "type": "feature_request",
+        "rating": 7,
+        "created_at": "2026-08-02T12:07:02.975138+00:00"
+      },
+      {
+        "id": "f7bbcd23-2beb-4b3f-879b-206adca148e0",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "qqqqqqqqq",
+        "type": "bug_report",
+        "rating": 10,
+        "created_at": "2026-08-02T12:07:04.078811+00:00"
+      },
+      {
+        "id": "6c6f79b0-16b3-42f7-ab84-04046bec2bff",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "general",
+        "rating": 2,
+        "created_at": "2026-08-02T12:08:30.567074+00:00"
+      },
+      {
+        "id": "c9d3c123-6026-4412-baae-61332d92e182",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "nice",
+        "type": "feature_request",
+        "rating": 9,
+        "created_at": "2026-08-02T12:08:31.659784+00:00"
+      },
+      {
+        "id": "fd7a9e0c-4203-46c3-99f9-03546e102b67",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "perfect",
+        "type": "bug_report",
+        "rating": 2,
+        "created_at": "2026-08-02T12:08:32.43823+00:00"
+      },
+      {
+        "id": "dba2de26-e549-4e2f-8ac7-85e9167800d1",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "nice",
+        "type": "general",
+        "rating": 8,
+        "created_at": "2026-08-02T13:23:20.663609+00:00"
+      },
+      {
+        "id": "822e39d7-8a26-4dd3-b344-494ecf094f63",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "feature_request",
+        "rating": 9,
+        "created_at": "2026-08-02T13:23:21.720425+00:00"
+      },
+      {
+        "id": "a5991775-431a-4145-bb39-20556a37d763",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "perfect",
+        "type": "bug_report",
+        "rating": 10,
+        "created_at": "2026-08-02T13:23:22.651602+00:00"
+      },
+      {
+        "id": "fa4a0067-653e-4a2c-9879-1d7020386f58",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "general",
+        "rating": 10,
+        "created_at": "2026-08-02T13:38:51.919924+00:00"
+      },
+      {
+        "id": "28c00376-717d-474a-88a9-5937b3389aef",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "vv",
+        "type": "general",
+        "rating": 6,
+        "created_at": "2026-08-02T13:52:14.160597+00:00"
+      },
+      {
+        "id": "107c7a4a-c6b2-49b4-a1b5-2d4bea916681",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "aaaaaaaaa",
+        "type": "feature_request",
+        "rating": 5,
+        "created_at": "2026-08-02T13:52:15.197321+00:00"
+      },
+      {
+        "id": "5282400c-e149-4d12-978e-3847a1e70d8d",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "dddddddd",
+        "type": "bug_report",
+        "rating": 10,
+        "created_at": "2026-08-02T13:52:16.184089+00:00"
+      },
+      {
+        "id": "3c52407a-54c2-4dca-b4eb-9eb1cbee9f47",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "hha",
+        "type": "general",
+        "rating": 5,
+        "created_at": "2026-08-02T13:52:52.976059+00:00"
+      },
+      {
+        "id": "329c755e-ace5-4d1b-8577-6fa0754c1c83",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "cc",
+        "type": "feature_request",
+        "rating": 7,
+        "created_at": "2026-08-02T13:52:53.995028+00:00"
+      },
+      {
+        "id": "6c7fcce6-2987-4321-bd40-856cd6f80488",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "vd",
+        "type": "bug_report",
+        "rating": 4,
+        "created_at": "2026-08-02T13:52:54.856252+00:00"
+      },
+      {
+        "id": "1e7aa529-e807-45bc-b860-08d0b64914f2",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "general",
+        "rating": 6,
+        "created_at": "2026-08-02T13:53:42.794382+00:00"
+      },
+      {
+        "id": "af4df521-70ce-49a6-8a48-3e4602914fb2",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "grt",
+        "type": "general",
+        "rating": 5,
+        "created_at": "2026-08-02T13:57:36.507683+00:00"
+      },
+      {
+        "id": "775748f7-16e8-4520-9fc7-3c1d8b95e1f0",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "nice",
+        "type": "feature_request",
+        "rating": 10,
+        "created_at": "2026-08-02T13:57:42.732984+00:00"
+      },
+      {
+        "id": "88c1171d-fe29-48ce-9e7d-e77564513f04",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "bug_report",
+        "rating": 6,
+        "created_at": "2026-08-02T13:57:43.551444+00:00"
+      },
+      {
+        "id": "729732a2-17d9-4ecb-86b5-4530b2c5457b",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "good",
+        "type": "general",
+        "rating": 7,
+        "created_at": "2026-08-02T14:04:12.632161+00:00"
+      },
+      {
+        "id": "cdfc74d6-68c3-4d75-903c-94348c6db585",
+        "user_id": "578d9284-fda9-4890-9c37-2d6bc0b0bcdb",
+        "content": "d",
+        "type": "general",
+        "rating": 6,
+        "created_at": "2026-08-02T14:16:45.110803+00:00"
+      }
+    ]
+  }
+}
