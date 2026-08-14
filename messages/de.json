@@ -1483,14 +1483,18 @@
       "skipStep": "Diesen Schritt überspringen",
       "getSupport": "Support kontaktieren",
       "showMe": "Zeig es mir",
-      "done": "Alles bereit. Otto finden Sie jederzeit in der Seitenleiste.",
+      "done": "Fertig",
       "placeholder": "Fragen Sie Otto etwas…",
       "send": "Senden",
       "thinking": "Otto denkt nach…",
       "stop": "Stopp",
       "verifyFailed": "Ich konnte noch nicht bestätigen, dass dieser Schritt abgeschlossen ist. Nochmal versuchen, überspringen oder den Support hinzuziehen?",
       "reducedMotionNotice": "Hervorhebungen sind deaktiviert, weil Sie reduzierte Bewegung bevorzugen.",
-      "mobileNotice": "Auf kleinen Bildschirmen führe ich Sie im Chat statt mit Hervorhebungen."
+      "mobileNotice": "Auf kleinen Bildschirmen führe ich Sie im Chat statt mit Hervorhebungen.",
+      "dragHint": "Zum Verschieben ziehen",
+      "suggestions": "Vorschläge",
+      "next": "Weiter",
+      "back": "Zurück"
     },
     "profile": {
       "intro": "Zwei bis drei kurze Fragen, dann richte ich alles auf Sie aus.",
@@ -1557,11 +1561,22 @@
       "kanbanBoard": "Hier liegen Ihre gespeicherten Ausschreibungen; Sie können sie zwischen den Spalten ziehen.",
       "documentUpload": "Laden Sie hier ein Dokument hoch, um es mit Dora zu bearbeiten.",
       "chatSuggestions": "Probieren Sie eine davon aus, um zu sehen, was Clara kann.",
-      "reportFromBoard": "Öffnen Sie hier eine gespeicherte Ausschreibung, um den vollständigen Bericht zu erstellen."
+      "reportFromBoard": "Öffnen Sie hier eine gespeicherte Ausschreibung, um den vollständigen Bericht zu erstellen.",
+      "tenderModeTabs": "Wechseln Sie hier zwischen KI-Treffern und der vollständigen Liste.",
+      "tenderCard": "Jede Karte zeigt Frist, Auftraggeber und wie gut sie zu Ihnen passt. Klicken Sie eine an, um sie vollständig zu öffnen.",
+      "documentFillerTabs": "Ihre eigenen Dokumente auf der einen Seite, Ausschreibungsunterlagen auf der anderen."
     },
     "errors": {
       "failed": "Etwas ist schiefgelaufen. Bitte versuchen Sie es gleich noch einmal.",
       "rate_limited": "Das war viel auf einmal — warten Sie ein paar Sekunden und versuchen Sie es erneut."
+    },
+    "replies": {
+      "showMe": "Zeig es mir",
+      "imDone": "Das habe ich erledigt",
+      "skip": "Diesen Schritt überspringen",
+      "explain": "Wofür ist das?",
+      "whatElse": "Wobei können Sie sonst helfen?",
+      "startTour": "Tour starten"
     }
   }
 }

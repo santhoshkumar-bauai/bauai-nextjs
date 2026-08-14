@@ -1483,14 +1483,18 @@
       "skipStep": "Skip this step",
       "getSupport": "Contact support",
       "showMe": "Show me",
-      "done": "You're all set. Otto is here in the sidebar whenever you want it.",
+      "done": "Done",
       "placeholder": "Ask Otto anything…",
       "send": "Send",
       "thinking": "Otto is thinking…",
       "stop": "Stop",
       "verifyFailed": "I couldn't confirm that step is finished yet. Want to try again, skip it, or get a hand from support?",
       "reducedMotionNotice": "Highlighting is off because you prefer reduced motion.",
-      "mobileNotice": "On a small screen I'll guide you in chat instead of highlighting."
+      "mobileNotice": "On a small screen I'll guide you in chat instead of highlighting.",
+      "dragHint": "Drag to move",
+      "suggestions": "Suggestions",
+      "next": "Next",
+      "back": "Back"
     },
     "profile": {
       "intro": "Two or three quick questions and I'll tailor this to you.",
@@ -1557,11 +1561,22 @@
       "kanbanBoard": "Your saved tenders live here, and you can drag them between columns.",
       "documentUpload": "Upload a document here to edit it with Dora.",
       "chatSuggestions": "Try one of these to see what Clara can do.",
-      "reportFromBoard": "Open a saved tender from here to generate its full report."
+      "reportFromBoard": "Open a saved tender from here to generate its full report.",
+      "tenderModeTabs": "Switch between AI-matched tenders and the full list here.",
+      "tenderCard": "Each card shows the deadline, the buyer and how well it fits you. Click one to open it in full.",
+      "documentFillerTabs": "Your own documents on one side, tender paperwork on the other."
     },
     "errors": {
       "failed": "Something went wrong. Try again in a moment.",
       "rate_limited": "That was a lot at once — give it a few seconds and try again."
+    },
+    "replies": {
+      "showMe": "Show me",
+      "imDone": "I have done that",
+      "skip": "Skip this step",
+      "explain": "What is this for?",
+      "whatElse": "What else can you help with?",
+      "startTour": "Start the tour"
     }
   }
 }

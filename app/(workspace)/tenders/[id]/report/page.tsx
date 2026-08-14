@@ -3,7 +3,6 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { OttoMount } from "@/components/otto/otto-mount";
 import { TenderReportView } from "@/components/tenders/report/tender-report-view";
 import { buildDashboardCopy } from "@/lib/dashboard/shell-copy";
 import { auth } from "@/lib/auth";
@@ -42,8 +41,6 @@ export default async function TenderReportPage({
 
   return (
     <DashboardShell
-
-      onboardingAgent={<OttoMount userId={session.user.id} />}
       firstName={fullName.split(/\s+/)[0]}
       fullName={fullName}
       email={session.user.email}

@@ -4,7 +4,6 @@ import { Suspense } from "react";
 
 import { ClaraChatWorkspace } from "@/components/chat/clara-chat-workspace";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { OttoMount } from "@/components/otto/otto-mount";
 import { buildDashboardCopy } from "@/lib/dashboard/shell-copy";
 import { auth } from "@/lib/auth";
 import { connectMongoose } from "@/lib/db/mongoose";
@@ -35,8 +34,6 @@ export default async function ChatPage() {
 
   return (
     <DashboardShell
-
-      onboardingAgent={<OttoMount userId={session.user.id} />}
       firstName={fullName.split(/\s+/)[0]}
       fullName={fullName}
       email={session.user.email}

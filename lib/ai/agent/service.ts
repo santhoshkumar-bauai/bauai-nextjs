@@ -121,6 +121,11 @@ export async function runChatTurn(input: {
   });
   callbacks?.onReady?.(userMessage);
 
+  // Namespace this turn's UI call ids by the user message they belong to:
+  // stable if the turn replays, distinct from every other turn, so the
+  // client's de-duplication cannot swallow later turns' actions.
+  ctx.uiCalls.setTurnKey(String(userMessage._id));
+
   // Attachment content rides inside the checkpointed user turn — later turns
   // in this thread keep seeing the files without re-uploading. Document text
   // is inlined; images become checkpoint-light media_ref parts that the graph

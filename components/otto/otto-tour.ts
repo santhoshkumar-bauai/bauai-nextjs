@@ -28,6 +28,7 @@ export interface RunTourInput {
   stepCopy: string[];
   doneLabel: string;
   nextLabel: string;
+  backLabel: string;
   onMissingStep: (failure: TourStepFailure) => void;
 }
 
@@ -84,7 +85,14 @@ export async function runMilestoneTour(input: RunTourInput): Promise<number> {
   const { milestone } = input;
   if (!canSpotlight()) return 0;
 
-  const resolved: Array<{ element: string; popover: { description: string } }> = [];
+  const resolved: Array<{
+    element: Element;
+    advanceOn: "next" | "click";
+    config: {
+      element: string;
+      popover: { description: string; showButtons?: Array<"next" | "previous" | "close"> };
+    };
+  }> = [];
 
   for (const [index, step] of milestone.steps.entries()) {
     const element = await waitForElement(step.selector);
@@ -98,15 +106,34 @@ export async function runMilestoneTour(input: RunTourInput): Promise<number> {
       });
       continue;
     }
+    const advanceOn = step.advanceOn ?? "next";
     resolved.push({
-      element: step.selector,
-      popover: { description: input.stepCopy[index] ?? "" },
+      element,
+      advanceOn,
+      config: {
+        element: step.selector,
+        popover: {
+          description: input.stepCopy[index] ?? "",
+          // On a click step, hiding Next is the whole point: the way onward
+          // is to use the control, not to read past it.
+          ...(advanceOn === "click"
+            ? { showButtons: ["previous", "close"] as Array<"previous" | "close"> }
+            : {}),
+        },
+      },
     });
   }
 
   if (resolved.length === 0) return 0;
 
   const reduced = prefersReducedMotion();
+  // Listeners are tracked so a tour closed early cannot leave click handlers
+  // on live controls, silently advancing a tour that is no longer running.
+  const cleanups: Array<() => void> = [];
+  const releaseAll = () => {
+    while (cleanups.length) cleanups.pop()?.();
+  };
+
   const instance = driver({
     showProgress: resolved.length > 1,
     animate: !reduced,
@@ -114,9 +141,38 @@ export async function runMilestoneTour(input: RunTourInput): Promise<number> {
     overlayOpacity: 0.55,
     doneBtnText: input.doneLabel,
     nextBtnText: input.nextLabel,
-    prevBtnText: "",
-    showButtons: ["next", "close"],
-    steps: resolved,
+    prevBtnText: input.backLabel,
+    showButtons: ["next", "previous", "close"],
+    steps: resolved.map((step) => step.config),
+    onDestroyed: releaseAll,
+    onHighlighted: (element) => {
+      const step = resolved.find((candidate) => candidate.element === element);
+      if (!step || step.advanceOn !== "click" || !element) return;
+
+      // Wait for the user to actually use the control. Because the overlay
+      // leaves the highlighted element interactive, this is a real click on
+      // the real button — the tour follows the user, not the other way round.
+      const onUse = () => {
+        release();
+        // Let the app's own handler run first; advancing mid-click makes the
+        // next popover measure an element that is still moving.
+        window.setTimeout(() => {
+          if (instance.isActive()) instance.moveNext();
+        }, 350);
+      };
+      const release = () => {
+        element.removeEventListener("click", onUse);
+        element.removeEventListener("keydown", onKey);
+      };
+      const onKey = (event: Event) => {
+        const key = (event as KeyboardEvent).key;
+        if (key === "Enter" || key === " ") onUse();
+      };
+
+      element.addEventListener("click", onUse, { once: true });
+      element.addEventListener("keydown", onKey);
+      cleanups.push(release);
+    },
   });
 
   instance.drive();

@@ -225,6 +225,7 @@ export function TenderCard({
     <article
       role="button"
       tabIndex={0}
+      data-tour="tender-card"
       onClick={() => onOpen(tender.id)}
       onKeyDown={handleKeyDown}
       className={cn(

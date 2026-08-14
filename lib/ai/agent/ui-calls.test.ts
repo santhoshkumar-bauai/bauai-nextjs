@@ -3,19 +3,35 @@ import { describe, expect, it } from "vitest";
 import { MAX_UI_CALLS, UiCallCollector } from "./ui-calls.ts";
 
 describe("UiCallCollector", () => {
-  it("assigns sequence-based ids so a replayed turn reuses them", () => {
+  it("reuses ids when the SAME turn replays, so nothing runs twice", () => {
     const first = new UiCallCollector();
+    first.setTurnKey("msg-1");
     first.add({ action: "navigateTo", args: { milestoneId: "ask_clara" } });
     first.add({ action: "highlightElement", args: { milestoneId: "ask_clara" } });
 
     // A checkpoint replay builds a fresh collector and re-runs the same tools;
     // identical ids are what lets the client skip work it already did.
     const replay = new UiCallCollector();
+    replay.setTurnKey("msg-1");
     replay.add({ action: "navigateTo", args: { milestoneId: "ask_clara" } });
     replay.add({ action: "highlightElement", args: { milestoneId: "ask_clara" } });
 
-    expect(first.list().map((call) => call.id)).toEqual(["ui-1", "ui-2"]);
-    expect(replay.list().map((call) => call.id)).toEqual(["ui-1", "ui-2"]);
+    expect(first.list().map((call) => call.id)).toEqual(["msg-1-1", "msg-1-2"]);
+    expect(replay.list().map((call) => call.id)).toEqual(["msg-1-1", "msg-1-2"]);
+  });
+
+  it("gives DIFFERENT turns different ids", () => {
+    // Regression: both turns used to emit "ui-1", and the client de-duplicates
+    // for the whole session — so only the first tour of a session ever ran.
+    const turnOne = new UiCallCollector();
+    turnOne.setTurnKey("msg-1");
+    turnOne.add({ action: "startMilestoneTour", args: {} });
+
+    const turnTwo = new UiCallCollector();
+    turnTwo.setTurnKey("msg-2");
+    turnTwo.add({ action: "startMilestoneTour", args: {} });
+
+    expect(turnOne.list()[0].id).not.toBe(turnTwo.list()[0].id);
   });
 
   it("drains only what is new, then empties", () => {

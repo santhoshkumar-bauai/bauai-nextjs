@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -14,6 +15,7 @@ import { trackOnboardingEvent } from "@/lib/onboarding/telemetry";
 import { OttoActions } from "./otto-actions";
 import { OttoPanel } from "./otto-panel";
 import { OttoSelectorCheck } from "./otto-selector-check";
+import { useMediaQuery } from "./use-media-query";
 import { useOttoChat } from "./use-otto-chat";
 
 /**
@@ -22,6 +24,12 @@ import { useOttoChat } from "./use-otto-chat";
  * marketing and auth pages, and from the full-bleed document editor, without
  * needing a route allowlist.
  */
+
+/**
+ * The ONLYOFFICE editor is full-bleed with Dora already docked beside it;
+ * a second floating agent there is clutter, not help.
+ */
+const HIDDEN_ROUTES = [/^\/document-filler\/[^/]+$/];
 
 export interface OttoProps {
   /** Server-rendered from AccountProfile.onboardingAgent. */
@@ -53,9 +61,13 @@ function OttoRuntime({ initialStatus, initialPlanned, initialCompleted }: OttoPr
   const t = useTranslations("Otto");
   const { dispatch, snapshotReadables } = useAgentDispatch();
 
+  const pathname = usePathname();
   const [status, setStatus] = useState<OnboardingAgentStatus>(initialStatus);
   // Auto-opens for someone who has never seen it; everyone else opts in.
   const [open, setOpen] = useState(initialStatus === "not_started");
+  // Matches the spotlight threshold: below it the panel is near full-width,
+  // so there is nowhere to drag it to.
+  const wide = useMediaQuery("(min-width: 768px)");
   const [seedRequest, setSeedRequest] = useState<MilestoneId | null>(null);
   const [guidanceOnly, setGuidanceOnly] = useState(false);
 
@@ -151,6 +163,8 @@ function OttoRuntime({ initialStatus, initialPlanned, initialCompleted }: OttoPr
     return null;
   }
 
+  if (HIDDEN_ROUTES.some((pattern) => pattern.test(pathname))) return null;
+
   const doneCount = completed.filter((id) => planned.includes(id)).length;
 
   return (
@@ -173,6 +187,7 @@ function OttoRuntime({ initialStatus, initialPlanned, initialCompleted }: OttoPr
             error={chat.error}
             seedRequest={seedRequest}
             guidanceOnly={guidanceOnly}
+            draggable={wide}
             onSend={chat.send}
             onConfirmSeed={confirmSeed}
             onDismissSeed={() => setSeedRequest(null)}

@@ -99,8 +99,9 @@ export function OttoActions({
       const shown = await runMilestoneTour({
         milestone,
         stepCopy: milestone.steps.map((step) => t(`steps.${step.copyKey}`)),
-        doneLabel: t("panel.showMe"),
-        nextLabel: t("panel.showMe"),
+        doneLabel: t("panel.done"),
+        nextLabel: t("panel.next"),
+        backLabel: t("panel.back"),
         onMissingStep: (failure) => {
           trackOnboardingEvent({
             name: "tool_call_failed",
@@ -155,8 +156,9 @@ export function OttoActions({
       await runMilestoneTour({
         milestone: { ...milestone, steps: [step] },
         stepCopy: [t(`steps.${step.copyKey}`)],
-        doneLabel: t("panel.showMe"),
-        nextLabel: t("panel.showMe"),
+        doneLabel: t("panel.done"),
+        nextLabel: t("panel.next"),
+        backLabel: t("panel.back"),
         onMissingStep: () => {},
       });
     },

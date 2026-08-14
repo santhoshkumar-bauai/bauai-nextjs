@@ -78,12 +78,6 @@ type DashboardShellProps = {
   email: string;
   adminPanel?: ReactNode;
   workspaceContent?: ReactNode;
-  /**
-   * Otto, the onboarding guide. Passed in as a node so the server page owns
-   * the profile read; mounting it here means every authenticated page gets it
-   * and the marketing, auth and full-bleed editor routes do not.
-   */
-  onboardingAgent?: ReactNode;
 };
 
 const mainNavigation = [
@@ -130,7 +124,6 @@ export function DashboardShell({
   email,
   adminPanel,
   workspaceContent,
-  onboardingAgent,
 }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState("Clara");
@@ -550,7 +543,6 @@ export function DashboardShell({
           </div>
         )}
       </section>
-      {onboardingAgent}
     </main>
   );
 }

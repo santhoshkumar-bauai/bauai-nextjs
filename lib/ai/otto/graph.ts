@@ -220,7 +220,12 @@ export async function buildOttoGraph(ctx: OttoRunContext) {
    */
   const verifyNode = async (state: OttoStateType) => {
     const current = state.currentMilestoneId;
-    if (!current) return { status: "completed" as const };
+    if (!current) return { status: "completed" as const, justAdvanced: false };
+
+    // Second pass this turn, straight after auto-advancing into this
+    // milestone. The user has not had a chance to do it yet, so checking now
+    // would only manufacture a failed attempt.
+    if (state.justAdvanced) return { justAdvanced: false };
 
     const done = await isMilestoneComplete(current, ctx.milestoneContext);
     if (!done) {
@@ -242,11 +247,15 @@ export async function buildOttoGraph(ctx: OttoRunContext) {
 
     log.info("milestone completed", { milestoneId: current, userId: ctx.userId });
 
+    const hasNext = remaining.length > 0;
     return {
       completedMilestoneIds: completed,
       currentMilestoneId: remaining[0] ?? null,
       attemptCount: 0,
-      status: remaining.length > 0 ? ("guiding" as const) : ("completed" as const),
+      status: hasNext ? ("guiding" as const) : ("completed" as const),
+      // Roll straight on to the next step in this same turn.
+      justAdvanced: hasNext,
+      autoAdvances: state.autoAdvances + (hasNext ? 1 : 0),
     };
   };
 
@@ -255,7 +264,9 @@ export async function buildOttoGraph(ctx: OttoRunContext) {
     // accumulate across turns until it passed the cap for good, after which
     // every turn short-circuited to finalize and Otto could never call a tool
     // — so it could never navigate or spotlight anything again.
-    .addNode("beginTurn", loop.beginTurn)
+    // Wraps the shared beginTurn so the per-turn auto-advance budget resets
+    // alongside the iteration cap.
+    .addNode("beginTurn", () => ({ iterations: 0, autoAdvances: 0, justAdvanced: false }))
     .addNode("profile", profileNode)
     .addNode("plan", planNode)
     .addNode("guide", loop.model)
@@ -290,7 +301,16 @@ export async function buildOttoGraph(ctx: OttoRunContext) {
     // Finalize re-asks with no tools bound, so the cap can never end a turn
     // in silence; verification then runs on whatever it said.
     .addEdge("finalize", "verify")
-    .addEdge("verify", END);
+    // Completing a step rolls straight into introducing the next one, so the
+    // user never has to type "next" to keep the tour moving. Capped at one
+    // hop per turn: two milestones' worth of instructions at once is a wall
+    // of text, not momentum.
+    .addConditionalEdges(
+      "verify",
+      (state: OttoStateType) =>
+        state.justAdvanced && state.autoAdvances <= 1 ? "guide" : "end",
+      { guide: "guide", end: END },
+    );
 
   return graph.compile({ checkpointer: await getClaraCheckpointer() });
 }

@@ -53,6 +53,18 @@ export const OttoState = Annotation.Root({
   attemptCount: replace<number>(() => 0),
 
   status: replace<OttoStatus>(() => "profiling"),
+
+  /**
+   * Set by `verify` when it has just ticked a milestone off and another one
+   * remains. It routes the turn straight back into `guide` so Otto introduces
+   * the next step immediately, instead of going quiet and waiting to be
+   * prodded with "next". Cleared on the second pass so the freshly-introduced
+   * milestone is not instantly counted as a failed attempt.
+   */
+  justAdvanced: replace<boolean>(() => false),
+
+  /** Auto-advances used this turn. Reset per turn; caps the verify↔guide hop. */
+  autoAdvances: replace<number>(() => 0),
 });
 
 export type OttoStateType = typeof OttoState.State;

@@ -11,6 +11,7 @@ import {
   type ProfileQuestionId,
 } from "@/lib/ai/otto/wire";
 import { MILESTONES, type MilestoneId } from "@/lib/onboarding/milestones";
+import { useDraggable } from "./use-draggable";
 
 /**
  * Otto's panel: a conversation, a live checklist driven by graph state, and
@@ -31,6 +32,8 @@ export interface OttoPanelProps {
   error: string | null;
   seedRequest: MilestoneId | null;
   guidanceOnly: boolean;
+  /** False on narrow screens, where the panel is effectively full-width. */
+  draggable: boolean;
   onSend: (message: string) => void;
   onConfirmSeed: (milestoneId: MilestoneId) => void;
   onDismissSeed: () => void;
@@ -42,6 +45,13 @@ export function OttoPanel(props: OttoPanelProps) {
   const t = useTranslations("Otto");
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Dragging is pointless where the panel already fills the screen.
+  const {
+    nodeRef: dragRef,
+    dragging,
+    reset: resetPosition,
+    handleProps: dragHandleProps,
+  } = useDraggable(props.draggable);
 
   const planned = props.agentState?.plannedMilestones.length
     ? props.agentState.plannedMilestones
@@ -51,10 +61,44 @@ export function OttoPanel(props: OttoPanelProps) {
     : props.completedFallback;
   const current = props.agentState?.currentMilestoneId ?? null;
   const pending = props.agentState?.pendingQuestion ?? null;
+  const status = props.agentState?.status ?? null;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [props.messages.length, props.streamingText]);
+
+  /**
+   * What the user can say next, decided from graph state rather than asked of
+   * the model — so a chip can never offer something the current step does not
+   * support. The chips send their own localised label, which keeps the
+   * transcript readable instead of littering it with internal ids.
+   */
+  const quickReplies = (() => {
+    if (pending) {
+      return PROFILE_CHOICES[pending as ProfileQuestionId].map((choice) => ({
+        key: choice,
+        // Send the label, not the id. The graph stores the answer as free
+        // text and the planner reads it as prose, so an id buys nothing and
+        // leaves "owner" sitting in the transcript where the user said
+        // "Owner or director".
+        send: t(`profile.${pending}.choices.${choice}`),
+        label: t(`profile.${pending}.choices.${choice}`),
+      }));
+    }
+    if (status === "guiding" && current) {
+      return (["showMe", "imDone", "explain", "skip"] as const).map((key) => ({
+        key,
+        send: t(`replies.${key}`),
+        label: t(`replies.${key}`),
+      }));
+    }
+    if (status === "completed") {
+      return [
+        { key: "whatElse", send: t("replies.whatElse"), label: t("replies.whatElse") },
+      ];
+    }
+    return [];
+  })();
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -64,8 +108,20 @@ export function OttoPanel(props: OttoPanelProps) {
   };
 
   return (
-    <div className="flex h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-xl">
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
+    <div
+      ref={dragRef}
+      className={`flex h-[min(34rem,calc(100vh-8rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-xl ${
+        dragging ? "select-none shadow-2xl" : ""
+      }`}
+    >
+      <header
+        {...dragHandleProps}
+        onDoubleClick={resetPosition}
+        title={props.draggable ? t("panel.dragHint") : undefined}
+        className={`flex items-center justify-between border-b border-border px-4 py-3 ${
+          props.draggable ? (dragging ? "cursor-grabbing" : "cursor-grab") : ""
+        } touch-none`}
+      >
         <div>
           <p className="text-sm font-semibold text-foreground">{t("panel.title")}</p>
           {planned.length > 0 && (
@@ -119,7 +175,10 @@ export function OttoPanel(props: OttoPanelProps) {
         </ol>
       )}
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3"
+      >
         {props.messages.length === 0 && !props.sending && (
           <p className="text-xs text-muted-foreground">{t("panel.intro")}</p>
         )}
@@ -192,21 +251,26 @@ export function OttoPanel(props: OttoPanelProps) {
         The chosen id is sent as an ordinary message, which is how the graph
         resumes without a separate resume transport.
       */}
-      {pending && !props.sending && (
+      {/*
+        Quick replies. Everything the tour needs answered is one tap — typing
+        "ok" or "next" to keep an agent moving is work the interface should be
+        doing. The options are derived from graph state in code, never asked
+        of the model, so they are always valid for where the user actually is.
+
+        No question label here either: Otto asks it in the message above, and
+        printing it again just renders the same sentence twice.
+      */}
+      {quickReplies.length > 0 && !props.sending && (
         <div className="shrink-0 border-t border-border px-4 py-3">
-          {/*
-            No question label here: Otto asks it in the message above, and
-            printing it again just renders the same sentence twice.
-          */}
           <div className="flex flex-wrap gap-1.5">
-            {PROFILE_CHOICES[pending as ProfileQuestionId].map((choice) => (
+            {quickReplies.map((reply) => (
               <button
-                key={choice}
+                key={reply.key}
                 type="button"
-                onClick={() => props.onSend(choice)}
-                className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                onClick={() => props.onSend(reply.send)}
+                className="rounded-full border border-border px-2.5 py-1 text-xs text-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
               >
-                {t(`profile.${pending}.choices.${choice}`)}
+                {reply.label}
               </button>
             ))}
           </div>

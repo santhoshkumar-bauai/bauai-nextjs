@@ -30,6 +30,16 @@ export interface MilestoneStep {
   selector: string;
   /** i18n key under `Otto.steps` for the spotlight caption. */
   copyKey: string;
+  /**
+   * How the step is finished.
+   *
+   * `"next"` — the user reads it and presses Next.
+   * `"click"` — the step waits for the user to actually USE the highlighted
+   *   control, and advances when they do. The Next button is hidden, so the
+   *   only way forward is to do the thing. That is the difference between a
+   *   slideshow about the product and being walked through it.
+   */
+  advanceOn?: "next" | "click";
 }
 
 export interface Milestone {
@@ -115,7 +125,14 @@ export const MILESTONES: Readonly<Record<MilestoneId, Milestone>> = {
     // "Build my AI matches" is the empty-state CTA on the tender feed: once a
     // run has completed the feed shows tenders instead and the button is gone.
     targetVanishesWhenComplete: true,
-    steps: [{ selector: '[data-tour="build-ai-matches"]', copyKey: "buildAiMatches" }],
+    steps: [
+      { selector: '[data-tour="tender-mode-tabs"]', copyKey: "tenderModeTabs" },
+      {
+        selector: '[data-tour="build-ai-matches"]',
+        copyKey: "buildAiMatches",
+        advanceOn: "click",
+      },
+    ],
   },
 
   save_first_tender: {
@@ -128,7 +145,17 @@ export const MILESTONES: Readonly<Record<MilestoneId, Milestone>> = {
       "tender enters the pipeline and becomes something the team works on.",
     relevantFor: ["admin", "member"],
     route: "/tenders",
-    steps: [{ selector: '[data-tour="tender-card-save"]', copyKey: "tenderCardSave" }],
+    steps: [
+      { selector: '[data-tour="tender-mode-tabs"]', copyKey: "tenderModeTabs" },
+      { selector: '[data-tour="tender-card"]', copyKey: "tenderCard" },
+      {
+        selector: '[data-tour="tender-card-save"]',
+        copyKey: "tenderCardSave",
+        // The milestone IS this click, so the tour waits for it rather than
+        // letting someone Next past the only step that matters.
+        advanceOn: "click",
+      },
+    ],
   },
 
   review_pipeline: {
@@ -155,7 +182,14 @@ export const MILESTONES: Readonly<Record<MilestoneId, Milestone>> = {
       "actually prepare bid paperwork.",
     relevantFor: ["admin", "member"],
     route: "/document-filler",
-    steps: [{ selector: '[data-tour="document-upload"]', copyKey: "documentUpload" }],
+    steps: [
+      { selector: '[data-tour="document-filler-tabs"]', copyKey: "documentFillerTabs" },
+      {
+        selector: '[data-tour="document-upload"]',
+        copyKey: "documentUpload",
+        advanceOn: "click",
+      },
+    ],
   },
 
   ask_clara: {
@@ -168,7 +202,13 @@ export const MILESTONES: Readonly<Record<MilestoneId, Milestone>> = {
       "needs no setup and returns something useful immediately.",
     relevantFor: ["admin", "member"],
     route: "/chat",
-    steps: [{ selector: '[data-tour="chat-suggestions"]', copyKey: "chatSuggestions" }],
+    steps: [
+      {
+        selector: '[data-tour="chat-suggestions"]',
+        copyKey: "chatSuggestions",
+        advanceOn: "click",
+      },
+    ],
   },
 
   generate_first_report: {

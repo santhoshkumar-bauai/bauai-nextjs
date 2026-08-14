@@ -30,15 +30,29 @@ export class UiCallCollector {
   /** Calls added since the last drain(); powers the live stream. */
   private pending: WireUiCall[] = [];
   private sequence = 0;
+  private turnKey = "ui";
+
+  /**
+   * Namespace this turn's call ids, using something stable for the turn and
+   * unique across turns — the persisted user message id.
+   *
+   * Without it every turn numbers from 1 and emits `ui-1`, while the client
+   * de-duplicates against a set that lives for the whole session. The result
+   * is that only the FIRST ui call of a session ever executes and every tour
+   * afterwards is silently dropped.
+   */
+  setTurnKey(key: string): void {
+    this.turnKey = key;
+  }
 
   /** Returns the call id, so a tool can name it in its ack to the model. */
   add(input: UiCallInput): string | null {
     if (this.calls.length >= MAX_UI_CALLS) return null;
 
     this.sequence += 1;
-    // Sequence-based, not random: ids must be stable across a checkpoint
-    // replay so a resumed turn cannot re-execute the same navigation twice.
-    const call: WireUiCall = { id: `ui-${this.sequence}`, ...input };
+    // Sequence-based within the turn, not random: ids must be stable across a
+    // checkpoint replay so a resumed turn cannot re-run the same navigation.
+    const call: WireUiCall = { id: `${this.turnKey}-${this.sequence}`, ...input };
     this.calls.push(call);
     this.pending.push(call);
     return call.id;
