@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext } from "./context.ts";
 import { TenderRefCollector } from "./tender-refs.ts";
+import { UiCallCollector } from "./ui-calls.ts";
 
 vi.mock("../../ingestion/db/client.ts", () => ({ getIngestionDb: vi.fn() }));
 vi.mock("../../tenders/document-files.ts", () => ({
@@ -45,6 +46,8 @@ function ctxOf(company: Record<string, unknown> = {}): AgentRunContext {
     companyContext: { company } as never,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+
+    uiCalls: new UiCallCollector(),
     tender: null,
     tenderCache: new Map(),
   };

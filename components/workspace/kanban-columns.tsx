@@ -243,7 +243,7 @@ export function KanbanBoardClient({
           cta={t("exploreTenders")}
         />
       ) : (
-        <div className={styles.boardScroller}>
+        <div data-tour="kanban-board" className={styles.boardScroller}>
           <div className={styles.board}>
             {columns.map((column) => {
               const columnItems = items.filter(

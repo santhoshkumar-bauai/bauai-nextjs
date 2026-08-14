@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { OttoMount } from "@/components/otto/otto-mount";
 import { DocumentFillerWorkspace } from "@/components/onlyoffice/document-filler-workspace";
 import { buildDashboardCopy } from "@/lib/dashboard/shell-copy";
 import { getCompanyContext } from "@/lib/company/context";
@@ -19,6 +20,8 @@ export default async function DocumentFillerPage() {
   ]);
   return (
     <DashboardShell
+
+      onboardingAgent={<OttoMount userId={context.userId} />}
       firstName={context.name.split(/\s+/)[0]}
       fullName={context.name}
       email={context.email}

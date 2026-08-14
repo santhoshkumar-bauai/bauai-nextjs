@@ -269,7 +269,11 @@ export function DocumentLibrary({
               if (file) void upload(file);
             }}
           />
-          <Button disabled={busy === "upload"} onClick={() => input.current?.click()}>
+          <Button
+            data-tour="document-upload"
+            disabled={busy === "upload"}
+            onClick={() => input.current?.click()}
+          >
             {busy === "upload" ? <Loader2 className="animate-spin" /> : <Upload />}
             {busy === "upload" ? t("uploading") : t("upload")}
           </Button>

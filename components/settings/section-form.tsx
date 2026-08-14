@@ -132,7 +132,7 @@ export function SectionForm({
   };
 
   return (
-    <section className={`${card} p-5 sm:p-[26px]`}>
+    <section data-tour="company-profile-form" className={`${card} p-5 sm:p-[26px]`}>
       <h2 className="m-0 text-base font-bold tracking-[-.02em]">
         {t(`sections.${config.id}.title`)}
       </h2>

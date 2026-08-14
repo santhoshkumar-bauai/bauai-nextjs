@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext, AgentTenderScope } from "./context.ts";
 import { TenderRefCollector } from "./tender-refs.ts";
+import { UiCallCollector } from "./ui-calls.ts";
 
 vi.mock("../retrieval/hybrid.ts", () => ({
   hybridRetrieveChunks: vi.fn(),
@@ -87,6 +88,8 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): AgentRunConte
     companyContext: { company: {} } as never,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+
+    uiCalls: new UiCallCollector(),
     tender,
     tenderCache: new Map(),
   };

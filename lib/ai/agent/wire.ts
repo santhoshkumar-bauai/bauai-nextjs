@@ -108,8 +108,34 @@ export interface WireVerdict {
   generatedAt: string;
 }
 
-/** SSE events the chat route emits. Tool labels are i18n KEYS, not text. */
-export type ClaraSseEvent =
+/**
+ * One frontend-executed action the agent asked for.
+ *
+ * `args` is deliberately `unknown`: the client re-validates it against the
+ * action's own schema before dispatching, so a malformed or unexpected payload
+ * is a logged no-op rather than a runtime throw. The model never puts a
+ * selector or a URL in here — only identifiers the server already validated
+ * against a registry.
+ */
+export interface WireUiCall {
+  /** Stable per-call id, so the client can de-duplicate on reconnect. */
+  id: string;
+  action: string;
+  args: unknown;
+}
+
+/** A question the graph paused on, rendered as buttons instead of free text. */
+export interface WireInterrupt {
+  interruptId: string;
+  /** i18n key for the question — never user-visible text. */
+  promptKey: string;
+  choices: Array<{ id: string; labelKey: string }>;
+  /** When true the user may also answer in prose instead of picking. */
+  allowFreeText?: boolean;
+}
+
+/** SSE events the chat routes emit. Tool labels are i18n KEYS, not text. */
+export type AgentSseEvent =
   | { type: "ready"; threadId: string; messageId: string }
   | { type: "token"; delta: string }
   | {
@@ -123,5 +149,21 @@ export type ClaraSseEvent =
   /** Tenders surfaced so far — sent as they are found, before the answer. */
   | { type: "tenders"; tenders: WireTenderRef[] }
   | { type: "artifact"; artifact: "verdict"; verdict: WireVerdict }
+  /**
+   * A shallow patch of the agent's own graph state, pushed as it changes, so
+   * the UI can render live progress instead of polling. Shape is per-agent;
+   * consumers narrow it themselves.
+   */
+  | { type: "state"; patch: Record<string, unknown> }
+  /** Actions for the client to execute — navigation, spotlighting, seeding. */
+  | { type: "ui"; calls: WireUiCall[] }
+  /** The graph paused for a human answer; resume via the agent's resume route. */
+  | { type: "interrupt"; interrupt: WireInterrupt }
   | { type: "message"; message: WireChatMessage }
   | { type: "error"; message: string };
+
+/**
+ * @deprecated Named for Clara before Dora and Otto shared the protocol. Kept
+ * so existing imports keep resolving; prefer `AgentSseEvent`.
+ */
+export type ClaraSseEvent = AgentSseEvent;

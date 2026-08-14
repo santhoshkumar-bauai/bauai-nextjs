@@ -6,6 +6,7 @@ import { resetAiEnvCache } from "../config/env.ts";
 import { CitationCollector } from "./citations.ts";
 import type { AgentRunContext } from "./context.ts";
 import { TenderRefCollector } from "./tender-refs.ts";
+import { UiCallCollector } from "./ui-calls.ts";
 import { FakeToolCallingChatModel } from "./testing.ts";
 import { setAgentModelForTests } from "./model.ts";
 
@@ -60,6 +61,8 @@ function fakeCtx(): AgentRunContext {
     companyContext: {} as never,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+
+    uiCalls: new UiCallCollector(),
     tender: {
       tenderId: new ObjectId(),
       tenderDetail: {

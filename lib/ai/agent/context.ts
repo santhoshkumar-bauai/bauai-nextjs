@@ -10,6 +10,7 @@ import {
 import { forCompanyContext } from "../tenant/repository.ts";
 import { CitationCollector } from "./citations.ts";
 import { TenderRefCollector } from "./tender-refs.ts";
+import { UiCallCollector } from "./ui-calls.ts";
 
 /**
  * Everything a Clara run needs, derived SERVER-SIDE from the authenticated
@@ -35,6 +36,8 @@ export interface AgentRunContext {
   citations: CitationCollector;
   /** Tenders the turn's tools touched, rendered as cards under the answer. */
   tenderRefs: TenderRefCollector;
+  /** Frontend actions the turn's tools requested; empty for Clara and Dora. */
+  uiCalls: UiCallCollector;
   tender: AgentTenderScope | null;
   /** Per-run memo so an 8-iteration global run doesn't refetch one tender. */
   tenderCache: Map<string, AgentTenderScope | null>;
@@ -86,6 +89,7 @@ export async function buildAgentRunContext(input: {
     companyContext: input.companyContext,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+    uiCalls: new UiCallCollector(),
     tender,
     tenderCache: new Map([[input.tenderIdHex, tender]]),
   };
@@ -103,6 +107,7 @@ export function buildGlobalAgentRunContext(input: {
     companyContext: input.companyContext,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+    uiCalls: new UiCallCollector(),
     tender: null,
     tenderCache: new Map(),
   };

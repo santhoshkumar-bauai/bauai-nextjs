@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { MembershipRequests } from "@/components/company/membership-requests";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { OttoMount } from "@/components/otto/otto-mount";
 import { auth } from "@/lib/auth";
 import { connectMongoose } from "@/lib/db/mongoose";
 import { AccountProfile } from "@/models/account-profile";
@@ -112,6 +113,8 @@ export default async function DashboardPage() {
 
   return (
     <DashboardShell
+
+      onboardingAgent={<OttoMount userId={session.user.id} />}
       firstName={firstName}
       fullName={fullName}
       email={session.user.email}

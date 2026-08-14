@@ -13,6 +13,7 @@ import {
   type AgentRunContext,
 } from "../agent/context.ts";
 import { TenderRefCollector } from "../agent/tender-refs.ts";
+import { UiCallCollector } from "../agent/ui-calls.ts";
 import { forCompanyContext } from "../tenant/repository.ts";
 
 /**
@@ -86,6 +87,7 @@ export async function buildDoraRunContext(input: {
     companyContext: input.companyContext,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+    uiCalls: new UiCallCollector(),
     tender,
     tenderCache: new Map(tenderIdHex ? [[tenderIdHex, tender]] : []),
     document: {

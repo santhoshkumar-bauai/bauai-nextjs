@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { OttoMount } from "@/components/otto/otto-mount";
 import {
   ComingSoonPage,
   KanbanBoard,
@@ -110,6 +111,8 @@ export default async function WorkspaceSectionPage({
 
   return (
     <DashboardShell
+
+      onboardingAgent={<OttoMount userId={session.user.id} />}
       firstName={fullName.split(/\s+/)[0]}
       fullName={fullName}
       email={session.user.email}

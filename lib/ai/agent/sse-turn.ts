@@ -33,6 +33,12 @@ export function streamChatTurnResponse(input: {
   request: Request;
   /** Graph override for non-Clara agents; see runChatTurn. */
   buildGraph?: () => Promise<CompiledAgentGraph>;
+  /**
+   * Stream graph state patches as `state` events. Off by default — only
+   * agents whose UI renders live state (Otto) need it, and Clara's and Dora's
+   * node outputs are nothing the client should see.
+   */
+  streamState?: boolean;
 }): Response {
   const { ctx, thread, body, request } = input;
   const encoder = new TextEncoder();
@@ -134,6 +140,10 @@ export function streamChatTurnResponse(input: {
                   resultCount: resultCount ?? undefined,
                 }),
               onTenderRefs: (tenders) => send({ type: "tenders", tenders }),
+              onUiCalls: (calls) => send({ type: "ui", calls }),
+              onState: input.streamState
+                ? (patch) => send({ type: "state", patch })
+                : undefined,
             },
           });
           send({

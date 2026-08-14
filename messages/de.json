@@ -1464,5 +1464,104 @@
       "tooLarge": "Datei zu groß (max. 25 MB)",
       "failed": "Upload fehlgeschlagen"
     }
+  },
+  "Otto": {
+    "name": "Otto",
+    "role": "Onboarding-Assistent",
+    "description": "Lernt, womit Sie arbeiten, und führt Sie dann durch die Bereiche von BAU AI, die dafür wichtig sind.",
+    "launcher": {
+      "open": "Mit Otto starten",
+      "resume": "Einrichtung fortsetzen — {done} von {total}",
+      "close": "Otto schließen"
+    },
+    "panel": {
+      "title": "Erste Schritte",
+      "intro": "Ich stelle Ihnen ein paar kurze Fragen und zeige Ihnen dann die Bereiche, die für Ihre Arbeit wichtig sind.",
+      "progress": "{done} von {total} erledigt",
+      "planTitle": "Ihr Einrichtungsplan",
+      "skip": "Tour überspringen",
+      "skipStep": "Diesen Schritt überspringen",
+      "getSupport": "Support kontaktieren",
+      "showMe": "Zeig es mir",
+      "done": "Alles bereit. Otto finden Sie jederzeit in der Seitenleiste.",
+      "placeholder": "Fragen Sie Otto etwas…",
+      "send": "Senden",
+      "thinking": "Otto denkt nach…",
+      "stop": "Stopp",
+      "verifyFailed": "Ich konnte noch nicht bestätigen, dass dieser Schritt abgeschlossen ist. Nochmal versuchen, überspringen oder den Support hinzuziehen?",
+      "reducedMotionNotice": "Hervorhebungen sind deaktiviert, weil Sie reduzierte Bewegung bevorzugen.",
+      "mobileNotice": "Auf kleinen Bildschirmen führe ich Sie im Chat statt mit Hervorhebungen."
+    },
+    "profile": {
+      "intro": "Zwei bis drei kurze Fragen, dann richte ich alles auf Sie aus.",
+      "role": {
+        "question": "Was ist Ihre Rolle?",
+        "choices": {
+          "owner": "Inhaber oder Geschäftsführung",
+          "bidManager": "Angebots- oder Ausschreibungsmanagement",
+          "estimator": "Kalkulation oder technische Leitung",
+          "other": "Etwas anderes"
+        }
+      },
+      "goal": {
+        "question": "Was möchten Sie zuerst erledigen?",
+        "choices": {
+          "findTenders": "Ausschreibungen finden, die sich lohnen",
+          "prepareBids": "Angebotsunterlagen vorbereiten und ausfüllen",
+          "organiseTeam": "Mein Team entlang einer Pipeline organisieren"
+        }
+      },
+      "teamSize": {
+        "question": "Wie viele Personen nutzen BAU AI mit Ihnen?",
+        "choices": {
+          "solo": "Nur ich",
+          "small": "2–10",
+          "large": "Mehr als 10"
+        }
+      }
+    },
+    "milestones": {
+      "completeCompanyProfile": {
+        "label": "Firmenprofil vervollständigen",
+        "body": "Leistungen, CPV-Codes und Region. Alles andere wird besser, sobald das ausgefüllt ist."
+      },
+      "buildAiMatches": {
+        "label": "KI-Treffer erstellen",
+        "body": "Offene Ausschreibungen anhand Ihres Profils bewerten, damit der Feed zu Ihnen passt."
+      },
+      "saveFirstTender": {
+        "label": "Erste Ausschreibung speichern",
+        "body": "Verschieben Sie eine Ausschreibung in Ihren Workspace, um daran zu arbeiten."
+      },
+      "reviewPipeline": {
+        "label": "Ihre Pipeline ansehen",
+        "body": "Verfolgen Sie gespeicherte Ausschreibungen von „Interessiert“ bis „Gewonnen“."
+      },
+      "uploadFirstDocument": {
+        "label": "Dokument hochladen",
+        "body": "Bearbeiten Sie es im Browser, mit Dora an Ihrer Seite."
+      },
+      "askClara": {
+        "label": "Clara eine Frage stellen",
+        "body": "Clara durchsucht Ihre Dokumente und den Ausschreibungsbestand für Sie."
+      },
+      "generateFirstReport": {
+        "label": "Entscheidungsbericht erstellen",
+        "body": "Die tiefgehendste Analyse, die BAU AI für eine Ausschreibung erstellt."
+      }
+    },
+    "steps": {
+      "companyProfileForm": "Das ist Ihr Firmenprofil. Je vollständiger es ist, desto besser Ihre Treffer.",
+      "buildAiMatches": "Hier starten — damit werden offene Ausschreibungen anhand Ihres Profils bewertet.",
+      "tenderCardSave": "Mit dieser Schaltfläche schicken Sie eine Ausschreibung in Ihren Workspace.",
+      "kanbanBoard": "Hier liegen Ihre gespeicherten Ausschreibungen; Sie können sie zwischen den Spalten ziehen.",
+      "documentUpload": "Laden Sie hier ein Dokument hoch, um es mit Dora zu bearbeiten.",
+      "chatSuggestions": "Probieren Sie eine davon aus, um zu sehen, was Clara kann.",
+      "reportFromBoard": "Öffnen Sie hier eine gespeicherte Ausschreibung, um den vollständigen Bericht zu erstellen."
+    },
+    "errors": {
+      "failed": "Etwas ist schiefgelaufen. Bitte versuchen Sie es gleich noch einmal.",
+      "rate_limited": "Das war viel auf einmal — warten Sie ein paar Sekunden und versuchen Sie es erneut."
+    }
   }
 }

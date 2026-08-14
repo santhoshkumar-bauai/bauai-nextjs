@@ -36,7 +36,16 @@ import { textFromContent } from "./content.ts";
  * hard-rejects malformed function-call turn pairings.
  */
 
-const ToolLoopState = Annotation.Root({
+/**
+ * The loop's own state channels, exported as a raw spec so richer agents can
+ * spread them into a wider `Annotation.Root` and still reuse the nodes below:
+ *
+ *   Annotation.Root({ ...toolLoopStateSpec, currentMilestoneId: ... })
+ *
+ * Every node here is typed against the NARROW state, so it accepts any state
+ * that structurally extends it.
+ */
+export const toolLoopStateSpec = {
   messages: Annotation<BaseMessage[]>({
     reducer: (left, right) => left.concat(right),
     default: () => [],
@@ -45,7 +54,9 @@ const ToolLoopState = Annotation.Root({
     reducer: (_left, right) => right,
     default: () => 0,
   }),
-});
+};
+
+const ToolLoopState = Annotation.Root(toolLoopStateSpec);
 
 export type ToolLoopStateType = typeof ToolLoopState.State;
 
@@ -131,18 +142,45 @@ export function windowFromUserTurn(
   return sanitizeToolPairs(messages.slice(begin < 0 ? cut : begin));
 }
 
-export interface ToolLoopGraphInput {
+export interface ToolLoopNodesInput {
   model: BaseChatModel;
   tools: StructuredToolInterface[];
-  systemPrompt: SystemMessage;
+  /**
+   * Either a fixed prompt, or a function of state for agents whose prompt
+   * depends on where they are (Otto's changes with the current milestone).
+   * Resolved per model call, never checkpointed, so prompt edits apply to
+   * conversations already in flight.
+   */
+  systemPrompt: SystemMessage | ((state: ToolLoopStateType) => SystemMessage);
   maxIterations: number;
   historyMaxMessages: number;
+}
+
+export interface ToolLoopGraphInput extends ToolLoopNodesInput {
   checkpointer: BaseCheckpointSaver;
 }
 
-export function buildToolLoopGraph(input: ToolLoopGraphInput) {
-  const { model, tools, systemPrompt, maxIterations } = input;
+/**
+ * Where the loop goes after a model call. Deliberately NOT expressed as graph
+ * node names: `done` means "the model has answered", and each host graph
+ * decides what that means — END for a plain chat agent, a verification node
+ * for one that has to check the answer against real data.
+ */
+export type ToolLoopRoute = "tools" | "finalize" | "done";
+
+/**
+ * The capped tool loop as loose parts, for graphs that need it as a SUBGRAPH
+ * rather than the whole machine. `buildToolLoopGraph` below is the two-line
+ * wrapper that wires these into the standalone shape Clara and Dora use.
+ */
+export function createToolLoopNodes(input: ToolLoopNodesInput) {
+  const { model, tools, maxIterations } = input;
   const boundModel = model.bindTools ? model.bindTools(tools) : model;
+
+  const resolvePrompt =
+    typeof input.systemPrompt === "function"
+      ? input.systemPrompt
+      : () => input.systemPrompt as SystemMessage;
 
   // Resetting the iteration counter is this node's entire job — it re-arms
   // the tool-loop cap at the start of every turn. History trimming happens
@@ -162,7 +200,7 @@ export function buildToolLoopGraph(input: ToolLoopGraphInput) {
   // callback manager — without it, streamEvents sees no token/tool events.
   const modelNode = async (state: ToolLoopStateType, config: RunnableConfig) => {
     const window = await resolveMediaParts(contextWindow(state.messages), mediaCache);
-    const response = await boundModel.invoke([systemPrompt, ...window], config);
+    const response = await boundModel.invoke([resolvePrompt(state), ...window], config);
     return { messages: [response], iterations: state.iterations + 1 };
   };
 
@@ -180,31 +218,48 @@ export function buildToolLoopGraph(input: ToolLoopGraphInput) {
     const nudge = new HumanMessage(
       "Stop gathering. Using ONLY the information collected above, give your final answer to my original question now, in plain prose. If something could not be determined, say so explicitly. Do not request any tools.",
     );
-    let response = await model.invoke([systemPrompt, ...window, nudge], config);
+    let response = await model.invoke([resolvePrompt(state), ...window, nudge], config);
     if (!textFromContent(response.content).trim()) {
       // One retry — Gemini occasionally needs a second pass to break the
       // function-call pattern.
-      response = await model.invoke([systemPrompt, ...window, nudge], config);
+      response = await model.invoke([resolvePrompt(state), ...window, nudge], config);
     }
     return { messages: [response] };
   };
 
+  const routeAfterModel = (state: ToolLoopStateType): ToolLoopRoute => {
+    const last = lastMessage(state);
+    if (!hasToolCalls(last)) {
+      // A thinking model can exhaust its output budget on reasoning and
+      // "answer" with zero text. Route through finalize (no tools bound,
+      // must produce prose) instead of ending on an empty reply.
+      return textFromContent(last?.content).trim() ? "done" : "finalize";
+    }
+    return state.iterations >= maxIterations ? "finalize" : "tools";
+  };
+
+  return {
+    beginTurn: beginTurnNode,
+    model: modelNode,
+    tools: new ToolNode(tools),
+    finalize: finalizeNode,
+    routeAfterModel,
+  };
+}
+
+export function buildToolLoopGraph(input: ToolLoopGraphInput) {
+  const nodes = createToolLoopNodes(input);
+
   const graph = new StateGraph(ToolLoopState)
-    .addNode("beginTurn", beginTurnNode)
-    .addNode("model", modelNode)
-    .addNode("tools", new ToolNode(tools))
-    .addNode("finalize", finalizeNode)
+    .addNode("beginTurn", nodes.beginTurn)
+    .addNode("model", nodes.model)
+    .addNode("tools", nodes.tools)
+    .addNode("finalize", nodes.finalize)
     .addEdge(START, "beginTurn")
     .addEdge("beginTurn", "model")
     .addConditionalEdges("model", (state) => {
-      const last = lastMessage(state);
-      if (!hasToolCalls(last)) {
-        // A thinking model can exhaust its output budget on reasoning and
-        // "answer" with zero text. Route through finalize (no tools bound,
-        // must produce prose) instead of ending on an empty reply.
-        return textFromContent(last?.content).trim() ? END : "finalize";
-      }
-      return state.iterations >= maxIterations ? "finalize" : "tools";
+      const route = nodes.routeAfterModel(state);
+      return route === "done" ? END : route;
     })
     .addEdge("tools", "model")
     .addEdge("finalize", END);
