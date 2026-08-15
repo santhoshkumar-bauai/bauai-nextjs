@@ -17,6 +17,7 @@ import {
   renderTenderSearch,
   wrapDocument,
 } from "../agent/tools.ts";
+import { buildProposeEditsTool } from "../../dora-gateway/edit-ops.ts";
 import { getAiCollections } from "../db/collections.ts";
 import { getBriefState } from "./brief.ts";
 import type { BriefContent } from "./brief-schema.ts";
@@ -267,6 +268,7 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     getDocumentInfo,
     getDocumentBrief,
     readCurrentDocument,
+    buildProposeEditsTool(ctx),
   ];
   const companyTools = [searchCompanyDocuments, getCompanyProfile];
 

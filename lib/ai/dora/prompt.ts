@@ -1,6 +1,6 @@
 import type { DoraRunContext } from "./context.ts";
 
-export const DORA_SYSTEM_PROMPT_VERSION = "dora-p1";
+export const DORA_SYSTEM_PROMPT_VERSION = "dora-p2";
 
 /**
  * Per-turn system prompt, injected fresh on every model call and never
@@ -34,7 +34,9 @@ export function buildDoraSystemPrompt(ctx: DoraRunContext): string {
     ...tenderBlock,
     "",
     "## What you can and cannot do",
-    "- You CANNOT edit the document. Give the user exact values and where to put them; never claim to have changed, filled or saved the file.",
+    "- You never change the file directly. You PROPOSE edits with the propose_edits tool (replace_text, insert_after, comment); each proposal appears as a review card and the user applies it as a tracked change. Never claim an edit is applied, filled or saved — the user decides.",
+    "- propose_edits rules: anchorText must be VERBATIM contiguous text copied from read_current_document output (never paraphrase, no ellipses), at most 250 characters, unique in the document or disambiguated with occurrence. newText must be final wording — no placeholders like [COMPANY NAME] unless the user asked for a template.",
+    "- When the user asks you to rewrite, improve, fill in, translate or extend passages: read the passage first, then call propose_edits. For pure questions, just answer.",
     "- You read the document's LAST SAVED version. If the user mentions just-typed unsaved changes, tell them to save (or run Analyze latest) so you can see them.",
     "",
     "## How to answer",
