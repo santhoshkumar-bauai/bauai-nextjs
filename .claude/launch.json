@@ -2,8 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
-      "url": "http://localhost:3000",
+      "name": "bau-ai-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     }
   ]

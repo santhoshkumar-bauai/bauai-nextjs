@@ -38,8 +38,11 @@ export async function verifyUploadToken(token: string): Promise<UploadClaims> {
   return result.payload as UploadClaims;
 }
 
-export async function signOnlyOfficeConfig(config: Record<string, unknown>): Promise<string> {
+export async function signOnlyOfficeConfig(
+  config: Record<string, unknown>,
+  secretOverride?: string,
+): Promise<string> {
   return new SignJWT(config)
     .setProtectedHeader({ alg: "HS256" })
-    .sign(encoder.encode(onlyOfficeEnv().jwtSecret));
+    .sign(encoder.encode(secretOverride ?? onlyOfficeEnv().jwtSecret));
 }

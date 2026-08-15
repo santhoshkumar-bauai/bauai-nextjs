@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 import { getCompanyContext } from "@/lib/company/context";
 import { buildOnlyOfficeConfig } from "@/lib/onlyoffice/config";
-import { onlyOfficeEnabled, onlyOfficeEnv } from "@/lib/onlyoffice/env";
+import { onlyOfficeEnabled, onlyOfficeEnv, onlyOfficeUiDev } from "@/lib/onlyoffice/env";
 import { WorkspaceDocument } from "@/models/workspace-document";
 
 type RouteContext = { params: Promise<{ documentId: string }> };
@@ -36,7 +36,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
       locale: await getLocale(),
     });
     return NextResponse.json(
-      { documentServerUrl: onlyOfficeEnv().publicUrl, config },
+      { documentServerUrl: onlyOfficeUiDev()?.url ?? onlyOfficeEnv().publicUrl, config },
       { headers: { "cache-control": "private, no-store, max-age=0" } },
     );
   } catch (error) {

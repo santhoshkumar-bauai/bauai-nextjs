@@ -19,6 +19,23 @@ function appJwtSecret(): string {
   return value.replace(/\/$/, "");
 }
 
+/**
+ * Opt-in switch pointing the document-filler at the :9000 UI-dev Document
+ * Server (bauai-ONLYOFFICE/compose.ui-dev.yml) instead of the normal one.
+ * The prod-ish server on :8080 is untouched when this is off (the default).
+ */
+export function onlyOfficeUiDev(): { url: string; jwtSecret: string } | null {
+  if (process.env.ONLYOFFICE_UI_DEV !== "true") return null;
+  const url = process.env.ONLYOFFICE_DEV_URL?.trim().replace(/\/$/, "");
+  const jwtSecret = process.env.ONLYOFFICE_DEV_JWT_SECRET?.trim();
+  if (!url || !jwtSecret) {
+    throw new Error(
+      "ONLYOFFICE_DEV_URL and ONLYOFFICE_DEV_JWT_SECRET are required when ONLYOFFICE_UI_DEV=true.",
+    );
+  }
+  return { url, jwtSecret };
+}
+
 export function onlyOfficeEnv() {
   return {
     publicUrl: required("NEXT_PUBLIC_DS_URL"),

@@ -6,7 +6,9 @@ import type { WorkspaceDocumentDocument } from "@/models/workspace-document";
 import { WorkspaceDocumentVersion } from "@/models/workspace-document-version";
 import type { HydratedDocument } from "mongoose";
 
-import { onlyOfficeEnv } from "./env";
+import { signDoraEditorGrant } from "@/lib/dora-gateway/tokens";
+
+import { onlyOfficeEnv, onlyOfficeUiDev } from "./env";
 import { signOnlyOfficeConfig } from "./tokens";
 
 export async function buildOnlyOfficeConfig(input: {
@@ -78,6 +80,37 @@ export async function buildOnlyOfficeConfig(input: {
     },
   } satisfies Config;
 
-  const token = await signOnlyOfficeConfig(unsigned as unknown as Record<string, unknown>);
-  return { ...unsigned, token } as Config;
+  // The native Dora panel reads customization.dora from the signed config and
+  // exchanges the grant at /api/dora-gateway/token (cookies don't cross the
+  // editor origin). Embedded only when gateway origins are configured.
+  const doraEnabled = Boolean(process.env.DORA_EDITOR_ORIGINS?.trim());
+  const signable = doraEnabled
+    ? {
+        ...unsigned,
+        editorConfig: {
+          ...unsigned.editorConfig,
+          customization: {
+            ...unsigned.editorConfig.customization,
+            dora: {
+              gatewayOrigin: env.publicAppUrl,
+              documentId,
+              locale: unsigned.editorConfig.lang,
+              grant: await signDoraEditorGrant({
+                userId: input.context.userId,
+                companyId,
+                documentId,
+                name: input.context.name,
+                email: input.context.email,
+              }),
+            },
+          },
+        },
+      }
+    : unsigned;
+
+  const token = await signOnlyOfficeConfig(
+    signable as unknown as Record<string, unknown>,
+    onlyOfficeUiDev()?.jwtSecret,
+  );
+  return { ...signable, token } as Config;
 }
