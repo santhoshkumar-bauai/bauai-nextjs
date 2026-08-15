@@ -37,12 +37,18 @@ export function onlyOfficeUiDev(): { url: string; jwtSecret: string } | null {
 }
 
 export function onlyOfficeEnv() {
+  // With the UI-dev switch on, EVERY Document Server touchpoint (editor config,
+  // callback verification, /command forcesave, /converter, SSRF origin checks)
+  // must consistently target the :9000 dev server and its JWT secret — a
+  // half-switched state signs configs for one server and verifies callbacks
+  // for another. The normal env stays required so prod config remains valid.
+  const uiDev = onlyOfficeUiDev();
   return {
-    publicUrl: required("NEXT_PUBLIC_DS_URL"),
-    internalUrl: required("DS_INTERNAL_URL"),
+    publicUrl: uiDev?.url ?? required("NEXT_PUBLIC_DS_URL"),
+    internalUrl: uiDev?.url ?? required("DS_INTERNAL_URL"),
     callbackBaseUrl: required("INTERNAL_APP_URL"),
     publicAppUrl: required("PUBLIC_APP_URL"),
-    jwtSecret: required("OO_JWT_SECRET"),
+    jwtSecret: uiDev?.jwtSecret ?? required("OO_JWT_SECRET"),
     appJwtSecret: appJwtSecret(),
     storagePrefix: process.env.S3_WORKSPACE_DOCUMENT_PREFIX || "workspace-documents",
   };
