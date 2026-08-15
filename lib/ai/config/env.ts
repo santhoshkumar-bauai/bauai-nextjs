@@ -174,6 +174,13 @@ function defaultModelRoles(): Record<string, string> {
      * report model so an unconfigured deployment still works.
      */
     dora: process.env.AI_DORA_MODEL || process.env.AI_REPORT_MODEL || agent,
+    /**
+     * Otto guides a brand-new user through the product. It is the first thing
+     * anyone experiences, and its planning step has to reason about a whole
+     * registry at once — so it gets its own role rather than sharing `agent`.
+     * Falls back through the report model so an unconfigured deployment works.
+     */
+    otto: process.env.AI_OTTO_MODEL || process.env.AI_REPORT_MODEL || agent,
   };
 }
 

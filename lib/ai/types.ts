@@ -219,14 +219,14 @@ export interface TenderVerdictDocument {
 export interface ChatThreadDocument {
   _id?: ObjectId;
   tenantId: ObjectId;
-  kind: "tender" | "global" | "document";
+  kind: "tender" | "global" | "document" | "onboarding";
   tenderId: ObjectId | null;
   /** Workspace document a "document" (Dora) thread is bound to; else null. */
   documentId?: ObjectId | null;
   ownerUserId: string | null;
   threadKey: string;
   title: string | null;
-  agent: "clara" | "dora";
+  agent: "clara" | "dora" | "otto";
   createdBy: string;
   graphVersion: string;
   lastMessageAt: Date;

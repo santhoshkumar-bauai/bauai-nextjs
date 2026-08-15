@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CitationCollector } from "../agent/citations.ts";
 import type { AgentTenderScope } from "../agent/context.ts";
 import { TenderRefCollector } from "../agent/tender-refs.ts";
+import { UiCallCollector } from "../agent/ui-calls.ts";
 import type { DoraRunContext } from "./context.ts";
 
 vi.mock("../retrieval/hybrid.ts", () => ({
@@ -71,6 +72,8 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): DoraRunContex
     companyContext: { company: {} } as never,
     citations: new CitationCollector(),
     tenderRefs: new TenderRefCollector(),
+
+    uiCalls: new UiCallCollector(),
     tender,
     tenderCache: new Map(),
     document: {

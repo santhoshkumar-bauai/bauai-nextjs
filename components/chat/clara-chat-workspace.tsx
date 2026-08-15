@@ -189,7 +189,10 @@ export function ClaraChatWorkspace() {
                     {t("globalEmpty")}
                   </p>
                 </div>
-                <div className="flex flex-wrap justify-center gap-2">
+                <div
+                  data-tour="chat-suggestions"
+                  className="flex flex-wrap justify-center gap-2"
+                >
                   {suggestionKeys.map((key) => (
                     <button
                       key={key}

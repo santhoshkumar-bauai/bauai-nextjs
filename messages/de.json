@@ -53,6 +53,44 @@
     "continue": "Weiter zum Onboarding",
     "tryAgain": "Zurück zur Registrierung"
   },
+  "ForgotPassword": {
+    "title": "Passwort vergessen?",
+    "description": "Geben Sie die E-Mail-Adresse Ihres BAU AI Kontos ein. Wir senden Ihnen einen Link, um ein neues Passwort zu vergeben.",
+    "email": "E-Mail-Adresse",
+    "emailPlaceholder": "sie@unternehmen.de",
+    "sendLink": "Link senden",
+    "sending": "Link wird gesendet...",
+    "remembered": "Passwort wieder eingefallen?",
+    "signIn": "Anmelden",
+    "validation": "Geben Sie eine gültige E-Mail-Adresse ein.",
+    "error": "Der Link konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "checkEmailTitle": "Prüfen Sie Ihr Postfach",
+    "checkEmailDescription": "Falls {email} zu einem BAU AI Konto gehört, ist ein Link zum Zurücksetzen des Passworts unterwegs.",
+    "checkSpam": "Der Link ist eine Stunde gültig. Prüfen Sie Ihren Spam-Ordner, falls er nicht ankommt.",
+    "backToLogin": "Zurück zur Anmeldung"
+  },
+  "ResetPassword": {
+    "title": "Neues Passwort vergeben",
+    "description": "Wählen Sie ein neues Passwort für Ihr BAU AI Konto. Sie werden auf allen anderen Geräten abgemeldet.",
+    "password": "Neues Passwort",
+    "passwordPlaceholder": "Sicheres Passwort erstellen",
+    "confirmPassword": "Neues Passwort bestätigen",
+    "confirmPasswordPlaceholder": "Neues Passwort wiederholen",
+    "passwordHint": "Verwenden Sie mindestens 8 Zeichen",
+    "save": "Passwort speichern",
+    "saving": "Passwort wird gespeichert...",
+    "remembered": "Passwort wieder eingefallen?",
+    "signIn": "Anmelden",
+    "validation": "Ihr Passwort muss mindestens 8 Zeichen haben.",
+    "mismatch": "Beide Passwörter müssen übereinstimmen.",
+    "error": "Das Passwort konnte nicht zurückgesetzt werden. Bitte fordern Sie einen neuen Link an.",
+    "successTitle": "Passwort aktualisiert",
+    "successDescription": "Ihr Passwort wurde geändert. Melden Sie sich mit Ihrem neuen Passwort an, um fortzufahren.",
+    "backToLogin": "Zur Anmeldung",
+    "invalidTitle": "Link abgelaufen",
+    "invalidDescription": "Dieser Link zum Zurücksetzen des Passworts ist ungültig, bereits verwendet oder abgelaufen. Fordern Sie einen neuen an.",
+    "requestNewLink": "Neuen Link anfordern"
+  },
   "Onboarding": {
     "title": "Erforderlich für den Ausschreibungsabgleich",
     "description": "Erzählen Sie uns von Ihrem Unternehmen. Wenn es bereits existiert, werden Sie dem vorhandenen Workspace hinzugefügt.",
@@ -1425,6 +1463,120 @@
       "unsupported": "Clara kann diesen Dateityp nicht lesen",
       "tooLarge": "Datei zu groß (max. 25 MB)",
       "failed": "Upload fehlgeschlagen"
+    }
+  },
+  "Otto": {
+    "name": "Otto",
+    "role": "Onboarding-Assistent",
+    "description": "Lernt, womit Sie arbeiten, und führt Sie dann durch die Bereiche von BAU AI, die dafür wichtig sind.",
+    "launcher": {
+      "open": "Mit Otto starten",
+      "resume": "Einrichtung fortsetzen — {done} von {total}",
+      "close": "Otto schließen"
+    },
+    "panel": {
+      "title": "Erste Schritte",
+      "intro": "Ich stelle Ihnen ein paar kurze Fragen und zeige Ihnen dann die Bereiche, die für Ihre Arbeit wichtig sind.",
+      "progress": "{done} von {total} erledigt",
+      "planTitle": "Ihr Einrichtungsplan",
+      "skip": "Tour überspringen",
+      "skipStep": "Diesen Schritt überspringen",
+      "getSupport": "Support kontaktieren",
+      "showMe": "Zeig es mir",
+      "done": "Fertig",
+      "placeholder": "Fragen Sie Otto etwas…",
+      "send": "Senden",
+      "thinking": "Otto denkt nach…",
+      "stop": "Stopp",
+      "verifyFailed": "Ich konnte noch nicht bestätigen, dass dieser Schritt abgeschlossen ist. Nochmal versuchen, überspringen oder den Support hinzuziehen?",
+      "reducedMotionNotice": "Hervorhebungen sind deaktiviert, weil Sie reduzierte Bewegung bevorzugen.",
+      "mobileNotice": "Auf kleinen Bildschirmen führe ich Sie im Chat statt mit Hervorhebungen.",
+      "dragHint": "Zum Verschieben ziehen",
+      "suggestions": "Vorschläge",
+      "next": "Weiter",
+      "back": "Zurück"
+    },
+    "profile": {
+      "intro": "Zwei bis drei kurze Fragen, dann richte ich alles auf Sie aus.",
+      "role": {
+        "question": "Was ist Ihre Rolle?",
+        "choices": {
+          "owner": "Inhaber oder Geschäftsführung",
+          "bidManager": "Angebots- oder Ausschreibungsmanagement",
+          "estimator": "Kalkulation oder technische Leitung",
+          "other": "Etwas anderes"
+        }
+      },
+      "goal": {
+        "question": "Was möchten Sie zuerst erledigen?",
+        "choices": {
+          "findTenders": "Ausschreibungen finden, die sich lohnen",
+          "prepareBids": "Angebotsunterlagen vorbereiten und ausfüllen",
+          "organiseTeam": "Mein Team entlang einer Pipeline organisieren"
+        }
+      },
+      "teamSize": {
+        "question": "Wie viele Personen nutzen BAU AI mit Ihnen?",
+        "choices": {
+          "solo": "Nur ich",
+          "small": "2–10",
+          "large": "Mehr als 10"
+        }
+      }
+    },
+    "milestones": {
+      "completeCompanyProfile": {
+        "label": "Firmenprofil vervollständigen",
+        "body": "Leistungen, CPV-Codes und Region. Alles andere wird besser, sobald das ausgefüllt ist."
+      },
+      "buildAiMatches": {
+        "label": "KI-Treffer erstellen",
+        "body": "Offene Ausschreibungen anhand Ihres Profils bewerten, damit der Feed zu Ihnen passt."
+      },
+      "saveFirstTender": {
+        "label": "Erste Ausschreibung speichern",
+        "body": "Verschieben Sie eine Ausschreibung in Ihren Workspace, um daran zu arbeiten."
+      },
+      "reviewPipeline": {
+        "label": "Ihre Pipeline ansehen",
+        "body": "Verfolgen Sie gespeicherte Ausschreibungen von „Interessiert“ bis „Gewonnen“."
+      },
+      "uploadFirstDocument": {
+        "label": "Dokument hochladen",
+        "body": "Bearbeiten Sie es im Browser, mit Dora an Ihrer Seite."
+      },
+      "askClara": {
+        "label": "Clara eine Frage stellen",
+        "body": "Clara durchsucht Ihre Dokumente und den Ausschreibungsbestand für Sie."
+      },
+      "generateFirstReport": {
+        "label": "Entscheidungsbericht erstellen",
+        "body": "Die tiefgehendste Analyse, die BAU AI für eine Ausschreibung erstellt."
+      }
+    },
+    "steps": {
+      "companyProfileForm": "Das ist Ihr Firmenprofil. Je vollständiger es ist, desto besser Ihre Treffer.",
+      "buildAiMatches": "Hier starten — damit werden offene Ausschreibungen anhand Ihres Profils bewertet.",
+      "tenderCardSave": "Mit dieser Schaltfläche schicken Sie eine Ausschreibung in Ihren Workspace.",
+      "kanbanBoard": "Hier liegen Ihre gespeicherten Ausschreibungen; Sie können sie zwischen den Spalten ziehen.",
+      "documentUpload": "Laden Sie hier ein Dokument hoch, um es mit Dora zu bearbeiten.",
+      "chatSuggestions": "Probieren Sie eine davon aus, um zu sehen, was Clara kann.",
+      "reportFromBoard": "Öffnen Sie hier eine gespeicherte Ausschreibung, um den vollständigen Bericht zu erstellen.",
+      "tenderModeTabs": "Wechseln Sie hier zwischen KI-Treffern und der vollständigen Liste.",
+      "tenderCard": "Jede Karte zeigt Frist, Auftraggeber und wie gut sie zu Ihnen passt. Klicken Sie eine an, um sie vollständig zu öffnen.",
+      "documentFillerTabs": "Ihre eigenen Dokumente auf der einen Seite, Ausschreibungsunterlagen auf der anderen."
+    },
+    "errors": {
+      "failed": "Etwas ist schiefgelaufen. Bitte versuchen Sie es gleich noch einmal.",
+      "rate_limited": "Das war viel auf einmal — warten Sie ein paar Sekunden und versuchen Sie es erneut."
+    },
+    "replies": {
+      "showMe": "Zeig es mir",
+      "imDone": "Das habe ich erledigt",
+      "skip": "Diesen Schritt überspringen",
+      "explain": "Wofür ist das?",
+      "whatElse": "Wobei können Sie sonst helfen?",
+      "startTour": "Tour starten"
     }
   }
 }

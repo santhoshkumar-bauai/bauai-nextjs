@@ -1,4 +1,6 @@
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, type BaseMessage } from "@langchain/core/messages";
+import type { RunnableConfig } from "@langchain/core/runnables";
+import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ObjectId } from "mongodb";
 
 import { logger } from "../../ingestion/observability/logger.ts";
@@ -10,12 +12,25 @@ import type { AgentRunContext } from "./context.ts";
 import { buildClaraGraph } from "./graph.ts";
 import { bumpThread } from "./threads.ts";
 import type { TenderRef } from "./tender-refs.ts";
-import type { WireChatMessage } from "./wire.ts";
+import type { WireChatMessage, WireUiCall } from "./wire.ts";
 
 const log = logger.child("ai.clara");
 
-/** A compiled agent graph, as produced by buildClaraGraph / buildDoraGraph. */
-export type CompiledAgentGraph = Awaited<ReturnType<typeof buildClaraGraph>>;
+/**
+ * The only thing `runChatTurn` needs from a compiled graph.
+ *
+ * Structural rather than `Awaited<ReturnType<typeof buildClaraGraph>>`, which
+ * pins the exact node names and state shape — fine while Clara and Dora were
+ * the same machine, but it rejects any agent with its own topology (Otto has
+ * profile/plan/guide/verify nodes and a wider state). Widening here keeps one
+ * turn runner for every agent instead of forking it per graph.
+ */
+export interface CompiledAgentGraph {
+  streamEvents(
+    input: { messages: BaseMessage[] },
+    options: Partial<RunnableConfig> & { version: "v1" | "v2" },
+  ): AsyncIterable<StreamEvent>;
+}
 
 export interface ChatTurnCallbacks {
   /** Fired as soon as the user message is persisted, before the model runs. */
@@ -25,6 +40,14 @@ export interface ChatTurnCallbacks {
   onToolEnd?: (name: string, durationMs: number, resultCount: number | null) => void;
   /** New or enriched tender cards, as the tools surface them mid-turn. */
   onTenderRefs?: (refs: TenderRef[]) => void;
+  /** Frontend actions the tools requested, streamed as they are registered. */
+  onUiCalls?: (calls: WireUiCall[]) => void;
+  /**
+   * A graph node's state update, as it lands. Only wired up for agents whose
+   * UI renders live state (Otto's progress checklist); Clara and Dora pass
+   * nothing and pay nothing.
+   */
+  onState?: (patch: Record<string, unknown>) => void;
 }
 
 export { textFromContent };
@@ -97,6 +120,11 @@ export async function runChatTurn(input: {
     metrics: null,
   });
   callbacks?.onReady?.(userMessage);
+
+  // Namespace this turn's UI call ids by the user message they belong to:
+  // stable if the turn replays, distinct from every other turn, so the
+  // client's de-duplication cannot swallow later turns' actions.
+  ctx.uiCalls.setTurnKey(String(userMessage._id));
 
   // Attachment content rides inside the checkpointed user turn — later turns
   // in this thread keep seeing the files without re-uploading. Document text
@@ -175,6 +203,27 @@ export async function runChatTurn(input: {
         // the reader can already click into them while Clara is still writing.
         const refs = ctx.tenderRefs.drain();
         if (refs.length > 0) callbacks?.onTenderRefs?.(refs);
+        // Frontend actions the tool just requested. Sent immediately: a guide
+        // that navigates only after finishing its sentence feels broken.
+        const uiCalls = ctx.uiCalls.drain();
+        if (uiCalls.length > 0) callbacks?.onUiCalls?.(uiCalls);
+      } else if (callbacks?.onState && event.event === "on_chain_end") {
+        // A graph node just returned its state update. `langgraph_node` is
+        // absent on the outer chain events, which is what keeps this from
+        // echoing the whole state on every step.
+        const node = (event.metadata as { langgraph_node?: string } | undefined)
+          ?.langgraph_node;
+        const output = event.data?.output;
+        if (node && output && typeof output === "object" && !Array.isArray(output)) {
+          // `messages` streams as tokens already and can hold non-serializable
+          // model objects; everything else is the agent's own state.
+          const patch = Object.fromEntries(
+            Object.entries(output as Record<string, unknown>).filter(
+              ([key]) => key !== "messages",
+            ),
+          );
+          if (Object.keys(patch).length > 0) callbacks.onState(patch);
+        }
       }
     }
   } catch (error) {

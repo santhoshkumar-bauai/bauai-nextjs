@@ -1,4 +1,4 @@
-import type { ClaraSseEvent } from "@/lib/ai/agent/wire";
+import type { AgentSseEvent } from "@/lib/ai/agent/wire";
 
 /**
  * Incremental SSE frame parser for fetch-reader streams (SSE-over-POST has no
@@ -8,9 +8,9 @@ import type { ClaraSseEvent } from "@/lib/ai/agent/wire";
 export class SseFrameParser {
   private buffer = "";
 
-  push(chunk: string): ClaraSseEvent[] {
+  push(chunk: string): AgentSseEvent[] {
     this.buffer += chunk;
-    const events: ClaraSseEvent[] = [];
+    const events: AgentSseEvent[] = [];
 
     let boundary = this.buffer.indexOf("\n\n");
     while (boundary !== -1) {
@@ -23,7 +23,7 @@ export class SseFrameParser {
         .find((line) => line.startsWith("data: "));
       if (!dataLine) continue; // comment/heartbeat frame
       try {
-        events.push(JSON.parse(dataLine.slice(6)) as ClaraSseEvent);
+        events.push(JSON.parse(dataLine.slice(6)) as AgentSseEvent);
       } catch {
         // Malformed frame — skip rather than kill the stream.
       }

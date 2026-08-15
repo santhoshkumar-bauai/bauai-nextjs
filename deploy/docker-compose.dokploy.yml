@@ -1,0 +1,17 @@
+# Dokploy entrypoint for the complete worker stack.
+#
+# Dokploy checks out this file beside docker-compose.vm.yml and writes the
+# service Environment values to deploy/.env. The included stack builds every
+# worker from the repository and bundles its own durable Redis instance.
+#
+# MongoDB is managed by a separate Dokploy Compose service. Making the default
+# network external puts every container from this stack on Dokploy's shared
+# network, where the MongoDB service is reachable by its stable hostname.
+
+include:
+  - path: ./docker-compose.vm.yml
+
+networks:
+  default:
+    name: dokploy-network
+    external: true

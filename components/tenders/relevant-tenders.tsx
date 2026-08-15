@@ -341,6 +341,7 @@ export function RelevantTenders() {
 
       {mode === "ai" && matchState === "never" && !isComputing ? (
         <StateCard
+          tourId="build-ai-matches"
           title={t("aiMatched.states.neverTitle")}
           description={t("aiMatched.states.neverDescription")}
           action={{
@@ -498,10 +499,13 @@ function StateCard({
   title,
   description,
   action,
+  tourId,
 }: {
   title: string;
   description: string;
   action?: { label: string; onClick: () => void };
+  /** Onboarding spotlight target; see lib/onboarding/milestones.ts. */
+  tourId?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-6 py-16 text-center">
@@ -510,6 +514,7 @@ function StateCard({
       {action && (
         <button
           type="button"
+          data-tour={tourId}
           onClick={action.onClick}
           className="mt-2 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
         >

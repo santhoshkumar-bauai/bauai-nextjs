@@ -225,6 +225,7 @@ export function TenderCard({
     <article
       role="button"
       tabIndex={0}
+      data-tour="tender-card"
       onClick={() => onOpen(tender.id)}
       onKeyDown={handleKeyDown}
       className={cn(
@@ -447,6 +448,7 @@ export function TenderCard({
               </button>
               <button
                 type="button"
+                data-tour="tender-card-save"
                 onClick={toWorkspace}
                 disabled={pending !== null}
                 className="flex h-full flex-[1.5] items-center justify-center gap-2 bg-primary text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"

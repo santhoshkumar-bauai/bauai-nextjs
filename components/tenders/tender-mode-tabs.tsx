@@ -32,6 +32,7 @@ export function TenderModeTabs({
   return (
     <div
       role="tablist"
+      data-tour="tender-mode-tabs"
       className="inline-flex shrink-0 rounded-lg border border-border bg-background p-0.5"
     >
       {tabs.map((tab) => {

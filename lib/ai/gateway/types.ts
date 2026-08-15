@@ -17,7 +17,9 @@ export type ModelRole =
   /** AI tender matching: judges the company against 200 candidate tenders. */
   | "match"
   /** Dora, the document assistant: brief generation + editor-side chat. */
-  | "dora";
+  | "dora"
+  /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
+  | "otto";
 
 /** Mirrors the retrieval asymmetry of embedding models: documents and
  * queries are embedded with different task hints. */

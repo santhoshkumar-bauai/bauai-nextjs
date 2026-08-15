@@ -53,6 +53,44 @@
     "continue": "Continue to onboarding",
     "tryAgain": "Return to sign up"
   },
+  "ForgotPassword": {
+    "title": "Forgot your password?",
+    "description": "Enter the email address on your BAU AI account and we will send you a link to set a new password.",
+    "email": "Email address",
+    "emailPlaceholder": "you@company.com",
+    "sendLink": "Send reset link",
+    "sending": "Sending link...",
+    "remembered": "Remembered your password?",
+    "signIn": "Sign in",
+    "validation": "Enter a valid email address.",
+    "error": "Unable to send the reset link. Please try again.",
+    "checkEmailTitle": "Check your inbox",
+    "checkEmailDescription": "If {email} belongs to a BAU AI account, a password reset link is on its way.",
+    "checkSpam": "The link is valid for one hour. Check your spam folder if it doesn't arrive shortly.",
+    "backToLogin": "Back to login"
+  },
+  "ResetPassword": {
+    "title": "Set a new password",
+    "description": "Choose a new password for your BAU AI account. You will be signed out everywhere else.",
+    "password": "New password",
+    "passwordPlaceholder": "Create a secure password",
+    "confirmPassword": "Confirm new password",
+    "confirmPasswordPlaceholder": "Repeat your new password",
+    "passwordHint": "Use at least 8 characters",
+    "save": "Save new password",
+    "saving": "Saving password...",
+    "remembered": "Remembered your password?",
+    "signIn": "Sign in",
+    "validation": "Your password must have at least 8 characters.",
+    "mismatch": "Both passwords must match.",
+    "error": "Unable to reset your password. Please request a new link.",
+    "successTitle": "Password updated",
+    "successDescription": "Your password has been changed. Sign in with your new password to continue.",
+    "backToLogin": "Go to login",
+    "invalidTitle": "Reset link expired",
+    "invalidDescription": "This password reset link is invalid, already used, or expired. Request a new one to continue.",
+    "requestNewLink": "Request a new link"
+  },
   "Onboarding": {
     "title": "Required for tender matching",
     "description": "Tell us about your company so we can prepare relevant tender matches. If the company already exists, you'll be added to its workspace.",
@@ -1425,6 +1463,120 @@
       "unsupported": "Clara cannot read this file type",
       "tooLarge": "File too large (max 25 MB)",
       "failed": "Upload failed"
+    }
+  },
+  "Otto": {
+    "name": "Otto",
+    "role": "Onboarding Guide",
+    "description": "Learns what you do, then walks you through the parts of BAU AI that matter for it.",
+    "launcher": {
+      "open": "Get started with Otto",
+      "resume": "Resume setup — {done} of {total}",
+      "close": "Close Otto"
+    },
+    "panel": {
+      "title": "Getting started",
+      "intro": "I'll ask a couple of quick questions, then show you around the parts that matter for your work.",
+      "progress": "{done} of {total} done",
+      "planTitle": "Your setup plan",
+      "skip": "Skip the tour",
+      "skipStep": "Skip this step",
+      "getSupport": "Contact support",
+      "showMe": "Show me",
+      "done": "Done",
+      "placeholder": "Ask Otto anything…",
+      "send": "Send",
+      "thinking": "Otto is thinking…",
+      "stop": "Stop",
+      "verifyFailed": "I couldn't confirm that step is finished yet. Want to try again, skip it, or get a hand from support?",
+      "reducedMotionNotice": "Highlighting is off because you prefer reduced motion.",
+      "mobileNotice": "On a small screen I'll guide you in chat instead of highlighting.",
+      "dragHint": "Drag to move",
+      "suggestions": "Suggestions",
+      "next": "Next",
+      "back": "Back"
+    },
+    "profile": {
+      "intro": "Two or three quick questions and I'll tailor this to you.",
+      "role": {
+        "question": "What's your role?",
+        "choices": {
+          "owner": "Owner or director",
+          "bidManager": "Bid or tender manager",
+          "estimator": "Estimator or technical lead",
+          "other": "Something else"
+        }
+      },
+      "goal": {
+        "question": "What would you most like to get done first?",
+        "choices": {
+          "findTenders": "Find tenders worth bidding on",
+          "prepareBids": "Prepare and fill in bid documents",
+          "organiseTeam": "Get my team organised around a pipeline"
+        }
+      },
+      "teamSize": {
+        "question": "How many people will use BAU AI with you?",
+        "choices": {
+          "solo": "Just me",
+          "small": "2–10",
+          "large": "More than 10"
+        }
+      }
+    },
+    "milestones": {
+      "completeCompanyProfile": {
+        "label": "Complete your company profile",
+        "body": "Services, CPV codes and region. Everything else gets better once this is filled in."
+      },
+      "buildAiMatches": {
+        "label": "Build your AI matches",
+        "body": "Score open tenders against your profile so the feed is about you."
+      },
+      "saveFirstTender": {
+        "label": "Save your first tender",
+        "body": "Move a tender into your workspace to start working on it."
+      },
+      "reviewPipeline": {
+        "label": "See your pipeline",
+        "body": "Track saved tenders from Interested through to Won."
+      },
+      "uploadFirstDocument": {
+        "label": "Upload a document",
+        "body": "Edit it in the browser with Dora alongside you."
+      },
+      "askClara": {
+        "label": "Ask Clara a question",
+        "body": "Clara searches your documents and the tender corpus for you."
+      },
+      "generateFirstReport": {
+        "label": "Generate a decision report",
+        "body": "The deepest analysis BAU AI produces for a tender."
+      }
+    },
+    "steps": {
+      "companyProfileForm": "This is your company profile. The more of it you fill in, the better your matches.",
+      "buildAiMatches": "Start here — this scores open tenders against your profile.",
+      "tenderCardSave": "Send a tender to your workspace with this button.",
+      "kanbanBoard": "Your saved tenders live here, and you can drag them between columns.",
+      "documentUpload": "Upload a document here to edit it with Dora.",
+      "chatSuggestions": "Try one of these to see what Clara can do.",
+      "reportFromBoard": "Open a saved tender from here to generate its full report.",
+      "tenderModeTabs": "Switch between AI-matched tenders and the full list here.",
+      "tenderCard": "Each card shows the deadline, the buyer and how well it fits you. Click one to open it in full.",
+      "documentFillerTabs": "Your own documents on one side, tender paperwork on the other."
+    },
+    "errors": {
+      "failed": "Something went wrong. Try again in a moment.",
+      "rate_limited": "That was a lot at once — give it a few seconds and try again."
+    },
+    "replies": {
+      "showMe": "Show me",
+      "imDone": "I have done that",
+      "skip": "Skip this step",
+      "explain": "What is this for?",
+      "whatElse": "What else can you help with?",
+      "startTour": "Start the tour"
     }
   }
 }

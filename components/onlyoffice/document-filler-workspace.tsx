@@ -37,7 +37,7 @@ export function DocumentFillerWorkspace({
         </header>
 
         <Tabs defaultValue="documents" className="gap-5">
-          <TabsList className="w-full max-w-md">
+          <TabsList data-tour="document-filler-tabs" className="w-full max-w-md">
             <TabsTrigger value="documents">
               <FolderOpen />
               {t("tabs.documents")}
