@@ -142,6 +142,16 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { documentId: 1 }, name: "ix_document" },
   ]);
 
+  await db.collection("dora_document_snapshots").createIndexes([
+    { key: { expiresAt: 1 }, name: "ttl_snapshot", expireAfterSeconds: 0 },
+    { key: { tenantId: 1, documentId: 1, createdAt: -1 }, name: "ix_document_recent" },
+  ]);
+
+  await db.collection("dora_edit_transactions").createIndexes([
+    { key: { tenantId: 1, documentId: 1, createdAt: -1 }, name: "ix_document_recent" },
+    { key: { transactionId: 1, state: 1 }, name: "ix_transaction_state" },
+  ]);
+
   // AI-owned index on the shared `tenders` collection: drives the embedding
   // sweep without scanning 44k documents. Deliberately created here rather
   // than in lib/ingestion/db/indexes.ts — the ingestion pipeline never reads it.

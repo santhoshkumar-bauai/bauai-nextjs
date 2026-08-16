@@ -19,13 +19,36 @@ function appJwtSecret(): string {
   return value.replace(/\/$/, "");
 }
 
+/**
+ * Opt-in switch pointing the document-filler at the :9000 UI-dev Document
+ * Server (bauai-ONLYOFFICE/compose.ui-dev.yml) instead of the normal one.
+ * The prod-ish server on :8080 is untouched when this is off (the default).
+ */
+export function onlyOfficeUiDev(): { url: string; jwtSecret: string } | null {
+  if (process.env.ONLYOFFICE_UI_DEV !== "true") return null;
+  const url = process.env.ONLYOFFICE_DEV_URL?.trim().replace(/\/$/, "");
+  const jwtSecret = process.env.ONLYOFFICE_DEV_JWT_SECRET?.trim();
+  if (!url || !jwtSecret) {
+    throw new Error(
+      "ONLYOFFICE_DEV_URL and ONLYOFFICE_DEV_JWT_SECRET are required when ONLYOFFICE_UI_DEV=true.",
+    );
+  }
+  return { url, jwtSecret };
+}
+
 export function onlyOfficeEnv() {
+  // With the UI-dev switch on, EVERY Document Server touchpoint (editor config,
+  // callback verification, /command forcesave, /converter, SSRF origin checks)
+  // must consistently target the :9000 dev server and its JWT secret — a
+  // half-switched state signs configs for one server and verifies callbacks
+  // for another. The normal env stays required so prod config remains valid.
+  const uiDev = onlyOfficeUiDev();
   return {
-    publicUrl: required("NEXT_PUBLIC_DS_URL"),
-    internalUrl: required("DS_INTERNAL_URL"),
+    publicUrl: uiDev?.url ?? required("NEXT_PUBLIC_DS_URL"),
+    internalUrl: uiDev?.url ?? required("DS_INTERNAL_URL"),
     callbackBaseUrl: required("INTERNAL_APP_URL"),
     publicAppUrl: required("PUBLIC_APP_URL"),
-    jwtSecret: required("OO_JWT_SECRET"),
+    jwtSecret: uiDev?.jwtSecret ?? required("OO_JWT_SECRET"),
     appJwtSecret: appJwtSecret(),
     storagePrefix: process.env.S3_WORKSPACE_DOCUMENT_PREFIX || "workspace-documents",
   };

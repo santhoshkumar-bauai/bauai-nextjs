@@ -27,10 +27,15 @@ import { SavedFilters } from "@/components/tenders/saved-filters";
 import { TenderCard } from "@/components/tenders/tender-card";
 import { TenderDetailDialog } from "@/components/tenders/tender-detail-dialog";
 import {
+  TenderDetailPanel,
+  type TenderPanelTab,
+} from "@/components/tenders/detail/tender-detail-panel";
+import {
   TenderModeTabs,
   type TenderMode,
 } from "@/components/tenders/tender-mode-tabs";
 import { TenderToolbar } from "@/components/tenders/tender-toolbar";
+import { useMediaQuery } from "@/components/otto/use-media-query";
 import {
   parseTenderFilters,
   tenderFiltersToParams,
@@ -42,14 +47,12 @@ import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 20;
 
+/** Below this the detail pane has no room, so the popup takes over. */
+const SPLIT_QUERY = "(min-width: 1024px)";
+
 /** Feed states the AI endpoint can report; the classic feed has none. */
 type MatchFeedState =
-  | "ready"
-  | "stale"
-  | "computing"
-  | "never"
-  | "empty"
-  | "unavailable";
+  "ready" | "stale" | "computing" | "never" | "empty" | "unavailable";
 
 const TenderMap = dynamic(
   () => import("@/components/tenders/tender-map").then((m) => m.TenderMap),
@@ -96,6 +99,7 @@ export function RelevantTenders() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const isSplit = useMediaQuery(SPLIT_QUERY);
 
   // Initialise from the URL so filtered views are shareable / bookmarkable.
   // AI is the default landing feed, so only the classic mode is serialized.
@@ -109,7 +113,8 @@ export function RelevantTenders() {
     parseTenderFilters(new URLSearchParams(searchParams.toString())),
   );
   const [debouncedQ, setDebouncedQ] = useState(
-    () => parseTenderFilters(new URLSearchParams(searchParams.toString())).q ?? "",
+    () =>
+      parseTenderFilters(new URLSearchParams(searchParams.toString())).q ?? "",
   );
   const [page, setPage] = useState(() => {
     const parsed = Number.parseInt(searchParams.get("page") ?? "0", 10);
@@ -121,6 +126,7 @@ export function RelevantTenders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<TenderPanelTab>("about");
   // Tenders decided on this page. The server already excludes them on the next
   // fetch; this keeps them from flashing back before that happens.
   const [decided, setDecided] = useState<Set<string>>(new Set());
@@ -237,6 +243,33 @@ export function RelevantTenders() {
     setPage(0);
   };
 
+  const openTender = useCallback(
+    (tenderId: string, tab: TenderPanelTab = "about") => {
+      setSelectedTenderId(tenderId);
+      setDetailTab(tab);
+    },
+    [],
+  );
+
+  const items = useMemo(
+    () => (data?.items ?? []).filter((tender) => !decided.has(tender.id)),
+    [data, decided],
+  );
+
+  // What the detail pane shows, derived rather than stored: an explicit pick
+  // wins for as long as it is still on the page, and the first result stands in
+  // the rest of the time — so the pane is never blank next to a full list, and
+  // never left pointing at a tender that was decided on, filtered out or paged
+  // away. The popup on narrow screens uses `selectedTenderId` itself: there,
+  // nothing is open until something is tapped.
+  const activeTenderId = useMemo(() => {
+    if (!isSplit) return null;
+    if (selectedTenderId && items.some((t) => t.id === selectedTenderId)) {
+      return selectedTenderId;
+    }
+    return items[0]?.id ?? null;
+  }, [isSplit, items, selectedTenderId]);
+
   const total = data?.total ?? 0;
   // Only the ranked pool is pageable, so the pager bounds come from that —
   // while the label still reports how many tenders matched in total.
@@ -244,215 +277,228 @@ export function RelevantTenders() {
   const totalPages = Math.max(1, Math.ceil(ranked / PAGE_SIZE));
   const from = ranked === 0 ? 0 : page * PAGE_SIZE + 1;
   const to = Math.min(ranked, (page + 1) * PAGE_SIZE);
-  const nuts = data?.profile.nuts;
-  const nutsRegion = nuts?.nuts3 || nuts?.nuts2 || nuts?.nuts1 || nuts?.country;
+  const isMap = mode === "classic" && view === "map";
+
+  const feed =
+    mode === "ai" && matchState === "never" && !isComputing ? (
+      <StateCard
+        tourId="build-ai-matches"
+        title={t("aiMatched.states.neverTitle")}
+        description={t("aiMatched.states.neverDescription")}
+        action={{
+          label: refreshing
+            ? t("aiMatched.run.refreshing")
+            : t("aiMatched.states.neverAction"),
+          onClick: startRefresh,
+        }}
+      />
+    ) : loading && !data ? (
+      <ListSkeleton />
+    ) : error ? (
+      <StateCard
+        title={t("states.errorTitle")}
+        description={t("states.errorDescription")}
+        action={{
+          label: t("states.retry"),
+          onClick: () => setRefreshKey((k) => k + 1),
+        }}
+      />
+    ) : total === 0 ? (
+      isComputing ? null : (
+        <StateCard
+          title={
+            mode === "ai"
+              ? t("aiMatched.states.emptyTitle")
+              : t("states.emptyTitle")
+          }
+          description={
+            mode === "ai"
+              ? t("aiMatched.states.emptyDescription")
+              : t("states.emptyDescription")
+          }
+        />
+      )
+    ) : (
+      <div
+        className={cn(
+          "flex flex-col gap-3",
+          loading && "pointer-events-none opacity-60",
+        )}
+      >
+        {items.map((tender) => (
+          <TenderCard
+            key={tender.id}
+            tender={tender}
+            selected={tender.id === activeTenderId}
+            onOpen={openTender}
+            onDecided={(tenderId, status) => {
+              if (status === "deadzone") {
+                setDecided((prev) => new Set(prev).add(tenderId));
+                return;
+              }
+              // Moved to the board: refetch so it comes back labelled
+              // "In workspace" instead of offering the action bar again.
+              setRefreshKey((key) => key + 1);
+            }}
+          />
+        ))}
+      </div>
+    );
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-4 py-6 sm:px-6 sm:py-8">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
-          {data && (
-            <p className="text-xs text-muted-foreground">
-              {t("why.label")}: {t("why.cpv")} ({data.profile.cpv.length})
-              {nutsRegion ? ` · ${t("why.region")}: ${nutsRegion}` : ""}
-            </p>
-          )}
-        </div>
+    <div className="flex h-svh flex-col overflow-hidden bg-background max-[560px]:h-[calc(100svh-64px)]">
+      <h1 className="sr-only">{t("title")}</h1>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <TenderModeTabs mode={mode} onChange={changeMode} />
-
-        {/* The map re-queries the deterministic feed, so it stays a
-            classic-mode view until the AI geo endpoint exists. */}
-        {mode === "classic" && (
-        <div className="inline-flex shrink-0 rounded-lg border border-border bg-background p-0.5">
-          <button
-            type="button"
-            onClick={() => setView("list")}
-            aria-pressed={view === "list"}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              view === "list"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <LayoutList className="size-4" />
-            {t("views.list")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("map")}
-            aria-pressed={view === "map"}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-              view === "map"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <MapIcon className="size-4" />
-            {t("views.map")}
-          </button>
-        </div>
-        )}
-        </div>
-      </header>
-
-      <TenderToolbar
-        filters={filters}
-        onChange={updateFilters}
-        savedSlot={
-          <>
+      {/* Toolbar — one row of controls above the split, like a mail client. */}
+      <div className="shrink-0 border-b border-border bg-background/95 px-4 py-2.5 backdrop-blur sm:px-5">
+        <TenderToolbar
+          filters={filters}
+          onChange={updateFilters}
+          leadingSlot={
             <RegionSwitcher
               region={data?.profile.region ?? null}
               // Region feeds the geo score and the distance hints, so a change
               // has to re-run the query rather than just relabel the chip.
               onSaved={() => setRefreshKey((key) => key + 1)}
             />
-            <SavedFilters currentFilters={filters} onApply={applyPreset} />
-          </>
-        }
-      />
-
-      {mode === "ai" && data?.coverage && (
-        <MatchCoverageNudge coverage={data.coverage} />
-      )}
-
-      {/* A live or failed run is reported above the results, not instead of
-          them: a refresh must never blank out the previous matches. */}
-      {mode === "ai" && run && (isComputing || run.status === "failed") && (
-        <AiMatchProgress run={run} onRetry={startRefresh} />
-      )}
-
-      {mode === "ai" && matchState === "stale" && (
-        <StaleBanner
-          onRefresh={startRefresh}
-          busy={refreshing}
-          label={t("aiMatched.states.staleTitle")}
-          description={t("aiMatched.states.staleDescription")}
-          action={
-            refreshing ? t("aiMatched.run.refreshing") : t("aiMatched.run.refresh")
           }
+          viewSlot={
+            // The map re-queries the deterministic feed, so it stays a
+            // classic-mode view until the AI geo endpoint exists.
+            mode === "classic" ? (
+              <button
+                type="button"
+                onClick={() => setView(view === "map" ? "list" : "map")}
+                aria-pressed={view === "map"}
+                className={cn(
+                  "inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors",
+                  view === "map"
+                    ? "border-primary/40 bg-primary/5 text-primary"
+                    : "border-border bg-background text-foreground hover:bg-muted",
+                )}
+              >
+                {view === "map" ? (
+                  <LayoutList className="size-3.5" />
+                ) : (
+                  <MapIcon className="size-3.5" />
+                )}
+                {view === "map" ? t("views.list") : t("views.map")}
+              </button>
+            ) : null
+          }
+          savedSlot={
+            <SavedFilters currentFilters={filters} onApply={applyPreset} />
+          }
+          trailingSlot={<TenderModeTabs mode={mode} onChange={changeMode} />}
         />
-      )}
+      </div>
 
-      {mode === "ai" && matchState === "never" && !isComputing ? (
-        <StateCard
-          tourId="build-ai-matches"
-          title={t("aiMatched.states.neverTitle")}
-          description={t("aiMatched.states.neverDescription")}
-          action={{
-            label: refreshing
-              ? t("aiMatched.run.refreshing")
-              : t("aiMatched.states.neverAction"),
-            onClick: startRefresh,
-          }}
-        />
-      ) : mode === "classic" && view === "map" ? (
-        <TenderMap
-          filters={effectiveFilters}
-          onOpenDetail={setSelectedTenderId}
-        />
-      ) : loading && !data ? (
-        <ListSkeleton />
-      ) : error ? (
-        <StateCard
-          title={t("states.errorTitle")}
-          description={t("states.errorDescription")}
-          action={{ label: t("states.retry"), onClick: () => setRefreshKey((k) => k + 1) }}
-        />
-      ) : total === 0 ? (
-        isComputing ? null : (
-          <StateCard
-            title={
-              mode === "ai" ? t("aiMatched.states.emptyTitle") : t("states.emptyTitle")
-            }
-            description={
-              mode === "ai"
-                ? t("aiMatched.states.emptyDescription")
-                : t("states.emptyDescription")
-            }
-          />
-        )
+      {isMap ? (
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+          <TenderMap filters={effectiveFilters} onOpenDetail={openTender} />
+        </div>
       ) : (
-        <>
-          <div
-            className={cn(
-              "grid gap-3 sm:grid-cols-2",
-              loading && "pointer-events-none opacity-60",
-            )}
-          >
-            {data?.items
-              .filter((tender) => !decided.has(tender.id))
-              .map((tender) => (
-                <TenderCard
-                  key={tender.id}
-                  tender={tender}
-                  onOpen={setSelectedTenderId}
-                  onDecided={(tenderId, status) => {
-                    if (status === "deadzone") {
-                      setDecided((prev) => new Set(prev).add(tenderId));
-                      return;
-                    }
-                    // Moved to the board: refetch so it comes back labelled
-                    // "In workspace" instead of offering the action bar again.
-                    setRefreshKey((key) => key + 1);
-                  }}
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+          {/* Feed */}
+          <div className="flex min-h-0 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 sm:px-5">
+              {mode === "ai" && data?.coverage && (
+                <MatchCoverageNudge coverage={data.coverage} />
+              )}
+
+              {/* A live or failed run is reported above the results, not instead
+                  of them: a refresh must never blank out the previous matches. */}
+              {mode === "ai" &&
+                run &&
+                (isComputing || run.status === "failed") && (
+                  <AiMatchProgress run={run} onRetry={startRefresh} />
+                )}
+
+              {mode === "ai" && matchState === "stale" && (
+                <StaleBanner
+                  onRefresh={startRefresh}
+                  busy={refreshing}
+                  label={t("aiMatched.states.staleTitle")}
+                  description={t("aiMatched.states.staleDescription")}
+                  action={
+                    refreshing
+                      ? t("aiMatched.run.refreshing")
+                      : t("aiMatched.run.refresh")
+                  }
                 />
-              ))}
+              )}
+
+              {feed}
+            </div>
+
+            {total > 0 && (
+              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-4 py-2 sm:px-5">
+                <span className="text-[11px] text-muted-foreground">
+                  {total > ranked
+                    ? t("pagination.showingRanked", { from, to, ranked, total })
+                    : t("pagination.showing", { from, to, total })}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0 || loading}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    <ChevronLeft className="size-3.5" />
+                    {t("pagination.previous")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPage((p) => Math.min(totalPages - 1, p + 1))
+                    }
+                    disabled={page >= totalPages - 1 || loading}
+                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    {t("pagination.next")}
+                    <ChevronRight className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <span className="text-xs text-muted-foreground">
-              {total > ranked
-                ? t("pagination.showingRanked", { from, to, ranked, total })
-                : t("pagination.showing", { from, to, total })}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0 || loading}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-              >
-                <ChevronLeft className="size-3.5" />
-                {t("pagination.previous")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1 || loading}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-              >
-                {t("pagination.next")}
-                <ChevronRight className="size-3.5" />
-              </button>
-            </div>
-          </div>
-        </>
+          {/* Detail — desktop only; narrow screens keep the popup. */}
+          {isSplit && (
+            <aside className="hidden min-h-0 border-l border-border bg-card lg:flex lg:flex-col">
+              <TenderDetailPanel
+                tenderId={activeTenderId}
+                tab={detailTab}
+                onTabChange={setDetailTab}
+                className="min-h-0 flex-1"
+              />
+            </aside>
+          )}
+        </div>
       )}
 
-      <TenderDetailDialog
-        tenderId={selectedTenderId}
-        onClose={() => setSelectedTenderId(null)}
-        // A decision taken inside the popup has to reach the feed too: rejected
-        // tenders drop out, workspace ones come back labelled "In workspace".
-        onDecided={() => setRefreshKey((key) => key + 1)}
-      />
+      {!isSplit && (
+        <TenderDetailDialog
+          tenderId={selectedTenderId}
+          onClose={() => setSelectedTenderId(null)}
+          initialTab={detailTab === "client" ? "about" : detailTab}
+          // A decision taken inside the popup has to reach the feed too: rejected
+          // tenders drop out, workspace ones come back labelled "In workspace".
+          onDecided={() => setRefreshKey((key) => key + 1)}
+        />
+      )}
     </div>
   );
 }
 
 function ListSkeleton() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      {Array.from({ length: 6 }).map((_, index) => (
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: 5 }).map((_, index) => (
         <div
           key={index}
-          className="h-48 animate-pulse rounded-xl border border-border bg-muted/40"
+          className="h-52 animate-pulse rounded-2xl border border-border bg-muted/40"
         />
       ))}
     </div>

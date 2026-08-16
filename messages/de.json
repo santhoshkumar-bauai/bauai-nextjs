@@ -743,6 +743,14 @@
       "cpvMore": "+{count} weitere",
       "cpvLess": "Weniger anzeigen",
       "viewSource": "Quelle ansehen",
+      "aiAnalysis": "KI-Analyse",
+      "fillDocuments": "Dokumente ausfüllen",
+      "analyzed": "Analysiert",
+      "fit": {
+        "good": "Gut geeignet",
+        "possible": "Bedingt geeignet",
+        "low": "Kaum geeignet"
+      },
       "breakdown": {
         "title": "Warum diese Übereinstimmung",
         "cpv": "CPV-Eignung",
@@ -795,8 +803,15 @@
         "about": "Übersicht",
         "documents": "Dokumente",
         "schedule": "Termine",
+        "client": "Auftraggeber",
         "ai": "KI-Eignung"
       },
+      "readMore": "Mehr lesen",
+      "readLess": "Weniger anzeigen",
+      "participate": "Zur Teilnahme (extern)",
+      "aiRecommendation": "KI-Empfehlung",
+      "selectTitle": "Ausschreibung auswählen",
+      "selectDescription": "Wählen Sie links eine Ausschreibung, um Details, Dokumente und die KI-Bewertung zu sehen.",
       "status": "Status",
       "value": "Geschätzter Wert",
       "procedure": "Verfahren",
@@ -1400,6 +1415,7 @@
       "list_tender_reports": "Lade Ihre Berichte…",
       "lookup_cpv_codes": "Schlage CPV-Codes nach…",
       "read_current_document": "Lese das geöffnete Dokument…",
+      "propose_edits": "Bereite Änderungsvorschläge vor…",
       "get_document_brief": "Lade die Dokumentanalyse…",
       "get_document_info": "Prüfe den Dokumentstatus…",
       "get_tender_context": "Lade den Ausschreibungskontext…"

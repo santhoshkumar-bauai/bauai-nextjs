@@ -743,6 +743,14 @@
       "cpvMore": "+{count} more",
       "cpvLess": "Show less",
       "viewSource": "View source",
+      "aiAnalysis": "AI analysis",
+      "fillDocuments": "Fill documents",
+      "analyzed": "Analyzed",
+      "fit": {
+        "good": "Good fit",
+        "possible": "Possible fit",
+        "low": "Low fit"
+      },
       "breakdown": {
         "title": "Why this match",
         "cpv": "CPV fit",
@@ -795,8 +803,15 @@
         "about": "About",
         "documents": "Documents",
         "schedule": "Schedule",
+        "client": "Client",
         "ai": "AI fit"
       },
+      "readMore": "Read more",
+      "readLess": "Show less",
+      "participate": "To participate (external)",
+      "aiRecommendation": "AI Recommendation",
+      "selectTitle": "Select a tender",
+      "selectDescription": "Pick a tender from the list to see its details, documents and AI assessment.",
       "status": "Status",
       "value": "Estimated value",
       "procedure": "Procedure",
@@ -1400,6 +1415,7 @@
       "list_tender_reports": "Loading your reports…",
       "lookup_cpv_codes": "Looking up CPV codes…",
       "read_current_document": "Reading the open document…",
+      "propose_edits": "Preparing document suggestions…",
       "get_document_brief": "Loading the document brief…",
       "get_document_info": "Checking the document status…",
       "get_tender_context": "Loading the tender context…"

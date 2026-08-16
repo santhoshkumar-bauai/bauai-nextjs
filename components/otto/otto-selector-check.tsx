@@ -5,6 +5,11 @@ import { useEffect } from "react";
 
 import { MILESTONES, MILESTONE_IDS } from "@/lib/onboarding/milestones";
 
+/** How often the targets are re-checked while a page is still filling in. */
+const POLL_MS = 500;
+/** How long a target may stay absent before it counts as missing. */
+const SETTLE_MS = 12_000;
+
 /**
  * Development-only guard: on every route change, check that the `data-tour`
  * targets the registry claims live on this route actually resolve.
@@ -33,27 +38,34 @@ export function OttoSelectorCheck() {
     );
     if (expected.length === 0) return;
 
-    // One frame plus a beat: these pages fetch, so a target inside a loading
-    // skeleton is expected to be absent on the first tick.
-    const timer = window.setTimeout(() => {
-      const missing: string[] = [];
-      for (const milestone of expected) {
-        for (const step of milestone.steps) {
-          if (!document.querySelector(step.selector)) {
-            missing.push(`${milestone.id} → ${step.selector}`);
-          }
-        }
-      }
-      if (missing.length > 0) {
-        console.error(
-          `[otto] tour targets missing on ${pathname}:\n  ${missing.join("\n  ")}\n` +
-            "Either the data-tour attribute was renamed or removed, or the target " +
-            "is behind an empty/loading state. Check lib/onboarding/milestones.ts.",
-        );
-      }
-    }, 1500);
+    // Poll rather than take one snapshot: these pages fetch before they can
+    // render a target, and the tender feed in particular waits on AI matching,
+    // which routinely takes several seconds. A single early tick reported every
+    // slow load as a broken tour — noise that trains people to ignore this.
+    const started = Date.now();
+    const missingNow = () =>
+      expected.flatMap((milestone) =>
+        milestone.steps
+          .filter((step) => !document.querySelector(step.selector))
+          .map((step) => `${milestone.id} → ${step.selector}`),
+      );
 
-    return () => window.clearTimeout(timer);
+    const timer = window.setInterval(() => {
+      const missing = missingNow();
+      if (missing.length === 0) {
+        window.clearInterval(timer);
+        return;
+      }
+      if (Date.now() - started < SETTLE_MS) return;
+      window.clearInterval(timer);
+      console.error(
+        `[otto] tour targets missing on ${pathname}:\n  ${missing.join("\n  ")}\n` +
+          "Either the data-tour attribute was renamed or removed, or the target " +
+          "is behind an empty/loading state. Check lib/onboarding/milestones.ts.",
+      );
+    }, POLL_MS);
+
+    return () => window.clearInterval(timer);
   }, [pathname]);
 
   return null;

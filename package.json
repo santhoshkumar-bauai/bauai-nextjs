@@ -13,6 +13,7 @@
     "db:seed:cpv": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/seed-cpv-codes.mts",
     "db:seed:onboarding": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/seed-onboarding-data.mts",
     "db:seed:all": "npm run db:seed:cpv && npm run db:seed:onboarding",
+    "db:replicate": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/replicate-mongodb.mts",
     "worker:scheduler": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/scheduler.mts",
     "worker:ingest": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/ingest.mts",
     "worker:outbox": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types workers/outbox-relay.mts",

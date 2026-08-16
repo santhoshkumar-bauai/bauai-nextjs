@@ -68,7 +68,7 @@ export function serializeChatMessage(doc: ChatMessageDocument): WireChatMessage 
   };
 }
 
-async function persistMessage(
+export async function persistChatMessage(
   message: Omit<ChatMessageDocument, "_id" | "createdAt" | "updatedAt">,
 ): Promise<ChatMessageDocument> {
   const { chatMessages } = await getAiCollections();
@@ -103,7 +103,7 @@ export async function runChatTurn(input: {
   const attachments = input.attachments ?? [];
   const startedAt = Date.now();
 
-  const userMessage = await persistMessage({
+  const userMessage = await persistChatMessage({
     tenantId: ctx.tenantId,
     threadId,
     tenderId: ctx.tender?.tenderId ?? null,
@@ -244,7 +244,7 @@ export async function runChatTurn(input: {
   // every tender the answer talks about.
   const tenderRefs = ctx.tenderRefs.list();
 
-  const assistantMessage = await persistMessage({
+  const assistantMessage = await persistChatMessage({
     tenantId: ctx.tenantId,
     threadId,
     tenderId: ctx.tender?.tenderId ?? null,

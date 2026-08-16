@@ -7,14 +7,21 @@ const nextConfig: NextConfig = {
   output: "standalone",
   async headers() {
     const documentServer = process.env.NEXT_PUBLIC_DS_URL?.trim().replace(/\/$/, "");
-    if (!documentServer) return [];
+    // The :9000 UI-dev Document Server needs frame-src too when the opt-in
+    // switch is on; the normal server stays allowed either way.
+    const devServer =
+      process.env.ONLYOFFICE_UI_DEV === "true"
+        ? process.env.ONLYOFFICE_DEV_URL?.trim().replace(/\/$/, "")
+        : undefined;
+    const frameSources = [documentServer, devServer].filter(Boolean);
+    if (!frameSources.length) return [];
     return [
       {
         source: "/:path*",
         headers: [
           {
             key: "Content-Security-Policy",
-            value: `frame-src 'self' ${documentServer};`,
+            value: `frame-src 'self' ${frameSources.join(" ")};`,
           },
         ],
       },

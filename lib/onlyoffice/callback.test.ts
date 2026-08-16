@@ -6,6 +6,9 @@ const original = { ...process.env };
 
 describe("ONLYOFFICE callback URL normalization", () => {
   beforeEach(() => {
+    delete process.env.ONLYOFFICE_UI_DEV;
+    delete process.env.ONLYOFFICE_DEV_URL;
+    delete process.env.ONLYOFFICE_DEV_JWT_SECRET;
     process.env.NEXT_PUBLIC_DS_URL = "https://docs.example.test";
     process.env.DS_INTERNAL_URL = "http://onlyoffice";
     process.env.INTERNAL_APP_URL = "http://web:3000";

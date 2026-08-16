@@ -4,6 +4,11 @@
  * node:crypto) — it is the only agent module components may import.
  */
 
+import type {
+  WireDoraEditStatusStage,
+  WireDoraEditTransaction,
+} from "../dora/edit-wire.ts";
+
 export interface WireCitation {
   key: string;
   quote: string;
@@ -157,6 +162,19 @@ export type AgentSseEvent =
   | { type: "state"; patch: Record<string, unknown> }
   /** Actions for the client to execute — navigation, spotlighting, seeding. */
   | { type: "ui"; calls: WireUiCall[] }
+  /** Dora V2 emits explicit edit lifecycle events instead of generic UI calls. */
+  | { type: "edit_status"; stage: WireDoraEditStatusStage; detail?: string }
+  | { type: "edit_transaction"; transaction: WireDoraEditTransaction }
+  | {
+      type: "edit_result";
+      transactionId: string;
+      state: "applied" | "accepted" | "rejected" | "stale" | "rolled_back" | "failed";
+      results: Array<{
+        opId: string;
+        state: "applied" | "accepted" | "rejected" | "stale" | "rolled_back" | "failed";
+        failureCode?: string;
+      }>;
+    }
   /** The graph paused for a human answer; resume via the agent's resume route. */
   | { type: "interrupt"; interrupt: WireInterrupt }
   | { type: "message"; message: WireChatMessage }
