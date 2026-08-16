@@ -106,6 +106,7 @@ const DOCUMENT_TOOLS = [
   "get_document_info",
   "get_document_brief",
   "read_current_document",
+  "propose_edits",
 ];
 const COMPANY_TOOLS = ["search_company_documents", "get_company_profile"];
 const TENDER_TOOLS = [
@@ -117,7 +118,7 @@ const TENDER_TOOLS = [
 ];
 
 describe("buildDoraTools registry", () => {
-  it("tender-linked documents get the full 10-tool registry", () => {
+  it("tender-linked documents get the full document tool registry", () => {
     const names = buildDoraTools(fakeCtx()).map((tool) => tool.name);
     expect(names.sort()).toEqual(
       [...DOCUMENT_TOOLS, ...TENDER_TOOLS, ...COMPANY_TOOLS].sort(),

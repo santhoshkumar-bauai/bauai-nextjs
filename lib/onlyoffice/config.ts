@@ -94,6 +94,8 @@ export async function buildOnlyOfficeConfig(input: {
             dora: {
               gatewayOrigin: env.publicAppUrl,
               documentId,
+          editorKey: input.document.activeEditorKey,
+          editEngineV2: process.env.DORA_EDIT_ENGINE_V2 === "true",
               locale: unsigned.editorConfig.lang,
               grant: await signDoraEditorGrant({
                 userId: input.context.userId,
