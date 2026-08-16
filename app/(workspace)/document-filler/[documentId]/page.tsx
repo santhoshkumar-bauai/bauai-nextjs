@@ -27,11 +27,15 @@ export default async function DocumentEditorPage({
       process.env.OPENAI_API_KEY ||
       process.env.ANTHROPIC_API_KEY,
   );
+  // When gateway origins are configured, the editor itself carries the native
+  // Dora panel (customization.dora) — the legacy sidebar would duplicate it.
+  const nativeDora = Boolean(process.env.DORA_EDITOR_ORIGINS?.trim());
   return (
     <EditorWorkspace
       documentId={documentId}
       fileName={document.fileName}
       aiAvailable={aiAvailable}
+      nativeDora={nativeDora}
     />
   );
 }

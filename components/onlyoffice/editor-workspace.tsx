@@ -20,10 +20,13 @@ export function EditorWorkspace({
   documentId,
   fileName,
   aiAvailable = false,
+  nativeDora = false,
 }: {
   documentId: string;
   fileName: string;
   aiAvailable?: boolean;
+  /** The editor hosts the native Dora panel — hide the legacy sidebar. */
+  nativeDora?: boolean;
 }) {
   const t = useTranslations("DocumentFiller.editor");
   const tDora = useTranslations("Dora");
@@ -103,25 +106,27 @@ export function EditorWorkspace({
         >
           {busy === "versions" ? <Loader2 className="animate-spin" /> : <History />}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setDoraOpen(!doraOpen)}
-          className={cn(
-            "hidden md:flex",
-            doraOpen && "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary",
-          )}
-          title={tDora("title")}
-        >
-          <Sparkles />
-          {tDora("title")}
-        </Button>
+        {!nativeDora && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDoraOpen(!doraOpen)}
+            className={cn(
+              "hidden md:flex",
+              doraOpen && "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary",
+            )}
+            title={tDora("title")}
+          >
+            <Sparkles />
+            {tDora("title")}
+          </Button>
+        )}
       </header>
       <div className="flex min-h-0 flex-1">
         <section className="min-h-0 min-w-0 flex-1">
           <OnlyOfficeEditorClient documentId={documentId} onStateChange={setState} />
         </section>
-        {doraOpen && (
+        {!nativeDora && doraOpen && (
           <aside className="hidden w-[400px] shrink-0 border-l border-border md:block">
             <DoraPanel documentId={documentId} aiAvailable={aiAvailable} onClose={() => setDoraOpen(false)} />
           </aside>
