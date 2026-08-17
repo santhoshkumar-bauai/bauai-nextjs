@@ -15,6 +15,7 @@ services:
       JWT_IN_BODY: "true"
       ALLOW_PRIVATE_IP_ADDRESS: "true"
       LARGER_FILE_LIMITS: "true"
+      METRICS_ENABLED: "false"
     expose:
       - "80"
     volumes:
