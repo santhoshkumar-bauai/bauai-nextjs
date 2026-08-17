@@ -11,6 +11,8 @@ services:
       JWT_IN_BODY: "true"
       ALLOW_PRIVATE_IP_ADDRESS: "true"
       LARGER_FILE_LIMITS: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - onlyoffice_data:/var/www/onlyoffice/Data
       - onlyoffice_logs:/var/log/onlyoffice

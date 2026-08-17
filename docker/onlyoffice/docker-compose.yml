@@ -16,6 +16,8 @@ services:
       ALLOW_PRIVATE_IP_ADDRESS: "true"
       LARGER_FILE_LIMITS: "true"
       METRICS_ENABLED: "false"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     expose:
       - "80"
     volumes:
