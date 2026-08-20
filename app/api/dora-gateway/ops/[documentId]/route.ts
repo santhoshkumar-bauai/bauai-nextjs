@@ -24,8 +24,11 @@ const v1Schema = z.object({
 
 const v2Schema = z.object({
   version: z.literal(2),
-  transactionId: z.string().uuid(),
-  snapshotId: z.string().uuid(),
+  // Plain bounded strings, not uuid(): stream turns report prefixed ids
+  // ("stream-<uuid>") and client-side stream outcomes have no server
+  // snapshot id ("stream-client").
+  transactionId: z.string().min(6).max(80),
+  snapshotId: z.string().min(4).max(80),
   opId: z.string().uuid().optional(),
   type: z
     .enum([
@@ -66,9 +69,30 @@ const v2Schema = z.object({
   provider: z.string().max(40).optional(),
   providerModel: z.string().max(120).optional(),
   latencyMs: z.number().int().min(0).max(3_600_000).optional(),
+  tier: z.enum(["plan", "stream"]).optional(),
+  mode: z.enum(["review", "auto"]).optional(),
+  retryOf: z.string().max(80).optional(),
 });
 
-const postSchema = z.union([v2Schema, v1Schema]);
+const v3Schema = z.object({
+  version: z.literal(3),
+  transactionId: z.string().uuid(),
+  contextId: z.string().uuid(),
+  state: z.enum([
+    "applying",
+    "applied",
+    "rejected",
+    "stale",
+    "rolled_back",
+    "failed",
+  ]),
+  failureCode: z.string().max(80).optional(),
+  promptVersion: z.string().max(80).optional(),
+  provider: z.string().max(40).optional(),
+  providerModel: z.string().max(120).optional(),
+});
+
+const postSchema = z.union([v3Schema, v2Schema, v1Schema]);
 
 type RouteParams = { params: Promise<{ documentId: string }> };
 
@@ -96,7 +120,27 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   const tenantId = forCompanyContext(auth.companyContext).value;
-  if (parsed.data.version === 2) {
+  if (parsed.data.version === 3) {
+    await recordEditTransactionState({
+      tenantId,
+      documentId,
+      userId: auth.companyContext.userId,
+      transactionId: parsed.data.transactionId,
+      snapshotId: parsed.data.contextId,
+      opId: null,
+      type: null,
+      surface: null,
+      state: parsed.data.state,
+      failureCode: parsed.data.failureCode ?? null,
+      schemaVersion: "dora-spreadsheet-v1",
+      promptVersion: parsed.data.promptVersion ?? null,
+      provider: parsed.data.provider ?? null,
+      providerModel: parsed.data.providerModel ?? null,
+      latencyMs: null,
+      tier: "plan",
+      mode: "review",
+    });
+  } else if (parsed.data.version === 2) {
     await recordEditTransactionState({
       tenantId,
       documentId,
@@ -113,6 +157,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       provider: parsed.data.provider ?? null,
       providerModel: parsed.data.providerModel ?? null,
       latencyMs: parsed.data.latencyMs ?? null,
+      ...(parsed.data.tier ? { tier: parsed.data.tier } : {}),
+      ...(parsed.data.mode ? { mode: parsed.data.mode } : {}),
+      ...(parsed.data.retryOf ? { retryOf: parsed.data.retryOf } : {}),
     });
   } else {
     await recordEditOpState({

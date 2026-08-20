@@ -18,4 +18,15 @@ describe("Dora thread keys", () => {
     expect(key).toBe("dora:64a000000000000000000001:64a000000000000000000002");
     expect(key.startsWith("clara")).toBe(false);
   });
+
+  it("new-chat generations suffix the frozen base without touching generation 0", () => {
+    const tenantId = new ObjectId("64a000000000000000000001");
+    const documentId = new ObjectId("64a000000000000000000002");
+    expect(documentThreadKey(tenantId, documentId, 0)).toBe(
+      documentThreadKey(tenantId, documentId),
+    );
+    expect(documentThreadKey(tenantId, documentId, 3)).toBe(
+      "dora:64a000000000000000000001:64a000000000000000000002:3",
+    );
+  });
 });

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import { ObjectId } from "mongodb";
 import { z } from "zod";
 
 import { buildDoraRunContext } from "@/lib/ai/dora/context";
 import { buildDoraGraph } from "@/lib/ai/dora/graph";
+import { buildDoraSpreadsheetGraph } from "@/lib/ai/dora/spreadsheet/graph";
+import { streamDoraSpreadsheetEditTurnResponse } from "@/lib/ai/dora/spreadsheet/edit-turn";
 import { streamDoraEditTurnResponse } from "@/lib/ai/dora/edit-turn";
+import { streamDoraEditStreamResponse } from "@/lib/ai/dora/edit-stream-turn";
 import { ensureDocumentThread } from "@/lib/ai/dora/threads";
 import { streamChatTurnResponse } from "@/lib/ai/agent/sse-turn";
 import {
@@ -12,6 +16,7 @@ import {
 } from "@/lib/dora-gateway/context";
 import { corsHeadersFor, handlePreflight, withCors } from "@/lib/dora-gateway/cors";
 import { isLikelyEditIntent } from "@/lib/dora-gateway/edit-v2";
+import { getSpreadsheetContext } from "@/lib/dora-gateway/spreadsheet-contexts";
 import {
   doraEditEngineV2Enabled,
   getDoraSnapshot,
@@ -29,7 +34,16 @@ const postSchema = z.object({
   locale: z.enum(["en", "de"]).optional(),
   intent: z.enum(["auto", "chat", "edit"]).default("auto"),
   source: z.enum(["selection", "composer"]).default("composer"),
+  /** Delivery tier: "stream" = single-point streaming edit (dora_fast, token
+   * deltas into the document), "plan" = validated V2 transaction, "auto" =
+   * server decides (stream only when the invocation surface qualifies). */
+  tier: z.enum(["auto", "stream", "plan"]).default("auto"),
+  /** Quick-action key from the invocation surface (rewrite/shorten/…). */
+  action: z.string().max(40).optional(),
+  /** Selected chat (panel switcher); absent = the active conversation. */
+  threadId: z.string().regex(/^[0-9a-f]{24}$/i).optional(),
   snapshotId: z.string().uuid().optional(),
+  contextId: z.string().uuid().optional(),
   clientContext: z
     .object({
       selectedText: z.string().max(4000).optional(),
@@ -81,13 +95,99 @@ export async function POST(request: Request, { params }: RouteParams) {
     tenantId: ctx.tenantId,
     documentId: ctx.document.documentId,
     userId: ctx.userId,
+    threadId: parsed.data.threadId ? new ObjectId(parsed.data.threadId) : null,
   });
 
+  // Spreadsheet turns always use the bounded, bearer-bound live context
+  // packet. Read-only questions use the spreadsheet graph; mutation requests
+  // use a separate structured planner and are returned as preview-only change
+  // sets. The editor remains the sole, user-approved mutation boundary.
+  if (ctx.document.documentType === "cell") {
+    if (process.env.DORA_SPREADSHEET_ENABLED === "false") {
+      return NextResponse.json(
+        { error: "spreadsheet_dora_disabled" },
+        { status: 409, headers: cors },
+      );
+    }
+    if (parsed.data.tier === "stream") {
+      return NextResponse.json(
+        { error: "spreadsheet_streaming_writes_not_supported" },
+        { status: 409, headers: cors },
+      );
+    }
+    const useSpreadsheetEditPath =
+      parsed.data.tier === "plan" ||
+      parsed.data.intent === "edit" ||
+      (parsed.data.intent === "auto" &&
+        (isLikelyEditIntent(parsed.data.message) ||
+          /\b(?:add|calculate|change|clear|copy|edit|fill|fix|insert|replace|set|update|write)\b/i
+            .test(parsed.data.message)));
+    const spreadsheetContext = parsed.data.contextId
+      ? await getSpreadsheetContext({
+          contextId: parsed.data.contextId,
+          tenantId: String(ctx.tenantId),
+          documentId,
+          userId: ctx.userId,
+        })
+      : null;
+    if (parsed.data.contextId && !spreadsheetContext) {
+      return NextResponse.json(
+        { error: "spreadsheet_context_stale" },
+        { status: 409, headers: cors },
+      );
+    }
+    if (spreadsheetContext?.editorKey !== ctx.document.activeEditorKey) {
+      return NextResponse.json(
+        { error: "spreadsheet_context_stale" },
+        { status: 409, headers: cors },
+      );
+    }
+    if (useSpreadsheetEditPath) {
+      if (process.env.DORA_SPREADSHEET_WRITES_ENABLED === "false") {
+        return NextResponse.json(
+          { error: "spreadsheet_writes_not_enabled" },
+          { status: 409, headers: cors },
+        );
+      }
+      if (!spreadsheetContext) {
+        return NextResponse.json(
+          { error: "live_spreadsheet_context_required" },
+          { status: 409, headers: cors },
+        );
+      }
+      return withCors(
+        request,
+        streamDoraSpreadsheetEditTurnResponse({
+          ctx,
+          thread,
+          context: spreadsheetContext,
+          message: parsed.data.message,
+          request,
+        }),
+      );
+    }
+    const response = await streamChatTurnResponse({
+      ctx,
+      thread,
+      body: { message: parsed.data.message },
+      request,
+      buildGraph: () => buildDoraSpreadsheetGraph(ctx, spreadsheetContext),
+    });
+    return withCors(request, response);
+  }
+
+  // Stream tier: single-insertion-point edits stream token deltas into the
+  // document (dora_fast). The client declares the tier from its invocation
+  // surface; "stream" is only honored with a live snapshot, like the planner.
+  const v2 = doraEditEngineV2Enabled();
+  const useStreamPath = v2 && parsed.data.tier === "stream";
   const useEditPath =
-    doraEditEngineV2Enabled() &&
-    (parsed.data.intent === "edit" ||
+    v2 &&
+    !useStreamPath &&
+    (parsed.data.tier === "plan" ||
+      parsed.data.intent === "edit" ||
       (parsed.data.intent === "auto" && isLikelyEditIntent(parsed.data.message)));
-  if (useEditPath) {
+  if (useStreamPath || useEditPath) {
     if (!parsed.data.snapshotId) {
       return NextResponse.json(
         { error: "live_snapshot_required" },
@@ -104,6 +204,20 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json(
         { error: "snapshot_stale" },
         { status: 409, headers: cors },
+      );
+    }
+    if (useStreamPath) {
+      return withCors(
+        request,
+        streamDoraEditStreamResponse({
+          ctx,
+          thread,
+          snapshot,
+          message: parsed.data.message,
+          action: parsed.data.action,
+          source: parsed.data.source,
+          request,
+        }),
       );
     }
     return withCors(

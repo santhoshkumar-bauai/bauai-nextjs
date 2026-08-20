@@ -264,11 +264,14 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     },
   );
 
+  // The V1 exact-text edit engine is retired: the V2 planner + stream tiers
+  // cover everything it did with live-range targeting instead of text-anchor
+  // search. Kill-switch kept for one release, then delete buildProposeEditsTool.
   const documentTools = [
     getDocumentInfo,
     getDocumentBrief,
     readCurrentDocument,
-    buildProposeEditsTool(ctx),
+    ...(process.env.DORA_EDIT_ENGINE_V1 === "true" ? [buildProposeEditsTool(ctx)] : []),
   ];
   const companyTools = [searchCompanyDocuments, getCompanyProfile];
 

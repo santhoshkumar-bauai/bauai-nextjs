@@ -8,6 +8,7 @@ import type {
   WireDoraEditStatusStage,
   WireDoraEditTransaction,
 } from "../dora/edit-wire.ts";
+import type { WireSpreadsheetChangeSet } from "../dora/spreadsheet/edit-wire.ts";
 
 export interface WireCitation {
   key: string;
@@ -165,10 +166,27 @@ export type AgentSseEvent =
   /** Dora V2 emits explicit edit lifecycle events instead of generic UI calls. */
   | { type: "edit_status"; stage: WireDoraEditStatusStage; detail?: string }
   | { type: "edit_transaction"; transaction: WireDoraEditTransaction }
+  | { type: "spreadsheet_change_set"; changeSet: WireSpreadsheetChangeSet }
+  /** Streaming edit tier: raw text deltas the editor writes into the document
+   * at the insertion point. Deliberately separate from `token`, which is wired
+   * to chat-message rendering. */
+  | { type: "edit_delta"; turnId: string; text: string }
   | {
       type: "edit_result";
       transactionId: string;
-      state: "applied" | "accepted" | "rejected" | "stale" | "rolled_back" | "failed";
+      state:
+        | "planned"
+        | "streamed"
+        | "applied"
+        | "accepted"
+        | "rejected"
+        | "stale"
+        | "rolled_back"
+        | "aborted"
+        | "failed";
+      failureCode?: string;
+      /** Stream tier: the complete generated text, for consolidation. */
+      finalText?: string;
       results: Array<{
         opId: string;
         state: "applied" | "accepted" | "rejected" | "stale" | "rolled_back" | "failed";

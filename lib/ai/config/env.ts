@@ -175,6 +175,17 @@ function defaultModelRoles(): Record<string, string> {
      */
     dora: process.env.AI_DORA_MODEL || process.env.AI_REPORT_MODEL || agent,
     /**
+     * Streaming single-point edits (rewrite selection, continue writing) need
+     * first-token latency more than planning depth — a smaller model streamed
+     * word-by-word into the document. Falls back through the main dora role so
+     * an unconfigured deployment still works.
+     */
+    dora_fast:
+      process.env.AI_DORA_FAST_MODEL ||
+      process.env.AI_DORA_MODEL ||
+      process.env.AI_REPORT_MODEL ||
+      agent,
+    /**
      * Otto guides a brand-new user through the product. It is the first thing
      * anyone experiences, and its planning step has to reason about a whole
      * registry at once — so it gets its own role rather than sharing `agent`.

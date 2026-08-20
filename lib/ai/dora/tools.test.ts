@@ -102,11 +102,13 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): DoraRunContex
   };
 }
 
+// propose_edits (the V1 exact-text engine) is retired from the default
+// registry — V2 planner + stream tiers replaced it. DORA_EDIT_ENGINE_V1=true
+// is the one-release kill-switch that brings it back.
 const DOCUMENT_TOOLS = [
   "get_document_info",
   "get_document_brief",
   "read_current_document",
-  "propose_edits",
 ];
 const COMPANY_TOOLS = ["search_company_documents", "get_company_profile"];
 const TENDER_TOOLS = [
@@ -128,6 +130,16 @@ describe("buildDoraTools registry", () => {
   it("unlinked documents get no tender tools", () => {
     const names = buildDoraTools(fakeCtx(null)).map((tool) => tool.name);
     expect(names.sort()).toEqual([...DOCUMENT_TOOLS, ...COMPANY_TOOLS].sort());
+  });
+
+  it("the V1 kill-switch restores propose_edits", () => {
+    process.env.DORA_EDIT_ENGINE_V1 = "true";
+    try {
+      const names = buildDoraTools(fakeCtx(null)).map((tool) => tool.name);
+      expect(names).toContain("propose_edits");
+    } finally {
+      delete process.env.DORA_EDIT_ENGINE_V1;
+    }
   });
 
   it("no tool takes a tenant, tender or document id input", () => {

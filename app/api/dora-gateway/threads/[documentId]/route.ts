@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
 
 import { buildDoraRunContext } from "@/lib/ai/dora/context";
-import { ensureDocumentThread, listDocumentThreads } from "@/lib/ai/dora/threads";
-import { serializeChatMessage } from "@/lib/ai/agent/service";
-import { getAiCollections } from "@/lib/ai/db/collections";
+import { startNewDocumentThread } from "@/lib/ai/dora/threads";
 import {
   DoraGatewayAuthError,
   requireDoraGatewayAuth,
 } from "@/lib/dora-gateway/context";
 import { corsHeadersFor, handlePreflight } from "@/lib/dora-gateway/cors";
 
-/** History replay for the editor panel — mirror of the in-app chat GET. */
+/**
+ * "New chat" for the editor panel: opens the next-generation thread for the
+ * document (idempotent — an active-but-empty conversation is reused, so the
+ * button can never pile up blank threads).
+ */
 
 type RouteParams = { params: Promise<{ documentId: string }> };
 
@@ -19,7 +20,7 @@ export function OPTIONS(request: Request) {
   return handlePreflight(request);
 }
 
-export async function GET(request: Request, { params }: RouteParams) {
+export async function POST(request: Request, { params }: RouteParams) {
   const cors = corsHeadersFor(request);
   if (!cors) return NextResponse.json({ error: "origin_not_allowed" }, { status: 403 });
 
@@ -40,26 +41,11 @@ export async function GET(request: Request, { params }: RouteParams) {
   });
   if (!ctx) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
 
-  // Optional chat selection (panel switcher); invalid ids fall back to the
-  // active conversation inside ensureDocumentThread.
-  const rawThreadId = new URL(request.url).searchParams.get("threadId");
-  const threadId =
-    rawThreadId && ObjectId.isValid(rawThreadId) ? new ObjectId(rawThreadId) : null;
-
-  const thread = await ensureDocumentThread({
+  const thread = await startNewDocumentThread({
     tenantId: ctx.tenantId,
     documentId: ctx.document.documentId,
     userId: ctx.userId,
-    threadId,
   });
-  const { chatMessages } = await getAiCollections();
-  const messages = await chatMessages
-    .find({ tenantId: ctx.tenantId, threadId: thread._id })
-    .sort({ createdAt: -1 })
-    .limit(50)
-    .toArray();
-  const threads = await listDocumentThreads(ctx.tenantId, ctx.document.documentId);
-
   return NextResponse.json(
     {
       thread: {
@@ -68,15 +54,6 @@ export async function GET(request: Request, { params }: RouteParams) {
         messageCount: thread.messageCount,
         lastMessageAt: thread.lastMessageAt.toISOString(),
       },
-      // The switcher list: newest first, titled by first user message.
-      threads: threads.map((entry) => ({
-        id: String(entry.thread._id),
-        title: entry.title,
-        messageCount: entry.thread.messageCount,
-        lastMessageAt: entry.thread.lastMessageAt.toISOString(),
-        active: String(entry.thread._id) === String(thread._id),
-      })),
-      messages: messages.reverse().map(serializeChatMessage),
     },
     { headers: cors },
   );

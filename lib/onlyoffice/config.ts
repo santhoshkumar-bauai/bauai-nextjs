@@ -33,6 +33,7 @@ export async function buildOnlyOfficeConfig(input: {
   });
   const companyId = String(input.context.company._id);
   const documentId = String(input.document._id);
+  const editorKind = input.document.documentType === "cell" ? "spreadsheet" : "document";
 
   const unsigned = {
     type: "desktop",
@@ -94,8 +95,25 @@ export async function buildOnlyOfficeConfig(input: {
             dora: {
               gatewayOrigin: env.publicAppUrl,
               documentId,
-          editorKey: input.document.activeEditorKey,
-          editEngineV2: process.env.DORA_EDIT_ENGINE_V2 === "true",
+              editorKey: input.document.activeEditorKey,
+              editorKind,
+              effectivePermissions: {
+                read: true,
+                edit: Boolean(unsigned.document.permissions.edit),
+              },
+              capabilities: {
+                spreadsheet: editorKind === "spreadsheet" &&
+                  process.env.DORA_SPREADSHEET_ENABLED !== "false",
+                spreadsheetWrites: editorKind === "spreadsheet" &&
+                  process.env.DORA_SPREADSHEET_ENABLED !== "false" &&
+                  process.env.DORA_SPREADSHEET_WRITES_ENABLED !== "false" &&
+                  Boolean(unsigned.document.permissions.edit),
+                developerConnector: process.env.DORA_SPREADSHEET_DEVELOPER_CONNECTOR === "true",
+              },
+              bridgePreference: process.env.DORA_SPREADSHEET_DEVELOPER_CONNECTOR === "true"
+                ? "developer_connector"
+                : "community_native",
+              editEngineV2: process.env.DORA_EDIT_ENGINE_V2 === "true",
               locale: unsigned.editorConfig.lang,
               grant: await signDoraEditorGrant({
                 userId: input.context.userId,

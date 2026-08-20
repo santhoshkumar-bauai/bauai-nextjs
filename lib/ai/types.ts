@@ -226,6 +226,9 @@ export interface ChatThreadDocument {
   ownerUserId: string | null;
   threadKey: string;
   title: string | null;
+  /** Dora document chats: 0 = the legacy frozen-key thread, 1+ = "new chat"
+   * generations. Highest generation is the active conversation. */
+  generation?: number;
   agent: "clara" | "dora" | "otto";
   createdBy: string;
   graphVersion: string;

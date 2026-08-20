@@ -18,6 +18,8 @@ export type ModelRole =
   | "match"
   /** Dora, the document assistant: brief generation + editor-side chat. */
   | "dora"
+  /** Dora's streaming edit tier: latency-first single-point document edits. */
+  | "dora_fast"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
   | "otto";
 

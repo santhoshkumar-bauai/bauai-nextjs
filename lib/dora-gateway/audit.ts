@@ -32,8 +32,25 @@ export interface DoraEditOpAudit {
   reportedAt: Date;
 }
 
+let indexesReady: Promise<void> | null = null;
+
+async function ensureAuditIndexes(): Promise<void> {
+  indexesReady ??= (async () => {
+    const db = await getIngestionDb();
+    await db.collection("dora_edit_transactions").createIndexes([
+      { key: { documentId: 1, createdAt: -1 }, name: "ix_document_recent" },
+      { key: { transactionId: 1 }, name: "ix_transaction" },
+    ]);
+    await db.collection("dora_edit_ops").createIndexes([
+      { key: { documentId: 1, reportedAt: -1 }, name: "ix_document_recent" },
+    ]);
+  })();
+  return indexesReady;
+}
+
 export async function recordEditOpState(entry: Omit<DoraEditOpAudit, "reportedAt">) {
   const db = await getIngestionDb();
+  await ensureAuditIndexes();
   await db.collection<DoraEditOpAudit>("dora_edit_ops").insertOne({
     ...entry,
     reportedAt: new Date(),
@@ -67,6 +84,12 @@ export interface DoraEditTransactionAudit {
   provider: string | null;
   providerModel: string | null;
   latencyMs: number | null;
+  /** Delivery tier: "plan" (V2 transaction) or "stream" (token deltas). */
+  tier?: "plan" | "stream";
+  /** Panel mode at apply time: "review" (tracked) or "auto" (plain). */
+  mode?: "review" | "auto";
+  /** Transaction this one replaces (balloon Retry). */
+  retryOf?: string | null;
   createdAt: Date;
 }
 
@@ -74,6 +97,7 @@ export async function recordEditTransactionState(
   entry: Omit<DoraEditTransactionAudit, "createdAt">,
 ) {
   const db = await getIngestionDb();
+  await ensureAuditIndexes();
   await db.collection<DoraEditTransactionAudit>("dora_edit_transactions").insertOne({
     ...entry,
     createdAt: new Date(),

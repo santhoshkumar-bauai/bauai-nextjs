@@ -58,6 +58,11 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenderId: 1 }, name: "uq_tender", unique: true },
   ]);
 
+  // Superseded by uq_document_thread_generation (multi-chat panel switcher):
+  // the old shape rejects a second conversation per document. Best-effort so
+  // a fresh database (index never existed) passes through.
+  await c.chatThreads.dropIndex("uq_document_thread").catch(() => undefined);
+
   await c.chatThreads.createIndexes([
     {
       // Uniqueness only for tender threads; global threads (tenderId null,
@@ -68,9 +73,12 @@ export async function ensureAiIndexes(): Promise<void> {
       partialFilterExpression: { kind: "tender" },
     },
     {
-      // One Dora thread per (tenant, workspace document) — same reasoning.
-      key: { tenantId: 1, documentId: 1, agent: 1 },
-      name: "uq_document_thread",
+      // One Dora thread per (tenant, workspace document, chat generation) —
+      // "new chat" opens generation N+1; legacy threads (no generation field)
+      // index as null and stay unique per document. The uniqueness guard is
+      // per-generation since the panel chat switcher landed.
+      key: { tenantId: 1, documentId: 1, agent: 1, generation: 1 },
+      name: "uq_document_thread_generation",
       unique: true,
       partialFilterExpression: { kind: "document" },
     },

@@ -534,6 +534,8 @@ export async function planDoraEditTransaction(input: {
   history?: string;
   grounding?: string;
   source: "selection" | "composer";
+  /** Called when the first plan failed compilation and a repair attempt starts. */
+  onReplanning?: () => void;
   planner?: {
     invoke: (prompt: string) => Promise<unknown>;
     provider: string;
@@ -541,7 +543,14 @@ export async function planDoraEditTransaction(input: {
   };
 }): Promise<DoraEditTransactionV2> {
   const planner = input.planner ?? (await (async () => {
-    const model = await getChatModel({ role: "dora", maxOutputTokens: 12_000, temperature: 0.1 });
+    // Low reasoning effort: the plan schema is rigid and the snapshot carries
+    // all the context — latency dominates perceived quality on this path.
+    const model = await getChatModel({
+      role: "dora",
+      maxOutputTokens: 12_000,
+      temperature: 0.1,
+      reasoningEffort: "low",
+    });
     const structured = model.withStructuredOutput<z.infer<typeof rawPlanSchema>>(
       RAW_PLAN_JSON_SCHEMA as never,
       { name: "dora_edit_transaction_v2", method: "functionCalling" },
@@ -559,6 +568,7 @@ export async function planDoraEditTransaction(input: {
   let repair = "";
   let failureToken = "";
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    if (attempt > 0) input.onReplanning?.();
     const raw = rawPlanSchema.parse(
       await planner.invoke(
         plannerPrompt({

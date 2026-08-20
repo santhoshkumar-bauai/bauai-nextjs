@@ -154,6 +154,7 @@ export function streamDoraEditTurnResponse(input: {
             history,
             grounding,
             source: input.source,
+            onReplanning: () => send({ type: "edit_status", stage: "replanning" }),
           });
           await recordEditTransactionState({
             tenantId: input.ctx.tenantId,
@@ -166,6 +167,7 @@ export function streamDoraEditTurnResponse(input: {
             surface: null,
             state: "planned",
             failureCode: null,
+            tier: "plan",
             schemaVersion: "dora-edit-v2",
             promptVersion: transaction.model.promptVersion,
             provider: transaction.model.provider,
@@ -198,15 +200,19 @@ export function streamDoraEditTurnResponse(input: {
           });
           await bumpThread(input.ctx.tenantId, input.thread._id!, 2);
           send({ type: "edit_status", stage: "complete" });
+          // Terminal frame: one authoritative end-of-turn state instead of the
+          // panel inferring it from message/error ordering.
+          send({ type: "edit_result", transactionId: transaction.transactionId, state: "planned", results: [] });
           send({ type: "message", message: serializeChatMessage(assistantMessage) });
         } catch (error) {
           const failureCode = plannerFailureCode(error);
           const modelRef = resolveRole("dora");
+          const failedTransactionId = `planning-${randomUUID()}`;
           await recordEditTransactionState({
             tenantId: input.ctx.tenantId,
             documentId: String(input.ctx.document.documentId),
             userId: input.ctx.userId,
-            transactionId: `planning-${randomUUID()}`,
+            transactionId: failedTransactionId,
             snapshotId: input.snapshot._id,
             opId: null,
             type: null,
@@ -214,12 +220,20 @@ export function streamDoraEditTurnResponse(input: {
             state: "failed",
             failureCode,
             failureDetail: plannerFailureDetail(error, failureCode),
+            tier: "plan",
             schemaVersion: "dora-edit-v2",
             promptVersion: null,
             provider: modelRef.provider,
             providerModel: modelRef.model,
             latencyMs: Date.now() - startedAt,
           }).catch(() => undefined);
+          send({
+            type: "edit_result",
+            transactionId: failedTransactionId,
+            state: "failed",
+            failureCode,
+            results: [],
+          });
           send({
             type: "error",
             message:
