@@ -51,6 +51,7 @@
     "migrate:documents": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-06-documents.mts",
     "migrate:misc": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-07-misc.mts",
     "migrate:verify": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-08-verify.mts",
+    "migrate:passwords": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-09-passwords.mts",
     "migrate:prune": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-prune.mts"
   },
   "dependencies": {
@@ -69,6 +70,7 @@
     "@onlyoffice/doceditor-types": "9.4.0",
     "@onlyoffice/document-editor-react": "2.2.0",
     "@vis.gl/react-google-maps": "^1.9.0",
+    "bcryptjs": "^3.0.3",
     "better-auth": "^1.6.25",
     "bullmq": "^5.81.3",
     "cheerio": "^1.2.0",

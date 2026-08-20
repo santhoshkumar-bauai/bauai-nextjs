@@ -2,6 +2,7 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { betterAuth } from "better-auth/minimal";
 import { after } from "next/server";
 
+import { password } from "@/lib/auth-password";
 import { mongoClient, mongoDatabase } from "@/lib/db/mongodb";
 import {
   sendResetPasswordEmail,
@@ -28,6 +29,10 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     requireEmailVerification: true,
     resetPasswordTokenExpiresIn: 60 * 60,
+    // Migrated users carry a bcrypt hash from Supabase; everyone else is on
+    // scrypt. See lib/auth-password.ts — only verification is dual, hashing
+    // stays on scrypt so the bcrypt population only shrinks.
+    password,
     // A reset is how someone locked out of the account takes it back. Assume the
     // old password leaked and drop every session the previous holder still has.
     revokeSessionsOnPasswordReset: true,
