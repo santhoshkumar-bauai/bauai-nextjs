@@ -311,30 +311,33 @@ export function compileEditTransaction(input: {
       { allowBodyContainers: operation.type === "format_blocks" },
     );
     const expectedText = target.text;
-    if (
-      operation.type !== "insert_fragment" &&
-      operation.type !== "set_content_control" &&
-      expectedText.length === 0
-    ) {
+    const fragment = compileContentMarkup(operation.contentMarkup);
+    // Replacing nothing IS inserting. A zero-length replace_range that carries
+    // content is how the planner points at an insertion point — an empty
+    // document or an empty paragraph has no text to replace. Coerce rather
+    // than reject: the editor adapter skips the delete for insert_fragment and
+    // inserts at startPos. Ops that only make sense over real text (delete,
+    // format, table, comment) still fail on an empty target below.
+    const type =
+      operation.type === "replace_range" && expectedText.length === 0 && fragment.length > 0
+        ? "insert_fragment"
+        : operation.type;
+    if (type !== "insert_fragment" && type !== "set_content_control" && expectedText.length === 0) {
       throw new Error("empty_target");
     }
-    const fragment = compileContentMarkup(operation.contentMarkup);
-    if (
-      ["replace_range", "insert_fragment", "update_table"].includes(operation.type) &&
-      fragment.length === 0
-    ) {
+    if (["replace_range", "insert_fragment", "update_table"].includes(type) && fragment.length === 0) {
       throw new Error("content_required");
     }
-    if (operation.type === "comment" && !operation.commentText.trim()) {
+    if (type === "comment" && !operation.commentText.trim()) {
       throw new Error("comment_required");
     }
     const format = parseFormat(operation.formatJson);
-    if (["format_text", "format_blocks"].includes(operation.type) && !Object.keys(format).length) {
+    if (["format_text", "format_blocks"].includes(type) && !Object.keys(format).length) {
       throw new Error("format_required");
     }
     return {
       opId: randomUUID(),
-      type: operation.type,
+      type,
       target: {
         surface: target.start.surface,
         startNodeId: target.start.id,
@@ -405,8 +408,11 @@ function renderSnapshot(snapshot: StoredDoraSnapshot): string {
     if (used >= maxChars) break;
     const text = node.text.slice(0, Math.max(0, maxChars - used));
     used += text.length;
+    // An empty paragraph still carries its paragraph mark ("\n"), which reads
+    // as content to the planner. Say so explicitly instead.
+    const empty = text.trim().length === 0 ? " empty=true" : "";
     lines.push(
-      `<node id=${JSON.stringify(node.id)} surface=${node.surface} kind=${node.kind} style=${JSON.stringify(node.styleName)} editable=${node.editable}>${text}</node>`,
+      `<node id=${JSON.stringify(node.id)} surface=${node.surface} kind=${node.kind} style=${JSON.stringify(node.styleName)} editable=${node.editable}${empty}>${text}</node>`,
     );
   }
   return [
@@ -432,6 +438,8 @@ function plannerPrompt(input: {
     "Every target MUST use node ids and offsets from the snapshot. Offsets are JavaScript string offsets within node text. endOffset is exclusive.",
     "Use the selection exactly when one exists unless the request clearly asks for a broader document change.",
     "Never reproduce unchanged surrounding text. replace_range removes exactly the target and inserts contentMarkup.",
+    "Use insert_fragment to ADD new content at a position: set startOffset equal to endOffset at the insertion point. It removes nothing.",
+    "A node marked empty=true is an empty paragraph with no text. To write into an empty document or an empty paragraph, use insert_fragment — never replace_range.",
     "Use delete_range to remove content completely. Use format_text/format_blocks for formatting-only requests.",
     "For whole-body paragraph formatting, one format_blocks range may span body nodes and embedded table/content-control nodes; all other edits must stay inside one surface/container.",
     "Use set_content_control only for form/content-control nodes. Do not target editable=false nodes.",
@@ -496,6 +504,29 @@ export async function buildEditGrounding(
   return sections.join("\n");
 }
 
+/** The compiler throws bare tokens. On its own "empty_target" tells the planner
+ * nothing it can act on, so the repair attempt reproduces the same plan. Keep
+ * the token (callers key failure codes off it) and append the remedy. */
+function repairHint(token: string): string {
+  const remedy: Record<string, string> = {
+    empty_target:
+      "the target range contained no text; to add new content use insert_fragment with startOffset equal to endOffset at the insertion point",
+    content_required: "the operation carried no contentMarkup; provide the content to insert",
+    overlapping_operations: "two operations covered the same text; keep every target disjoint",
+    cross_surface_target: "the range spanned two surfaces; keep each operation inside one surface",
+    cross_container_target:
+      "the range spanned two containers; keep each operation inside one table cell or content control",
+    target_node_missing: "the node id was not in the snapshot; use ids exactly as given",
+    target_offset_out_of_range: "an offset ran past the node text; offsets are within one node",
+    target_range_reversed: "endOffset came before startOffset",
+    target_protected: "the target node is not editable; choose an editable node",
+    format_required: "formatJson was empty; provide the formatting to apply",
+    format_json_invalid: "formatJson was not valid JSON",
+    comment_required: "commentText was empty",
+  };
+  return remedy[token] ? `${token} — ${remedy[token]}` : token;
+}
+
 export async function planDoraEditTransaction(input: {
   ctx: DoraRunContext;
   snapshot: StoredDoraSnapshot;
@@ -522,7 +553,11 @@ export async function planDoraEditTransaction(input: {
       providerModel: modelRef.model,
     };
   })());
+  // `repair` is the actionable text the planner sees; `failureToken` stays the
+  // bare compiler token so the thrown code keeps its machine-readable shape
+  // (edit-turn's plannerFailureCode only preserves reasons matching [a-z0-9_:-]).
   let repair = "";
+  let failureToken = "";
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const raw = rawPlanSchema.parse(
       await planner.invoke(
@@ -545,10 +580,11 @@ export async function planDoraEditTransaction(input: {
         providerModel: planner.providerModel,
       });
     } catch (error) {
-      repair = error instanceof Error ? error.message : "invalid_plan";
+      failureToken = error instanceof Error ? error.message : "invalid_plan";
+      repair = repairHint(failureToken);
     }
   }
-  throw new Error(`invalid_edit_plan:${repair || "unknown"}`);
+  throw new Error(`invalid_edit_plan:${failureToken || "unknown"}`);
 }
 
 export function isLikelyEditIntent(message: string): boolean {

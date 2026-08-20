@@ -217,6 +217,50 @@ describe("Dora V2 deterministic target validation", () => {
     expect(() => compile([first, second])).toThrow("overlapping_operations");
   });
 
+  it("writes into a blank document by turning an empty replacement into an insertion", () => {
+    const base = snapshot();
+    const blank = snapshot({
+      nodes: [{ ...base.nodes[0], id: "body:body:902", text: "\n", rangeStart: 0, rangeEnd: 1 }],
+    });
+    const op = {
+      ...rawOperation("replace_range"),
+      startNodeId: "body:body:902",
+      endNodeId: "body:body:902",
+      startOffset: 0,
+      endOffset: 0,
+    };
+    const transaction = compile([op], blank);
+    expect(transaction.operations[0].type).toBe("insert_fragment");
+    expect(transaction.operations[0].target.expectedText).toBe("");
+    expect(transaction.operations[0].fragment.length).toBeGreaterThan(0);
+  });
+
+  it("leaves a rewrite over real text as a replacement", () => {
+    const transaction = compile([rawOperation("replace_range")]);
+    expect(transaction.operations[0].type).toBe("replace_range");
+    expect(transaction.operations[0].target.expectedText).toBe("Alpha");
+  });
+
+  it("still rejects empty targets for operations that need real text", () => {
+    const base = snapshot();
+    const blank = snapshot({
+      nodes: [{ ...base.nodes[0], id: "body:body:902", text: "\n", rangeStart: 0, rangeEnd: 1 }],
+    });
+    const at = (type: string) => ({
+      ...rawOperation(type),
+      startNodeId: "body:body:902",
+      endNodeId: "body:body:902",
+      startOffset: 0,
+      endOffset: 0,
+    });
+    expect(() => compile([at("delete_range")], blank)).toThrow("empty_target");
+    expect(() => compile([at("format_text")], blank)).toThrow("empty_target");
+    // A replacement with nothing to insert is not an insertion either.
+    expect(() => compile([{ ...at("replace_range"), contentMarkup: "" }], blank)).toThrow(
+      "empty_target",
+    );
+  });
+
   it("rejects fields and OLE-protected targets", () => {
     const value = snapshot({
       nodes: [{ ...snapshot().nodes[0], editable: false, protectedReason: "field" }],
@@ -310,5 +354,46 @@ describe("Dora V2 deterministic target validation", () => {
     expect(prompts).toHaveLength(2);
     expect(prompts[1]).toContain("overlapping_operations");
     expect(transaction.summary).toBe("Repaired");
+  });
+
+  it("tells the planner how to fix an empty target instead of echoing the bare token", async () => {
+    const prompts: string[] = [];
+    const base = snapshot();
+    const blank = snapshot({
+      nodes: [{ ...base.nodes[0], id: "body:body:902", text: "\n", rangeStart: 0, rangeEnd: 1 }],
+    });
+    const emptyTarget = {
+      summary: "Delete nothing",
+      assistantMessage: "First attempt",
+      operations: [
+        {
+          ...rawOperation("delete_range"),
+          startNodeId: "body:body:902",
+          endNodeId: "body:body:902",
+          startOffset: 0,
+          endOffset: 0,
+        },
+      ],
+    };
+    await expect(
+      planDoraEditTransaction({
+        ctx: { locale: "en", document: { fileName: "blank.docx" } } as never,
+        snapshot: blank,
+        userMessage: "Write a paragraph about Messi",
+        source: "composer",
+        planner: {
+          provider: "fixture",
+          providerModel: "fixture-model",
+          invoke: async (prompt) => {
+            prompts.push(prompt);
+            return emptyTarget;
+          },
+        },
+      }),
+    ).rejects.toThrow("invalid_edit_plan:empty_target");
+    expect(prompts[1]).toContain("empty_target");
+    expect(prompts[1]).toContain("insert_fragment");
+    // The snapshot must flag the paragraph mark as an empty paragraph.
+    expect(prompts[0]).toContain("empty=true");
   });
 });
