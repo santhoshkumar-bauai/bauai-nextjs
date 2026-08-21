@@ -2,11 +2,13 @@
 
 import type { Config } from "@onlyoffice/doceditor-types";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { generatedDocumentIdFromEditorMessage } from "@/lib/onlyoffice/editor-messages";
 
 const DocumentEditor = dynamic(
   () => import("@onlyoffice/document-editor-react").then((module) => module.DocumentEditor),
@@ -23,6 +25,7 @@ export function OnlyOfficeEditorClient({
   onStateChange?: (state: string) => void;
 }) {
   const t = useTranslations("DocumentFiller.editor");
+  const router = useRouter();
   const [payload, setPayload] = useState<EditorPayload | null>(null);
   const [error, setError] = useState("");
   const editorId = useMemo(() => `onlyoffice-${documentId}`, [documentId]);
@@ -48,6 +51,22 @@ export function OnlyOfficeEditorClient({
       window.DocEditor?.instances?.[editorId]?.destroyEditor();
     };
   }, [documentId, editorId, t]);
+
+  useEffect(() => {
+    if (!payload) return;
+
+    const editorOrigin = new URL(payload.documentServerUrl, window.location.href).origin;
+    const onMessage = (event: MessageEvent) => {
+      const editorFrame = document.querySelector<HTMLIFrameElement>('iframe[name="frameEditor"]');
+      if (event.origin !== editorOrigin || event.source !== editorFrame?.contentWindow) return;
+
+      const generatedDocumentId = generatedDocumentIdFromEditorMessage(event.data);
+      if (generatedDocumentId) router.push(`/document-filler/${generatedDocumentId}`);
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [payload, router]);
 
   if (error) {
     return (

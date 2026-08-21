@@ -26,7 +26,9 @@ export const FILL_DISCOVERY_JSON_SCHEMA = {
   properties: {
     fields: {
       type: "array",
-      maxItems: 500,
+      // Keep the 500-field limit in the Zod validator above. Gemini's legacy
+      // generateContent endpoint rejects a response schema with maxItems: 500
+      // as INVALID_ARGUMENT even though it accepts the rest of this schema.
       items: {
         type: "object",
         additionalProperties: false,

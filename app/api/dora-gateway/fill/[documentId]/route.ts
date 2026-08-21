@@ -3,6 +3,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { buildDoraRunContext } from "@/lib/ai/dora/context";
+import { analyzeDocumentFillRun } from "@/lib/ai/dora/fill/analyze";
+import {
+  dispatchDocumentFillTask,
+  fillGenerationDisposition,
+} from "@/lib/ai/dora/fill/execution";
+import { generateDocumentFillCopy } from "@/lib/ai/dora/fill/generate";
 import {
   createFillRun,
   latestFillRun,
@@ -109,21 +115,43 @@ export async function POST(request: Request, { params }: RouteParams) {
         snapshotHash: snapshot.snapshotHash,
         userId: ctx.userId,
       });
-      await enqueueDocumentFillAnalysis(run._id.toHexString());
-      return NextResponse.json({ run: serializeFillRun(run) }, { status: 202, headers: cors });
+      const mode = await dispatchDocumentFillTask({
+        inline: () => analyzeDocumentFillRun(run._id.toHexString()),
+        queued: () => enqueueDocumentFillAnalysis(run._id.toHexString()),
+      });
+      if (mode === "queue") {
+        return NextResponse.json({ run: serializeFillRun(run) }, { status: 202, headers: cors });
+      }
+      const analyzed = await latestFillRun(ctx.tenantId, ctx.document.documentId);
+      if (!analyzed) throw new Error("fill_run_missing_after_analysis");
+      return NextResponse.json({ run: serializeFillRun(analyzed) }, { headers: cors });
     }
     const run = await latestFillRun(ctx.tenantId, ctx.document.documentId);
-    if (!run || run.status !== "review") {
+    const disposition = fillGenerationDisposition(run);
+    if (disposition === "completed" && run) {
+      return NextResponse.json({ run: serializeFillRun(run) }, { headers: cors });
+    }
+    if (!run || disposition === "review_required") {
       return NextResponse.json({ error: "fill_review_required" }, { status: 409, headers: cors });
     }
     const ready = run.fields.filter((field) => field.state === "ready" && !field.sensitive);
     if (ready.length === 0) {
       return NextResponse.json({ error: "no_ready_fields" }, { status: 409, headers: cors });
     }
-    await enqueueDocumentFillGeneration(run._id.toHexString());
-    await updateFillRun(run._id, { status: "generating", stage: "building", error: null });
-    const queued = { ...run, status: "generating" as const, stage: "building" as const };
-    return NextResponse.json({ run: serializeFillRun(queued) }, { status: 202, headers: cors });
+    const mode = await dispatchDocumentFillTask({
+      inline: () => generateDocumentFillCopy(run._id.toHexString()),
+      queued: async () => {
+        await enqueueDocumentFillGeneration(run._id.toHexString());
+        await updateFillRun(run._id, { status: "generating", stage: "building", error: null });
+      },
+    });
+    if (mode === "queue") {
+      const queued = { ...run, status: "generating" as const, stage: "building" as const };
+      return NextResponse.json({ run: serializeFillRun(queued) }, { status: 202, headers: cors });
+    }
+    const generated = await latestFillRun(ctx.tenantId, ctx.document.documentId);
+    if (!generated) throw new Error("fill_run_missing_after_generation");
+    return NextResponse.json({ run: serializeFillRun(generated) }, { headers: cors });
   } catch (error) {
     if (error instanceof DoraGatewayAuthError) return authError(error, cors);
     return NextResponse.json(
