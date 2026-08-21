@@ -1,39 +1,70 @@
 import type { Locale } from "@/i18n/config";
 
+import { bookingUrl } from "./brand";
+import {
+  button,
+  divider,
+  outlinePanel,
+  panelHeading,
+  paragraph,
+  rawLink,
+  renderEmail,
+  renderText,
+  type EmailDocument,
+} from "./layout";
+
+/**
+ * The first email a new account ever receives, and the only one standing
+ * between signup and the product.
+ *
+ * It carries a second call to action the other transactional mails do not: the
+ * onboarding demo booking. Verification is the moment intent is highest, and a
+ * self-serve account that never gets shown the product is the one that churns —
+ * so the demo sits under its own divider rather than in the generic footer
+ * card, with copy that names it for what it is.
+ */
+
 const copy = {
   en: {
-    subject: "Verify your BAU AI email",
+    subject: "Verify your email to start using BAU AI",
+    preheader:
+      "One click to confirm your address — then your 7-day trial and company onboarding begin.",
     eyebrow: "One last step",
     title: "Verify your email address",
-    body: "Thanks for creating your BAU AI account. Confirm your email to continue to company onboarding and start your 7-day free trial.",
-    button: "Verify email",
+    greeting: (name: string) => `Hi ${name},`,
+    body: "Thanks for creating your BAU AI account. Confirm this address to continue to company onboarding and start your 7-day free trial.",
+    button: "Verify email address",
+    fallback: "Button not working? Copy this link into your browser:",
     expiry:
-      "This verification link expires in one hour. If you didn't create this account, you can safely ignore this email.",
+      "This link expires in one hour. If you did not create a BAU AI account, you can safely ignore this email.",
+    demoTitle: "Book your onboarding demo",
+    demoBody:
+      "Want us to walk you through it? Book a free 30-minute onboarding demo — we will set up your company profile with you and show you how BAU AI finds and analyses the tenders that fit your business.",
+    demoButton: "Book onboarding demo",
+    footerNote:
+      "You are receiving this email because someone signed up for BAU AI with this address.",
   },
   de: {
-    subject: "Bestätigen Sie Ihre BAU AI E-Mail-Adresse",
+    subject: "Bestätigen Sie Ihre E-Mail-Adresse für BAU AI",
+    preheader:
+      "Ein Klick zur Bestätigung — danach starten Ihre 7-tägige Testphase und das Onboarding.",
     eyebrow: "Nur noch ein Schritt",
     title: "E-Mail-Adresse bestätigen",
-    body: "Vielen Dank für die Erstellung Ihres BAU AI Kontos. Bestätigen Sie Ihre E-Mail-Adresse, um mit dem Unternehmens-Onboarding fortzufahren und Ihre kostenlose 7-Tage-Testphase zu starten.",
-    button: "E-Mail bestätigen",
+    greeting: (name: string) => `Hallo ${name},`,
+    body: "Vielen Dank für die Erstellung Ihres BAU AI Kontos. Bestätigen Sie diese Adresse, um mit dem Unternehmens-Onboarding fortzufahren und Ihre kostenlose 7-tägige Testphase zu starten.",
+    button: "E-Mail-Adresse bestätigen",
+    fallback:
+      "Button funktioniert nicht? Kopieren Sie diesen Link in Ihren Browser:",
     expiry:
-      "Dieser Bestätigungslink läuft in einer Stunde ab. Falls Sie dieses Konto nicht erstellt haben, können Sie diese E-Mail ignorieren.",
+      "Dieser Link läuft in einer Stunde ab. Falls Sie kein BAU AI Konto erstellt haben, können Sie diese E-Mail ignorieren.",
+    demoTitle: "Onboarding-Demo buchen",
+    demoBody:
+      "Sollen wir Sie durch die Plattform führen? Buchen Sie eine kostenlose 30-minütige Onboarding-Demo — wir richten Ihr Unternehmensprofil gemeinsam mit Ihnen ein und zeigen Ihnen, wie BAU AI die passenden Ausschreibungen findet und analysiert.",
+    demoButton: "Onboarding-Demo buchen",
+    footerNote:
+      "Sie erhalten diese E-Mail, weil sich jemand mit dieser Adresse bei BAU AI registriert hat.",
   },
 } as const;
-
-function escapeHtml(value: string) {
-  return value.replace(
-    /[&<>'"]/g,
-    (character) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        "'": "&#39;",
-        '"': "&quot;",
-      })[character]!,
-  );
-}
 
 export function verificationEmail({
   locale,
@@ -43,30 +74,57 @@ export function verificationEmail({
   locale: Locale;
   name: string;
   verificationUrl: string;
-}) {
+}): EmailDocument {
   const message = copy[locale];
-  const safeName = escapeHtml(name);
-  const safeUrl = escapeHtml(verificationUrl);
+  const demo = bookingUrl();
+
+  const content = [
+    paragraph(message.greeting(name), { tone: "ink", spaceAfter: 12 }),
+    paragraph(message.body, { spaceAfter: 28 }),
+    button({ href: verificationUrl, label: message.button }),
+    rawLink(message.fallback, verificationUrl),
+    paragraph(message.expiry, { tone: "muted", spaceAfter: 30 }),
+    divider(28),
+    outlinePanel(
+      [
+        panelHeading(message.demoTitle),
+        paragraph(message.demoBody, { spaceAfter: 18 }),
+        button({ href: demo, label: message.demoButton, variant: "ghost" }),
+      ].join(""),
+    ),
+  ].join("");
 
   return {
     subject: message.subject,
-    text: `${message.title}\n\n${message.body}\n\n${message.button}: ${verificationUrl}\n\n${message.expiry}`,
-    html: `<!doctype html>
-      <html><body style="margin:0;background:#f5f3f7;font-family:Inter,Arial,sans-serif;color:#191724">
-        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:40px 16px;background:#f5f3f7"><tr><td align="center">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;background:#ffffff;border:1px solid #e8e1ed;border-radius:18px;overflow:hidden">
-            <tr><td style="height:8px;background:linear-gradient(90deg,#5000a8,#8d22ea)"></td></tr>
-            <tr><td style="padding:40px">
-              <div style="font-size:20px;font-weight:800;color:#5000a8;letter-spacing:-.04em">BAU AI</div>
-              <p style="margin:36px 0 8px;color:#7d3bc0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase">${message.eyebrow}</p>
-              <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;letter-spacing:-.04em">${message.title}</h1>
-              <p style="margin:0 0 12px;font-size:15px;line-height:1.7">${safeName},</p>
-              <p style="margin:0 0 28px;color:#615b69;font-size:15px;line-height:1.7">${message.body}</p>
-              <a href="${safeUrl}" style="display:inline-block;padding:14px 24px;background:#5000a8;color:#ffffff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700">${message.button}</a>
-              <p style="margin:30px 0 0;color:#918b98;font-size:12px;line-height:1.6">${message.expiry}</p>
-            </td></tr>
-          </table>
-        </td></tr></table>
-      </body></html>`,
+    html: renderEmail({
+      locale,
+      preheader: message.preheader,
+      eyebrow: message.eyebrow,
+      title: message.title,
+      content,
+      footerNote: message.footerNote,
+      // The demo has its own block above; the generic card would be the same
+      // ask twice, but the footer link stays.
+      booking: "footer",
+    }),
+    text: renderText({
+      locale,
+      title: message.title,
+      booking: "footer",
+      lines: [
+        message.greeting(name),
+        "",
+        message.body,
+        "",
+        `${message.button}: ${verificationUrl}`,
+        "",
+        message.expiry,
+        "",
+        "—",
+        message.demoTitle,
+        message.demoBody,
+        `${message.demoButton}: ${demo}`,
+      ],
+    }),
   };
 }

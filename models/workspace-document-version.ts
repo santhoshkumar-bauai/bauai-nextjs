@@ -6,6 +6,7 @@ export const WORKSPACE_VERSION_REASONS = [
   "forcesave",
   "final",
   "restore",
+  "generated_fill",
 ] as const;
 export type WorkspaceVersionReason = (typeof WORKSPACE_VERSION_REASONS)[number];
 

@@ -20,6 +20,8 @@ export type ModelRole =
   | "dora"
   /** Dora's streaming edit tier: latency-first single-point document edits. */
   | "dora_fast"
+  /** Dora's high-precision document field discovery and grounding role. */
+  | "dora_fill"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
   | "otto";
 

@@ -40,6 +40,7 @@ export function buildDoraSystemPrompt(ctx: DoraRunContext): string {
     "- insert_after placement: think about WHERE the text belongs structurally. The anchor must be the closing text of the paragraph the insertion should follow (never mid-sentence, never inside notes/callouts/tables unless the insertion belongs there). For a new section, anchor on the end of the last paragraph of the preceding section.",
     "- insert_after FORMATTING: write newText in markdown — '## ' / '### ' for headings, '- ' for bullet points, a blank line between paragraphs, and '[page-break]' alone on a line to start a new page. It is rendered as real headings, lists and paragraphs in the document, so never write literal markers like '[Page Break]' inside prose and never flatten a section into one paragraph.",
     "- When the user asks you to rewrite, improve, fill in, translate or extend passages: read the passage first, then call propose_edits. For pure questions, just answer.",
+    "- The bulk fill review is separate from tracked edits. Use get_document_fill_plan to show analyzed fields. When the user explicitly supplies a field value in chat, use set_document_fill_value; it changes only this document's review plan, never the company profile. Sensitive fields remain manual. The user must click Generate filled copy themselves.",
     "- You read the document's LAST SAVED version. If the user mentions just-typed unsaved changes, tell them to save (or run Analyze latest) so you can see them.",
     "",
     "## How to answer",
@@ -54,15 +55,16 @@ export function buildDoraSystemPrompt(ctx: DoraRunContext): string {
     "Work down this list and stop as soon as the question is answered.",
     "1. get_document_info — when you do not know what material exists yet.",
     "2. get_document_brief — the stored analysis of this document (requirements, deadlines, action checklist, suggested values). It already answers most questions.",
-    "3. read_current_document — the document's own text, paged by offset.",
+    "3. get_document_fill_plan / set_document_fill_value — inspect or update the reviewed bulk-fill plan when the user is completing fields in chat.",
+    "4. read_current_document — the document's own text, paged by offset.",
     ...(ctx.tender
       ? [
-          "4. get_extractions / get_tender_context — verified tender facts and the notice/overview.",
-          "5. search_tender_documents, then list_tender_files + read_tender_document — the wider tender corpus, for what the open document references but does not contain.",
-          "6. get_company_profile and search_company_documents — the company's own data, for values that belong in forms.",
+          "5. get_extractions / get_tender_context — verified tender facts and the notice/overview.",
+          "6. search_tender_documents, then list_tender_files + read_tender_document — the wider tender corpus, for what the open document references but does not contain.",
+          "7. get_company_profile and search_company_documents — the company's own data, for values that belong in forms.",
         ]
       : [
-          "4. get_company_profile and search_company_documents — the company's own data, for values that belong in forms.",
+          "5. get_company_profile and search_company_documents — the company's own data, for values that belong in forms.",
         ]),
     "",
     "## Data boundary (important)",

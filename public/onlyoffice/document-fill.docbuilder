@@ -1,0 +1,26 @@
+var input = typeof Argument === "string" ? JSON.parse(Argument) : Argument;
+builder.OpenFile(input.sourceUrl, "");
+var doc = Api.GetDocument();
+var forms = [];
+
+for (var i = 0; i < input.fields.length; i++) {
+    var field = input.fields[i];
+    if (field.strategy === "form_key") {
+        forms.push({ key: field.formKey, value: field.value });
+        continue;
+    }
+    if (field.strategy === "unique_text") {
+        var ranges = doc.Search(field.searchText) || [];
+        if (ranges.length !== 1) {
+            throw new Error("locator_preflight_failed:" + field.id + ":" + ranges.length);
+        }
+        ranges[0].SetText(field.value);
+    }
+}
+
+if (forms.length && doc.SetFormsData(forms) === false) {
+    throw new Error("form_preflight_failed");
+}
+
+builder.SaveFile("docx", "filled.docx");
+builder.CloseFile();

@@ -1,6 +1,7 @@
 import type { ObjectId } from "mongodb";
 
 import type { CompanyContext } from "../../company/context.ts";
+import { notifyReportReady } from "../../email/report-ready-notification.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
 import type { SerializedTenderDetail } from "../../tenders/detail.ts";
 import { RateLimitError, StructuredOutputError } from "../gateway/types.ts";
@@ -38,7 +39,7 @@ export async function runReportJob(input: {
   }, RUN_HEARTBEAT_MS);
 
   try {
-    await generateTenderReport({
+    const report = await generateTenderReport({
       companyContext: input.companyContext,
       tenderId: input.tenderId,
       tender: input.tender,
@@ -53,6 +54,15 @@ export async function runReportJob(input: {
       tenantId: input.tenantId,
       tenderId: input.tenderId,
       error: null,
+    });
+
+    // After the run is marked done, never before: the page must flip to
+    // "ready" on its next poll regardless of how the mail fan-out goes. The
+    // notifier swallows its own failures for the same reason.
+    await notifyReportReady({
+      tenantId: input.tenantId,
+      tenderId: input.tenderId,
+      report,
     });
   } catch (error) {
     log.error("report job failed", {

@@ -2,26 +2,15 @@
 
 import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  ChevronLeft,
-  ChevronRight,
-  LayoutList,
-  Loader2,
-  Map as MapIcon,
-  RefreshCw,
-} from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { LayoutList, Loader2, Map as MapIcon, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import {
   AiMatchProgress,
   useMatchRunPolling,
-  type MatchRunState,
 } from "@/components/tenders/ai-match-progress";
-import {
-  MatchCoverageNudge,
-  type MatchCoverage,
-} from "@/components/tenders/match-coverage-nudge";
+import { MatchCoverageNudge } from "@/components/tenders/match-coverage-nudge";
 import { RegionSwitcher } from "@/components/tenders/region-switcher";
 import { SavedFilters } from "@/components/tenders/saved-filters";
 import { TenderCard } from "@/components/tenders/tender-card";
@@ -35,24 +24,24 @@ import {
   type TenderMode,
 } from "@/components/tenders/tender-mode-tabs";
 import { TenderToolbar } from "@/components/tenders/tender-toolbar";
+import {
+  useTenderFeed,
+  type TenderFeedResponse,
+} from "@/components/tenders/use-tender-feed";
 import { useMediaQuery } from "@/components/otto/use-media-query";
 import {
   parseTenderFilters,
   tenderFiltersToParams,
   type TenderFilters,
 } from "@/lib/tenders/filters";
-import type { NutsResolution } from "@/lib/tenders/nuts";
-import type { SerializedTender } from "@/lib/tenders/serialize";
+import type { DecisionStatus } from "@/lib/tenders/pipeline-status";
 import { cn } from "@/lib/utils";
-
-const PAGE_SIZE = 20;
 
 /** Below this the detail pane has no room, so the popup takes over. */
 const SPLIT_QUERY = "(min-width: 1024px)";
 
-/** Feed states the AI endpoint can report; the classic feed has none. */
-type MatchFeedState =
-  "ready" | "stale" | "computing" | "never" | "empty" | "unavailable";
+/** How far ahead of the sentinel the next page starts loading. */
+const PREFETCH_MARGIN = "600px";
 
 const TenderMap = dynamic(
   () => import("@/components/tenders/tender-map").then((m) => m.TenderMap),
@@ -61,26 +50,6 @@ const TenderMap = dynamic(
     loading: () => <MapPlaceholder />,
   },
 );
-
-interface ApiResponse {
-  items: SerializedTender[];
-  page: number;
-  pageSize: number;
-  /** Every tender matching the filters. */
-  total: number;
-  /** The pageable slice of that — the top `RANK_CAP` by relevance. */
-  rankedTotal: number;
-  profile: {
-    cpv: string[];
-    nuts: NutsResolution;
-    region: string | null;
-    hasCoordinates: boolean;
-  };
-  /** AI mode only — absent from the classic endpoint's response. */
-  state?: MatchFeedState;
-  run?: MatchRunState | null;
-  coverage?: MatchCoverage | null;
-}
 
 function MapPlaceholder() {
   const t = useTranslations("Tenders");
@@ -116,27 +85,20 @@ export function RelevantTenders() {
     () =>
       parseTenderFilters(new URLSearchParams(searchParams.toString())).q ?? "",
   );
-  const [page, setPage] = useState(() => {
-    const parsed = Number.parseInt(searchParams.get("page") ?? "0", 10);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-  });
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const [data, setData] = useState<ApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [selectedTenderId, setSelectedTenderId] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<TenderPanelTab>("about");
-  // Tenders decided on this page. The server already excludes them on the next
-  // fetch; this keeps them from flashing back before that happens.
-  const [decided, setDecided] = useState<Set<string>>(new Set());
+  // Decisions taken while the feed is open. The server applies them on the next
+  // fresh run; until then they are overlaid here, so that neither a rejected
+  // tender lingers nor one moved to the board keeps offering the action bar —
+  // and neither costs the reader the scroll position they built up.
+  const [rejected, setRejected] = useState<Set<string>>(new Set());
+  const [inWorkspace, setInWorkspace] = useState<Set<string>>(new Set());
 
   // Debounce only the free-text query; chip changes apply immediately.
   useEffect(() => {
-    const id = setTimeout(() => {
-      setDebouncedQ(filters.q ?? "");
-      setPage(0);
-    }, 300);
+    const id = setTimeout(() => setDebouncedQ(filters.q ?? ""), 300);
     return () => clearTimeout(id);
   }, [filters.q]);
 
@@ -145,15 +107,14 @@ export function RelevantTenders() {
     [filters, debouncedQ],
   );
 
+  // Paging is left to the feed hook — this is only the filter half of the query.
   const queryString = useMemo(
     () =>
       tenderFiltersToParams(effectiveFilters, {
-        page: String(page),
-        pageSize: String(PAGE_SIZE),
         // The AI reason is generated in both languages and picked server-side.
         locale,
       }).toString(),
-    [effectiveFilters, page, locale],
+    [effectiveFilters, locale],
   );
 
   // Mirror state into the browser URL (no navigation/refetch) so the current
@@ -163,47 +124,58 @@ export function RelevantTenders() {
     const params = tenderFiltersToParams(effectiveFilters);
     if (mode === "classic") params.set("mode", "classic");
     if (view === "map") params.set("view", "map");
-    if (page > 0) params.set("page", String(page));
     const qs = params.toString();
     window.history.replaceState(
       window.history.state,
       "",
       qs ? `${pathname}?${qs}` : pathname,
     );
-  }, [effectiveFilters, mode, view, page, pathname]);
+  }, [effectiveFilters, mode, view, pathname]);
+
+  const onFirstPage = useCallback((response: TenderFeedResponse) => {
+    // The deployment cannot do AI matching at all (kill switch, or no Atlas
+    // Search) — fall back rather than leaving the user on a tab that will
+    // never produce anything.
+    if (response.state === "unavailable") setMode("classic");
+  }, []);
+
+  // Server-side paging, client-side continuity: pages are appended, never
+  // swapped, so the reader scrolls one list instead of stepping through them.
+  const feed = useTenderFeed({
+    endpoint: mode === "ai" ? "/api/tenders/ai-matched" : "/api/tenders/relevant",
+    query: queryString,
+    refreshKey,
+    onFirstPage,
+  });
+  const { loading, loadingMore, error, hasMore, loadMore } = feed;
+  const data = feed.meta;
+
+  // The scroll container is the observer root, so the sentinel fires off the
+  // feed's own scrolling rather than the window's.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const endpoint =
-      mode === "ai" ? "/api/tenders/ai-matched" : "/api/tenders/relevant";
-    const timer = setTimeout(() => {
-      setLoading(true);
-      setError(false);
-      fetch(`${endpoint}?${queryString}`, { signal: controller.signal })
-        .then((response) => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.json() as Promise<ApiResponse>;
-        })
-        .then((json) => {
-          setData(json);
-          // The deployment cannot do AI matching at all (kill switch, or no
-          // Atlas Search) — fall back rather than leaving the user on a tab
-          // that will never produce anything.
-          if (json.state === "unavailable") setMode("classic");
-        })
-        .catch((cause) => {
-          if (!controller.signal.aborted) setError(true);
-          void cause;
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [queryString, refreshKey, mode]);
+    const sentinel = sentinelRef.current;
+    const root = scrollRef.current;
+    if (!sentinel || !root || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { root, rootMargin: `${PREFETCH_MARGIN} 0px` },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
+
+  // A new query is a new list: start it at the top rather than wherever the
+  // previous one happened to be scrolled to. `refreshKey` counts here too —
+  // a finished AI run collapses the accumulated pages back to twenty, and
+  // without this the reader is left clamped to the bottom of the short list.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [queryString, mode, refreshKey]);
 
   // ---- AI mode -----------------------------------------------------------
   const matchState = mode === "ai" ? (data?.state ?? null) : null;
@@ -228,19 +200,12 @@ export function RelevantTenders() {
     }
   }, []);
 
-  const changeMode = (next: TenderMode) => {
-    setMode(next);
-    setPage(0);
-  };
+  const changeMode = (next: TenderMode) => setMode(next);
 
-  const updateFilters = (next: TenderFilters) => {
-    setFilters(next);
-    setPage(0);
-  };
+  const updateFilters = (next: TenderFilters) => setFilters(next);
   const applyPreset = (preset: TenderFilters) => {
     setFilters(preset);
     setDebouncedQ(preset.q ?? "");
-    setPage(0);
   };
 
   const openTender = useCallback(
@@ -251,9 +216,40 @@ export function RelevantTenders() {
     [],
   );
 
+  /**
+   * Record a decision without refetching. Dropping a card or relabelling it in
+   * place is what the next fresh run would produce anyway, and it leaves the
+   * accumulated pages — and the scroll position — untouched.
+   */
+  const applyDecision = useCallback(
+    (tenderId: string, status: DecisionStatus | null) => {
+      const hidden = status === "deadzone" || status === "deleted";
+      setRejected((prev) => {
+        const next = new Set(prev);
+        if (hidden) next.add(tenderId);
+        else next.delete(tenderId);
+        return next;
+      });
+      setInWorkspace((prev) => {
+        const next = new Set(prev);
+        if (status && !hidden) next.add(tenderId);
+        else next.delete(tenderId);
+        return next;
+      });
+    },
+    [],
+  );
+
   const items = useMemo(
-    () => (data?.items ?? []).filter((tender) => !decided.has(tender.id)),
-    [data, decided],
+    () =>
+      feed.items
+        .filter((tender) => !rejected.has(tender.id))
+        .map((tender) =>
+          inWorkspace.has(tender.id) && tender.pipelineStatus === null
+            ? { ...tender, pipelineStatus: "interested" }
+            : tender,
+        ),
+    [feed.items, rejected, inWorkspace],
   );
 
   // What the detail pane shows, derived rather than stored: an explicit pick
@@ -271,15 +267,13 @@ export function RelevantTenders() {
   }, [isSplit, items, selectedTenderId]);
 
   const total = data?.total ?? 0;
-  // Only the ranked pool is pageable, so the pager bounds come from that —
-  // while the label still reports how many tenders matched in total.
+  // Only the ranked pool is reachable, so the progress label counts against
+  // that — while still reporting how many tenders matched in total.
   const ranked = data?.rankedTotal ?? 0;
-  const totalPages = Math.max(1, Math.ceil(ranked / PAGE_SIZE));
-  const from = ranked === 0 ? 0 : page * PAGE_SIZE + 1;
-  const to = Math.min(ranked, (page + 1) * PAGE_SIZE);
+  const shown = items.length;
   const isMap = mode === "classic" && view === "map";
 
-  const feed =
+  const feedBody =
     mode === "ai" && matchState === "never" && !isComputing ? (
       <StateCard
         tourId="build-ai-matches"
@@ -322,6 +316,8 @@ export function RelevantTenders() {
       <div
         className={cn(
           "flex flex-col gap-3",
+          // A fresh run is in flight; the previous results stay readable but
+          // inert. Appended pages never dim — the list below them is live.
           loading && "pointer-events-none opacity-60",
         )}
       >
@@ -331,17 +327,30 @@ export function RelevantTenders() {
             tender={tender}
             selected={tender.id === activeTenderId}
             onOpen={openTender}
-            onDecided={(tenderId, status) => {
-              if (status === "deadzone") {
-                setDecided((prev) => new Set(prev).add(tenderId));
-                return;
-              }
-              // Moved to the board: refetch so it comes back labelled
-              // "In workspace" instead of offering the action bar again.
-              setRefreshKey((key) => key + 1);
-            }}
+            onDecided={applyDecision}
           />
         ))}
+
+        {/* Tripwire for the next page, kept a screenful ahead of the fold so
+            the tenders are already there by the time the reader gets down to
+            them. `hasMore` gates it, so the last page ends cleanly. */}
+        {hasMore && <div ref={sentinelRef} aria-hidden className="h-px" />}
+
+        {loadingMore && <LoadingMoreRow label={t("pagination.loadingMore")} />}
+
+        {/* The observer covers the normal case; this covers the rest — a failed
+            page, and any browser or setting where it never fires. */}
+        {hasMore && !loadingMore && (
+          <button
+            type="button"
+            onClick={loadMore}
+            className="mx-auto rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            {feed.loadMoreFailed
+              ? t("states.retry")
+              : t("pagination.loadMore")}
+          </button>
+        )}
       </div>
     );
 
@@ -401,7 +410,10 @@ export function RelevantTenders() {
         <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Feed */}
           <div className="flex min-h-0 flex-col">
-            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 sm:px-5">
+            <div
+              ref={scrollRef}
+              className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4 sm:px-5"
+            >
               {mode === "ai" && data?.coverage && (
                 <MatchCoverageNudge coverage={data.coverage} />
               )}
@@ -428,38 +440,18 @@ export function RelevantTenders() {
                 />
               )}
 
-              {feed}
+              {feedBody}
             </div>
 
+            {/* The pager's replacement — how far into the list the reader has
+                got. The list itself says when the next page is coming. */}
             {total > 0 && (
-              <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-4 py-2 sm:px-5">
+              <div className="flex shrink-0 items-center gap-3 border-t border-border px-4 py-2 sm:px-5">
                 <span className="text-[11px] text-muted-foreground">
                   {total > ranked
-                    ? t("pagination.showingRanked", { from, to, ranked, total })
-                    : t("pagination.showing", { from, to, total })}
+                    ? t("pagination.shownRanked", { shown, ranked, total })
+                    : t("pagination.shown", { shown, total })}
                 </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={page === 0 || loading}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-                  >
-                    <ChevronLeft className="size-3.5" />
-                    {t("pagination.previous")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPage((p) => Math.min(totalPages - 1, p + 1))
-                    }
-                    disabled={page >= totalPages - 1 || loading}
-                    className="inline-flex items-center gap-1 rounded-md border border-border px-2.5 py-1.5 text-[11px] text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40"
-                  >
-                    {t("pagination.next")}
-                    <ChevronRight className="size-3.5" />
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -485,9 +477,29 @@ export function RelevantTenders() {
           initialTab={detailTab === "client" ? "about" : detailTab}
           // A decision taken inside the popup has to reach the feed too: rejected
           // tenders drop out, workspace ones come back labelled "In workspace".
-          onDecided={() => setRefreshKey((key) => key + 1)}
+          onDecided={applyDecision}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * Placeholder for the page being appended. Card-shaped rather than a bare
+ * spinner, so the list keeps its rhythm and the scrollbar stops jumping as
+ * each page lands.
+ */
+function LoadingMoreRow({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="grid h-24 place-items-center rounded-2xl border border-dashed border-border bg-muted/20 text-xs text-muted-foreground"
+    >
+      <span className="flex items-center gap-2">
+        <Loader2 className="size-3.5 animate-spin" />
+        {label}
+      </span>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import type { Types } from "mongoose";
 import { deleteObject, s3Config } from "@/lib/storage/s3";
 import { WorkspaceDocument, type WorkspaceDocumentSource } from "@/models/workspace-document";
 import { WorkspaceDocumentVersion } from "@/models/workspace-document-version";
+import type { WorkspaceVersionReason } from "@/models/workspace-document-version";
 
 import type { WorkspaceFormat } from "./formats";
 import { onlyOfficeDocumentKey } from "./key";
@@ -22,6 +23,7 @@ export async function createWorkspaceDocumentFromObject(input: {
   sourceKey: string;
   sourceBucket?: string;
   actorId: string;
+  versionReason?: WorkspaceVersionReason;
 }) {
   const document = new WorkspaceDocument({
     companyId: input.companyId,
@@ -64,7 +66,7 @@ export async function createWorkspaceDocumentFromObject(input: {
       documentId: document._id,
       storageRevision: 1,
       editorRevision: 1,
-      reason: "upload",
+      reason: input.versionReason ?? "upload",
       state: "committed",
       s3Bucket: s3Config().bucket,
       s3Key: finalKey,

@@ -87,7 +87,7 @@ services:
   # Legacy DOC/XLS conversion plus interrupted-save reconciliation.
   onlyoffice-worker:
     <<: *worker
-    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/onlyoffice.mts"]
+    command: ["node", "--import", "tsx", "workers/onlyoffice.mts"]
 
   # ══════════════ PUBLISHERS — emit outward ══════════════
   # Single replica: a second would duplicate every push without adding durability.

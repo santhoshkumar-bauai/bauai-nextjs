@@ -150,6 +150,11 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { documentId: 1 }, name: "ix_document" },
   ]);
 
+  await c.documentFillRuns.createIndexes([
+    { key: { tenantId: 1, documentId: 1, createdAt: -1 }, name: "ix_document_recent" },
+    { key: { tenantId: 1, status: 1, updatedAt: 1 }, name: "ix_status_heartbeat" },
+  ]);
+
   await db.collection("dora_document_snapshots").createIndexes([
     { key: { expiresAt: 1 }, name: "ttl_snapshot", expireAfterSeconds: 0 },
     { key: { tenantId: 1, documentId: 1, createdAt: -1 }, name: "ix_document_recent" },

@@ -39,9 +39,17 @@ export interface AgentModelOptions {
 
 type ReasoningEffort = "none" | "low" | "medium" | "high";
 
+function geminiUsesFixedSampling(model: string): boolean {
+  const match = model.replace(/^models\//, "").match(/^gemini-3\.(\d+)(?:-|$)/);
+  return match !== null && Number(match[1]) >= 6;
+}
+
 export interface ChatModelOptions extends AgentModelOptions {
   /** Defaults to "agent". */
-  role?: Extract<ModelRole, "agent" | "report" | "dora" | "dora_fast" | "otto">;
+  role?: Extract<
+    ModelRole,
+    "agent" | "report" | "dora" | "dora_fast" | "dora_fill" | "otto"
+  >;
   /** Overrides the env-configured effort for this role. */
   reasoningEffort?: ReasoningEffort;
 }
@@ -79,7 +87,10 @@ export async function getChatModel(
       return new ChatGoogleGenerativeAI({
         model: ref.model,
         apiKey: requireGeminiApiKey(),
-        temperature,
+        // Gemini 3.6+ rejects the legacy temperature/top-p/top-k knobs with
+        // INVALID_ARGUMENT. Leaving the value undefined keeps it out of the
+        // serialized generationConfig and uses the model's fixed sampling.
+        ...(geminiUsesFixedSampling(ref.model) ? {} : { temperature }),
         maxOutputTokens,
         ...(effort === "none"
           ? { thinkingConfig: { thinkingBudget: 0 } }

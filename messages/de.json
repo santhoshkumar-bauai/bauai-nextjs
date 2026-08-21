@@ -767,10 +767,10 @@
       "retry": "Erneut versuchen"
     },
     "pagination": {
-      "previous": "Zurück",
-      "next": "Weiter",
-      "showing": "{from}–{to} von {total}",
-      "showingRanked": "{from}–{to} der {ranked} besten Treffer ({total} insgesamt)"
+      "shown": "{shown} von {total}",
+      "shownRanked": "{shown} der {ranked} besten Treffer ({total} insgesamt)",
+      "loadMore": "Mehr laden",
+      "loadingMore": "Weitere Ausschreibungen werden geladen…"
     },
     "map": {
       "attribution": "Kartendaten © Google",
@@ -1418,6 +1418,8 @@
       "propose_edits": "Bereite Änderungsvorschläge vor…",
       "get_document_brief": "Lade die Dokumentanalyse…",
       "get_document_info": "Prüfe den Dokumentstatus…",
+      "get_document_fill_plan": "Lade ausfüllbare Felder…",
+      "set_document_fill_value": "Aktualisiere den Ausfüllplan…",
       "get_tender_context": "Lade den Ausschreibungskontext…"
     },
     "verdict": {

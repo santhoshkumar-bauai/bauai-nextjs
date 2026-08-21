@@ -14,9 +14,11 @@ export const WORKSPACE_DOCUMENT_TYPES = ["word", "cell", "pdf"] as const;
 export type WorkspaceDocumentType = (typeof WORKSPACE_DOCUMENT_TYPES)[number];
 
 export interface WorkspaceDocumentSource {
-  kind: "upload" | "tender-copy";
+  kind: "upload" | "tender-copy" | "generated-fill";
   tenderRecordId?: string;
   tenderFileIndex?: number;
+  sourceDocumentId?: Types.ObjectId;
+  fillRunId?: Types.ObjectId;
 }
 
 export interface WorkspaceDocumentDocument {
@@ -47,9 +49,15 @@ const workspaceDocumentSchema = new Schema<WorkspaceDocumentDocument>(
     companyId: { type: Schema.Types.ObjectId, ref: "Company", required: true },
     tenderId: { type: Schema.Types.ObjectId, default: null },
     source: {
-      kind: { type: String, enum: ["upload", "tender-copy"], required: true },
+      kind: {
+        type: String,
+        enum: ["upload", "tender-copy", "generated-fill"],
+        required: true,
+      },
       tenderRecordId: String,
       tenderFileIndex: Number,
+      sourceDocumentId: { type: Schema.Types.ObjectId, ref: "WorkspaceDocument" },
+      fillRunId: Schema.Types.ObjectId,
     },
     fileName: { type: String, required: true, trim: true },
     extension: { type: String, required: true, lowercase: true },

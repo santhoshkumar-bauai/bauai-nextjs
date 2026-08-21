@@ -10,12 +10,23 @@ const {
   ONLYOFFICE_QUEUE_PREFIX,
 } = await import("../lib/onlyoffice/queue.ts");
 const { reconcileOnlyOfficeState } = await import("../lib/onlyoffice/reconcile.ts");
+const { analyzeDocumentFillRun } = await import("../lib/ai/dora/fill/analyze.ts");
+const { generateDocumentFillCopy } = await import("../lib/ai/dora/fill/generate.ts");
 
 const worker = new Worker(
   ONLYOFFICE_CONVERSION_QUEUE,
   async (job) => {
-    if (job.data.kind !== "convert") return;
-    await convertWorkspaceDocument(job.data.documentId);
+    if (job.data.kind === "convert") {
+      await convertWorkspaceDocument(job.data.documentId);
+      return;
+    }
+    if (job.data.kind === "fill-analyze") {
+      await analyzeDocumentFillRun(job.data.runId);
+      return;
+    }
+    if (job.data.kind === "fill-generate") {
+      await generateDocumentFillCopy(job.data.runId);
+    }
   },
   {
     connection: aiRedisOptions(),

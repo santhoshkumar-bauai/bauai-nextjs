@@ -1,0 +1,28 @@
+{
+  "name": "Nordbau Projekt GmbH",
+  "domain": "nordbau.example",
+  "website": "https://nordbau.example",
+  "businessDomain": "Commercial construction",
+  "region": "Hamburg",
+  "registrationNumber": "HRB 184221",
+  "vatNumber": "DE349991234",
+  "address": "Hafenstrasse 18, 20457 Hamburg, Germany",
+  "email": "office@nordbau.example",
+  "phone": "+49 40 555 0199",
+  "knowledgeBase": {
+    "companyExtended": {
+      "legalForm": "GmbH",
+      "foundingYear": "2012"
+    },
+    "primaryContact": {
+      "name": "Lena Hoffmann",
+      "title": "Bid Manager",
+      "email": "lena.hoffmann@nordbau.example",
+      "phone": "+49 40 555 0121"
+    },
+    "authorizedSigner": {
+      "name": "Markus Weber",
+      "title": "Managing Director"
+    }
+  }
+}

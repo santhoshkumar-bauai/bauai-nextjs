@@ -767,10 +767,10 @@
       "retry": "Retry"
     },
     "pagination": {
-      "previous": "Previous",
-      "next": "Next",
-      "showing": "Showing {from}–{to} of {total}",
-      "showingRanked": "Showing {from}–{to} of the {ranked} best matches ({total} total)"
+      "shown": "Showing {shown} of {total}",
+      "shownRanked": "Showing {shown} of the {ranked} best matches ({total} total)",
+      "loadMore": "Load more",
+      "loadingMore": "Loading more tenders…"
     },
     "map": {
       "attribution": "Map data © Google",
@@ -1418,6 +1418,8 @@
       "propose_edits": "Preparing document suggestions…",
       "get_document_brief": "Loading the document brief…",
       "get_document_info": "Checking the document status…",
+      "get_document_fill_plan": "Loading fillable fields…",
+      "set_document_fill_value": "Updating the document fill plan…",
       "get_tender_context": "Loading the tender context…"
     },
     "verdict": {

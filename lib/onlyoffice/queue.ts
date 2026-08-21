@@ -5,10 +5,10 @@ import { aiRedisOptions } from "@/lib/ai/queue/connection";
 export const ONLYOFFICE_CONVERSION_QUEUE = "onlyoffice-conversion";
 export const ONLYOFFICE_QUEUE_PREFIX = process.env.ONLYOFFICE_REDIS_PREFIX || "{bauai:onlyoffice}";
 
-export type OnlyOfficeConversionJob = {
-  kind: "convert";
-  documentId: string;
-};
+export type OnlyOfficeJob =
+  | { kind: "convert"; documentId: string }
+  | { kind: "fill-analyze"; runId: string }
+  | { kind: "fill-generate"; runId: string };
 
 const options: JobsOptions = {
   attempts: 5,
@@ -17,15 +17,31 @@ const options: JobsOptions = {
   removeOnFail: 2_000,
 };
 
-let queue: Queue<OnlyOfficeConversionJob> | null = null;
+let queue: Queue<OnlyOfficeJob> | null = null;
 
-export function onlyOfficeConversionQueue(): Queue<OnlyOfficeConversionJob> {
-  queue ??= new Queue<OnlyOfficeConversionJob>(ONLYOFFICE_CONVERSION_QUEUE, {
+export function onlyOfficeConversionQueue(): Queue<OnlyOfficeJob> {
+  queue ??= new Queue<OnlyOfficeJob>(ONLYOFFICE_CONVERSION_QUEUE, {
     connection: aiRedisOptions(),
     prefix: ONLYOFFICE_QUEUE_PREFIX,
     defaultJobOptions: options,
   });
   return queue;
+}
+
+export async function enqueueDocumentFillAnalysis(runId: string): Promise<void> {
+  await onlyOfficeConversionQueue().add(
+    "fill-analyze",
+    { kind: "fill-analyze", runId },
+    { jobId: `fill-analyze-${runId}` },
+  );
+}
+
+export async function enqueueDocumentFillGeneration(runId: string): Promise<void> {
+  await onlyOfficeConversionQueue().add(
+    "fill-generate",
+    { kind: "fill-generate", runId },
+    { jobId: `fill-generate-${runId}` },
+  );
 }
 
 export async function enqueueOnlyOfficeConversion(documentId: string): Promise<void> {

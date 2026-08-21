@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { resetAiEnvCache } from "../config/env.ts";
-import { getAgentChatModel, setAgentModelForTests } from "./model.ts";
+import { getAgentChatModel, getChatModel, setAgentModelForTests } from "./model.ts";
 
-const KEYS = ["AI_MODEL_ROLES", "GEMINI_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"];
+const KEYS = [
+  "AI_MODEL_ROLES",
+  "AI_DORA_FILL_MODEL",
+  "GEMINI_API_KEY",
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
+];
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => {
@@ -30,6 +36,19 @@ describe("getAgentChatModel", () => {
     const model = await getAgentChatModel();
     expect(model.constructor.name).toBe("ChatGoogleGenerativeAI");
     expect((model as { model?: string }).model).toContain("gemini-3.5-flash");
+    expect((model as { temperature?: number }).temperature).toBe(0.2);
+  });
+
+  it("omits sampling parameters rejected by Gemini 3.6 and newer", async () => {
+    process.env.GEMINI_API_KEY = "test-key";
+    process.env.AI_DORA_FILL_MODEL = "gemini:gemini-3.7-flash";
+    resetAiEnvCache();
+
+    const model = await getChatModel({ role: "dora_fill", temperature: 0 });
+
+    expect(model.constructor.name).toBe("ChatGoogleGenerativeAI");
+    expect((model as { model?: string }).model).toBe("gemini-3.7-flash");
+    expect((model as { temperature?: number }).temperature).toBeUndefined();
   });
 
   it("routes to openai when configured, with a clear missing-key error", async () => {

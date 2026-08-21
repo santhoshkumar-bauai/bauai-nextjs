@@ -160,7 +160,7 @@ services:
   # Legacy DOC/XLS conversion plus interrupted-save reconciliation.
   onlyoffice-worker:
     <<: *worker
-    command: ["node", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", "workers/onlyoffice.mts"]
+    command: ["node", "--import", "tsx", "workers/onlyoffice.mts"]
 
   # ══════════════ TOOLS — run on demand, never auto-started ══════════════
   #   docker compose -f docker-compose.vm.yml run --rm seed -- --from 2026-01-01

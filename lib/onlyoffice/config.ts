@@ -102,6 +102,9 @@ export async function buildOnlyOfficeConfig(input: {
                 edit: Boolean(unsigned.document.permissions.edit),
               },
               capabilities: {
+                documentFill:
+                  input.document.documentType === "word" &&
+                  input.document.extension === "docx",
                 spreadsheet: editorKind === "spreadsheet" &&
                   process.env.DORA_SPREADSHEET_ENABLED !== "false",
                 spreadsheetWrites: editorKind === "spreadsheet" &&

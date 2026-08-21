@@ -22,6 +22,7 @@ import type {
   TenderVerdictDocument,
   WorkspaceDocumentTextDocument,
 } from "../types.ts";
+import type { DocumentFillRunDocument } from "../dora/fill/types.ts";
 
 export const aiCollectionNames = {
   tenderSearchDocuments: "tender_search_documents",
@@ -43,6 +44,7 @@ export const aiCollectionNames = {
   documentBriefs: "document_briefs",
   documentBriefRuns: "document_brief_runs",
   workspaceDocumentTexts: "workspace_document_texts",
+  documentFillRuns: "document_fill_runs",
 } as const;
 
 export interface AiCollections {
@@ -65,6 +67,7 @@ export interface AiCollections {
   documentBriefs: Collection<DocumentBriefDocument>;
   documentBriefRuns: Collection<DocumentBriefRunDocument>;
   workspaceDocumentTexts: Collection<WorkspaceDocumentTextDocument>;
+  documentFillRuns: Collection<DocumentFillRunDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -92,5 +95,6 @@ export async function getAiCollections(): Promise<AiCollections> {
     documentBriefs: db.collection(aiCollectionNames.documentBriefs),
     documentBriefRuns: db.collection(aiCollectionNames.documentBriefRuns),
     workspaceDocumentTexts: db.collection(aiCollectionNames.workspaceDocumentTexts),
+    documentFillRuns: db.collection(aiCollectionNames.documentFillRuns),
   };
 }

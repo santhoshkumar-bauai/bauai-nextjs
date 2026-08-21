@@ -53,6 +53,8 @@ export const doraSnapshotNodeSchema = z.object({
   formattingHash: z.string().max(64).default(""),
   editable: z.boolean().default(true),
   protectedReason: z.string().max(160).default(""),
+  /** Stable ONLYOFFICE form key, present only for native fillable controls. */
+  formKey: z.string().max(300).optional(),
 });
 
 export const doraSelectionSchema = z.object({

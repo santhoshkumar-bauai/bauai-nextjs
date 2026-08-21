@@ -34,8 +34,13 @@ vi.mock("./document-text.ts", async (importOriginal) => ({
   getWorkspaceDocumentText: vi.fn(),
 }));
 vi.mock("./brief.ts", () => ({ getBriefState: vi.fn() }));
+vi.mock("./fill/runs.ts", () => ({
+  latestFillRun: vi.fn(),
+  patchFillFields: vi.fn(),
+}));
 
 const docText = await import("./document-text.ts");
+const fillRuns = await import("./fill/runs.ts");
 const { buildDoraTools } = await import("./tools.ts");
 
 function tenderScope(): AgentTenderScope {
@@ -109,6 +114,8 @@ const DOCUMENT_TOOLS = [
   "get_document_info",
   "get_document_brief",
   "read_current_document",
+  "get_document_fill_plan",
+  "set_document_fill_value",
 ];
 const COMPANY_TOOLS = ["search_company_documents", "get_company_profile"];
 const TENDER_TOOLS = [
@@ -194,6 +201,33 @@ describe("read_current_document", () => {
     const result = JSON.parse((await tool.invoke({ offset: 0 })) as string);
     expect(result.notReadable).toBe(true);
     expect(result.note).toBe("no_text_layer");
+  });
+});
+
+describe("document-local fill tools", () => {
+  it("updates one exact reviewed field without changing company context", async () => {
+    const ctx = fakeCtx(null);
+    const field = {
+      id: "field-1", label: "Insurance policy", description: "", required: true,
+      sensitive: false, value: null, confidence: 0, state: "missing" as const,
+      locator: null, evidence: [], reason: "Missing", updatedBy: "ai" as const,
+    };
+    vi.mocked(fillRuns.latestFillRun).mockResolvedValue({
+      status: "review", fields: [field],
+    } as never);
+    vi.mocked(fillRuns.patchFillFields).mockResolvedValue({
+      fields: [{ ...field, value: "GL-2026-44", state: "needs_review", updatedBy: "user" }],
+    } as never);
+    const registered = buildDoraTools(ctx).find((item) => item.name === "set_document_fill_value")!;
+    const result = JSON.parse(await registered.invoke({
+      field: "Insurance policy", value: "GL-2026-44", notApplicable: false,
+    }) as string);
+    expect(result.updated).toBe(true);
+    expect(fillRuns.patchFillFields).toHaveBeenCalledWith({
+      tenantId: ctx.tenantId,
+      documentId: ctx.document.documentId,
+      updates: [{ id: "field-1", value: "GL-2026-44" }],
+    });
   });
 });
 

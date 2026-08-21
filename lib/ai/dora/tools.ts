@@ -23,6 +23,7 @@ import { getBriefState } from "./brief.ts";
 import type { BriefContent } from "./brief-schema.ts";
 import type { DoraRunContext } from "./context.ts";
 import { getWorkspaceDocumentText, workspaceTextCacheKey } from "./document-text.ts";
+import { latestFillRun, patchFillFields } from "./fill/runs.ts";
 
 /**
  * Dora's tool registry: the document-panel subset. Same invariants as Clara's
@@ -264,6 +265,73 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     },
   );
 
+  const getDocumentFillPlan = tool(
+    async () => {
+      const run = await latestFillRun(ctx.tenantId, ctx.document.documentId);
+      if (!run) return JSON.stringify({ notAnalyzed: true });
+      return JSON.stringify({
+        status: run.status,
+        fields: run.fields.map((field) => ({
+          id: field.id,
+          label: field.label,
+          required: field.required,
+          sensitive: field.sensitive,
+          value: field.value,
+          state: field.state,
+          confidence: field.confidence,
+          reason: field.reason,
+          evidence: field.evidence,
+        })),
+      });
+    },
+    {
+      name: "get_document_fill_plan",
+      description:
+        "Read the current reviewed fill-field list for the open Word document, including ready, missing, manual and needs-review fields. Use when the user asks what is fillable or what is still missing.",
+      schema: z.object({}),
+    },
+  );
+
+  const setDocumentFillValue = tool(
+    async ({ field, value, notApplicable }: { field: string; value?: string; notApplicable: boolean }) => {
+      const run = await latestFillRun(ctx.tenantId, ctx.document.documentId);
+      if (!run || run.status !== "review") {
+        return JSON.stringify({ updated: false, error: "fill_review_not_available" });
+      }
+      const needle = field.trim().toLocaleLowerCase();
+      const matches = run.fields.filter(
+        (item) => item.id === field || item.label.trim().toLocaleLowerCase() === needle,
+      );
+      if (matches.length !== 1) {
+        return JSON.stringify({
+          updated: false,
+          error: matches.length ? "field_ambiguous" : "field_not_found",
+          availableFields: run.fields.map((item) => ({ id: item.id, label: item.label })),
+        });
+      }
+      const updated = await patchFillFields({
+        tenantId: ctx.tenantId,
+        documentId: ctx.document.documentId,
+        updates: [{
+          id: matches[0].id,
+          ...(notApplicable ? { state: "not_applicable" as const } : { value: value ?? "" }),
+        }],
+      });
+      const result = updated?.fields.find((item) => item.id === matches[0].id);
+      return JSON.stringify({ updated: Boolean(result), field: result ?? null });
+    },
+    {
+      name: "set_document_fill_value",
+      description:
+        "Set one field in the document-local fill review plan from the user's explicit answer, or mark it not applicable. This never updates the company profile and never generates a file.",
+      schema: z.object({
+        field: z.string().min(1).max(200).describe("Exact field label or id from get_document_fill_plan"),
+        value: z.string().max(20_000).optional(),
+        notApplicable: z.boolean().default(false),
+      }),
+    },
+  );
+
   // The V1 exact-text edit engine is retired: the V2 planner + stream tiers
   // cover everything it did with live-range targeting instead of text-anchor
   // search. Kill-switch kept for one release, then delete buildProposeEditsTool.
@@ -271,6 +339,8 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     getDocumentInfo,
     getDocumentBrief,
     readCurrentDocument,
+    getDocumentFillPlan,
+    setDocumentFillValue,
     ...(process.env.DORA_EDIT_ENGINE_V1 === "true" ? [buildProposeEditsTool(ctx)] : []),
   ];
   const companyTools = [searchCompanyDocuments, getCompanyProfile];
