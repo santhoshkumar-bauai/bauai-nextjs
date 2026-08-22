@@ -33,7 +33,15 @@ export async function buildOnlyOfficeConfig(input: {
   });
   const companyId = String(input.context.company._id);
   const documentId = String(input.document._id);
-  const editorKind = input.document.documentType === "cell" ? "spreadsheet" : "document";
+  // Three-way. PDFs previously fell through to "document", which told the
+  // panel it was running inside the Word editor — a different app, a different
+  // API surface, and a different set of capabilities.
+  const editorKind =
+    input.document.documentType === "cell"
+      ? "spreadsheet"
+      : input.document.documentType === "pdf"
+        ? "pdf"
+        : "document";
 
   const unsigned = {
     type: "desktop",
@@ -85,6 +93,12 @@ export async function buildOnlyOfficeConfig(input: {
   // exchanges the grant at /api/dora-gateway/token (cookies don't cross the
   // editor origin). Embedded only when gateway origins are configured.
   const doraEnabled = Boolean(process.env.DORA_EDITOR_ORIGINS?.trim());
+  const isPdf =
+    input.document.documentType === "pdf" && input.document.extension === "pdf";
+  // Upstream ONLYOFFICE hardcodes PDFs into view mode (pdfeditor Main.js:1346).
+  // Our fork restores the real expression, gated on this flag, so a host that
+  // does not set it keeps stock upstream behaviour.
+  const pdfEditByDefault = isPdf && process.env.DORA_PDF_EDIT_BY_DEFAULT !== "false";
   const signable = doraEnabled
     ? {
         ...unsigned,
@@ -97,14 +111,21 @@ export async function buildOnlyOfficeConfig(input: {
               documentId,
               editorKey: input.document.activeEditorKey,
               editorKind,
+              pdfEditByDefault,
               effectivePermissions: {
                 read: true,
-                edit: Boolean(unsigned.document.permissions.edit),
+                edit: isPdf
+                  ? pdfEditByDefault
+                  : Boolean(unsigned.document.permissions.edit),
               },
               capabilities: {
                 documentFill:
-                  input.document.documentType === "word" &&
-                  input.document.extension === "docx",
+                  (input.document.documentType === "word" &&
+                    input.document.extension === "docx") ||
+                  (isPdf && process.env.DORA_PDF_FILL_ENABLED !== "false"),
+                pdf: isPdf && process.env.DORA_PDF_ENABLED !== "false",
+                pdfFieldNavigation:
+                  isPdf && process.env.DORA_PDF_FIELD_NAV_ENABLED !== "false",
                 spreadsheet: editorKind === "spreadsheet" &&
                   process.env.DORA_SPREADSHEET_ENABLED !== "false",
                 spreadsheetWrites: editorKind === "spreadsheet" &&
@@ -116,7 +137,9 @@ export async function buildOnlyOfficeConfig(input: {
               bridgePreference: process.env.DORA_SPREADSHEET_DEVELOPER_CONNECTOR === "true"
                 ? "developer_connector"
                 : "community_native",
-              editEngineV2: process.env.DORA_EDIT_ENGINE_V2 === "true",
+              // V2 is the Word snapshot/range engine; it has no meaning in the
+              // PDF editor, which exposes no such document model.
+              editEngineV2: !isPdf && process.env.DORA_EDIT_ENGINE_V2 === "true",
               locale: unsigned.editorConfig.lang,
               grant: await signDoraEditorGrant({
                 userId: input.context.userId,

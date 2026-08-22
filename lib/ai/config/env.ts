@@ -188,6 +188,12 @@ function defaultModelRoles(): Record<string, string> {
     // Fill discovery is pinned independently so chat model changes cannot
     // silently alter generated legal/business documents.
     dora_fill: process.env.AI_DORA_FILL_MODEL || "gemini:gemini-3.7-flash",
+    // PDF discovery reads the file natively (layout, tables, scanned pages),
+    // so it needs a PDF-capable model. Falls back to the Word fill model.
+    dora_pdf_fill:
+      process.env.AI_DORA_PDF_FILL_MODEL ||
+      process.env.AI_DORA_FILL_MODEL ||
+      "gemini:gemini-3.7-flash",
     /**
      * Otto guides a brand-new user through the product. It is the first thing
      * anyone experiences, and its planning step has to reason about a whole

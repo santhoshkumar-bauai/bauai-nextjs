@@ -2,17 +2,27 @@ import { ObjectId } from "mongodb";
 
 import { getAiCollections } from "@/lib/ai/db/collections";
 
-import type { DocumentFillField, DocumentFillRunDocument } from "./types";
+import { fillRunFormat } from "./format";
+import { canAutoApply } from "./locators";
+import type {
+  DocumentFillField,
+  DocumentFillFormat,
+  DocumentFillRunDocument,
+} from "./types";
 
 export function serializeFillRun(run: DocumentFillRunDocument) {
   return {
     id: run._id.toHexString(),
     documentId: run.documentId.toHexString(),
+    format: fillRunFormat(run),
     sourceVersionId: run.sourceVersionId.toHexString(),
     sourceStorageRevision: run.sourceStorageRevision,
     status: run.status,
     stage: run.stage,
     fields: run.fields,
+    // Page geometry rides out so the panel can convert a locator rect to
+    // editor coordinates without ever re-parsing the PDF client-side.
+    pdf: run.pdf ?? null,
     generatedDocumentId: run.generatedDocumentId?.toHexString() ?? null,
     error: run.error,
     createdAt: run.createdAt.toISOString(),
@@ -29,11 +39,13 @@ export async function latestFillRun(tenantId: ObjectId, documentId: ObjectId) {
 export async function createFillRun(input: {
   tenantId: ObjectId;
   documentId: ObjectId;
+  format: DocumentFillFormat;
   sourceVersionId: ObjectId;
   sourceStorageRevision: number;
   sourceSha256: string;
-  snapshotId: string;
-  snapshotHash: string;
+  /** Word pins a live editor snapshot; PDF pins the committed bytes instead. */
+  snapshotId: string | null;
+  snapshotHash: string | null;
   userId: string;
 }) {
   const { documentFillRuns } = await getAiCollections();
@@ -42,11 +54,13 @@ export async function createFillRun(input: {
     _id: new ObjectId(),
     tenantId: input.tenantId,
     documentId: input.documentId,
+    format: input.format,
     sourceVersionId: input.sourceVersionId,
     sourceStorageRevision: input.sourceStorageRevision,
     sourceSha256: input.sourceSha256,
     snapshotId: input.snapshotId,
     snapshotHash: input.snapshotHash,
+    pdf: null,
     status: "queued",
     stage: "queued",
     fields: [],
@@ -63,7 +77,12 @@ export async function createFillRun(input: {
 
 export async function updateFillRun(
   runId: ObjectId,
-  patch: Partial<Pick<DocumentFillRunDocument, "status" | "stage" | "fields" | "generatedDocumentId" | "error" | "finishedAt">>,
+  patch: Partial<
+    Pick<
+      DocumentFillRunDocument,
+      "status" | "stage" | "fields" | "pdf" | "generatedDocumentId" | "error" | "finishedAt"
+    >
+  >,
 ) {
   const { documentFillRuns } = await getAiCollections();
   await documentFillRuns.updateOne({ _id: runId }, { $set: { ...patch, updatedAt: new Date() } });
@@ -82,11 +101,15 @@ export async function patchFillFields(input: {
     const update = updates.get(field.id);
     if (!update) return field;
     const value = update.value === undefined ? field.value : update.value?.trim() || null;
+    // canAutoApply keeps a user-typed value from promoting an UNVERIFIABLE
+    // target: vision-derived overlay geometry on a scanned page has nothing
+    // checking it, so supplying the value settles the answer but not the
+    // position. No-op for docx, where every locator is verifiable.
     const state = update.state
       ? update.state
       : field.sensitive
         ? "manual"
-        : value && field.locator
+        : value && canAutoApply(field.locator)
           ? "ready"
           : value
             ? "needs_review"

@@ -98,6 +98,7 @@ function fakeCtx(tender: AgentTenderScope | null = tenderScope()): DoraRunContex
         s3Key: "workspace-documents/x",
         fileName: "angebot.docx",
         extension: "docx",
+        size: 24_576,
         contentType:
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         storageRevision: 3,
@@ -137,6 +138,29 @@ describe("buildDoraTools registry", () => {
   it("unlinked documents get no tender tools", () => {
     const names = buildDoraTools(fakeCtx(null)).map((tool) => tool.name);
     expect(names.sort()).toEqual([...DOCUMENT_TOOLS, ...COMPANY_TOOLS].sort());
+  });
+
+  it("only PDFs get locate_document_field", () => {
+    // A Word user can scroll to a field; a PDF user needs the page and the box.
+    expect(buildDoraTools(fakeCtx(null)).map((t) => t.name)).not.toContain(
+      "locate_document_field",
+    );
+    const pdfCtx = fakeCtx(null);
+    pdfCtx.document.documentType = "pdf";
+    expect(buildDoraTools(pdfCtx).map((t) => t.name)).toContain("locate_document_field");
+  });
+
+  it("never offers propose_edits on a PDF, even with the V1 kill-switch on", () => {
+    // V1 is a Word text-anchor engine. Registering it for a PDF would advertise
+    // a tool that cannot possibly work on this document.
+    process.env.DORA_EDIT_ENGINE_V1 = "true";
+    try {
+      const pdfCtx = fakeCtx(null);
+      pdfCtx.document.documentType = "pdf";
+      expect(buildDoraTools(pdfCtx).map((t) => t.name)).not.toContain("propose_edits");
+    } finally {
+      delete process.env.DORA_EDIT_ENGINE_V1;
+    }
   });
 
   it("the V1 kill-switch restores propose_edits", () => {

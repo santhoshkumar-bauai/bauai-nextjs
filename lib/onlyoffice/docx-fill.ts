@@ -2,7 +2,17 @@ import JSZip from "jszip";
 
 import type { DocumentFillLocator } from "@/lib/ai/dora/fill/types";
 
-export type DocxFillInstruction = { id: string; value: string } & DocumentFillLocator;
+/**
+ * Only the two OOXML strategies. Narrowed out of the shared locator union so a
+ * PDF locator routed here is a compile error rather than a runtime surprise —
+ * generate.ts dispatches on the run format, and this is the backstop.
+ */
+export type DocxFillLocator = Extract<
+  DocumentFillLocator,
+  { strategy: "form_key" | "unique_text" }
+>;
+
+export type DocxFillInstruction = { id: string; value: string } & DocxFillLocator;
 
 const WORD_PART = /^word\/(?:document|header\d+|footer\d+|footnotes|endnotes)\.xml$/;
 

@@ -4,7 +4,13 @@ import { ObjectId } from "mongodb";
 
 import { getAiCollections } from "@/lib/ai/db/collections";
 import { connectMongoose } from "@/lib/db/mongoose";
-import { fillDocxBuffer } from "@/lib/onlyoffice/docx-fill";
+import { fillDocxBuffer, type DocxFillInstruction } from "@/lib/onlyoffice/docx-fill";
+import {
+  fillPdfBuffer,
+  narrowPdfInstructions,
+  verifyFilledPdf,
+  type PdfFillCandidate,
+} from "@/lib/onlyoffice/pdf-fill";
 import { createWorkspaceDocumentFromObject } from "@/lib/onlyoffice/document-service";
 import { onlyOfficeEnv } from "@/lib/onlyoffice/env";
 import { workspaceFormat } from "@/lib/onlyoffice/formats";
@@ -15,7 +21,10 @@ import { createDownloadUrl, getObjectBuffer, putObjectBuffer } from "@/lib/stora
 import { WorkspaceDocument } from "@/models/workspace-document";
 import { WorkspaceDocumentVersion } from "@/models/workspace-document-version";
 
+import { fillRunFormat } from "./format";
+import { canAutoApply } from "./locators";
 import { updateFillRun } from "./runs";
+import type { DocumentFillLocator } from "./types";
 
 type BuilderResponse = {
   end?: boolean;
@@ -26,6 +35,26 @@ type BuilderResponse = {
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Mirror of narrowPdfInstructions for the Word engine. Fill fields are rebuilt
+ * from Mongo, so the locator union is only as narrow as the stored data.
+ */
+function narrowDocxInstructions(
+  fields: Array<{ id: string; value: string } & DocumentFillLocator>,
+): DocxFillInstruction[] {
+  return fields.map((field) => {
+    if (field.strategy !== "form_key" && field.strategy !== "unique_text") {
+      throw new Error(`pdf_locator_in_docx:${field.id}`);
+    }
+    return field;
+  });
+}
+
+async function pageCountOf(bytes: Buffer): Promise<number> {
+  const { PDFDocument } = await import("pdf-lib");
+  return (await PDFDocument.load(Uint8Array.from(bytes), { updateMetadata: false })).getPageCount();
 }
 
 async function requestBuilder(body: Record<string, unknown>, key: string) {
@@ -62,15 +91,22 @@ export async function generateDocumentFillCopy(runIdHex: string): Promise<void> 
       }).lean(),
     ]);
     if (!source || !version) throw new Error("source_version_missing");
-    if (source.documentType !== "word" || source.extension !== "docx") {
+    const runFormat = fillRunFormat(run);
+    if (runFormat === "docx" && (source.documentType !== "word" || source.extension !== "docx")) {
       throw new Error("word_docx_required");
     }
+    if (runFormat === "pdf" && (source.documentType !== "pdf" || source.extension !== "pdf")) {
+      throw new Error("pdf_required");
+    }
+    // Re-filtered server-side, ignoring whatever the client selected.
+    // canAutoApply additionally drops targets whose POSITION nothing verified.
     const fields = run.fields.flatMap((field) => {
       if (
         field.state !== "ready" ||
         !field.value ||
         !field.locator ||
-        field.sensitive
+        field.sensitive ||
+        !canAutoApply(field.locator)
       ) {
         return [];
       }
@@ -79,12 +115,41 @@ export async function generateDocumentFillCopy(runIdHex: string): Promise<void> 
     if (fields.length === 0) throw new Error("no_ready_fields");
 
     await updateFillRun(runId, { stage: "storing" });
-    const fileName = `${source.fileName.replace(/\.docx$/i, "")} - filled.docx`;
+    const extension = runFormat === "pdf" ? "pdf" : "docx";
+    const stem = source.fileName.replace(new RegExp(`\\.${extension}$`, "i"), "");
+    const fileName = `${stem} - filled.${extension}`;
     const format = workspaceFormat(fileName);
     if (!format) throw new Error("generated_format_invalid");
     const pendingKey = workspacePendingKey(run.tenantId.toHexString(), run.documentId.toHexString());
     let stored: { sha256: string; size: number };
-    if (process.env.ONLYOFFICE_DOCUMENT_BUILDER_ENABLED === "true") {
+    if (runFormat === "pdf") {
+      // Always in-process. The Document Builder script is docx-only, and PDF
+      // filling needs no Document Server round trip at all.
+      const sourceBytes = await getObjectBuffer(version.s3Key);
+      const instructions = narrowPdfInstructions(fields as PdfFillCandidate[]);
+      const outputBytes = await fillPdfBuffer(sourceBytes, instructions, {
+        expectedManifestHash: run.pdf?.manifestHash,
+      });
+      // Verified BEFORE anything is stored, so a bad write never leaves an
+      // orphaned S3 object behind. PDF writes fail quietly: a value can be set
+      // on a field that renders blank, and an overlay can land far from its
+      // target without erroring.
+      const verdict = await verifyFilledPdf(
+        outputBytes,
+        instructions,
+        run.pdf?.pageCount ?? (await pageCountOf(sourceBytes)),
+      );
+      if (!verdict.ok) {
+        throw new Error(
+          `pdf_verification_failed:${verdict.failures.map((f) => f.id).join(",")}`.slice(0, 200),
+        );
+      }
+      await putObjectBuffer(pendingKey, outputBytes, format.contentType);
+      stored = {
+        size: outputBytes.byteLength,
+        sha256: createHash("sha256").update(outputBytes).digest("hex"),
+      };
+    } else if (process.env.ONLYOFFICE_DOCUMENT_BUILDER_ENABLED === "true") {
       const sourceUrl = await createDownloadUrl({
         key: version.s3Key,
         fileName: version.fileName,
@@ -117,7 +182,7 @@ export async function generateDocumentFillCopy(runIdHex: string): Promise<void> 
       });
     } else {
       const sourceBytes = await getObjectBuffer(version.s3Key);
-      const outputBytes = await fillDocxBuffer(sourceBytes, fields);
+      const outputBytes = await fillDocxBuffer(sourceBytes, narrowDocxInstructions(fields));
       await putObjectBuffer(pendingKey, outputBytes, format.contentType);
       stored = {
         size: outputBytes.byteLength,

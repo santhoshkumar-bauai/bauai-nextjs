@@ -48,7 +48,7 @@ export interface ChatModelOptions extends AgentModelOptions {
   /** Defaults to "agent". */
   role?: Extract<
     ModelRole,
-    "agent" | "report" | "dora" | "dora_fast" | "dora_fill" | "otto"
+    "agent" | "report" | "dora" | "dora_fast" | "dora_fill" | "dora_pdf_fill" | "otto"
   >;
   /** Overrides the env-configured effort for this role. */
   reasoningEffort?: ReasoningEffort;

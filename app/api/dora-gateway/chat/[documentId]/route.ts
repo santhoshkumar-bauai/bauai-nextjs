@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { buildDoraRunContext } from "@/lib/ai/dora/context";
 import { buildDoraGraph } from "@/lib/ai/dora/graph";
+import { buildPdfTurnMedia } from "@/lib/ai/dora/pdf/turn-media";
 import { buildDoraSpreadsheetGraph } from "@/lib/ai/dora/spreadsheet/graph";
 import { streamDoraSpreadsheetEditTurnResponse } from "@/lib/ai/dora/spreadsheet/edit-turn";
 import { streamDoraEditTurnResponse } from "@/lib/ai/dora/edit-turn";
@@ -176,10 +177,39 @@ export async function POST(request: Request, { params }: RouteParams) {
     return withCors(request, response);
   }
 
+  // PDFs are read-only to Dora: the PDF editor exposes no API to set a form
+  // field's value, and body text cannot be rewritten without reflow damage.
+  // Questions, the fill plan and field navigation only — every write goes
+  // through the reviewed copy-generation flow instead.
+  if (ctx.document.documentType === "pdf") {
+    if (process.env.DORA_PDF_ENABLED === "false") {
+      return NextResponse.json({ error: "pdf_dora_disabled" }, { status: 409, headers: cors });
+    }
+    if (parsed.data.tier === "stream") {
+      return NextResponse.json(
+        { error: "pdf_streaming_writes_not_supported" },
+        { status: 409, headers: cors },
+      );
+    }
+    const response = await streamChatTurnResponse({
+      ctx,
+      thread,
+      body: { message: parsed.data.message },
+      request,
+      // A scanned PDF has no text to read, so the file itself rides in the
+      // turn and the model reads the pages.
+      extraContent: await buildPdfTurnMedia(ctx),
+      buildGraph: () => buildDoraGraph(ctx),
+    });
+    return withCors(request, response);
+  }
+
   // Stream tier: single-insertion-point edits stream token deltas into the
   // document (dora_fast). The client declares the tier from its invocation
   // surface; "stream" is only honored with a live snapshot, like the planner.
-  const v2 = doraEditEngineV2Enabled();
+  // V2 is the WORD snapshot/range engine; without the documentType guard every
+  // non-spreadsheet document fell into it and 409'd on live_snapshot_required.
+  const v2 = doraEditEngineV2Enabled() && ctx.document.documentType === "word";
   const useStreamPath = v2 && parsed.data.tier === "stream";
   const useEditPath =
     v2 &&

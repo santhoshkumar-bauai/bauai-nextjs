@@ -3,9 +3,8 @@ import { createHash } from "node:crypto";
 import type { DoraEditorSnapshotInput } from "@/lib/dora-gateway/snapshot-schema";
 
 import type { FillDiscovery } from "./schema";
+import { isSensitiveField } from "./sensitive";
 import type { DocumentFillEvidence, DocumentFillField } from "./types";
-
-const SENSITIVE = /signature|initial|attest|consent|bank|iban|bic|account|commitment|certif(?:y|ication)/i;
 
 export function resolveDiscoveredFields(input: {
   discovery: FillDiscovery;
@@ -43,7 +42,11 @@ export function resolveDiscoveredFields(input: {
     const evidence = candidate.evidenceReferences
       .map((ref) => input.evidence.get(ref))
       .filter((item): item is DocumentFillEvidence => Boolean(item));
-    const sensitive = candidate.sensitive || SENSITIVE.test(`${candidate.label} ${candidate.description}`);
+    const sensitive = isSensitiveField({
+      label: candidate.label,
+      description: candidate.description,
+      modelSaidSensitive: candidate.sensitive,
+    });
     const hasValue = Boolean(candidate.value?.trim());
     let state: DocumentFillField["state"];
     if (sensitive) state = "manual";

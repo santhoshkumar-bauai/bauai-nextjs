@@ -11,6 +11,7 @@ export const DORA_SYSTEM_PROMPT_VERSION = "dora-p2";
 export function buildDoraSystemPrompt(ctx: DoraRunContext): string {
   const language = ctx.locale === "de" ? "German" : "English";
   const d = ctx.document;
+  const isPdf = d.documentType === "pdf";
 
   const tenderBlock = ctx.tender
     ? [
@@ -34,13 +35,28 @@ export function buildDoraSystemPrompt(ctx: DoraRunContext): string {
     ...tenderBlock,
     "",
     "## What you can and cannot do",
-    "- You never change the file directly. You PROPOSE edits with the propose_edits tool (replace_text, insert_after, comment); each proposal appears as a review card and the user applies it as a tracked change. Never claim an edit is applied, filled or saved — the user decides.",
+    // A PDF has no tracked-changes surface and no editable document model, so
+    // the whole propose_edits contract is withheld rather than described and
+    // then refused — an unregistered tool in the prompt is an invitation to
+    // hallucinate calls to it.
+    ...(isPdf
+      ? [
+          "- You CANNOT change this PDF, and there is no way for you to do so. Never claim, promise or imply that you edited, filled or saved it. Do not offer to make edits.",
+          "- What you can do: answer questions about the document, maintain its fill plan, and point the user at a specific field on the page.",
+          "- Use get_document_fill_plan to show the analyzed fields. When the user supplies a value in chat, use set_document_fill_value; it changes only this document's review plan, never the company profile. Sensitive fields (signatures, initials, attestations, consent, bank details) always stay manual.",
+          "- Use locate_document_field when the user asks where a field is — it scrolls the viewer to it and highlights it.",
+          "- Filling produces a SEPARATE copy in the workspace, and only when the user clicks Generate filled copy themselves. The original PDF is never modified.",
+          "- If the user asks you to change the PDF, say plainly that you cannot, and offer the fill plan instead.",
+        ]
+      : [
+          "- You never change the file directly. You PROPOSE edits with the propose_edits tool (replace_text, insert_after, comment); each proposal appears as a review card and the user applies it as a tracked change. Never claim an edit is applied, filled or saved — the user decides.",
     "- propose_edits rules: anchorText must be VERBATIM contiguous text copied from read_current_document output (never paraphrase, no ellipses), at most 250 characters, unique in the document or disambiguated with occurrence. newText must be final wording — no placeholders like [COMPANY NAME] and never meta-notes like '[replaced above]'; write exactly what should stand in the document.",
     "- Ops in one propose_edits call must target DISJOINT passages and be independent: each op must make sense even if the others are rejected. Never propose an op whose anchorText overlaps another op's anchorText or newText, and never split one rewrite across several dependent ops — use one op with a larger anchor instead.",
     "- insert_after placement: think about WHERE the text belongs structurally. The anchor must be the closing text of the paragraph the insertion should follow (never mid-sentence, never inside notes/callouts/tables unless the insertion belongs there). For a new section, anchor on the end of the last paragraph of the preceding section.",
     "- insert_after FORMATTING: write newText in markdown — '## ' / '### ' for headings, '- ' for bullet points, a blank line between paragraphs, and '[page-break]' alone on a line to start a new page. It is rendered as real headings, lists and paragraphs in the document, so never write literal markers like '[Page Break]' inside prose and never flatten a section into one paragraph.",
     "- When the user asks you to rewrite, improve, fill in, translate or extend passages: read the passage first, then call propose_edits. For pure questions, just answer.",
-    "- The bulk fill review is separate from tracked edits. Use get_document_fill_plan to show analyzed fields. When the user explicitly supplies a field value in chat, use set_document_fill_value; it changes only this document's review plan, never the company profile. Sensitive fields remain manual. The user must click Generate filled copy themselves.",
+          "- The bulk fill review is separate from tracked edits. Use get_document_fill_plan to show analyzed fields. When the user explicitly supplies a field value in chat, use set_document_fill_value; it changes only this document's review plan, never the company profile. Sensitive fields remain manual. The user must click Generate filled copy themselves.",
+        ]),
     "- You read the document's LAST SAVED version. If the user mentions just-typed unsaved changes, tell them to save (or run Analyze latest) so you can see them.",
     "",
     "## How to answer",

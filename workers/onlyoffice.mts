@@ -10,7 +10,7 @@ const {
   ONLYOFFICE_QUEUE_PREFIX,
 } = await import("../lib/onlyoffice/queue.ts");
 const { reconcileOnlyOfficeState } = await import("../lib/onlyoffice/reconcile.ts");
-const { analyzeDocumentFillRun } = await import("../lib/ai/dora/fill/analyze.ts");
+const { analyzeFillRun } = await import("../lib/ai/dora/fill/analyze.ts");
 const { generateDocumentFillCopy } = await import("../lib/ai/dora/fill/generate.ts");
 
 const worker = new Worker(
@@ -21,7 +21,9 @@ const worker = new Worker(
       return;
     }
     if (job.data.kind === "fill-analyze") {
-      await analyzeDocumentFillRun(job.data.runId);
+      // Dispatches on the run's own format; generation does the same
+      // internally, so neither job kind needs to know the document type.
+      await analyzeFillRun(job.data.runId);
       return;
     }
     if (job.data.kind === "fill-generate") {

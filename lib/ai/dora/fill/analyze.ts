@@ -3,77 +3,65 @@ import { ObjectId } from "mongodb";
 import { getChatModel } from "@/lib/ai/agent/model";
 import { getAiCollections } from "@/lib/ai/db/collections";
 import { getDoraSnapshot } from "@/lib/dora-gateway/snapshots";
-import { Company } from "@/models/company";
 import { WorkspaceDocument } from "@/models/workspace-document";
 
+import { fillRunFormat } from "./format";
+import { buildFillGrounding } from "./grounding";
 import { resolveDiscoveredFields } from "./resolve";
 import { FILL_DISCOVERY_JSON_SCHEMA, fillDiscoverySchema } from "./schema";
 import { updateFillRun } from "./runs";
-import type { DocumentFillEvidence } from "./types";
 
-function flatten(value: unknown, prefix = "company", out = new Map<string, string>()) {
-  if (value == null) return out;
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => flatten(item, `${prefix}.${index}`, out));
-  } else if (typeof value === "object") {
-    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      if (!["_id", "members", "membershipRequests", "trial", "createdBy", "createdAt", "updatedAt"].includes(key)) {
-        flatten(item, `${prefix}.${key}`, out);
-      }
-    }
-  } else if (String(value).trim()) {
-    out.set(prefix, String(value).trim());
+/**
+ * Analyse a fill run with whichever engine its format calls for.
+ *
+ * The format is read from the RUN, never from the job payload: a queued job
+ * that is retried after the run was edited must dispatch on current state, not
+ * on a snapshot of it taken at enqueue time. That is also why OnlyOfficeJob
+ * still carries nothing but a runId.
+ *
+ * The PDF graph (pdf-lib, unpdf) is imported lazily so a Word run never pays
+ * for loading it.
+ */
+export async function analyzeFillRun(runIdHex: string): Promise<void> {
+  const { documentFillRuns } = await getAiCollections();
+  const run = await documentFillRuns.findOne(
+    { _id: new ObjectId(runIdHex) },
+    { projection: { format: 1 } },
+  );
+  if (!run) return;
+  if (fillRunFormat(run) === "pdf") {
+    const { analyzePdfFillRun } = await import("./pdf/analyze-pdf");
+    return analyzePdfFillRun(runIdHex);
   }
-  return out;
+  return analyzeDocumentFillRun(runIdHex);
 }
 
 export async function analyzeDocumentFillRun(runIdHex: string): Promise<void> {
-  const { documentFillRuns, chunks } = await getAiCollections();
+  const { documentFillRuns } = await getAiCollections();
   const runId = new ObjectId(runIdHex);
   const run = await documentFillRuns.findOne({ _id: runId });
   if (!run || !["queued", "failed"].includes(run.status)) return;
   await updateFillRun(runId, { status: "analyzing", stage: "discovering", error: null });
 
   try {
-    const [snapshot, company, document] = await Promise.all([
+    if (!run.snapshotId) throw new Error("snapshot_expired");
+    const [snapshot, document] = await Promise.all([
       getDoraSnapshot({
         snapshotId: run.snapshotId,
         tenantId: run.tenantId.toHexString(),
         documentId: run.documentId.toHexString(),
         userId: run.startedByUserId,
       }),
-      Company.findById(run.tenantId).lean(),
       WorkspaceDocument.findById(run.documentId).lean(),
     ]);
     if (!snapshot) throw new Error("snapshot_expired");
-    if (!company || !document) throw new Error("document_context_missing");
+    if (!document) throw new Error("document_context_missing");
     if (snapshot.snapshotHash !== run.snapshotHash) throw new Error("snapshot_hash_mismatch");
 
     await updateFillRun(runId, { stage: "grounding" });
-    const profile = flatten(company);
-    const evidence = new Map<string, DocumentFillEvidence>();
-    const profileLines = [...profile.entries()].map(([key, value]) => {
-      evidence.set(key, { source: "company_profile", reference: key, excerpt: value.slice(0, 240) });
-      return `${key}: ${value}`;
-    });
-    const corpus = await chunks
-      .find({
-        $or: [
-          { tenantId: run.tenantId },
-          ...(document.tenderId ? [{ tenantId: null, tenderId: new ObjectId(String(document.tenderId)) }] : []),
-        ],
-      })
-      .sort({ chunkIndex: 1 })
-      .limit(40)
-      .toArray();
-    const corpusLines = corpus.map((chunk) => {
-      const ref = `chunk:${chunk._id?.toHexString() ?? `${chunk.documentRecordId}:${chunk.chunkIndex}`}`;
-      evidence.set(ref, {
-        source: chunk.tenantId ? "company_document" : "tender",
-        reference: ref,
-        excerpt: chunk.text.slice(0, 240),
-      });
-      return `${ref} (${chunk.fileName}, ${chunk.sectionPath.join(" > ")}): ${chunk.text}`;
+    const { evidence, profileLines, corpusLines } = await buildFillGrounding({
+      tenantId: run.tenantId,
+      tenderId: document.tenderId ? new ObjectId(String(document.tenderId)) : null,
     });
 
     const nodes = snapshot.nodes.map((node) => ({

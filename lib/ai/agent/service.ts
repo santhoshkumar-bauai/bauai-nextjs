@@ -1,4 +1,8 @@
-import { HumanMessage, type BaseMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  type BaseMessage,
+  type MessageContentComplex,
+} from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
 import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ObjectId } from "mongodb";
@@ -98,6 +102,12 @@ export async function runChatTurn(input: {
    * own richer context). Defaults to Clara's graph on `ctx`.
    */
   buildGraph?: () => Promise<CompiledAgentGraph>;
+  /**
+   * Extra multimodal parts appended to the user turn, beyond whatever the
+   * attachments produce. Used to hand the model the open document itself when
+   * text extraction cannot reach it (a scanned PDF).
+   */
+  extraContent?: MessageContentComplex[];
 }): Promise<{ userMessage: ChatMessageDocument; assistantMessage: ChatMessageDocument }> {
   const { ctx, threadId, userText, signal, callbacks } = input;
   const attachments = input.attachments ?? [];
@@ -130,7 +140,20 @@ export async function runChatTurn(input: {
   // in this thread keep seeing the files without re-uploading. Document text
   // is inlined; images become checkpoint-light media_ref parts that the graph
   // resolves to base64 at model-call time.
-  const turnContent = buildUserTurnContent(userText, attachments);
+  const built = buildUserTurnContent(userText, attachments);
+  const extra = input.extraContent ?? [];
+  // A string result has to become a part array before anything can be appended.
+  const turnContent =
+    extra.length === 0
+      ? built
+      : [
+          ...(typeof built === "string"
+            ? built
+              ? [{ type: "text", text: built } as MessageContentComplex]
+              : []
+            : built),
+          ...extra,
+        ];
 
   const graph = input.buildGraph ? await input.buildGraph() : await buildClaraGraph(ctx);
   const config = {

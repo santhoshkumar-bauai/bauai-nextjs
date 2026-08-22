@@ -43,6 +43,8 @@ export interface DoraDocumentScope {
     fileName: string;
     extension: string;
     contentType: string;
+    /** Stored object size in bytes. */
+    size: number;
     storageRevision: number;
     reason: string;
   } | null;
@@ -108,6 +110,7 @@ export async function buildDoraRunContext(input: {
             fileName: version.fileName,
             extension: version.extension,
             contentType: version.contentType,
+            size: version.size,
             storageRevision: version.storageRevision,
             reason: version.reason,
           }

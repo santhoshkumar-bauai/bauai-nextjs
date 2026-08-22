@@ -52,7 +52,7 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
           note: text.note,
           hint:
             text.note === "no_text_layer"
-              ? "Scanned PDF without a text layer; OCR is not supported. Answer from tender context instead."
+              ? "Scanned PDF with no text layer. Its pages are attached to this conversation — read them directly rather than answering from tender context alone."
               : "The document's text could not be extracted.",
         });
       }
@@ -287,7 +287,7 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     {
       name: "get_document_fill_plan",
       description:
-        "Read the current reviewed fill-field list for the open Word document, including ready, missing, manual and needs-review fields. Use when the user asks what is fillable or what is still missing.",
+        "Read the current reviewed fill-field list for the open document, including ready, missing, manual and needs-review fields. Use when the user asks what is fillable or what is still missing.",
       schema: z.object({}),
     },
   );
@@ -332,6 +332,62 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     },
   );
 
+  /**
+   * Point the viewer at a discovered field. PDF-only: it is the answer to
+   * "where do I sign?", which in a Word document the user can simply scroll to
+   * but in a paginated PDF they cannot.
+   *
+   * The tool returns text; the actual scrolling is a UI call the panel picks
+   * up. WireUiCall is already generic, so this needs no wire-protocol change.
+   */
+  const locateDocumentField = tool(
+    async ({ field }: { field: string }) => {
+      const run = await latestFillRun(ctx.tenantId, ctx.document.documentId);
+      if (!run) return JSON.stringify({ located: false, error: "not_analyzed" });
+      const needle = field.trim().toLocaleLowerCase();
+      // Same matcher as set_document_fill_value: exact id, else folded label.
+      const matches = run.fields.filter(
+        (item) => item.id === field || item.label.trim().toLocaleLowerCase() === needle,
+      );
+      if (matches.length !== 1) {
+        return JSON.stringify({
+          located: false,
+          error: matches.length ? "field_ambiguous" : "field_not_found",
+          availableFields: run.fields.map((item) => ({ id: item.id, label: item.label })),
+        });
+      }
+      const target = matches[0];
+      const locator = target.locator;
+      if (!locator || !("page" in locator)) {
+        return JSON.stringify({ located: false, error: "field_has_no_location", label: target.label });
+      }
+      ctx.uiCalls.add({
+        action: "dora.pdf.locate_field",
+        args: {
+          fieldId: target.id,
+          page: locator.page,
+          rect: locator.rect,
+          anchorText: "anchorText" in locator ? locator.anchorText : null,
+        },
+      });
+      return JSON.stringify({
+        located: true,
+        id: target.id,
+        label: target.label,
+        page: locator.page + 1,
+        state: target.state,
+      });
+    },
+    {
+      name: "locate_document_field",
+      description:
+        "Scroll the open PDF to a field from the fill plan and highlight it. Use when the user asks where a field is or where they need to sign.",
+      schema: z.object({
+        field: z.string().min(1).max(200).describe("Exact field label or id from get_document_fill_plan"),
+      }),
+    },
+  );
+
   // The V1 exact-text edit engine is retired: the V2 planner + stream tiers
   // cover everything it did with live-range targeting instead of text-anchor
   // search. Kill-switch kept for one release, then delete buildProposeEditsTool.
@@ -341,7 +397,13 @@ export function buildDoraTools(ctx: DoraRunContext): StructuredToolInterface[] {
     readCurrentDocument,
     getDocumentFillPlan,
     setDocumentFillValue,
-    ...(process.env.DORA_EDIT_ENGINE_V1 === "true" ? [buildProposeEditsTool(ctx)] : []),
+    // PDF-only: a Word user scrolls; a PDF user needs the page and the box.
+    ...(ctx.document.documentType === "pdf" ? [locateDocumentField] : []),
+    // V1 is a Word text-anchor engine. Registering it for a PDF would offer a
+    // tool that cannot possibly work on this document.
+    ...(process.env.DORA_EDIT_ENGINE_V1 === "true" && ctx.document.documentType === "word"
+      ? [buildProposeEditsTool(ctx)]
+      : []),
   ];
   const companyTools = [searchCompanyDocuments, getCompanyProfile];
 

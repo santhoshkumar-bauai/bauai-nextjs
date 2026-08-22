@@ -1,3 +1,5 @@
+import type { MessageContentComplex } from "@langchain/core/messages";
+
 import type { ChatThreadDocument } from "../types.ts";
 import { claimChatAttachments } from "./attachments.ts";
 import type { AgentRunContext, TenderAgentRunContext } from "./context.ts";
@@ -33,6 +35,8 @@ export function streamChatTurnResponse(input: {
   request: Request;
   /** Graph override for non-Clara agents; see runChatTurn. */
   buildGraph?: () => Promise<CompiledAgentGraph>;
+  /** Extra multimodal parts for the user turn; see runChatTurn. */
+  extraContent?: MessageContentComplex[];
   /**
    * Stream graph state patches as `state` events. Off by default — only
    * agents whose UI renders live state (Otto) need it, and Clara's and Dora's
@@ -122,6 +126,7 @@ export function streamChatTurnResponse(input: {
             userText: body.message,
             attachments,
             buildGraph: input.buildGraph,
+            extraContent: input.extraContent,
             signal: turnController.signal,
             callbacks: {
               onReady: (userMessage) =>

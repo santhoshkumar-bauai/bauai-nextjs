@@ -3,11 +3,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { buildDoraRunContext } from "@/lib/ai/dora/context";
-import { analyzeDocumentFillRun } from "@/lib/ai/dora/fill/analyze";
+import { analyzeFillRun } from "@/lib/ai/dora/fill/analyze";
 import {
   dispatchDocumentFillTask,
   fillGenerationDisposition,
+  fillRequiresQueueMode,
 } from "@/lib/ai/dora/fill/execution";
+import { fillFormatFor } from "@/lib/ai/dora/fill/format";
 import { generateDocumentFillCopy } from "@/lib/ai/dora/fill/generate";
 import {
   createFillRun,
@@ -32,7 +34,9 @@ type RouteParams = { params: Promise<{ documentId: string }> };
 const actionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("analyze"),
-    snapshotId: z.string().uuid(),
+    // Word pins a live editor snapshot. PDF analysis reads the committed S3
+    // bytes, so it sends none; the per-format requirement is enforced below.
+    snapshotId: z.string().uuid().optional(),
     sourceStorageRevision: z.number().int().positive(),
   }),
   z.object({ action: z.literal("generate") }),
@@ -79,44 +83,80 @@ export async function POST(request: Request, { params }: RouteParams) {
   try {
     const { ctx } = await context(request, documentId);
     if (!ctx) return NextResponse.json({ error: "not_found" }, { status: 404, headers: cors });
-    if (ctx.document.documentType !== "word" || ctx.document.extension !== "docx") {
-      return NextResponse.json({ error: "word_docx_required" }, { status: 409, headers: cors });
+    const fillFormat = fillFormatFor(ctx.document);
+    if (!fillFormat) {
+      // Keep the legacy string for Word-ish documents so the existing panel
+      // copy still resolves; anything else gets the generic refusal.
+      return NextResponse.json(
+        {
+          error:
+            ctx.document.documentType === "word"
+              ? "word_docx_required"
+              : "fill_unsupported_document",
+        },
+        { status: 409, headers: cors },
+      );
+    }
+    if (fillFormat === "pdf" && process.env.DORA_PDF_FILL_ENABLED === "false") {
+      return NextResponse.json({ error: "pdf_fill_disabled" }, { status: 409, headers: cors });
     }
     const parsed = actionSchema.safeParse(await request.json());
     if (!parsed.success) {
       return NextResponse.json({ error: "invalid_request" }, { status: 400, headers: cors });
     }
     if (parsed.data.action === "analyze") {
+      if (fillFormat === "docx" && !parsed.data.snapshotId) {
+        return NextResponse.json({ error: "invalid_request" }, { status: 400, headers: cors });
+      }
       const active = await latestFillRun(ctx.tenantId, ctx.document.documentId);
       if (active && ["queued", "analyzing", "generating"].includes(active.status)) {
         return NextResponse.json({ error: "fill_run_in_progress" }, { status: 409, headers: cors });
       }
       const version = ctx.document.version;
       if (!version) return NextResponse.json({ error: "no_committed_version" }, { status: 409, headers: cors });
+      // Applies to both formats: the run is pinned to one revision, and this is
+      // the "the document changed since the panel loaded" guard.
       if (version.storageRevision !== parsed.data.sourceStorageRevision) {
         return NextResponse.json({ error: "source_revision_changed" }, { status: 409, headers: cors });
       }
-      const snapshot = await getDoraSnapshot({
-        snapshotId: parsed.data.snapshotId,
-        tenantId: ctx.tenantId.toHexString(),
-        documentId,
-        userId: ctx.userId,
-      });
-      if (!snapshot || snapshot.editorKey !== ctx.document.activeEditorKey) {
-        return NextResponse.json({ error: "snapshot_stale" }, { status: 409, headers: cors });
+
+      // Word only: the snapshot must still describe the live editor session.
+      let snapshotId: string | null = null;
+      let snapshotHash: string | null = null;
+      if (fillFormat === "docx") {
+        const snapshot = await getDoraSnapshot({
+          snapshotId: parsed.data.snapshotId!,
+          tenantId: ctx.tenantId.toHexString(),
+          documentId,
+          userId: ctx.userId,
+        });
+        if (!snapshot || snapshot.editorKey !== ctx.document.activeEditorKey) {
+          return NextResponse.json({ error: "snapshot_stale" }, { status: 409, headers: cors });
+        }
+        snapshotId = snapshot._id;
+        snapshotHash = snapshot.snapshotHash;
+      } else if (
+        fillRequiresQueueMode({ format: fillFormat, sizeBytes: version.size ?? 0 })
+      ) {
+        return NextResponse.json(
+          { error: "pdf_requires_queue_mode" },
+          { status: 409, headers: cors },
+        );
       }
+
       const run = await createFillRun({
         tenantId: ctx.tenantId,
         documentId: ctx.document.documentId,
+        format: fillFormat,
         sourceVersionId: version.id,
         sourceStorageRevision: version.storageRevision,
         sourceSha256: version.sha256,
-        snapshotId: snapshot._id,
-        snapshotHash: snapshot.snapshotHash,
+        snapshotId,
+        snapshotHash,
         userId: ctx.userId,
       });
       const mode = await dispatchDocumentFillTask({
-        inline: () => analyzeDocumentFillRun(run._id.toHexString()),
+        inline: () => analyzeFillRun(run._id.toHexString()),
         queued: () => enqueueDocumentFillAnalysis(run._id.toHexString()),
       });
       if (mode === "queue") {

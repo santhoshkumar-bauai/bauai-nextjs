@@ -22,6 +22,13 @@ export type ModelRole =
   | "dora_fast"
   /** Dora's high-precision document field discovery and grounding role. */
   | "dora_fill"
+  /**
+   * The same job for PDFs, where the model reads the file itself rather than a
+   * structural snapshot. Split from dora_fill because vision-grade scan
+   * analysis has different needs from OOXML node analysis, and because a
+   * regression in one must not be forced on the other.
+   */
+  | "dora_pdf_fill"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
   | "otto";
 
