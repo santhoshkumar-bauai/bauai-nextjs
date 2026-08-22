@@ -33,6 +33,29 @@ export function fillRequiresQueueMode(input: {
   return input.sizeBytes > (input.maxBytes ?? pdfInlineMaxBytes());
 }
 
+/** Default ceiling for running a GAEB batch loop inside the request. */
+const GAEB_INLINE_DEFAULT_MAX_ITEMS = 60;
+
+export function gaebInlineMaxItems(value = process.env.AI_GAEB_FILL_INLINE_MAX_ITEMS): number {
+  const raw = Number(value);
+  return Number.isFinite(raw) && raw > 0 ? raw : GAEB_INLINE_DEFAULT_MAX_ITEMS;
+}
+
+/**
+ * The GAEB analogue of the PDF gate: a 500-position LV runs dozens of model
+ * calls over several minutes — far past any request budget. Above the ceiling
+ * the run must go through the queue worker.
+ */
+export function gaebFillRequiresQueueMode(input: {
+  itemCount: number;
+  mode?: DocumentFillExecutionMode;
+  maxItems?: number;
+}): boolean {
+  const mode = input.mode ?? documentFillExecutionMode();
+  if (mode === "queue") return false;
+  return input.itemCount > (input.maxItems ?? gaebInlineMaxItems());
+}
+
 export function fillGenerationDisposition(
   run: { status: string } | null,
 ): FillGenerationDisposition {

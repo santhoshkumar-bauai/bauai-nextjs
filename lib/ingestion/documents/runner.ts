@@ -343,7 +343,7 @@ function isHtmlResponse(mimeType: string): boolean {
  * with an HTML content type is rare but happens, so an explicit extension still wins.
  */
 function hasDocumentExtension(fileName: string): boolean {
-  return /\.(pdf|zip|7z|rar|docx?|xlsx?|pptx?|odt|ods|odp|rtf|txt|csv|dwg|dxf|ifc)$/i.test(
+  return /\.(pdf|zip|7z|rar|docx?|xlsx?|pptx?|odt|ods|odp|rtf|txt|csv|dwg|dxf|ifc|[xdp]8[1-6])$/i.test(
     fileName,
   );
 }
@@ -437,6 +437,9 @@ async function persist(
 
 function guessMimeType(path: string): string {
   const extension = path.toLowerCase().split(".").pop() ?? "";
+  // GAEB exchange files (.x83/.d83/...) are structured data, not prose; the
+  // octet-stream type keeps them out of the text pipeline (see text-extract).
+  if (/^[xdp]8[1-6]$/.test(extension)) return "application/octet-stream";
   const types: Record<string, string> = {
     pdf: "application/pdf",
     docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

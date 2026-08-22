@@ -55,7 +55,7 @@ const RULES: Rule[] = [
     name: "bill-of-quantities",
     docClass: "bill_of_quantities",
     pattern:
-      /leistungsverzeichnis|leistungsbeschreibung|\bLV\b|\bGAEB\b|\.d8[1-6]\b|\.x8[1-6]\b|leistungsprogramm/i,
+      /leistungsverzeichnis|leistungsbeschreibung|\bLV\b|\bGAEB\b|\.[xdp]8[1-6]\b|leistungsprogramm/i,
   },
   {
     name: "price-sheet",

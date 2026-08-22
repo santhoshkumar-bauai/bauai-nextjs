@@ -46,11 +46,33 @@ export function OnlyOfficeEditorClient({
           setError(reason instanceof Error ? reason.message : t("configError"));
         }
       });
-    return () => {
-      controller.abort();
-      window.DocEditor?.instances?.[editorId]?.destroyEditor();
-    };
+    return () => controller.abort();
   }, [documentId, editorId, t]);
+
+  /**
+   * The editor's lifetime belongs to the DOCUMENT, not to this fetch.
+   *
+   * Destroying it from the config effect above looked equivalent but was not:
+   * that effect depends on `t`, whose identity changes on re-render and on
+   * every Fast Refresh. A single unrelated re-render therefore tore down a
+   * live editor, and the ONLYOFFICE React wrapper refuses to build a second
+   * one for the same placeholder ("Skip loading. Instance already exists") —
+   * leaving the page on its skeleton with no error anywhere.
+   *
+   * destroyEditor() also leaves its own registry entry behind, so clear it
+   * explicitly or the next legitimate mount hits the same guard.
+   */
+  useEffect(() => {
+    return () => {
+      const instances = window.DocEditor?.instances;
+      try {
+        instances?.[editorId]?.destroyEditor();
+      } catch {
+        // Already torn down by the wrapper; the delete below is what matters.
+      }
+      if (instances) delete instances[editorId];
+    };
+  }, [editorId]);
 
   useEffect(() => {
     if (!payload) return;

@@ -77,6 +77,12 @@ export async function generateDocumentFillCopy(runIdHex: string): Promise<void> 
   const { documentFillRuns } = await getAiCollections();
   const run = await documentFillRuns.findOne({ _id: runId });
   if (!run || !["review", "generating"].includes(run.status)) return;
+  // Format dispatch mirrors analyze.ts; the GAEB writer patches XML in
+  // process and never touches the Document Builder.
+  if (fillRunFormat(run) === "gaeb") {
+    const { generateGaebFillCopy } = await import("./gaeb/generate-gaeb");
+    return generateGaebFillCopy(runIdHex);
+  }
   await updateFillRun(runId, { status: "generating", stage: "building", error: null });
 
   try {

@@ -1,3 +1,10 @@
+import {
+  gaebFlavor,
+  gaebPhase,
+  gaebPhaseSupportsPricing,
+  isGaebExtension,
+} from "@/lib/gaeb/format";
+
 import type { DocumentFillFormat } from "./types";
 
 /**
@@ -25,5 +32,13 @@ export function fillFormatFor(doc: {
 }): DocumentFillFormat | null {
   if (doc.documentType === "word" && doc.extension === "docx") return "docx";
   if (doc.documentType === "pdf" && doc.extension === "pdf") return "pdf";
+  const extension = doc.extension.toLowerCase();
+  if (doc.documentType === "gaeb" && isGaebExtension(extension)) {
+    // Only the XML flavor is parseable today, and only priceable phases
+    // (81 LV, 82 estimate, 83 offer request, 84 offer) can run a fill.
+    if (gaebFlavor(extension) !== "xml") return null;
+    if (!gaebPhaseSupportsPricing(gaebPhase(extension))) return null;
+    return "gaeb";
+  }
   return null;
 }

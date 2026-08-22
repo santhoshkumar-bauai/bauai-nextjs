@@ -23,6 +23,9 @@ import type {
   WorkspaceDocumentTextDocument,
 } from "../types.ts";
 import type { DocumentFillRunDocument } from "../dora/fill/types.ts";
+import type { GaebFillItemDocument } from "../dora/fill/gaeb/items.ts";
+import type { GaebPriceSheetDocument } from "../../gaeb/price-sheet.ts";
+import type { GaebStoredDocument } from "../../gaeb/store.ts";
 
 export const aiCollectionNames = {
   tenderSearchDocuments: "tender_search_documents",
@@ -45,6 +48,9 @@ export const aiCollectionNames = {
   documentBriefRuns: "document_brief_runs",
   workspaceDocumentTexts: "workspace_document_texts",
   documentFillRuns: "document_fill_runs",
+  gaebDocuments: "gaeb_documents",
+  gaebPriceSheets: "gaeb_price_sheets",
+  gaebFillItems: "gaeb_fill_items",
 } as const;
 
 export interface AiCollections {
@@ -68,6 +74,9 @@ export interface AiCollections {
   documentBriefRuns: Collection<DocumentBriefRunDocument>;
   workspaceDocumentTexts: Collection<WorkspaceDocumentTextDocument>;
   documentFillRuns: Collection<DocumentFillRunDocument>;
+  gaebDocuments: Collection<GaebStoredDocument>;
+  gaebPriceSheets: Collection<GaebPriceSheetDocument>;
+  gaebFillItems: Collection<GaebFillItemDocument>;
 }
 
 /** Reuses the ingestion worker's pooled client — same DB, same lifecycle. */
@@ -96,5 +105,8 @@ export async function getAiCollections(): Promise<AiCollections> {
     documentBriefRuns: db.collection(aiCollectionNames.documentBriefRuns),
     workspaceDocumentTexts: db.collection(aiCollectionNames.workspaceDocumentTexts),
     documentFillRuns: db.collection(aiCollectionNames.documentFillRuns),
+    gaebDocuments: db.collection(aiCollectionNames.gaebDocuments),
+    gaebPriceSheets: db.collection(aiCollectionNames.gaebPriceSheets),
+    gaebFillItems: db.collection(aiCollectionNames.gaebFillItems),
   };
 }

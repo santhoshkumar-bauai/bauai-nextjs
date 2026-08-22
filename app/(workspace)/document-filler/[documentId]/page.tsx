@@ -1,6 +1,7 @@
 import { isValidObjectId } from "mongoose";
 import { notFound, redirect } from "next/navigation";
 
+import { GaebWorkspace } from "@/components/gaeb/gaeb-workspace";
 import { EditorWorkspace } from "@/components/onlyoffice/editor-workspace";
 import { getCompanyContext } from "@/lib/company/context";
 import { WorkspaceDocument } from "@/models/workspace-document";
@@ -27,6 +28,18 @@ export default async function DocumentEditorPage({
       process.env.OPENAI_API_KEY ||
       process.env.ANTHROPIC_API_KEY,
   );
+  // GAEB bills of quantities open in the BAU AI BOQ editor; they are not an
+  // ONLYOFFICE format and must never reach the editor iframe.
+  if (document.documentType === "gaeb") {
+    return (
+      <GaebWorkspace
+        documentId={documentId}
+        fileName={document.fileName}
+        extension={document.extension}
+        aiAvailable={aiAvailable}
+      />
+    );
+  }
   // When gateway origins are configured, the editor itself carries the native
   // Dora panel (customization.dora) — the legacy sidebar would duplicate it.
   const nativeDora = Boolean(process.env.DORA_EDITOR_ORIGINS?.trim());

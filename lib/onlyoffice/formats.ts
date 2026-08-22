@@ -1,10 +1,12 @@
+import { GAEB_EXTENSIONS, type GaebExtension } from "@/lib/gaeb/format";
+
 export const WORKSPACE_MAX_FILE_BYTES = 100_000_000;
 
 export type WorkspaceFormat = {
-  extension: "doc" | "docx" | "xls" | "xlsx" | "pdf";
-  canonicalExtension: "docx" | "xlsx" | "pdf";
+  extension: "doc" | "docx" | "xls" | "xlsx" | "pdf" | GaebExtension;
+  canonicalExtension: "docx" | "xlsx" | "pdf" | GaebExtension;
   contentType: string;
-  documentType: "word" | "cell" | "pdf";
+  documentType: "word" | "cell" | "pdf" | "gaeb";
   requiresConversion: boolean;
 };
 
@@ -44,9 +46,28 @@ const formats: Record<string, WorkspaceFormat> = {
     documentType: "pdf",
     requiresConversion: false,
   },
+  // GAEB bills of quantities open in the BAU AI BOQ editor, never in
+  // ONLYOFFICE, so they keep their own extension and skip conversion. The
+  // octet-stream content type is deliberate: browsers report GAEB uploads
+  // inconsistently (empty, text/xml, octet-stream) and downloads must never
+  // be rendered inline.
+  ...Object.fromEntries(
+    GAEB_EXTENSIONS.map((extension): [string, WorkspaceFormat] => [
+      extension,
+      {
+        extension,
+        canonicalExtension: extension,
+        contentType: "application/octet-stream",
+        documentType: "gaeb",
+        requiresConversion: false,
+      },
+    ]),
+  ),
 };
 
-export const WORKSPACE_ACCEPT = ".doc,.docx,.xls,.xlsx,.pdf";
+export const WORKSPACE_ACCEPT = Object.keys(formats)
+  .map((extension) => `.${extension}`)
+  .join(",");
 
 export function extensionFromFileName(fileName: string): string {
   const clean = fileName.trim().split(/[\\/]/).pop() ?? "";

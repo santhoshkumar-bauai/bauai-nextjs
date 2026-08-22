@@ -1282,7 +1282,7 @@
       "subtitle": "Edit tender working copies with your team and Dora.",
       "upload": "Upload document",
       "uploading": "Uploading…",
-      "sizeHint": "{mb} MB max · DOCX, XLSX, PDF",
+      "sizeHint": "{mb} MB max · DOCX, XLSX, PDF, GAEB (X83…)",
       "filter": {
         "all": "All documents",
         "tender": "Tender working copies",
@@ -1595,6 +1595,128 @@
       "explain": "What is this for?",
       "whatElse": "What else can you help with?",
       "startTour": "Start the tour"
+    }
+  },
+  "Gaeb": {
+    "editor": {
+      "back": "Back to Document Filler",
+      "subtitle": "GAEB {phase} · Bill of quantities",
+      "download": "Download original",
+      "loading": "Reading bill of quantities…",
+      "loadFailed": "The bill of quantities could not be loaded.",
+      "retry": "Try again",
+      "dora": "Dora"
+    },
+    "unsupported": {
+      "parseFailedTitle": "This GAEB file could not be read",
+      "parseFailedBody": "The file is stored safely and can be downloaded, but the bill of quantities could not be parsed ({code}).",
+      "legacyTitle": "Legacy GAEB format",
+      "legacyBody": "{extension} files (GAEB90/GAEB2000) can be stored and downloaded. Editing in BAU AI currently supports GAEB XML (.x81–.x86).",
+      "phaseTitle": "View-only exchange phase",
+      "phaseBody": "Phase {phase} files document side offers or awards and are read-only here.",
+      "download": "Download file"
+    },
+    "table": {
+      "oz": "Item no.",
+      "shortText": "Description",
+      "qty": "Qty",
+      "unit": "Unit",
+      "suggestion": "Dora suggestion",
+      "unitPrice": "Unit price",
+      "total": "Total",
+      "positions": "{count} positions",
+      "expandAll": "Expand all",
+      "collapseAll": "Collapse all",
+      "emptyFilter": "No positions match the current filter.",
+      "existingPrice": "Tender price: {price}"
+    },
+    "markers": {
+      "provisional": "Contingency",
+      "alternative": "Alternative",
+      "lump_sum": "Lump sum",
+      "hourly": "Hourly work",
+      "surcharge": "Surcharge",
+      "free_quantity": "Open quantity",
+      "notInTotal": "Not in total"
+    },
+    "filters": {
+      "all": "All",
+      "unpriced": "Unpriced",
+      "suggested": "Suggested",
+      "accepted": "Accepted",
+      "edited": "Edited",
+      "rejected": "Rejected",
+      "failed": "Failed",
+      "search": "Search item no. or text…"
+    },
+    "bulk": {
+      "acceptVisible": "Accept {count} visible",
+      "acceptConfident": "Accept {count} with ≥ {percent}% confidence",
+      "confirmTitle": "Apply Dora's suggestions?",
+      "confirmBody": "{count} unit prices will be written into your offer. Each one stays editable afterwards.",
+      "confirm": "Apply suggestions",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "quantity": "Quantity",
+      "longText": "Full description",
+      "classification": "Classification",
+      "suggestion": "Dora suggestion",
+      "range": "Expected range",
+      "confidence": "{percent}% confidence",
+      "assumptions": "Assumptions",
+      "risks": "Risk notes",
+      "evidence": "Sources",
+      "accept": "Accept",
+      "reject": "Reject",
+      "close": "Close",
+      "estimateNote": "Estimate — review before submitting.",
+      "failed": "Dora could not price this position.",
+      "noSuggestion": "No suggestion yet."
+    },
+    "totals": {
+      "net": "Net",
+      "vat": "VAT {rate}%",
+      "gross": "Gross",
+      "unpriced": "{count} without price",
+      "allPriced": "All positions priced",
+      "export": "Export X84",
+      "exportBlocked": "Price or reject every position to export",
+      "confirmTitle": "Generate X84 offer?",
+      "confirmBody": "A priced GAEB X84 file will be created as a new document. Your original stays unchanged.",
+      "confirm": "Generate X84",
+      "cancel": "Cancel"
+    },
+    "fill": {
+      "start": "Let Dora price this LV",
+      "startHint": "Dora analyses the tender context, classifies every position, and proposes unit prices with sources — you review everything before it counts.",
+      "unavailable": "AI pricing is not configured.",
+      "stageParse": "Read bill of quantities",
+      "stageClassify": "Classify positions",
+      "stageWeb": "Collect market prices",
+      "stagePrice": "Draft unit prices",
+      "stageReview": "Ready for review",
+      "counted": "{done}/{total}",
+      "failedCount": "{count} positions failed",
+      "retryFailed": "Retry failed",
+      "cancel": "Stop",
+      "cancelled": "Pricing stopped.",
+      "generating": "Building X84 offer…",
+      "completed": "X84 offer generated.",
+      "openGenerated": "Open generated document",
+      "error": "Pricing failed: {message}",
+      "sourceChanged": "The document changed since this run started."
+    },
+    "suggestion": {
+      "accept": "Accept suggestion",
+      "reject": "Reject suggestion",
+      "confidence": "{percent}%",
+      "pending": "Queued…",
+      "failed": "Failed"
+    },
+    "banner": {
+      "stale": "The document bytes changed (restore or new upload). Existing prices refer to the previous version.",
+      "reset": "Start fresh for current version"
     }
   }
 }

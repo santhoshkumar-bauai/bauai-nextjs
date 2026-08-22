@@ -10,7 +10,7 @@ export const WORKSPACE_DOCUMENT_STATES = [
 ] as const;
 export type WorkspaceDocumentState = (typeof WORKSPACE_DOCUMENT_STATES)[number];
 
-export const WORKSPACE_DOCUMENT_TYPES = ["word", "cell", "pdf"] as const;
+export const WORKSPACE_DOCUMENT_TYPES = ["word", "cell", "pdf", "gaeb"] as const;
 export type WorkspaceDocumentType = (typeof WORKSPACE_DOCUMENT_TYPES)[number];
 
 export interface WorkspaceDocumentSource {

@@ -33,6 +33,11 @@ export async function buildOnlyOfficeConfig(input: {
   });
   const companyId = String(input.context.company._id);
   const documentId = String(input.document._id);
+  // GAEB opens in the BAU AI BOQ editor; the page never renders the
+  // ONLYOFFICE client for it, so a config request here is a routing bug.
+  if (input.document.documentType === "gaeb") {
+    throw new Error("gaeb documents have no ONLYOFFICE editor config");
+  }
   // Three-way. PDFs previously fell through to "document", which told the
   // panel it was running inside the Word editor — a different app, a different
   // API surface, and a different set of capabilities.
@@ -54,6 +59,14 @@ export async function buildOnlyOfficeConfig(input: {
       fileType: input.document.extension as NonNullable<Config["document"]>["fileType"],
       key: input.document.activeEditorKey,
       referenceData: { fileKey: documentId, instanceId: env.publicAppUrl },
+      // For a PDF, api.js reads document.isForm to choose the app. Left
+      // undefined it loads apps/common/index.html first — a sniffer page that
+      // downloads the file's first bytes to detect an ONLYOFFICE form (oform)
+      // and only then swaps in the real editor. If that round trip stalls, the
+      // frame sits on the sniffer forever with no error. We already know what
+      // this file is, and our PDFs are never ONLYOFFICE forms, so state it and
+      // go straight to the PDF editor.
+      ...(input.document.documentType === "pdf" ? { isForm: false } : {}),
       permissions: {
         chat: false,
         comment: true,

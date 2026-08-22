@@ -452,7 +452,7 @@ export interface DocumentBriefDocument {
   /** How the document text was obtained; drives UI limitation notices. */
   textInfo: {
     status: "ready" | "unsupported" | "failed";
-    source: "native" | "converted-csv" | null;
+    source: "native" | "converted-csv" | "gaeb-projection" | null;
     note: string | null;
     chars: number;
     truncated: boolean;
@@ -505,8 +505,9 @@ export interface WorkspaceDocumentTextDocument {
   versionId: ObjectId;
   sha256: string;
   status: "ready" | "unsupported" | "failed";
-  /** "native" = unpdf/mammoth; "converted-csv" = spreadsheet via DS converter. */
-  source: "native" | "converted-csv" | null;
+  /** "native" = unpdf/mammoth; "converted-csv" = spreadsheet via DS
+   * converter; "gaeb-projection" = structured BOQ projection via lib/gaeb. */
+  source: "native" | "converted-csv" | "gaeb-projection" | null;
   /** Limitation marker ("no_text_layer" | "first_sheet_only" | error slug). */
   note: string | null;
   text: string;

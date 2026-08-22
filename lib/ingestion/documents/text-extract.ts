@@ -22,13 +22,18 @@ const PLAIN = /^text\/(plain|csv|html)$/i;
 const XML = /^(text|application)\/xml$/i;
 
 export function canExtractText(mimeType: string, fileName: string): boolean {
-  return classify(mimeType, fileName) !== null;
+  const kind = classify(mimeType, fileName);
+  return kind !== null && kind !== "gaeb";
 }
 
-function classify(mimeType: string, fileName: string): "pdf" | "docx" | "text" | null {
+function classify(mimeType: string, fileName: string): "pdf" | "docx" | "text" | "gaeb" | null {
   const type = mimeType.split(";")[0].trim().toLowerCase();
   const name = fileName.toLowerCase();
 
+  // Checked before the MIME branches: portals serve .x83 as text/xml often
+  // enough that the text branch would dump a megabyte of GAEB markup into the
+  // chunker. The filename is the reliable signal here.
+  if (/\.[xdp]8[1-6]$/.test(name)) return "gaeb";
   if (PDF.test(type) || name.endsWith(".pdf")) return "pdf";
   if (DOCX.test(type) || name.endsWith(".docx")) return "docx";
   if (PLAIN.test(type) || XML.test(type)) return "text";
@@ -46,6 +51,12 @@ export async function extractText(
     // .doc, .xlsx, images and CAD drawings are common in tender packs and are simply
     // archived without text. Recorded as UNSUPPORTED, not FAILED.
     return { status: "UNSUPPORTED", text: "" };
+  }
+  if (kind === "gaeb") {
+    // GAEB bills of quantities are structured position data, not prose. Raw
+    // markup in the chunker would be junk; a structured text projection via
+    // the GAEB parser is the planned follow-up (lib/gaeb).
+    return { status: "UNSUPPORTED", text: "", error: "gaeb structured data" };
   }
 
   const startedAt = Date.now();

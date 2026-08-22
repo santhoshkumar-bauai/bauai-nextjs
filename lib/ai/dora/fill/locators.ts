@@ -39,5 +39,7 @@ export function locatorKey(locator: DocumentFillLocator): string {
       return `ovt:${locator.page}:${locator.anchorText}`;
     case "pdf_overlay_vision":
       return `vis:${locator.page}:${Math.round(locator.rect.x)}:${Math.round(locator.rect.y)}`;
+    case "gaeb_meta":
+      return `gm:${locator.key}`;
   }
 }

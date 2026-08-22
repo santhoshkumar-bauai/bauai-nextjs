@@ -6,6 +6,7 @@ import {
   FileText,
   FileType2,
   History,
+  ListTree,
   Loader2,
   Pencil,
   RotateCcw,
@@ -42,6 +43,7 @@ type VersionItem = SerializedWorkspaceVersion & { restorable: boolean };
 function TypeIcon({ type }: { type: SerializedWorkspaceDocument["documentType"] }) {
   if (type === "cell") return <FileSpreadsheet className="text-emerald-600" />;
   if (type === "pdf") return <FileType2 className="text-red-600" />;
+  if (type === "gaeb") return <ListTree className="text-amber-600" />;
   return <FileText className="text-blue-600" />;
 }
 

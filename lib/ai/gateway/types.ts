@@ -29,6 +29,12 @@ export type ModelRole =
    * regression in one must not be forced on the other.
    */
   | "dora_pdf_fill"
+  /** GAEB bill-of-quantities pricing: position classification + unit-price
+   * suggestion batches. Split like the other fill roles so chat model changes
+   * cannot alter priced offers. */
+  | "dora_gaeb_fill"
+  /** Search-grounded product price lookups for GAEB pricing evidence. */
+  | "dora_gaeb_web"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
   | "otto";
 

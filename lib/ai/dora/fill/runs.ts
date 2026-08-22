@@ -23,6 +23,8 @@ export function serializeFillRun(run: DocumentFillRunDocument) {
     // Page geometry rides out so the panel can convert a locator rect to
     // editor coordinates without ever re-parsing the PDF client-side.
     pdf: run.pdf ?? null,
+    // Batch progress + tender context for the BOQ editor's staged display.
+    gaeb: run.gaeb ?? null,
     generatedDocumentId: run.generatedDocumentId?.toHexString() ?? null,
     error: run.error,
     createdAt: run.createdAt.toISOString(),
@@ -80,7 +82,14 @@ export async function updateFillRun(
   patch: Partial<
     Pick<
       DocumentFillRunDocument,
-      "status" | "stage" | "fields" | "pdf" | "generatedDocumentId" | "error" | "finishedAt"
+      | "status"
+      | "stage"
+      | "fields"
+      | "pdf"
+      | "gaeb"
+      | "generatedDocumentId"
+      | "error"
+      | "finishedAt"
     >
   >,
 ) {

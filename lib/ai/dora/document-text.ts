@@ -27,7 +27,7 @@ const KEEP_ROWS_PER_DOCUMENT = 3;
 
 export interface WorkspaceDocText {
   status: "ready" | "unsupported" | "failed";
-  source: "native" | "converted-csv" | null;
+  source: "native" | "converted-csv" | "gaeb-projection" | null;
   note: string | null;
   text: string;
   /** Full pre-cap length; `truncated` when it exceeded the stored cap. */
@@ -76,7 +76,65 @@ export async function getWorkspaceDocumentText(
   let note: string | null = null;
   let fullText = "";
 
+  const persistWorkspaceText = async (): Promise<WorkspaceDocText> => {
+    const truncated = fullText.length > WORKSPACE_TEXT_MAX_CHARS;
+    const doc: WorkspaceDocumentTextDocument = {
+      _id: key,
+      tenantId,
+      documentId: scope.documentId,
+      versionId: version.id,
+      sha256: version.sha256,
+      status,
+      source,
+      note,
+      text: truncated ? fullText.slice(0, WORKSPACE_TEXT_MAX_CHARS) : fullText,
+      chars: fullText.length,
+      truncated,
+      extractedAt: new Date(),
+    };
+    await workspaceDocumentTexts.updateOne({ _id: key }, { $set: doc }, { upsert: true });
+
+    // Prune superseded versions' rows, newest-first survivors.
+    const stale = await workspaceDocumentTexts
+      .find({ documentId: scope.documentId }, { projection: { _id: 1 } })
+      .sort({ extractedAt: -1 })
+      .skip(KEEP_ROWS_PER_DOCUMENT)
+      .toArray();
+    if (stale.length > 0) {
+      await workspaceDocumentTexts.deleteMany({
+        _id: { $in: stale.map((row) => row._id) },
+      });
+    }
+
+    return project(doc);
+  };
+
   try {
+    // GAEB is structured position data; its "text" is the parser's
+    // projection (category tree + positions), not raw XML markup. Falls
+    // through to the shared cache/prune block below like every other format.
+    if (scope.documentType === "gaeb") {
+      const { getOrParseGaebDocument } = await import("../../gaeb/store.ts");
+      const { projectGaebToText } = await import("../../gaeb/text-projection.ts");
+      const stored = await getOrParseGaebDocument({
+        tenantId,
+        documentId: scope.documentId,
+        versionId: version.id,
+        sourceSha256: version.sha256,
+        s3Key: version.s3Key,
+        extension: version.extension,
+      });
+      if (stored.document) {
+        status = "ready";
+        source = "gaeb-projection";
+        fullText = projectGaebToText(stored.document);
+      } else {
+        status = "unsupported";
+        note = `gaeb_parse_failed:${stored.parseError?.code ?? "unknown"}`.slice(0, 120);
+      }
+      return persistWorkspaceText();
+    }
+
     const buffer = await getObjectBuffer(version.s3Key);
     const extracted = await extractText(buffer, version.contentType, version.fileName);
 
@@ -117,40 +175,7 @@ export async function getWorkspaceDocumentText(
     note = "extraction_failed";
   }
 
-  const truncated = fullText.length > WORKSPACE_TEXT_MAX_CHARS;
-  const doc: WorkspaceDocumentTextDocument = {
-    _id: key,
-    tenantId,
-    documentId: scope.documentId,
-    versionId: version.id,
-    sha256: version.sha256,
-    status,
-    source,
-    note,
-    text: truncated ? fullText.slice(0, WORKSPACE_TEXT_MAX_CHARS) : fullText,
-    chars: fullText.length,
-    truncated,
-    extractedAt: new Date(),
-  };
-  await workspaceDocumentTexts.updateOne(
-    { _id: key },
-    { $set: doc },
-    { upsert: true },
-  );
-
-  // Prune superseded versions' rows, newest-first survivors.
-  const stale = await workspaceDocumentTexts
-    .find({ documentId: scope.documentId }, { projection: { _id: 1 } })
-    .sort({ extractedAt: -1 })
-    .skip(KEEP_ROWS_PER_DOCUMENT)
-    .toArray();
-  if (stale.length > 0) {
-    await workspaceDocumentTexts.deleteMany({
-      _id: { $in: stale.map((row) => row._id) },
-    });
-  }
-
-  return project(doc);
+  return persistWorkspaceText();
 }
 
 /**

@@ -1282,7 +1282,7 @@
       "subtitle": "Bearbeiten Sie Arbeitskopien von Ausschreibungen gemeinsam mit Ihrem Team und Dora.",
       "upload": "Dokument hochladen",
       "uploading": "Wird hochgeladen…",
-      "sizeHint": "Max. {mb} MB · DOCX, XLSX, PDF",
+      "sizeHint": "Max. {mb} MB · DOCX, XLSX, PDF, GAEB (X83…)",
       "filter": {
         "all": "Alle Dokumente",
         "tender": "Arbeitskopien",
@@ -1595,6 +1595,128 @@
       "explain": "Wofür ist das?",
       "whatElse": "Wobei können Sie sonst helfen?",
       "startTour": "Tour starten"
+    }
+  },
+  "Gaeb": {
+    "editor": {
+      "back": "Zurück zum Document Filler",
+      "subtitle": "GAEB {phase} · Leistungsverzeichnis",
+      "download": "Original herunterladen",
+      "loading": "Leistungsverzeichnis wird gelesen…",
+      "loadFailed": "Das Leistungsverzeichnis konnte nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "dora": "Dora"
+    },
+    "unsupported": {
+      "parseFailedTitle": "Diese GAEB-Datei konnte nicht gelesen werden",
+      "parseFailedBody": "Die Datei ist sicher gespeichert und kann heruntergeladen werden, das Leistungsverzeichnis ließ sich jedoch nicht auslesen ({code}).",
+      "legacyTitle": "Älteres GAEB-Format",
+      "legacyBody": "{extension}-Dateien (GAEB90/GAEB2000) können gespeichert und heruntergeladen werden. Die Bearbeitung in BAU AI unterstützt derzeit GAEB XML (.x81–.x86).",
+      "phaseTitle": "Nur-Lese-Austauschphase",
+      "phaseBody": "Dateien der Phase {phase} dokumentieren Nebenangebote oder Zuschläge und sind hier schreibgeschützt.",
+      "download": "Datei herunterladen"
+    },
+    "table": {
+      "oz": "OZ",
+      "shortText": "Kurztext",
+      "qty": "Menge",
+      "unit": "Einheit",
+      "suggestion": "Dora-Vorschlag",
+      "unitPrice": "EP",
+      "total": "GB",
+      "positions": "{count} Positionen",
+      "expandAll": "Alle aufklappen",
+      "collapseAll": "Alle zuklappen",
+      "emptyFilter": "Keine Positionen entsprechen dem aktuellen Filter.",
+      "existingPrice": "Ausschreibungspreis: {price}"
+    },
+    "markers": {
+      "provisional": "Bedarfsposition",
+      "alternative": "Alternativposition",
+      "lump_sum": "Pauschale",
+      "hourly": "Stundenlohn",
+      "surcharge": "Zulage",
+      "free_quantity": "Freie Menge",
+      "notInTotal": "Nicht in Summe"
+    },
+    "filters": {
+      "all": "Alle",
+      "unpriced": "Ohne Preis",
+      "suggested": "Vorgeschlagen",
+      "accepted": "Übernommen",
+      "edited": "Bearbeitet",
+      "rejected": "Abgelehnt",
+      "failed": "Fehlgeschlagen",
+      "search": "OZ oder Text suchen…"
+    },
+    "bulk": {
+      "acceptVisible": "{count} sichtbare übernehmen",
+      "acceptConfident": "{count} mit ≥ {percent} % Konfidenz übernehmen",
+      "confirmTitle": "Dora-Vorschläge übernehmen?",
+      "confirmBody": "{count} Einheitspreise werden in Ihr Angebot übernommen. Jeder Preis bleibt danach bearbeitbar.",
+      "confirm": "Vorschläge übernehmen",
+      "cancel": "Abbrechen"
+    },
+    "detail": {
+      "quantity": "Menge",
+      "longText": "Langtext",
+      "classification": "Einordnung",
+      "suggestion": "Dora-Vorschlag",
+      "range": "Erwartete Spanne",
+      "confidence": "{percent} % Konfidenz",
+      "assumptions": "Annahmen",
+      "risks": "Risikohinweise",
+      "evidence": "Quellen",
+      "accept": "Übernehmen",
+      "reject": "Ablehnen",
+      "close": "Schließen",
+      "estimateNote": "Schätzung — vor Abgabe prüfen.",
+      "failed": "Dora konnte diese Position nicht bepreisen.",
+      "noSuggestion": "Noch kein Vorschlag."
+    },
+    "totals": {
+      "net": "Netto",
+      "vat": "USt. {rate} %",
+      "gross": "Brutto",
+      "unpriced": "{count} ohne Preis",
+      "allPriced": "Alle Positionen bepreist",
+      "export": "X84 exportieren",
+      "exportBlocked": "Zum Export jede Position bepreisen oder ablehnen",
+      "confirmTitle": "X84-Angebot erzeugen?",
+      "confirmBody": "Eine bepreiste GAEB-X84-Datei wird als neues Dokument erstellt. Ihr Original bleibt unverändert.",
+      "confirm": "X84 erzeugen",
+      "cancel": "Abbrechen"
+    },
+    "fill": {
+      "start": "Dora dieses LV bepreisen lassen",
+      "startHint": "Dora analysiert den Ausschreibungskontext, ordnet jede Position ein und schlägt Einheitspreise mit Quellen vor — Sie prüfen alles, bevor es zählt.",
+      "unavailable": "KI-Bepreisung ist nicht konfiguriert.",
+      "stageParse": "Leistungsverzeichnis lesen",
+      "stageClassify": "Positionen einordnen",
+      "stageWeb": "Marktpreise sammeln",
+      "stagePrice": "Einheitspreise entwerfen",
+      "stageReview": "Bereit zur Prüfung",
+      "counted": "{done}/{total}",
+      "failedCount": "{count} Positionen fehlgeschlagen",
+      "retryFailed": "Fehlgeschlagene wiederholen",
+      "cancel": "Stoppen",
+      "cancelled": "Bepreisung gestoppt.",
+      "generating": "X84-Angebot wird erstellt…",
+      "completed": "X84-Angebot erzeugt.",
+      "openGenerated": "Erzeugtes Dokument öffnen",
+      "error": "Bepreisung fehlgeschlagen: {message}",
+      "sourceChanged": "Das Dokument hat sich seit Start dieses Laufs geändert."
+    },
+    "suggestion": {
+      "accept": "Vorschlag übernehmen",
+      "reject": "Vorschlag ablehnen",
+      "confidence": "{percent} %",
+      "pending": "In Warteschlange…",
+      "failed": "Fehlgeschlagen"
+    },
+    "banner": {
+      "stale": "Die Dokumentdaten haben sich geändert (Wiederherstellung oder neuer Upload). Vorhandene Preise beziehen sich auf die vorherige Version.",
+      "reset": "Für aktuelle Version neu beginnen"
     }
   }
 }

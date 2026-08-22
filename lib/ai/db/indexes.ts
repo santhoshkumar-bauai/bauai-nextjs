@@ -155,6 +155,27 @@ export async function ensureAiIndexes(): Promise<void> {
     { key: { tenantId: 1, status: 1, updatedAt: 1 }, name: "ix_status_heartbeat" },
   ]);
 
+  // Parsed-source cache; the unique key IS the cache identity (ledger
+  // convention: bumping GAEB_PARSER_VERSION makes every row a miss).
+  await c.gaebDocuments.createIndexes([
+    {
+      key: { documentId: 1, sourceSha256: 1, parserVersion: 1 },
+      name: "uq_document_sha_parser",
+      unique: true,
+    },
+    { key: { tenantId: 1, documentId: 1 }, name: "ix_tenant_document" },
+  ]);
+
+  await c.gaebPriceSheets.createIndexes([
+    { key: { tenantId: 1, documentId: 1 }, name: "uq_tenant_document", unique: true },
+  ]);
+
+  await c.gaebFillItems.createIndexes([
+    { key: { runId: 1, itemKey: 1 }, name: "uq_run_item", unique: true },
+    { key: { runId: 1, status: 1 }, name: "ix_run_status" },
+    { key: { runId: 1, batchIndex: 1 }, name: "ix_run_batch" },
+  ]);
+
   await db.collection("dora_document_snapshots").createIndexes([
     { key: { expiresAt: 1 }, name: "ttl_snapshot", expireAfterSeconds: 0 },
     { key: { tenantId: 1, documentId: 1, createdAt: -1 }, name: "ix_document_recent" },

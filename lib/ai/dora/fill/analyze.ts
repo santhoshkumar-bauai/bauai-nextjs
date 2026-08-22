@@ -33,6 +33,10 @@ export async function analyzeFillRun(runIdHex: string): Promise<void> {
     const { analyzePdfFillRun } = await import("./pdf/analyze-pdf");
     return analyzePdfFillRun(runIdHex);
   }
+  if (fillRunFormat(run) === "gaeb") {
+    const { analyzeGaebFillRun } = await import("./gaeb/analyze-gaeb");
+    return analyzeGaebFillRun(runIdHex);
+  }
   return analyzeDocumentFillRun(runIdHex);
 }
 

@@ -128,6 +128,23 @@ const AiEnvSchema = z.object({
   extractionMaxDocChars: z.coerce.number().int().positive().default(150_000),
   extractionRpm: z.coerce.number().int().positive().default(30),
   extractionConcurrency: z.coerce.number().int().positive().default(2),
+
+  /**
+   * GAEB bill-of-quantities support. The parser version is cache identity for
+   * `gaeb_documents` (ledger convention: bumping it re-parses on next open).
+   */
+  gaebParserVersion: z.string().default("v1"),
+  /** Positions per classify/price LLM call. */
+  gaebFillBatchSize: z.coerce.number().int().min(1).max(50).default(20),
+  gaebFillBatchConcurrency: z.coerce.number().int().min(1).max(4).default(2),
+  /** Hard guard: runs above this many positions are rejected up front. */
+  gaebFillMaxPositions: z.coerce.number().int().positive().default(3000),
+  /** Above this many positions the run must go through the queue worker. */
+  gaebFillInlineMaxItems: z.coerce.number().int().positive().default(60),
+  gaebFillMaxOutputTokens: z.coerce.number().int().positive().default(16_384),
+  /** Web price evidence for named products (search-grounded lookups). */
+  gaebWebPricingEnabled: boolFromEnv("true"),
+  gaebWebPricingMaxLookups: z.coerce.number().int().min(0).max(200).default(40),
 });
 
 export type AiEnv = z.infer<typeof AiEnvSchema>;
@@ -194,6 +211,19 @@ function defaultModelRoles(): Record<string, string> {
       process.env.AI_DORA_PDF_FILL_MODEL ||
       process.env.AI_DORA_FILL_MODEL ||
       "gemini:gemini-3.7-flash",
+    // GAEB position classification + price suggestion batches. Pinned like the
+    // other fill roles so chat model changes cannot alter priced offers.
+    dora_gaeb_fill:
+      process.env.AI_DORA_GAEB_FILL_MODEL ||
+      process.env.AI_DORA_FILL_MODEL ||
+      "gemini:gemini-3.7-flash",
+    // Search-grounded product price lookups. Needs a provider with a native
+    // web-search tool (Gemini googleSearch); web pricing degrades to "no
+    // evidence" when the configured provider cannot search.
+    dora_gaeb_web:
+      process.env.AI_DORA_GAEB_WEB_MODEL ||
+      process.env.AI_DORA_GAEB_FILL_MODEL ||
+      "gemini:gemini-3.7-flash",
     /**
      * Otto guides a brand-new user through the product. It is the first thing
      * anyone experiences, and its planning step has to reason about a whole
@@ -253,6 +283,14 @@ export function aiEnv(): AiEnv {
     extractionMaxDocChars: process.env.AI_EXTRACTION_MAX_DOC_CHARS,
     extractionRpm: process.env.AI_EXTRACTION_RPM,
     extractionConcurrency: process.env.AI_EXTRACTION_CONCURRENCY,
+    gaebParserVersion: process.env.GAEB_PARSER_VERSION,
+    gaebFillBatchSize: process.env.AI_GAEB_FILL_BATCH_SIZE,
+    gaebFillBatchConcurrency: process.env.AI_GAEB_FILL_BATCH_CONCURRENCY,
+    gaebFillMaxPositions: process.env.AI_GAEB_FILL_MAX_POSITIONS,
+    gaebFillInlineMaxItems: process.env.AI_GAEB_FILL_INLINE_MAX_ITEMS,
+    gaebFillMaxOutputTokens: process.env.AI_GAEB_FILL_MAX_OUTPUT_TOKENS,
+    gaebWebPricingEnabled: process.env.AI_GAEB_WEB_PRICING_ENABLED,
+    gaebWebPricingMaxLookups: process.env.AI_GAEB_WEB_PRICING_MAX_LOOKUPS,
   });
   return cached;
 }

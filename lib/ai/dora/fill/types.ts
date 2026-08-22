@@ -8,7 +8,7 @@ export type DocumentFillFieldState =
   | "not_applicable";
 
 /** Which engine fills a run. Absent on pre-PDF rows, which are all docx. */
-export type DocumentFillFormat = "docx" | "pdf";
+export type DocumentFillFormat = "docx" | "pdf" | "gaeb";
 
 /**
  * PDF COORDINATE CONTRACT — normative. Every producer and consumer obeys it.
@@ -104,6 +104,25 @@ export type DocumentFillLocator =
       fontSize: number;
       /** Nearest recognised text, for the review UI only. */
       nearestText: string;
+    }
+  /**
+   * A GAEB X84 metadata slot (bidder block). Per-position unit prices are NOT
+   * fill fields — they live in the price sheet and gaeb_fill_items; run.fields
+   * carries only these few profile-groundable document-level values.
+   */
+  | {
+      strategy: "gaeb_meta";
+      /** `gm:<key>` */
+      nodeId: string;
+      /** XML target the X84 writer fills, e.g. "Award/CTR/Address/Name1". */
+      path: string;
+      key:
+        | "bidder.name"
+        | "bidder.street"
+        | "bidder.zip"
+        | "bidder.city"
+        | "bidder.contact"
+        | "bidder.email";
     };
 
 export type PdfFormFieldType =
@@ -136,7 +155,7 @@ export interface DocumentFillPdfSummary {
 }
 
 export interface DocumentFillEvidence {
-  source: "company_profile" | "company_document" | "tender" | "user";
+  source: "company_profile" | "company_document" | "tender" | "user" | "web";
   reference: string;
   excerpt: string;
 }
@@ -154,6 +173,55 @@ export interface DocumentFillField {
   evidence: DocumentFillEvidence[];
   reason: string;
   updatedBy: "ai" | "user";
+}
+
+/**
+ * Global tender conditions extracted once per GAEB run and attached to every
+ * pricing batch — the model prices "steel pipe demolition in an occupied
+ * school", not "steel pipe demolition" in a vacuum.
+ */
+export interface GaebTenderContext {
+  projectType: string[];
+  building: string | null;
+  existingBuilding: boolean | null;
+  occupiedDuringConstruction: boolean | null;
+  region: string | null;
+  siteConditions: string[];
+  riskFactors: Array<{ factor: string; pricingImpact: "low" | "medium" | "high" }>;
+  summary: string;
+}
+
+/** Progress + context for a GAEB run, carried on the run and out to the UI. */
+export interface DocumentFillGaebSummary {
+  phase: number;
+  flavor: string;
+  parserVersion: string;
+  sourceItemCount: number;
+  batchSize: number;
+  batchCount: number;
+  classifiedCount: number;
+  pricedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  webLookupsDone: number;
+  webLookupsTotal: number;
+  /**
+   * Persisted so a retry_failed pass reuses the evidence instead of paying
+   * for the same searches again. Small by construction (lookup cap × ~200B).
+   */
+  webFindings?: Array<{
+    product: string;
+    unitPrice: number | null;
+    unit: string;
+    currency: string;
+    sourceUrl: string;
+    sourceTitle: string;
+    note: string;
+  }>;
+  /** sha256 over the serialized context; generation refuses on drift. */
+  contextHash: string | null;
+  context: GaebTenderContext | null;
+  warnings: string[];
 }
 
 export interface DocumentFillRunDocument {
@@ -176,6 +244,8 @@ export interface DocumentFillRunDocument {
   snapshotHash: string | null;
   /** Present only on PDF runs. */
   pdf?: DocumentFillPdfSummary | null;
+  /** Present only on GAEB runs. */
+  gaeb?: DocumentFillGaebSummary | null;
   status:
     | "queued"
     | "analyzing"

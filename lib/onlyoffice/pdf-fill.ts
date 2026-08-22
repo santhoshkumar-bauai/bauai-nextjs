@@ -55,6 +55,9 @@ export function narrowPdfInstructions(fields: PdfFillCandidate[]): PdfFillInstru
     if (field.strategy === "form_key" || field.strategy === "unique_text") {
       throw new Error("docx_locator_in_pdf");
     }
+    if (field.strategy === "gaeb_meta") {
+      throw new Error("gaeb_locator_in_pdf");
+    }
     return field;
   });
 }
