@@ -7,6 +7,11 @@ the Clara/Dora/Nova agents. Companion docs: `docs/GLOSSARY.md` (German
 procurement terms ↔ English identifiers), `docs/INGESTION_WORKER.md`,
 `docs/DOCUMENT_RESOLVERS.md`.
 
+**For the agents themselves** — how LangChain and LangGraph are used, the four
+graphs, the turn lifecycle, the implementation review and the Langfuse
+observability plan — see [`docs/agentic-ai/`](agentic-ai/README.md). This
+document covers the deterministic foundation those agents sit on.
+
 ## Architecture at a glance
 
 ```
