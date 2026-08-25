@@ -22,6 +22,7 @@ import {
   type ReportLocale,
   type TenderReportContent,
 } from "./schema.ts";
+import { withProviderStructuredOutput } from "../agent/structured.ts";
 
 const log = logger.child("ai.report");
 
@@ -114,9 +115,10 @@ export async function generateTenderReport(input: {
   });
 
   const model = await getChatModel({ role: "report" });
-  const structured = model.withStructuredOutput<TenderReportContent>(
-    REPORT_JSON_SCHEMA as never,
-    { name: "tender_report" },
+  const structured = withProviderStructuredOutput<TenderReportContent>(
+    model,
+    REPORT_JSON_SCHEMA,
+    { name: "tender_report", role: "report" },
   );
 
   input.onProgress?.("analyzing");
@@ -124,6 +126,15 @@ export async function generateTenderReport(input: {
 
   // Every other UI language is a TRANSLATION of this one analysis, never a
   // second analysis — two runs could reach two different verdicts.
+  //
+  // Its own model, deliberately. The analysis runs at the highest reasoning
+  // effort in the product; reusing that instance would spend it again on
+  // literal translation, once per remaining locale, for no gain in quality.
+  const translator = withProviderStructuredOutput<TenderReportContent>(
+    await getChatModel({ role: "report", reasoningEffort: "low" }),
+    REPORT_JSON_SCHEMA,
+    { name: "tender_report", role: "report" },
+  );
   input.onProgress?.("translating");
   const byLocale: Partial<Record<ReportLocale, Record<string, unknown>>> = {
     [input.locale]: report as unknown as Record<string, unknown>,
@@ -133,7 +144,7 @@ export async function generateTenderReport(input: {
       async (target) => {
         try {
           const translated = reportSchema.parse(
-            await structured.invoke(
+            await translator.invoke(
               buildTranslationPrompt({ report, from: input.locale, to: target }),
             ),
           );

@@ -21,6 +21,7 @@ import { buildFullCompanyContext } from "@/lib/ai/fit/company-context";
 import { companyProfileInput } from "@/lib/ai/fit/service";
 
 import type { DoraSnapshotNode, StoredDoraSnapshot } from "./snapshot-schema";
+import { withProviderStructuredOutput } from "@/lib/ai/agent/structured";
 
 export const DORA_EDIT_SCHEMA_VERSION = "dora-edit-v2";
 export const DORA_EDIT_PROMPT_VERSION = "dora-edit-p3";
@@ -528,9 +529,16 @@ export async function planDoraEditTransaction(input: {
       temperature: 0.1,
       reasoningEffort: "low",
     });
-    const structured = model.withStructuredOutput<z.infer<typeof rawPlanSchema>>(
-      RAW_PLAN_JSON_SCHEMA as never,
-      { name: "dora_edit_transaction_v2", method: "functionCalling" },
+    const structured = withProviderStructuredOutput<z.infer<typeof rawPlanSchema>>(
+      model,
+      RAW_PLAN_JSON_SCHEMA,
+      {
+        name: "dora_edit_transaction_v2",
+        role: "dora",
+        // Gemini only — see structured.ts. A forced function tool_choice also
+        // cannot coexist with a server-side tool such as web search.
+        forceFunctionCalling: true,
+      },
     );
     const modelRef = resolveRole("dora");
     return {

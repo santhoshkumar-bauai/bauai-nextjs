@@ -10,6 +10,7 @@ import { buildFillGrounding } from "./grounding";
 import { resolveDiscoveredFields } from "./resolve";
 import { FILL_DISCOVERY_JSON_SCHEMA, fillDiscoverySchema } from "./schema";
 import { updateFillRun } from "./runs";
+import { withProviderStructuredOutput } from "../../agent/structured.ts";
 
 /**
  * Analyse a fill run with whichever engine its format calls for.
@@ -90,8 +91,9 @@ export async function analyzeDocumentFillRun(runIdHex: string): Promise<void> {
     ].join("\n\n");
 
     const model = await getChatModel({ role: "dora_fill", maxOutputTokens: 16_384, temperature: 0 });
-    const structured = model.withStructuredOutput(FILL_DISCOVERY_JSON_SCHEMA as never, {
+    const structured = withProviderStructuredOutput(model, FILL_DISCOVERY_JSON_SCHEMA, {
       name: "document_fill_discovery",
+      role: "dora_fill",
     });
     const raw = await structured.invoke(prompt);
     const discovery = fillDiscoverySchema.parse(raw);

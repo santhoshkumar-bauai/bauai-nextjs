@@ -2,6 +2,7 @@ import { getChatModel } from "@/lib/ai/agent/model";
 import { aiEnv } from "@/lib/ai/config/env";
 
 import { GAEB_WEB_PRICE_JSON_SCHEMA, gaebWebPriceSchema } from "./schema-gaeb";
+import { withProviderStructuredOutput } from "../../../agent/structured.ts";
 
 /**
  * Search-grounded market-price evidence for named products. Strictly an
@@ -120,8 +121,9 @@ export async function lookupWebPrices(input: {
       maxOutputTokens: 4_096,
       temperature: 0,
     });
-    const structured = extractor.withStructuredOutput(GAEB_WEB_PRICE_JSON_SCHEMA as never, {
+    const structured = withProviderStructuredOutput(extractor, GAEB_WEB_PRICE_JSON_SCHEMA, {
       name: "gaeb_web_price_findings",
+      role: "dora_gaeb_fill",
     });
     for (let index = 0; index < grounded.length; index += RESEARCH_BATCH) {
       const slice = grounded.slice(index, index + RESEARCH_BATCH);

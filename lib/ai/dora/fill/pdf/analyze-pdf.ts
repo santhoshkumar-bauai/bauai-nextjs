@@ -17,6 +17,7 @@ import { helveticaMeasurer } from "./measure";
 import { pdfFileBlock, shouldSendPdfNatively } from "./model-input";
 import { resolvePdfDiscoveredFields } from "./resolve-pdf";
 import { PDF_FILL_DISCOVERY_JSON_SCHEMA, pdfFillDiscoverySchema } from "./schema-pdf";
+import { withProviderStructuredOutput } from "../../../agent/structured.ts";
 
 /**
  * PDF field discovery. Mirrors ../analyze.ts stage for stage — the difference
@@ -82,8 +83,9 @@ export async function analyzePdfFillRun(runIdHex: string): Promise<void> {
       maxOutputTokens: 16_384,
       temperature: 0,
     });
-    const structured = model.withStructuredOutput(PDF_FILL_DISCOVERY_JSON_SCHEMA as never, {
+    const structured = withProviderStructuredOutput(model, PDF_FILL_DISCOVERY_JSON_SCHEMA, {
       name: "pdf_document_fill_discovery",
+      role: "dora_pdf_fill",
     });
     // A multimodal turn needs a BaseMessage[]; the text-only path takes the
     // bare string, exactly like the Word analyzer.

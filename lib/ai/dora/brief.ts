@@ -10,6 +10,7 @@ import { getExtractions } from "../extraction/store.ts";
 import { buildFullCompanyContext } from "../fit/company-context.ts";
 import { companyProfileInput } from "../fit/service.ts";
 import { classifyAiError } from "../agent/errors.ts";
+import { withProviderStructuredOutput } from "../agent/structured.ts";
 import { resolveRole } from "../gateway/config.ts";
 import { getTenderOverview } from "../overview/service.ts";
 import {
@@ -174,16 +175,17 @@ export async function generateBrief(input: {
 
     await markBriefStage(tenantId, documentId, "analyzing");
     const prompt = buildBriefPrompt(ctx, text, grounding);
-    const model = await getChatModel({ role: "dora", maxOutputTokens: 8_192 });
-    // Two calls per language — see brief-schema.ts for why this must never be
-    // merged into one schema.
-    const analysisStructured = model.withStructuredOutput<BriefAnalysis>(
-      ANALYSIS_JSON_SCHEMA as never,
-      { name: "brief_analysis" },
+    const model = await getChatModel({ role: "dora" });
+    // Two calls, deliberately — see brief-schema.ts.
+    const analysisStructured = withProviderStructuredOutput<BriefAnalysis>(
+      model,
+      ANALYSIS_JSON_SCHEMA,
+      { name: "brief_analysis", role: "dora" },
     );
-    const planStructured = model.withStructuredOutput<BriefPlan>(
-      PLAN_JSON_SCHEMA as never,
-      { name: "brief_plan" },
+    const planStructured = withProviderStructuredOutput<BriefPlan>(
+      model,
+      PLAN_JSON_SCHEMA,
+      { name: "brief_plan", role: "dora" },
     );
     const [analysisRaw, planRaw] = await Promise.all([
       analysisStructured.invoke(
@@ -202,11 +204,24 @@ export async function generateBrief(input: {
     // (report-service rule). A failed translation just leaves the language
     // absent; the wire layer falls back.
     await markBriefStage(tenantId, documentId, "translating");
+    // Its own model for the same reason as the report: translating is not
+    // analysis, and should not pay the analysis pass's reasoning effort.
+    const translationModel = await getChatModel({ role: "dora", reasoningEffort: "low" });
+    const analysisTranslator = withProviderStructuredOutput<BriefAnalysis>(
+      translationModel,
+      ANALYSIS_JSON_SCHEMA,
+      { name: "brief_analysis", role: "dora" },
+    );
+    const planTranslator = withProviderStructuredOutput<BriefPlan>(
+      translationModel,
+      PLAN_JSON_SCHEMA,
+      { name: "brief_plan", role: "dora" },
+    );
     const otherLocale: "en" | "de" = ctx.locale === "de" ? "en" : "de";
     let translated: BriefContent | null = null;
     try {
       const [translatedAnalysis, translatedPlan] = await Promise.all([
-        analysisStructured.invoke(
+        analysisTranslator.invoke(
           translationPrompt(otherLocale, {
             documentType: primary.documentType,
             purpose: primary.purpose,
@@ -217,7 +232,7 @@ export async function generateBrief(input: {
             risks: primary.risks,
           }),
         ),
-        planStructured.invoke(
+        planTranslator.invoke(
           translationPrompt(otherLocale, {
             requiredActions: primary.requiredActions,
             suggestedValues: primary.suggestedValues,
