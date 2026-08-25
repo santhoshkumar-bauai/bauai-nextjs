@@ -36,7 +36,11 @@ export type ModelRole =
   /** Search-grounded product price lookups for GAEB pricing evidence. */
   | "dora_gaeb_web"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
-  | "otto";
+  | "otto"
+  /** Chat-based PDF form-filling agent (POC). Pinned like the other fill
+   * roles — a chat model change must not silently alter a filled form — and
+   * vision-capable: it reads rendered pages and 400dpi inspection crops. */
+  | "fill_agent";
 
 /** Mirrors the retrieval asymmetry of embedding models: documents and
  * queries are embedded with different task hints. */

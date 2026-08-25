@@ -231,6 +231,11 @@ function defaultModelRoles(): Record<string, string> {
      * Falls back through the report model so an unconfigured deployment works.
      */
     otto: process.env.AI_OTTO_MODEL || process.env.AI_REPORT_MODEL || agent,
+    // Chat-based PDF form-filling agent (POC). Pinned to the flagship Gemini
+    // tier: it orchestrates tools, writes sandbox Python and reads rendered
+    // pages + 400dpi crops, so it needs vision + strong reasoning — and like
+    // the other fill roles it must not drift with chat model upgrades.
+    fill_agent: process.env.AI_FILL_AGENT_MODEL || "gemini:gemini-3.7-pro",
   };
 }
 

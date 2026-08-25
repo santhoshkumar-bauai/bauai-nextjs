@@ -1,0 +1,59 @@
+name: bauai-fill-sandbox
+
+# Dev topology (Windows Docker Desktop, `npm run dev` on the host):
+#
+#   host:127.0.0.1:8971 -> gateway(socat) -> fill-sandbox:8000
+#
+# `sandbox_internal` is internal:true, so the sandbox container has NO route
+# to the internet — LLM-written code cannot exfiltrate or fetch anything.
+# The socat gateway is the only bridge, and it only forwards the API port
+# inward. In prod (Coolify/Dokploy) drop the gateway and attach fill-sandbox
+# to the shared internal network, like docker/onlyoffice/.
+
+services:
+  fill-sandbox:
+    build: .
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - fill_work:/work
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 256
+    environment:
+      # dev default; override in .env for anything shared
+      FILL_SANDBOX_TOKEN: ${FILL_SANDBOX_TOKEN:-dev-fill-sandbox-token}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - sandbox_internal
+
+  gateway:
+    image: alpine/socat
+    restart: unless-stopped
+    command: TCP-LISTEN:8000,fork,reuseaddr TCP:fill-sandbox:8000
+    ports:
+      - "127.0.0.1:8971:8000"
+    depends_on:
+      - fill-sandbox
+    networks:
+      - sandbox_internal
+      - default
+
+volumes:
+  fill_work:
+
+networks:
+  sandbox_internal:
+    internal: true

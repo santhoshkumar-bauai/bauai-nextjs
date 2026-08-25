@@ -52,7 +52,10 @@
     "migrate:misc": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-07-misc.mts",
     "migrate:verify": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-08-verify.mts",
     "migrate:passwords": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-09-passwords.mts",
-    "migrate:prune": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-prune.mts"
+    "migrate:prune": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-prune.mts",
+    "sandbox:fill": "docker compose -f docker/fill-sandbox/docker-compose.yml up -d --build",
+    "sandbox:fill:test": "docker compose -f docker/fill-sandbox/docker-compose.yml run --rm fill-sandbox python -m pytest /opt/tests -q",
+    "poc:fill:smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/poc/fill-agent-smoke.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1103.0",

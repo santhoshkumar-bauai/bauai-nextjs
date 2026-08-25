@@ -57,6 +57,7 @@ export interface ChatModelOptions extends AgentModelOptions {
     | "dora_gaeb_fill"
     | "dora_gaeb_web"
     | "otto"
+    | "fill_agent"
   >;
   /** Overrides the env-configured effort for this role. */
   reasoningEffort?: ReasoningEffort;

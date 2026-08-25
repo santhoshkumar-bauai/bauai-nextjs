@@ -51,6 +51,16 @@ const TOOL_LABEL_KEYS = [
   "get_document_brief",
   "get_document_info",
   "get_tender_context",
+  // Fill agent (POC) tools — same catalog, same generic fallback.
+  "analyze_pdf",
+  "propose_fieldmap",
+  "set_field_values",
+  "fill_and_validate",
+  "critique_fill",
+  "repair_fieldmap",
+  "run_python",
+  "render_preview",
+  "get_session_status",
 ] as const;
 
 const VERDICT_STAGES = ["loading_artifacts", "retrieving_gaps", "drafting"] as const;
