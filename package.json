@@ -55,7 +55,8 @@
     "migrate:prune": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/migrate-prune.mts",
     "sandbox:fill": "docker compose -f docker/fill-sandbox/docker-compose.yml up -d --build",
     "sandbox:fill:test": "docker compose -f docker/fill-sandbox/docker-compose.yml run --rm fill-sandbox python -m pytest /opt/tests -q",
-    "poc:fill:smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/poc/fill-agent-smoke.mts"
+    "poc:fill:smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/poc/fill-agent-smoke.mts",
+    "ai:azure:probe": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/azure-probe.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1103.0",
