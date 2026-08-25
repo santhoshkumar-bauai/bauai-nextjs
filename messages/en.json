@@ -1429,7 +1429,8 @@
       "repair_fieldmap": "Repairing the fill…",
       "run_python": "Writing and running code…",
       "render_preview": "Updating the preview…",
-      "get_session_status": "Checking the session state…"
+      "get_session_status": "Checking the session state…",
+      "search_company_data": "Searching your company data…"
     },
     "verdict": {
       "recommendation": {
@@ -1664,7 +1665,16 @@
     "formError": "Saving the values failed — try again.",
     "formContinueMessage": "I have entered {count, plural, one {# value} other {# values}} in the form. Please continue filling the document.",
     "formSkipMessage": "Please continue without the remaining optional fields.",
-    "steps": "{count, plural, one {# step} other {# steps}}"
+    "steps": "{count, plural, one {# step} other {# steps}}",
+    "openInEditor": "Open in ONLYOFFICE",
+    "openInEditorFailed": "Opening in the editor failed — try again.",
+    "autoAnalyzeMessage": "Analyze this document, fill in everything you can ground in our company data, and list what is still missing.",
+    "chooserBack": "Back to Document Filler",
+    "chooserSubtitle": "How do you want to work on this PDF?",
+    "chooserChat": "Fill with AI chat",
+    "chooserChatHint": "The agent analyzes the form, grounds values in your company data, asks for what's missing and fills it — validated and exportable at any time.",
+    "chooserEditor": "Open in ONLYOFFICE",
+    "chooserEditorHint": "Open the PDF directly in the editor and work on it by hand."
   },
   "Gaeb": {
     "editor": {

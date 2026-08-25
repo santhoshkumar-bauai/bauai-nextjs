@@ -7,10 +7,30 @@ each box MEANS, not where it is.
 from __future__ import annotations
 
 import os
+import re
 from typing import Any
 
 import pdfplumber
 from pypdf import PdfReader
+
+# "Fill here" runs printed as GLYPHS rather than drawn as lines: underscores,
+# dot leaders, ellipses, dashes. German procurement forms use these constantly
+# ("Firmenname: ______________________"), and treating them as ordinary text
+# was hiding every entry position on such a form: the box that contains them
+# looked occupied, so it never reached `empty_boxes`, and the planner was left
+# with nothing to copy — which is exactly when a model starts inventing
+# coordinates.
+FILLER_CHARS = "_.…·-–—"
+_FILLER_RE = re.compile(rf"^[{re.escape(FILLER_CHARS)}\s]+$")
+MIN_FILLER_RUN = 5
+
+
+def is_filler(text: str) -> bool:
+    """True for a run that is only leader characters — an entry line, not content."""
+    stripped = (text or "").strip()
+    if len(stripped) < MIN_FILLER_RUN:
+        return False
+    return bool(_FILLER_RE.match(stripped))
 
 
 def classify(pdf_path: str) -> str:
@@ -55,9 +75,22 @@ def extract_geometry(pdf_path: str) -> dict[str, Any]:
                     rules.append(item)               # thin → underline / cell edge
                 elif w > 25 and h > 8:
                     boxes.append(item)               # rectangle → entry box
-            # dotted "………" runs are entry lines too
-            dotted = [w for w in words if w["text"].count("…") > 5
-                      or w["text"].count(".") > 15]
+            # Leader runs ("……", "....", "_____") are entry lines too.
+            dotted = [w for w in words if is_filler(w["text"])]
+
+            # An entry area for each leader run: the value belongs just ABOVE
+            # the leader ink, so the box ends at the run's baseline and opens
+            # upward. Drawn with valign "bottom" this lands the text on the
+            # line the way a person filling the form by hand would.
+            entry_lines = [
+                {
+                    "x0": w["x0"], "top": round(w["bottom"] - 12.5, 2),
+                    "x1": w["x1"], "bottom": w["bottom"],
+                    "w": round(w["x1"] - w["x0"], 2), "h": 12.5,
+                    "derived": "leader",
+                }
+                for w in dotted
+            ]
 
             # Many German form templates draw tables as bare horizontal rules
             # with no rectangles at all, so `boxes` comes back empty. Rebuild
@@ -82,6 +115,7 @@ def extract_geometry(pdf_path: str) -> dict[str, Any]:
                 "checkboxes": checkboxes,
                 "rules": rules,
                 "dotted_lines": dotted,
+                "entry_lines": entry_lines,
                 "empty_boxes": _empty_boxes(boxes + cells, words),
             })
     return out
@@ -113,13 +147,18 @@ def _cells_from_rules(rules: list[dict], page_w: float,
 
 
 def _empty_boxes(boxes: list[dict], words: list[dict]) -> list[dict]:
-    """Boxes containing no glyphs → almost certainly an unfilled field.
-    This single heuristic removes most of the work the LLM would otherwise do."""
+    """Boxes containing no CONTENT → almost certainly an unfilled field.
+    This single heuristic removes most of the work the LLM would otherwise do.
+
+    Leader runs do not count as content: a box holding only "____________" is
+    the emptiest field on the page, and treating it as occupied is what left
+    underscore-lined forms with no anchors at all."""
     empty = []
     for b in boxes:
         has_text = any(
             b["x0"] - 1 <= w["x0"] and w["x1"] <= b["x1"] + 1
             and b["top"] - 1 <= w["top"] and w["bottom"] <= b["bottom"] + 1
+            and not is_filler(w["text"])
             for w in words
         )
         if not has_text:

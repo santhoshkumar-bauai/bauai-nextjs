@@ -26,6 +26,11 @@ export interface FillAgentSessionDocument {
   _id?: ObjectId;
   tenantId: ObjectId;
   createdBy: string;
+  /** Workspace document this session fills, when opened from the document
+   * filler; null for direct POC uploads. Document-bound sessions REFERENCE
+   * the document version's S3 object as their source — teardown must never
+   * delete it. */
+  documentId: ObjectId | null;
   status: FillSessionStatus;
   source: {
     s3Key: string;
@@ -81,9 +86,10 @@ export async function getFillSessionCollection(): Promise<
   );
   if (!indexesEnsured) {
     indexesEnsured = true;
-    await collection
-      .createIndex({ tenantId: 1, createdAt: -1 })
-      .catch(() => {}); // races with parallel routes are benign
+    await Promise.all([
+      collection.createIndex({ tenantId: 1, createdAt: -1 }),
+      collection.createIndex({ tenantId: 1, documentId: 1 }),
+    ]).catch(() => {}); // races with parallel routes are benign
   }
   return collection;
 }
@@ -95,12 +101,14 @@ export async function createFillSession(input: {
   pdf: FillAgentSessionDocument["pdf"];
   maxFillIterations: number;
   targetScore: number;
+  documentId?: ObjectId | null;
 }): Promise<FillAgentSessionDocument> {
   const collection = await getFillSessionCollection();
   const now = new Date();
   const doc: FillAgentSessionDocument = {
     tenantId: input.tenantId,
     createdBy: input.createdBy,
+    documentId: input.documentId ?? null,
     status: "ready",
     source: input.source,
     pdf: input.pdf,
@@ -176,6 +184,8 @@ export function serializeFillSession(doc: FillAgentSessionDocument) {
     pageCount: doc.pdf.pageCount,
     acroFieldCount: doc.pdf.acroFieldCount,
     fieldCount: doc.fieldmap.length,
+    /** True once the sandbox analyzed the PDF — source page renders exist. */
+    analyzed: doc.sandboxSessionId != null,
     openQuestions: doc.openQuestions,
     fillIterations: doc.fillIterations,
     maxFillIterations: doc.maxFillIterations,

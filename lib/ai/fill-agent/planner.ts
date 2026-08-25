@@ -3,6 +3,7 @@ import type { z } from "zod";
 
 import { textFromContent } from "../agent/content.ts";
 import { getChatModel } from "../agent/model.ts";
+import { buildFillGrounding } from "../dora/fill/grounding.ts";
 import type { FillAgentRunContext } from "./context.ts";
 import {
   critiqueResponseSchema,
@@ -35,8 +36,8 @@ import {
 
 const GEOMETRY_CHAR_CAP = 180_000;
 const NATIVE_FIELDS_CHAR_CAP = 60_000;
+const GROUNDING_CHAR_CAP = 40_000;
 const REPAIR_PAYLOAD_CHAR_CAP = 150_000;
-const MAX_PLAN_PAGE_IMAGES = 15;
 const MAX_CRITIQUE_PAGE_IMAGES = 12;
 const MAX_REPAIR_PAGE_IMAGES = 6;
 
@@ -155,7 +156,13 @@ export async function proposeFieldmapWithModel(
 
   const content: ContentPart[] = [{ type: "text", text: FILL_PLAN_PROMPT }];
   content.push(
-    ...(await pageImageParts(ctx, workspaceId, "source_pages", pages, MAX_PLAN_PAGE_IMAGES)),
+    ...(await pageImageParts(
+      ctx,
+      workspaceId,
+      "source_pages",
+      pages,
+      fillAgentEnv().maxPlanImages,
+    )),
   );
   content.push({
     type: "text",
@@ -168,6 +175,28 @@ export async function proposeFieldmapWithModel(
         'NATIVE ACROFORM FIELDS (prefer these — set "target": "acroform" and use field_id as id):\n' +
         JSON.stringify(ctx.session.nativeFields).slice(0, NATIVE_FIELDS_CHAR_CAP),
     });
+  }
+  // Company grounding: the profile + a corpus slice, so the planner fills
+  // what the company's own data answers instead of asking the user for it.
+  // Degrades to conversation-only when the tenant has no profile yet.
+  try {
+    const grounding = await buildFillGrounding({
+      tenantId: ctx.tenantId,
+      tenderId: null,
+    });
+    const lines = [...grounding.profileLines, ...grounding.corpusLines];
+    if (lines.length > 0) {
+      content.push({
+        type: "text",
+        text:
+          "COMPANY CONTEXT (grounded facts from the company profile and " +
+          "documents — usable for values they clearly answer; never stretch " +
+          "them to fields they do not):\n" +
+          lines.join("\n").slice(0, GROUNDING_CHAR_CAP),
+      });
+    }
+  } catch {
+    // no company profile — the conversation collects everything
   }
   content.push({
     type: "text",
@@ -268,5 +297,5 @@ export async function repairFieldmapWithModel(
 
 /** Exposed for the smoke script: how many page images the planner may send. */
 export function plannerImageBudget(): number {
-  return Math.min(MAX_PLAN_PAGE_IMAGES, fillAgentEnv().maxPages);
+  return Math.min(fillAgentEnv().maxPlanImages, fillAgentEnv().maxPages);
 }

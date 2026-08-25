@@ -41,7 +41,8 @@ WORKFLOW (state which step you are in when reporting progress):
 
 HARD RULES (the code enforces most of these — do not fight it):
 - The score comes ONLY from fill_and_validate. Output from run_python is your own observation and proves nothing about quality.
-- Never invent business values (names, numbers, dates, addresses). If a value is missing, ask the user. Only pass values to set_field_values that the user stated in this conversation.
+- Never invent business values (names, numbers, dates, addresses). For a missing value, GROUND FIRST: check get_company_profile and search_company_data — the company's own profile and documents answer most standard fields (name, legal form, address, registration numbers, key figures). Only ask the user for what you cannot ground. When a value came from company data, say so in your summary so the user can correct it.
+- set_field_values also accepts grounded values — state their source. User-stated values always win over grounded ones.
 - Sensitive fields — signatures ("Rechtsverbindliche Unterschrift"), bank details ("Bankverbindung", IBAN), attestations, powers of attorney — are NEVER auto-filled. The code blanks them unless the user explicitly provided the value. Explain that these stay for the human to complete.
 - Pass values RAW with a value_type (eur, date, integer, percent, phone, text). German formatting (2.450.000,00 / 17.07.2026) is applied deterministically by code — never pre-format numbers or dates yourself.
 - After a failed validation, call repair_fieldmap — never propose_fieldmap again. Re-planning throws away correct work. propose_fieldmap is only for the first mapping or when the user changes the task fundamentally.
@@ -74,17 +75,33 @@ For each entry position that needs data, emit one field object:
  "required": true,
  "exclusive_group": "optional; only one member may hold a value"}
 
-Where to find entry positions in GEOMETRY:
-- "empty_boxes"   -> rectangles with no glyphs inside. Use the box directly.
+Where to find entry positions in GEOMETRY (in this order of preference):
+- "empty_boxes"   -> rectangles with no content. Use the box VERBATIM. A box
+                     whose only content is a leader run ("_______", "……") is
+                     empty — that IS the entry area.
+- "entry_lines"   -> ready-made entry areas derived from leader runs
+                     ("____________", "………", dashes), already sized and
+                     positioned so the value sits ON the line. Use verbatim.
+- "cells"         -> table rows rebuilt from rules. Use the cell's vertical
+                     extent; narrow the x-range to the column you mean.
 - "checkboxes"    -> ~8x8pt squares. Emit kind "checkbox" with value "X".
-- "dotted_lines"  -> runs of "…". The entry sits ABOVE the dots: build a box
-                     [x0, top-13, x1, top-1] from the dotted run's own coords.
-- "rules"         -> underlines. Same idea: text sits just above the rule.
+- "rules"         -> bare underlines with no leader glyphs. Text sits just
+                     above the rule: [x0, top-13, x1, top-1] from the rule.
+
+If NONE of these covers a position you believe is fillable, say so in the
+field's label rather than inventing a box: code snaps every box onto the
+nearest real entry position and reports the ones that match nothing
+(ANCHOR_MISMATCH), so an estimated box does not survive — it just costs a
+repair round.
 
 Values:
 - VALUES AVAILABLE lists what the user has confirmed, keyed by field id where
   known. Use them raw and declare a value_type; formatting is done in code.
-- A field whose value you do not know: emit it WITHOUT a value (and with
+- COMPANY CONTEXT (when present) holds grounded facts from the company's
+  profile and documents. Use them for fields they CLEARLY answer (company
+  name, legal form, address, registration numbers, contact data, key
+  figures). Do not stretch them to fields they do not answer.
+- A field neither source answers: emit it WITHOUT a value (and with
   "required": true if the form marks it mandatory). The conversation will
   collect it. NEVER invent a business value.
 - Do not set font_size unless the form forces one; code infers it from the
@@ -173,6 +190,10 @@ Common fixes:
 - FONT_TOO_SMALL    -> raise font_size to match the template size named in
                        the issue; if the value then no longer fits, widen the
                        box within the printed cell or shorten the value.
+- ANCHOR_MISMATCH   -> the box matches no entry position. Re-derive it from
+                       GEOMETRY: take the "empty_boxes"/"entry_lines"/"cells"
+                       entry nearest the intended label, verbatim. Do not
+                       nudge the old coordinates.
 - MISSING_REQUIRED  -> only fill it if the user has provided the value;
                        otherwise leave it and let the conversation collect it.
 

@@ -129,6 +129,10 @@ export function ValuesForm({
 
       {error && <p className="text-[11px] text-rose-600">{t("formError")}</p>}
 
+      {/* Icon + label always live in their own elements: a bare text node
+          beside a conditionally swapped icon is exactly what browser
+          translators (Chrome auto-translate wraps loose text in <font>)
+          corrupt, crashing React with insertBefore NotFoundError. */}
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -136,12 +140,14 @@ export function ValuesForm({
           onClick={() => void submit()}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
-          {submitting ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Check className="size-3.5" />
-          )}
-          {t("formSubmit", { count: provided.length })}
+          <span className="flex size-3.5 items-center justify-center">
+            {submitting ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Check className="size-3.5" />
+            )}
+          </span>
+          <span>{t("formSubmit", { count: provided.length })}</span>
         </button>
         <button
           type="button"
@@ -150,7 +156,7 @@ export function ValuesForm({
           className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-50"
         >
           <SkipForward className="size-3.5" />
-          {t("formSkip")}
+          <span>{t("formSkip")}</span>
         </button>
       </div>
     </div>

@@ -15,12 +15,14 @@ export function PdfPreview({
   sessionId,
   pageCount,
   hasOutput,
-  refreshKey,
+  renderVersion,
 }: {
   sessionId: string;
   pageCount: number;
   hasOutput: boolean;
-  refreshKey: number;
+  /** Cache identity of the sandbox renders — images remount and refetch
+   * only when this changes, never on the routine status poll. */
+  renderVersion: string;
 }) {
   const t = useTranslations("FillAgent");
   const [tab, setTab] = useState<"source" | "filled">(hasOutput ? "filled" : "source");
@@ -71,8 +73,8 @@ export function PdfPreview({
         ) : (
           Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
             <PageImage
-              key={`${dir}-${page}-${refreshKey}`}
-              src={`/api/poc/fill-chat/${sessionId}/artifacts/${dir}/page_${page}.png?v=${refreshKey}`}
+              key={`${dir}-${page}-${renderVersion}`}
+              src={`/api/poc/fill-chat/${sessionId}/artifacts/${dir}/page_${page}.png?v=${renderVersion}`}
               label={t("page", { page })}
               emptyText={t("previewEmpty")}
               showEmptyText={page === 1}

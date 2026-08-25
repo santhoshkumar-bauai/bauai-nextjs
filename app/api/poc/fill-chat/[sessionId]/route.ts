@@ -75,7 +75,11 @@ export async function DELETE(
       .deleteSession(session.sandboxSessionId)
       .catch(() => {});
   }
-  await deleteObject(session.source.s3Key).catch(() => {});
+  // Document-bound sessions REFERENCE the workspace version's object — it
+  // belongs to the document, never to this session.
+  if (!session.documentId) {
+    await deleteObject(session.source.s3Key).catch(() => {});
+  }
   if (session.output) await deleteObject(session.output.s3Key).catch(() => {});
   await purgeFillSessionThread(tenantId, id);
   await deleteFillSession(tenantId, id);

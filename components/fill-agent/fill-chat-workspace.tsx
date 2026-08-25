@@ -31,14 +31,20 @@ import { ValuesForm } from "./values-form";
 export function FillChatWorkspace({
   sessionId,
   aiAvailable,
+  backHref = "/poc/fill-chat",
+  backLabelKey = "back",
 }: {
   sessionId: string;
   aiAvailable: boolean;
+  /** Where "back" leads — the POC list or the document-filler chooser. */
+  backHref?: string;
+  /** FillAgent message key for the back link, matching backHref's target. */
+  backLabelKey?: "back" | "chooserBack";
 }) {
   const t = useTranslations("FillAgent");
   const locale = useLocale() as "en" | "de";
   const chat = useClaraChat(`/api/poc/fill-chat/${sessionId}/chat`, { locale });
-  const { session, refresh, refreshKey } = useFillSession(sessionId);
+  const { session, refresh, renderVersion } = useFillSession(sessionId);
 
   // ---- live activity trail: accumulate activeTool transitions per turn ----
   const [trail, setTrail] = useState<string[]>([]);
@@ -59,6 +65,28 @@ export function FillChatWorkspace({
     if (chat.sending && !sendingRef.current) setTrail([]); // new turn
     sendingRef.current = chat.sending;
   }, [chat.sending]);
+
+  // Fresh session + empty conversation → the agent starts by itself: opening
+  // the chat IS the request to analyze. Deferred a tick (repo convention) so
+  // the kickoff send never runs inside the effect body.
+  const autoStartedRef = useRef(false);
+  const autoAnalyzeMessage = t("autoAnalyzeMessage");
+  useEffect(() => {
+    if (autoStartedRef.current || !aiAvailable) return;
+    if (chat.loading || chat.sending || chat.messages.length > 0) return;
+    if (!session || session.status !== "ready") return;
+    autoStartedRef.current = true;
+    const timer = setTimeout(() => chat.send(autoAnalyzeMessage), 0);
+    return () => clearTimeout(timer);
+  }, [
+    aiAvailable,
+    autoAnalyzeMessage,
+    chat,
+    chat.loading,
+    chat.sending,
+    chat.messages.length,
+    session,
+  ]);
 
   // Turn boundary: the send flag flipping off means tools may have moved
   // score/budget/output — re-pull the panel's truth.
@@ -91,14 +119,14 @@ export function FillChatWorkspace({
     .find((message) => message.role === "assistant");
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-svh min-h-0 flex-col bg-background">
       <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <Link
-          href="/poc/fill-chat"
+          href={backHref}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
-          {t("back")}
+          <span>{t(backLabelKey)}</span>
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-foreground">
@@ -134,6 +162,7 @@ export function FillChatWorkspace({
                   activeStage={chat.activeStage}
                   liveTenderRefs={chat.tenderRefs}
                   thinkingText={t("thinking")}
+                  autoScroll="pinned"
                 />
                 {!chat.sending && lastAssistant && (
                   <MessageSteps toolEvents={lastAssistant.toolEvents} />
@@ -185,7 +214,7 @@ export function FillChatWorkspace({
               sessionId={sessionId}
               pageCount={session.pageCount}
               hasOutput={session.score != null}
-              refreshKey={refreshKey}
+              renderVersion={renderVersion}
             />
           )}
         </aside>

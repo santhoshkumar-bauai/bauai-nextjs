@@ -5,6 +5,10 @@ import { z } from "zod";
 import { buildDoraRunContext } from "@/lib/ai/dora/context";
 import { buildDoraGraph } from "@/lib/ai/dora/graph";
 import { buildPdfTurnMedia } from "@/lib/ai/dora/pdf/turn-media";
+import { buildFillAgentRunContext } from "@/lib/ai/fill-agent/context";
+import { ensureDocumentFillSession } from "@/lib/ai/fill-agent/document-session";
+import { fillAgentEditorEnabled } from "@/lib/ai/fill-agent/env";
+import { buildFillAgentGraph } from "@/lib/ai/fill-agent/graph";
 import { buildDoraSpreadsheetGraph } from "@/lib/ai/dora/spreadsheet/graph";
 import { streamDoraSpreadsheetEditTurnResponse } from "@/lib/ai/dora/spreadsheet/edit-turn";
 import { streamDoraEditTurnResponse } from "@/lib/ai/dora/edit-turn";
@@ -177,10 +181,15 @@ export async function POST(request: Request, { params }: RouteParams) {
     return withCors(request, response);
   }
 
-  // PDFs are read-only to Dora: the PDF editor exposes no API to set a form
-  // field's value, and body text cannot be rewritten without reflow damage.
-  // Questions, the fill plan and field navigation only — every write goes
-  // through the reviewed copy-generation flow instead.
+  // PDFs: the fill agent drives the editor panel too, so the editor-side
+  // conversation gets the same analyze → ground → fill → validate loop as
+  // the in-app chat (and the same sandbox), instead of Dora's read-only
+  // "questions and a fill plan" surface.
+  //
+  // Persistence stays on the panel's own document thread — history the panel
+  // already reads — while only the GRAPH is swapped. A document the agent
+  // cannot fill (scanned, no committed version) transparently falls back to
+  // read-only Dora, which still answers questions about it.
   if (ctx.document.documentType === "pdf") {
     if (process.env.DORA_PDF_ENABLED === "false") {
       return NextResponse.json({ error: "pdf_dora_disabled" }, { status: 409, headers: cors });
@@ -191,15 +200,33 @@ export async function POST(request: Request, { params }: RouteParams) {
         { status: 409, headers: cors },
       );
     }
+
+    const fillCtx = fillAgentEditorEnabled()
+      ? await (async () => {
+          const bound = await ensureDocumentFillSession({
+            companyContext: ctx.companyContext,
+            documentIdHex: documentId,
+          });
+          if ("error" in bound) return null;
+          return buildFillAgentRunContext({
+            companyContext: ctx.companyContext,
+            sessionIdHex: String(bound.session._id),
+            locale: ctx.locale,
+          });
+        })()
+      : null;
+
     const response = await streamChatTurnResponse({
       ctx,
       thread,
       body: { message: parsed.data.message },
       request,
-      // A scanned PDF has no text to read, so the file itself rides in the
-      // turn and the model reads the pages.
-      extraContent: await buildPdfTurnMedia(ctx),
-      buildGraph: () => buildDoraGraph(ctx),
+      // Fill-agent turns read the document through sandbox geometry, so the
+      // file only rides along on the read-only fallback path (a scanned PDF
+      // has no text layer and the model must see the pages).
+      ...(fillCtx ? {} : { extraContent: await buildPdfTurnMedia(ctx) }),
+      buildGraph: () =>
+        fillCtx ? buildFillAgentGraph(fillCtx) : buildDoraGraph(ctx),
     });
     return withCors(request, response);
   }

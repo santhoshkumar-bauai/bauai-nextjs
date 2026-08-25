@@ -26,6 +26,7 @@ function baseSession(): FillAgentSessionDocument {
     _id: new ObjectId("64a000000000000000000010"),
     tenantId: new ObjectId("64a000000000000000000001"),
     createdBy: "user-1",
+    documentId: null,
     status: "in_progress",
     source: {
       s3Key: "companies/x/fill-agent-poc/src.pdf",

@@ -145,6 +145,20 @@ def pre_checks(fieldmap: list[dict], geometry: dict[str, Any]) -> list[dict]:
             issues.append(_issue("error", "MISSING_REQUIRED",
                                  f"{f.get('label', f.get('id'))} is required",
                                  f.get("id"), f.get("page")))
+
+    # A value whose box matches no entry position on the page is floating —
+    # the model placed it by eye. anchors.py already corrected everything it
+    # could recognise, so what is left needs a human-visible answer rather
+    # than silent shipping.
+    for f in fieldmap:
+        if f.get("kind") != "text" or not f.get("value"):
+            continue
+        if f.get("anchor_kind") == "none":
+            issues.append(_issue("warning", "ANCHOR_MISMATCH",
+                                 "box matches no entry position (empty box, table cell "
+                                 "or leader line) on this page; re-derive it from the "
+                                 "geometry instead of estimating from the page image",
+                                 f.get("id"), f.get("page")))
     return issues
 
 

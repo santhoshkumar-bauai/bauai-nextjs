@@ -18,6 +18,10 @@ export interface FillAgentEnv {
   targetScore: number;
   maxUploadBytes: number;
   maxPages: number;
+  /** Page renders the planner may send in one call. Below `maxPages` the
+   * model simply never sees the tail of the form, so anything there goes
+   * unmapped — keep them in step. */
+  maxPlanImages: number;
 }
 
 let cached: FillAgentEnv | null = null;
@@ -42,7 +46,14 @@ export function fillAgentEnv(): FillAgentEnv {
     fillBudget: intFromEnv("AI_FILL_AGENT_FILL_BUDGET", 5),
     targetScore: floatFromEnv("AI_FILL_AGENT_TARGET_SCORE", 0.95),
     maxUploadBytes: intFromEnv("FILL_AGENT_MAX_UPLOAD_BYTES", 20 * 1024 * 1024),
-    maxPages: intFromEnv("FILL_AGENT_MAX_PAGES", 15),
+    // Real procurement forms are long — a 25-page ESPD request is routine —
+    // so the gate sits above them. One planning call then carries that many
+    // page renders, which is the actual cost of a long form.
+    maxPages: intFromEnv("FILL_AGENT_MAX_PAGES", 50),
+    maxPlanImages: intFromEnv(
+      "AI_FILL_AGENT_MAX_PLAN_IMAGES",
+      intFromEnv("FILL_AGENT_MAX_PAGES", 50),
+    ),
   };
   return cached;
 }
@@ -50,4 +61,13 @@ export function fillAgentEnv(): FillAgentEnv {
 /** Test hook: drop the cache so env overrides apply. */
 export function resetFillAgentEnvForTests(): void {
   cached = null;
+}
+
+/**
+ * Whether the ONLYOFFICE editor panel's PDF chat runs the fill agent instead
+ * of read-only Dora. On by default; set FILL_AGENT_EDITOR_ENABLED=false to
+ * fall back to the previous behavior without a deploy.
+ */
+export function fillAgentEditorEnabled(): boolean {
+  return process.env.FILL_AGENT_EDITOR_ENABLED !== "false";
 }

@@ -81,11 +81,13 @@ export function UploadDropzone({
           dragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
         } disabled:opacity-60`}
       >
-        {uploading ? (
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
-        ) : (
-          <FileUp className="size-6 text-muted-foreground" />
-        )}
+        <span className="flex size-6 items-center justify-center">
+          {uploading ? (
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          ) : (
+            <FileUp className="size-6 text-muted-foreground" />
+          )}
+        </span>
         <span className="text-sm font-medium text-foreground">
           {uploading ? t("uploading") : t("dropzoneTitle")}
         </span>

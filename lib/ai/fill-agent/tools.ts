@@ -4,6 +4,8 @@ import { tool, type StructuredToolInterface } from "@langchain/core/tools";
 import { z } from "zod";
 
 import { buildObjectKey, putObjectBuffer } from "../../storage/s3.ts";
+import { flattenCompanyProfile } from "../dora/fill/grounding.ts";
+import { hybridRetrieveCompanyChunks } from "../retrieval/hybrid.ts";
 import type { FillAgentRunContext } from "./context.ts";
 import {
   applyFieldmapPatch,
@@ -426,6 +428,54 @@ export function buildFillAgentTools(
     },
   );
 
+  const getCompanyProfile = tool(
+    async () => {
+      const { Company } = await import("../../../models/company.ts");
+      const { connectMongoose } = await import("../../db/mongoose.ts");
+      await connectMongoose();
+      const company = await Company.findById(ctx.tenantId).lean();
+      if (!company) return JSON.stringify({ empty: true });
+      const lines = [...flattenCompanyProfile(company).entries()]
+        .slice(0, 120)
+        .map(([key, value]) => `${key}: ${value.slice(0, 200)}`);
+      return JSON.stringify({ profile: lines });
+    },
+    {
+      name: "get_company_profile",
+      description:
+        "The company's structured profile (name, legal form, address, registration, contacts, key figures) as key/value lines. Check here FIRST for form values before asking the user.",
+      schema: z.object({}),
+    },
+  );
+
+  const searchCompanyData = tool(
+    async ({ query, k }: { query: string; k: number }) => {
+      const hits = await hybridRetrieveCompanyChunks({
+        text: query,
+        k,
+        filters: { tenantId: ctx.tenantId },
+      });
+      return JSON.stringify({
+        hits: hits.map((hit) => ({
+          fileName: hit.fileName,
+          text: hit.text.slice(0, 1200),
+        })),
+        ...(hits.length === 0
+          ? { hint: "Nothing grounded — ask the user for this value instead." }
+          : {}),
+      });
+    },
+    {
+      name: "search_company_data",
+      description:
+        "Semantic search over the company's uploaded documents (references, certificates, financials). Use to ground a missing form value (e.g. 'Umsatz 2025', 'Handelsregisternummer') before asking the user. Values found here should be mentioned to the user so they can correct them.",
+      schema: z.object({
+        query: z.string().min(2).max(300),
+        k: z.number().int().min(1).max(8).default(5),
+      }),
+    },
+  );
+
   const renderPreview = tool(
     async () =>
       withSandbox(async () => {
@@ -483,6 +533,8 @@ export function buildFillAgentTools(
     critiqueFill,
     repairFieldmap,
     runPython,
+    getCompanyProfile,
+    searchCompanyData,
     renderPreview,
     getSessionStatus,
   ];

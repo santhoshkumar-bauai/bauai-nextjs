@@ -13,8 +13,6 @@ import type { SerializedFillSession } from "@/lib/ai/fill-agent/store";
 export function useFillSession(sessionId: string) {
   const [session, setSession] = useState<SerializedFillSession | null>(null);
   const [loading, setLoading] = useState(true);
-  // Monotonic bump used by the preview to cache-bust rendered page images.
-  const [refreshKey, setRefreshKey] = useState(0);
   const aliveRef = useRef(true);
 
   const refresh = useCallback(async () => {
@@ -24,7 +22,6 @@ export function useFillSession(sessionId: string) {
       const json = (await response.json()) as { session: SerializedFillSession };
       if (!aliveRef.current) return;
       setSession(json.session);
-      setRefreshKey((key) => key + 1);
     } catch {
       // transient — the next refresh will catch up
     } finally {
@@ -43,5 +40,15 @@ export function useFillSession(sessionId: string) {
     };
   }, [refresh]);
 
-  return { session, loading, refresh, refreshKey };
+  /**
+   * Cache identity of the sandbox page renders — changes ONLY when they can
+   * actually differ (analyze produced source renders / a fill round produced
+   * new output renders). The 4s status poll must never remount or refetch
+   * the preview images, or they flicker for the whole turn.
+   */
+  const renderVersion = session
+    ? `${session.analyzed ? 1 : 0}-${session.fillIterations}`
+    : "0-0";
+
+  return { session, loading, refresh, renderVersion };
 }

@@ -1429,7 +1429,8 @@
       "repair_fieldmap": "Korrigiere die Ausfüllung…",
       "run_python": "Schreibe und führe Code aus…",
       "render_preview": "Aktualisiere die Vorschau…",
-      "get_session_status": "Prüfe den Sitzungsstand…"
+      "get_session_status": "Prüfe den Sitzungsstand…",
+      "search_company_data": "Durchsuche Ihre Firmendaten…"
     },
     "verdict": {
       "recommendation": {
@@ -1664,7 +1665,16 @@
     "formError": "Speichern fehlgeschlagen — bitte erneut versuchen.",
     "formContinueMessage": "Ich habe {count, plural, one {# Wert} other {# Werte}} im Formular eingetragen. Bitte fahre mit dem Ausfüllen fort.",
     "formSkipMessage": "Bitte ohne die restlichen optionalen Angaben fortfahren.",
-    "steps": "{count, plural, one {# Schritt} other {# Schritte}}"
+    "steps": "{count, plural, one {# Schritt} other {# Schritte}}",
+    "openInEditor": "In ONLYOFFICE öffnen",
+    "openInEditorFailed": "Öffnen im Editor fehlgeschlagen — bitte erneut versuchen.",
+    "autoAnalyzeMessage": "Analysiere dieses Dokument, fülle alles aus, was du aus unseren Firmendaten belegen kannst, und liste, was noch fehlt.",
+    "chooserBack": "Zurück zum Document Filler",
+    "chooserSubtitle": "Wie möchten Sie an diesem PDF arbeiten?",
+    "chooserChat": "Mit KI-Chat ausfüllen",
+    "chooserChatHint": "Der Assistent analysiert das Formular, belegt Werte aus Ihren Firmendaten, fragt Fehlendes ab und füllt aus — geprüft und jederzeit exportierbar.",
+    "chooserEditor": "In ONLYOFFICE öffnen",
+    "chooserEditorHint": "Das PDF direkt im Editor öffnen und von Hand bearbeiten."
   },
   "Gaeb": {
     "editor": {

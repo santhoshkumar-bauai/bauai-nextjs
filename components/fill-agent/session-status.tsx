@@ -1,6 +1,8 @@
 "use client";
 
-import { Download, FileOutput } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Download, FileEdit, FileOutput, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { SerializedFillSession } from "@/lib/ai/fill-agent/store";
@@ -8,6 +10,27 @@ import type { SerializedFillSession } from "@/lib/ai/fill-agent/store";
 /** Server-truth panel: status, score gauge vs target, budget, open items. */
 export function SessionStatus({ session }: { session: SerializedFillSession }) {
   const t = useTranslations("FillAgent");
+  const router = useRouter();
+  const [openingEditor, setOpeningEditor] = useState(false);
+  const [editorError, setEditorError] = useState(false);
+
+  const openInEditor = async () => {
+    setOpeningEditor(true);
+    setEditorError(false);
+    try {
+      const response = await fetch(`/api/poc/fill-chat/${session.id}/open-in-editor`, {
+        method: "POST",
+      });
+      const json = (await response.json().catch(() => null)) as
+        | { documentId?: string }
+        | null;
+      if (!response.ok || !json?.documentId) throw new Error("open_failed");
+      router.push(`/document-filler/${json.documentId}?mode=editor`);
+    } catch {
+      setEditorError(true);
+      setOpeningEditor(false);
+    }
+  };
 
   const statusLabel: Record<SerializedFillSession["status"], string> = {
     ready: t("statusReady"),
@@ -103,7 +126,7 @@ export function SessionStatus({ session }: { session: SerializedFillSession }) {
           className="flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90"
         >
           <Download className="size-3.5" />
-          {t("download")}
+          <span>{t("download")}</span>
         </a>
       )}
       {/* Export the CURRENT state — allowed at any time, even partially
@@ -114,8 +137,30 @@ export function SessionStatus({ session }: { session: SerializedFillSession }) {
           className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-muted"
         >
           <FileOutput className="size-3.5" />
-          {session.downloadReady ? t("exportCurrent") : t("exportPartial")}
+          <span>{session.downloadReady ? t("exportCurrent") : t("exportPartial")}</span>
         </a>
+      )}
+      {/* Hand the filled PDF (partial fills too) to ONLYOFFICE as a new
+          generated-fill workspace document, to finish or polish by hand. */}
+      {session.fieldCount > 0 && (
+        <button
+          type="button"
+          disabled={openingEditor}
+          onClick={() => void openInEditor()}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-muted disabled:opacity-60"
+        >
+          <span className="flex size-3.5 items-center justify-center">
+            {openingEditor ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <FileEdit className="size-3.5" />
+            )}
+          </span>
+          <span>{t("openInEditor")}</span>
+        </button>
+      )}
+      {editorError && (
+        <p className="text-[11px] text-rose-600">{t("openInEditorFailed")}</p>
       )}
     </div>
   );

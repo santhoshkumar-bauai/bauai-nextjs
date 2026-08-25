@@ -26,6 +26,8 @@ const KNOWN_TOOL_LABELS = new Set([
   "run_python",
   "render_preview",
   "get_session_status",
+  "get_company_profile",
+  "search_company_data",
 ]);
 
 function useToolLabel() {
@@ -78,12 +80,14 @@ export function MessageSteps({ toolEvents }: { toolEvents: WireToolEvent[] }) {
         onClick={() => setOpen((prev) => !prev)}
         className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
       >
-        {open ? (
-          <ChevronDown className="size-3" />
-        ) : (
-          <ChevronRight className="size-3" />
-        )}
-        {t("steps", { count: toolEvents.length })}
+        <span className="flex size-3 items-center justify-center">
+          {open ? (
+            <ChevronDown className="size-3" />
+          ) : (
+            <ChevronRight className="size-3" />
+          )}
+        </span>
+        <span>{t("steps", { count: toolEvents.length })}</span>
       </button>
       {open && (
         <ul className="mt-1 space-y-0.5 border-l border-border pl-3">

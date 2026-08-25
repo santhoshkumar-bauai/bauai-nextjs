@@ -41,11 +41,23 @@ from .security import (
 )
 # absolute import: the toolkit lives on PYTHONPATH (/opt/toolkit) so the
 # free-form /exec lane can `from toolkit import ...` the exact same code
-from toolkit import TOOLKIT_VERSION, acroform, crops, extract, fill, formats, style, validate
+from toolkit import (
+    TOOLKIT_VERSION,
+    acroform,
+    anchors,
+    crops,
+    extract,
+    fill,
+    formats,
+    style,
+    validate,
+)
 
 app = FastAPI(title="fill-sandbox", docs_url=None, redoc_url=None)
 
-ANALYZE_MAX_PAGES = int(os.environ.get("FILL_SANDBOX_MAX_PAGES", 15))
+# Kept in step with FILL_AGENT_MAX_PAGES on the app side; a lower value here
+# rejects the analyze after the app already accepted the document.
+ANALYZE_MAX_PAGES = int(os.environ.get("FILL_SANDBOX_MAX_PAGES", 50))
 
 
 @app.on_event("startup")
@@ -188,9 +200,12 @@ def run_prepare(session_id: str, body: PrepareRequest) -> dict:
     geometry = _read_json(session_id, "geometry.json")
 
     # Order matters: format first (a German-formatted number is WIDER than the
-    # raw one, so width checks must measure the final string), then infer type
-    # size from the template, then harmonise siblings.
+    # raw one, so width checks must measure the final string), then SNAP each
+    # box onto a real entry position, then infer type size from the template
+    # (which reads the box height, so it must see the snapped box), then
+    # harmonise siblings.
     prepared = formats.apply_formats(fieldmap)
+    prepared = anchors.snap_fieldmap(prepared, geometry)
     prepared = style.annotate_fieldmap(prepared, geometry)
 
     with open(os.path.join(base, "fieldmap.prepared.json"), "w") as fh:
@@ -199,6 +214,7 @@ def run_prepare(session_id: str, body: PrepareRequest) -> dict:
         "fieldCount": len(prepared),
         "styleGroups": len({f.get("style_group") for f in prepared
                             if f.get("style_group")}),
+        "anchors": anchors.snap_summary(prepared),
         "preparedFile": "fieldmap.prepared.json",
     }
 
