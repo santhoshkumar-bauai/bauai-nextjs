@@ -21,6 +21,17 @@ const boolFromEnv = (fallback: "true" | "false" = "false") =>
 
 const BoolFromEnv = boolFromEnv();
 
+/**
+ * Product-level reasoning effort. Six rungs so the strongest models can be
+ * asked for their best, mapped onto each provider's own knob in
+ * `lib/ai/agent/model.ts` — which CLAMPS, because no provider accepts all six:
+ * Gemini's thinkingLevel stops at HIGH, and gpt-5.6 rejects both `minimal`
+ * (a gpt-5.0 spelling) and `max` (probe P5).
+ */
+export const REASONING_EFFORTS = ["none", "low", "medium", "high", "xhigh", "max"] as const;
+export type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
+const ReasoningEffortEnum = z.enum(REASONING_EFFORTS);
+
 const AiEnvSchema = z.object({
   /** Embedding model identity — stamped onto every stored vector (§17.1). */
   embeddingModel: z.string().default("gemini-embedding-001"),
@@ -37,6 +48,44 @@ const AiEnvSchema = z.object({
    * providers/models swap here without touching callers.
    */
   modelRoles: z.record(z.string(), ModelRoleRef),
+
+  /**
+   * Per-role reasoning effort and output budget, spread over the built-in
+   * defaults exactly like `modelRoles`. Two JSON knobs rather than ~20 flat
+   * vars, because the interesting operation is "raise the report, lower the
+   * match judge" and that should be one edit.
+   *
+   * `AI_AGENT_REASONING` / `AI_REPORT_REASONING` still win for their two roles
+   * so already-deployed setups keep their behaviour.
+   */
+  roleReasoning: z.record(z.string(), ReasoningEffortEnum),
+  roleMaxOutputTokens: z.record(z.string(), z.coerce.number().int().positive()),
+
+  /**
+   * Azure model-id → deployment-name. Roles name the MODEL
+   * ("azure:gpt-5.6-luna") because that is the identity worth stamping on a
+   * cached artifact; the deployment is infrastructure and lives here. Falls
+   * back to `AZURE_OPENAI_DEPLOYMENT`, so the single-deployment case needs no
+   * entry at all.
+   */
+  azureDeployments: z.record(z.string(), z.string()).default({}),
+  /**
+   * Responses API vs Chat Completions.
+   *
+   * Defaults ON, and that is not a preference. On this deployment
+   * `/v1/chat/completions` rejects function tools combined with any
+   * `reasoning_effort` above `none`:
+   *
+   *   "Function tools with reasoning_effort are not supported for luna-dev in
+   *    /v1/chat/completions. To use function tools, use /v1/responses or set
+   *    reasoning_effort to 'none'."
+   *
+   * Every agent here is a tool loop and per-role effort is the point of the
+   * migration, so Responses is the only surface that satisfies both. The flag
+   * exists as an escape hatch — turning it off means giving up reasoning on
+   * every tool-calling role.
+   */
+  azureUseResponsesApi: boolFromEnv("true"),
 
   /** Hash-tagged so all BullMQ keys land on one Redis Cluster slot. */
   redisPrefix: z.string().default("{bauai:ai}"),
@@ -65,15 +114,17 @@ const AiEnvSchema = z.object({
    * budget — 2048 starved gemini-3.5-flash into empty answers on complex
    * multi-tool turns.
    */
+  /** @deprecated Superseded by `roleMaxOutputTokens`, which reads the same
+   * env var as the `agent` role default. Kept so nothing breaks mid-rollout. */
   agentMaxOutputTokens: z.coerce.number().int().positive().default(8192),
   /** Conversation messages kept in model context (UI history is unlimited). */
   agentHistoryMaxMessages: z.coerce.number().int().positive().default(30),
   /**
    * Reasoning effort for thinking-capable agent models, mapped per provider
-   * (Gemini thinkingConfig, OpenAI reasoningEffort, Anthropic thinking
-   * budget). Unset = provider default.
+   * (Gemini thinkingConfig, OpenAI/Azure reasoning.effort, Anthropic thinking
+   * budget). Unset = the role default from `defaultRoleReasoning()`.
    */
-  agentReasoningEffort: z.enum(["none", "low", "medium", "high"]).optional(),
+  agentReasoningEffort: ReasoningEffortEnum.optional(),
 
   /**
    * The full tender report is a single very long synthesis over every artifact
@@ -81,9 +132,7 @@ const AiEnvSchema = z.object({
    * large output allowance and, by default, maximum reasoning effort.
    */
   reportMaxOutputTokens: z.coerce.number().int().positive().default(32_768),
-  reportReasoningEffort: z
-    .enum(["none", "low", "medium", "high"])
-    .default("high"),
+  reportReasoningEffort: ReasoningEffortEnum.default("high"),
   /** Tender document excerpts fed to the report prompt. */
   reportMaxTenderChunks: z.coerce.number().int().positive().default(40),
   /** Company document excerpts fed to the report prompt. */
@@ -148,6 +197,16 @@ const AiEnvSchema = z.object({
 });
 
 export type AiEnv = z.infer<typeof AiEnvSchema>;
+
+/** Shared parser for the role-keyed JSON knobs, so they fail the same way. */
+function parseJsonRecord<T>(raw: string | undefined, name: string): Record<string, T> {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, T>;
+  } catch {
+    throw new Error(`${name} must be a JSON object keyed by role, received: ${raw}`);
+  }
+}
 
 function parseModelRoles(raw: string | undefined) {
   if (!raw) return undefined;
@@ -239,6 +298,94 @@ function defaultModelRoles(): Record<string, string> {
   };
 }
 
+/**
+ * Reasoning effort per role.
+ *
+ * Chosen from what each role actually does, not from a global "more is better":
+ * reasoning tokens are billed from the SAME budget as the answer and they cost
+ * latency, so effort is spent where a wrong answer is expensive and withheld
+ * where waiting is the damage.
+ *
+ * `xhigh` is the top rung this model family accepts — `max` is rejected
+ * (probe P5), and `minimal` is the gpt-5.0 spelling of `none`.
+ */
+function defaultRoleReasoning(): Record<string, string> {
+  return {
+    // Pipelines. Schema-shaped extraction, but German legal text distinguishes
+    // Bindefrist from Zuschlagsfrist and cpv-derive is asked to REFUSE when the
+    // evidence is vague — `none` starts guessing.
+    extraction: "low",
+    // Overview and fit: bilingual synthesis behind a user-facing page, cached
+    // per corpus hash so it runs rarely. Worth real thought.
+    reasoning: "medium",
+    // Clara. Her visible failure mode is tool ordering, which is exactly what
+    // reasoning buys. Drop to "low" if time-to-first-token regresses.
+    agent: process.env.AI_AGENT_REASONING || "medium",
+    // The most demanding synthesis in the product, and a background job — no
+    // one is watching a stream. Not the top rung: latency is unbounded there
+    // and N translations follow this call.
+    report: process.env.AI_REPORT_REASONING || "xhigh",
+    // Matching is the discovery surface and its quality is a known gap, so
+    // effort is the right lever — but this is the top cost-watch item in the
+    // system: batch 10 over a rank cap of 200 is ~20 calls per company per
+    // refresh, swept every few hours for every tenant. First knob to lower.
+    match: "medium",
+    // Dora reads the open document and drives 13 tools over it.
+    dora: "medium",
+    // Streamed word-by-word into the document: first-token latency IS the
+    // product here, so no thinking at all.
+    dora_fast: "none",
+    // Maps company facts onto up to 500 Word fields with exact node ids. A
+    // wrong value lands in a legal document — but a user is waiting.
+    dora_fill: "medium",
+    // Strictly harder than dora_fill: vision over a scan plus anchor-text
+    // geometry. Vision and layout is where effort pays most.
+    dora_pdf_fill: "high",
+    // Position classification and unit-price estimation with money at stake,
+    // batched 20 at a time.
+    dora_gaeb_fill: "medium",
+    // Grounded research; the search results, not the thinking, carry the work.
+    dora_gaeb_web: "low",
+    // The first thing a new user experiences. The script is already in the
+    // prompt and sanitizePlan() enforces correctness in code, so latency is
+    // the thing worth optimising.
+    otto: "low",
+    // Orchestrates a Python sandbox, vision and multi-tool repair — the
+    // hardest reasoning surface in the product, behind a feature flag.
+    fill_agent: "high",
+  };
+}
+
+/**
+ * Output budget per role. Every value is larger than its pre-Azure equivalent
+ * for one reason: on a reasoning model the thinking is billed from this same
+ * budget, so the old numbers now buy noticeably less answer. The precedent is
+ * `agentMaxOutputTokens` above — 2048 once starved gemini-3.5-flash into empty
+ * replies for exactly this reason.
+ *
+ * Probe P14: exhausting the budget returns HTTP 200 with
+ * finish_reason="length" and EMPTY content, so under-budgeting reads as "the
+ * model said nothing", not as an error.
+ */
+function defaultRoleMaxOutputTokens(): Record<string, number> {
+  const agent = process.env.AI_AGENT_MAX_OUTPUT_TOKENS || 16_384;
+  return {
+    extraction: 8_192,
+    reasoning: 16_384,
+    agent,
+    report: process.env.AI_REPORT_MAX_OUTPUT_TOKENS || 65_536,
+    match: 12_288,
+    dora: 16_384,
+    dora_fast: 6_000,
+    dora_fill: 24_576,
+    dora_pdf_fill: 32_768,
+    dora_gaeb_fill: 24_576,
+    dora_gaeb_web: 8_192,
+    otto: 12_288,
+    fill_agent: 16_384,
+  } as Record<string, number>;
+}
+
 let cached: AiEnv | null = null;
 
 export function aiEnv(): AiEnv {
@@ -253,6 +400,16 @@ export function aiEnv(): AiEnv {
       ...defaultModelRoles(),
       ...parseModelRoles(process.env.AI_MODEL_ROLES),
     },
+    roleReasoning: {
+      ...defaultRoleReasoning(),
+      ...parseJsonRecord(process.env.AI_ROLE_REASONING, "AI_ROLE_REASONING"),
+    },
+    roleMaxOutputTokens: {
+      ...defaultRoleMaxOutputTokens(),
+      ...parseJsonRecord(process.env.AI_ROLE_MAX_OUTPUT_TOKENS, "AI_ROLE_MAX_OUTPUT_TOKENS"),
+    },
+    azureDeployments: parseJsonRecord(process.env.AI_AZURE_DEPLOYMENTS, "AI_AZURE_DEPLOYMENTS"),
+    azureUseResponsesApi: process.env.AI_AZURE_RESPONSES,
     redisPrefix: process.env.AI_REDIS_PREFIX,
     workerConcurrency: process.env.AI_WORKER_CONCURRENCY,
     useRankFusion: process.env.AI_USE_RANK_FUSION,
@@ -311,4 +468,19 @@ export function requireGeminiApiKey(): string {
     throw new Error("GEMINI_API_KEY is not configured. Add it to .env.local.");
   }
   return key;
+}
+
+/** Reasoning effort for a role, or undefined to leave it to the provider. */
+export function roleReasoningEffort(role: string): ReasoningEffort | undefined {
+  return aiEnv().roleReasoning[role] as ReasoningEffort | undefined;
+}
+
+/**
+ * Output budget for a role. Falls back to the agent budget rather than
+ * throwing: a new role that nobody remembered to size should degrade to a
+ * sensible number, not take a surface down.
+ */
+export function roleMaxOutputTokens(role: string): number {
+  const table = aiEnv().roleMaxOutputTokens;
+  return table[role] ?? table.agent ?? 16_384;
 }
