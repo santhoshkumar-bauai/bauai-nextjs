@@ -10,6 +10,7 @@ import type { TenderDocument } from "@/lib/ingestion/types";
 import { serializeTenderDetail } from "@/lib/tenders/detail";
 import { forCompanyContext } from "@/lib/ai/tenant/repository";
 import { reportLocaleFromRequest } from "./locale";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * The full tender report — the deepest artifact the product produces.
@@ -61,9 +62,7 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
   if (
-    !process.env.GEMINI_API_KEY &&
-    !process.env.OPENAI_API_KEY &&
-    !process.env.ANTHROPIC_API_KEY
+    !aiProviderConfigured()
   ) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503 });
   }

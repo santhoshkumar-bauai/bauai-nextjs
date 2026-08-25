@@ -3,6 +3,7 @@ import type { MessageContentComplex } from "@langchain/core/messages";
 import type { ChatThreadDocument } from "../types.ts";
 import { claimChatAttachments } from "./attachments.ts";
 import type { AgentRunContext, TenderAgentRunContext } from "./context.ts";
+import { classifyAiError } from "./errors.ts";
 import {
   runChatTurn,
   serializeChatMessage,
@@ -15,7 +16,8 @@ import type { ClaraSseEvent } from "./wire.ts";
  * The one SSE-over-POST implementation behind both chat routes (per-tender
  * and per-thread). Frames `event: {type}\ndata: {json}\n\n`, 25s keep-alive
  * heartbeat, hard per-turn timeout composed with client disconnect. Errors
- * collapse to i18n keys ("rate_limited" | "failed") — never raw messages.
+ * collapse to the i18n keys in `errors.ts` (`AiFailureCode`) — never raw
+ * provider messages, which can carry credentials and prompt text.
  */
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
@@ -35,6 +37,8 @@ export function streamChatTurnResponse(input: {
   request: Request;
   /** Graph override for non-Clara agents; see runChatTurn. */
   buildGraph?: () => Promise<CompiledAgentGraph>;
+  /** Superstep budget for that graph; see runChatTurn. */
+  recursionLimit?: number;
   /** Extra multimodal parts for the user turn; see runChatTurn. */
   extraContent?: MessageContentComplex[];
   /**
@@ -126,6 +130,7 @@ export function streamChatTurnResponse(input: {
             userText: body.message,
             attachments,
             buildGraph: input.buildGraph,
+            recursionLimit: input.recursionLimit,
             extraContent: input.extraContent,
             signal: turnController.signal,
             callbacks: {
@@ -156,13 +161,9 @@ export function streamChatTurnResponse(input: {
             message: serializeChatMessage(result.assistantMessage),
           });
         } catch (error) {
-          send({
-            type: "error",
-            message:
-              error instanceof Error && /rate.?limit/i.test(error.message)
-                ? "rate_limited"
-                : "failed",
-          });
+          // One classifier for all five chat surfaces. The i18n catalogs carry
+          // a key per failure code, so a new code needs no change here.
+          send({ type: "error", message: classifyAiError(error) });
         } finally {
           close();
         }

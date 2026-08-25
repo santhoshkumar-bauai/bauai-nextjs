@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 
 import { getIngestionDb } from "../../ingestion/db/client.ts";
+import { classifyAiError } from "../agent/errors.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
 import { buildProfileTerms, hasUsableTerms } from "../../tenders/profile-terms.ts";
 import { buildRelevancePipeline } from "../../tenders/relevance.ts";
@@ -484,8 +485,8 @@ export async function refreshCompanyMatches(input: {
 
 /** Collapse a thrown error to the i18n key the UI renders. Never raw text. */
 export function toRunError(error: unknown): string {
+  // Atlas search being down is a matching-specific condition with its own
+  // message, and it must be tested before the generic provider classifier.
   if (isSearchUnavailable(error)) return "search_unavailable";
-  const name = error instanceof Error ? error.name : "";
-  if (name === "RateLimitError") return "rate_limited";
-  return "failed";
+  return classifyAiError(error);
 }

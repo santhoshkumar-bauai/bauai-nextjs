@@ -7,6 +7,7 @@ import { RateLimitError, StructuredOutputError } from "@/lib/ai/gateway/types";
 import { auth } from "@/lib/auth";
 import { connectMongoose } from "@/lib/db/mongoose";
 import { CpvCode } from "@/models/cpv-code";
+import { aiRoleConfigured } from "@/lib/ai/gateway/config";
 
 type MappingBody = {
   services?: unknown;
@@ -65,10 +66,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey)
+  if (!aiRoleConfigured("extraction"))
     return NextResponse.json(
-      { error: "Gemini is not configured." },
+      { error: "No AI provider is configured." },
       { status: 503 },
     );
 

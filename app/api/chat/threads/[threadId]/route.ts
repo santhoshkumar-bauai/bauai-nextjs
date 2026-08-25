@@ -21,6 +21,7 @@ import { forCompanyContext } from "@/lib/ai/tenant/repository";
 import type { ChatThreadDocument } from "@/lib/ai/types";
 import { getCompanyContext, type CompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * One Clara chat session, addressed by thread id — the full-page chat's API.
@@ -128,7 +129,7 @@ export async function POST(
 ) {
   const context = await getCompanyContext();
   if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+  if (!aiProviderConfigured()) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503 });
   }
 

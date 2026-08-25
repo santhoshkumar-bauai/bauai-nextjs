@@ -11,6 +11,7 @@ import { runCompanyMatchJob } from "@/lib/ai/match/job";
 import { claimRun, getRun, serializeRun } from "@/lib/ai/match/runs";
 import { MATCH_JUDGE_PROMPT_VERSION } from "@/lib/ai/match/schema";
 import { getCompanyContext } from "@/lib/company/context";
+import { aiRoleConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * Starts (or joins) an AI match refresh for the caller's company.
@@ -31,7 +32,12 @@ export async function POST() {
   if (!aiEnv().matchEnabled) {
     return NextResponse.json({ error: "AI matching is disabled" }, { status: 503 });
   }
-  if (!process.env.GEMINI_API_KEY) {
+  // Deliberately not the generic guard. Matching EMBEDS the company profile
+  // against the Atlas vector index as well as judging with an LLM, and the
+  // embedding role stays on Gemini — moving it would mean re-embedding the
+  // whole corpus and rebuilding both vector indexes. So this route needs the
+  // embedding provider specifically, not "some provider".
+  if (!aiRoleConfigured("embedding") || !aiRoleConfigured("match")) {
     return NextResponse.json(
       { error: "No AI provider configured" },
       { status: 503 },

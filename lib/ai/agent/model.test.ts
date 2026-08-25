@@ -119,7 +119,7 @@ describe("getAgentChatModel", () => {
   it("rejects unknown providers", async () => {
     process.env.AI_MODEL_ROLES = JSON.stringify({ agent: "mistral:some-model" });
     await expect(getAgentChatModel()).rejects.toThrow(
-      /Unknown agent provider "mistral".*azure/s,
+      /Unknown agent provider "mistral"[\s\S]*azure/,
     );
   });
 
@@ -231,7 +231,7 @@ describe("azure provider", () => {
     process.env.AZURE_OPENAI_ENDPOINT = "https://test.openai.azure.com/";
     resetAiEnvCache();
     await expect(getAgentChatModel()).rejects.toThrow(
-      /No Azure deployment for model "gpt-5\.6-luna".*AZURE_OPENAI_DEPLOYMENT.*AI_AZURE_DEPLOYMENTS/s,
+      /No Azure deployment for model "gpt-5\.6-luna"[\s\S]*AZURE_OPENAI_DEPLOYMENT[\s\S]*AI_AZURE_DEPLOYMENTS/,
     );
   });
 
@@ -240,7 +240,7 @@ describe("azure provider", () => {
     process.env.AZURE_OPENAI_DEPLOYMENT = "luna-dev";
     resetAiEnvCache();
     await expect(getAgentChatModel()).rejects.toThrow(
-      /AZURE_OPENAI_ENDPOINT is not configured.*"agent" role.*"azure"/s,
+      /AZURE_OPENAI_ENDPOINT is not configured[\s\S]*"agent" role[\s\S]*"azure"/,
     );
   });
 

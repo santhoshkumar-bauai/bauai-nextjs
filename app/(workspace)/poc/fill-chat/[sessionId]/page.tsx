@@ -5,6 +5,7 @@ import { FillChatWorkspace } from "@/components/fill-agent/fill-chat-workspace";
 import { getFillSession } from "@/lib/ai/fill-agent/store";
 import { forCompanyContext } from "@/lib/ai/tenant/repository";
 import { getCompanyContext } from "@/lib/company/context";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /** One fill session: chat + preview workspace. */
 export default async function FillChatSessionPage({
@@ -24,9 +25,7 @@ export default async function FillChatSessionPage({
   // Same provider gate the chat route enforces, computed server-side so the
   // panel can explain itself instead of failing on first send.
   const aiAvailable = Boolean(
-    process.env.GEMINI_API_KEY ||
-      process.env.OPENAI_API_KEY ||
-      process.env.ANTHROPIC_API_KEY,
+    aiProviderConfigured(),
   );
   return <FillChatWorkspace sessionId={sessionId} aiAvailable={aiAvailable} />;
 }

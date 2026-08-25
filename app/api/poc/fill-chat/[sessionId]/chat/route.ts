@@ -5,10 +5,12 @@ import { serializeChatMessage } from "@/lib/ai/agent/service";
 import { streamChatTurnResponse } from "@/lib/ai/agent/sse-turn";
 import { getAiCollections } from "@/lib/ai/db/collections";
 import { buildFillAgentRunContext } from "@/lib/ai/fill-agent/context";
-import { buildFillAgentGraph } from "@/lib/ai/fill-agent/graph";
+import { fillAgentEnv } from "@/lib/ai/fill-agent/env";
+import { buildFillAgentGraph, fillAgentRecursionLimit } from "@/lib/ai/fill-agent/graph";
 import { ensureFillSessionThread } from "@/lib/ai/fill-agent/threads";
 import { getCompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * One fill-agent chat turn over SSE — Clara's SSE turn runner with the fill
@@ -61,9 +63,7 @@ export async function POST(
   const context = await getCompanyContext();
   if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (
-    !process.env.GEMINI_API_KEY &&
-    !process.env.OPENAI_API_KEY &&
-    !process.env.ANTHROPIC_API_KEY
+    !aiProviderConfigured()
   ) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503 });
   }
@@ -96,5 +96,8 @@ export async function POST(
     body: parsed.data,
     request,
     buildGraph: () => buildFillAgentGraph(ctx),
+    // Wider than the shared default: this agent chains fill→repair→fill
+    // inside a single turn.
+    recursionLimit: fillAgentRecursionLimit(fillAgentEnv().maxIterations),
   });
 }

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { FillChatWorkspace } from "@/components/fill-agent/fill-chat-workspace";
 import { ensureDocumentFillSession } from "@/lib/ai/fill-agent/document-session";
 import { getCompanyContext } from "@/lib/company/context";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * "Open in chat" for a PDF in the document filler: lazily binds a fill
@@ -30,9 +31,7 @@ export default async function DocumentFillChatPage({
   }
 
   const aiAvailable = Boolean(
-    process.env.GEMINI_API_KEY ||
-      process.env.OPENAI_API_KEY ||
-      process.env.ANTHROPIC_API_KEY,
+    aiProviderConfigured(),
   );
   return (
     <FillChatWorkspace

@@ -10,6 +10,7 @@ import { getCompanyContext } from "@/lib/company/context";
 import { mongoDatabase } from "@/lib/db/mongodb";
 import type { TenderDocument } from "@/lib/ingestion/types";
 import { serializeTenderDetail } from "@/lib/tenders/detail";
+import { aiRoleConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * Tender-centric AI overview (about / scope / buyer / risks / highlights),
@@ -46,8 +47,8 @@ export async function POST(
   if (!context) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json({ error: "Gemini is not configured." }, { status: 503 });
+  if (!aiRoleConfigured("reasoning")) {
+    return NextResponse.json({ error: "No AI provider is configured." }, { status: 503 });
   }
 
   const { id } = await params;

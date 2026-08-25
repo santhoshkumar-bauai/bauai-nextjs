@@ -9,6 +9,7 @@ import { getAiCollections } from "../db/collections.ts";
 import { getExtractions } from "../extraction/store.ts";
 import { buildFullCompanyContext } from "../fit/company-context.ts";
 import { companyProfileInput } from "../fit/service.ts";
+import { classifyAiError } from "../agent/errors.ts";
 import { resolveRole } from "../gateway/config.ts";
 import { getTenderOverview } from "../overview/service.ts";
 import {
@@ -515,7 +516,7 @@ function collectCitations(
 function mapBriefError(error: unknown): string {
   if (error instanceof ZodError) return "invalid_output";
   const message = error instanceof Error ? error.message : String(error);
+  // Ours: the brief pipeline's own validation failed before any provider call.
   if (message.startsWith("invalid_output")) return "invalid_output";
-  if (/rate.?limit/i.test(message)) return "rate_limited";
-  return "failed";
+  return classifyAiError(error);
 }

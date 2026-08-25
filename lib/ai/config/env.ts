@@ -117,8 +117,21 @@ const AiEnvSchema = z.object({
   /** @deprecated Superseded by `roleMaxOutputTokens`, which reads the same
    * env var as the `agent` role default. Kept so nothing breaks mid-rollout. */
   agentMaxOutputTokens: z.coerce.number().int().positive().default(8192),
-  /** Conversation messages kept in model context (UI history is unlimited). */
+  /**
+   * Hard ceiling on conversation messages, and the whole window strategy when
+   * `agentHistoryMaxTokens` is unset (UI history is unlimited either way).
+   */
   agentHistoryMaxMessages: z.coerce.number().int().positive().default(30),
+  /**
+   * Token budget for the model-visible window. Supersedes the message count
+   * when set: 30 messages is under two turns of a tool-heavy chat, which was
+   * the right cap when the window had to stay small and is badly wrong against
+   * a million-token context.
+   *
+   * Left unset by default so the Gemini deployments behave exactly as before;
+   * the Azure roles set it.
+   */
+  agentHistoryMaxTokens: z.coerce.number().int().positive().optional(),
   /**
    * Reasoning effort for thinking-capable agent models, mapped per provider
    * (Gemini thinkingConfig, OpenAI/Azure reasoning.effort, Anthropic thinking
@@ -422,6 +435,7 @@ export function aiEnv(): AiEnv {
     agentGlobalMaxIterations: process.env.AI_AGENT_GLOBAL_MAX_ITERATIONS,
     agentMaxOutputTokens: process.env.AI_AGENT_MAX_OUTPUT_TOKENS,
     agentHistoryMaxMessages: process.env.AI_AGENT_HISTORY_MAX_MESSAGES,
+    agentHistoryMaxTokens: process.env.AI_AGENT_HISTORY_MAX_TOKENS,
     agentReasoningEffort: process.env.AI_AGENT_REASONING,
     reportMaxOutputTokens: process.env.AI_REPORT_MAX_OUTPUT_TOKENS,
     reportReasoningEffort: process.env.AI_REPORT_REASONING,

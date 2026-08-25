@@ -12,6 +12,7 @@ import {
 } from "@/lib/ai/otto/wire";
 import { MILESTONES, type MilestoneId } from "@/lib/onboarding/milestones";
 import { useDraggable } from "./use-draggable";
+import { useAiErrorMessage } from "../chat/use-ai-error-message";
 
 /**
  * Otto's panel: a conversation, a live checklist driven by graph state, and
@@ -43,6 +44,7 @@ export interface OttoPanelProps {
 
 export function OttoPanel(props: OttoPanelProps) {
   const t = useTranslations("Otto");
+  const aiErrorMessage = useAiErrorMessage();
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   // Dragging is pointless where the panel already fills the screen.
@@ -241,7 +243,7 @@ export function OttoPanel(props: OttoPanelProps) {
 
         {props.error && (
           <p className="text-xs text-rose-600" role="alert">
-            {t(`errors.${props.error === "rate_limited" ? "rate_limited" : "failed"}`)}
+            {aiErrorMessage(props.error)}
           </p>
         )}
       </div>

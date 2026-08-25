@@ -4,7 +4,7 @@ import type { CompanyContext } from "../../company/context.ts";
 import { notifyReportReady } from "../../email/report-ready-notification.ts";
 import { logger } from "../../ingestion/observability/logger.ts";
 import type { SerializedTenderDetail } from "../../tenders/detail.ts";
-import { RateLimitError, StructuredOutputError } from "../gateway/types.ts";
+import { classifyAiError } from "../agent/errors.ts";
 import {
   finishRun,
   heartbeat,
@@ -81,10 +81,5 @@ export async function runReportJob(input: {
 
 /** Collapses provider failures to i18n keys — never a raw provider message. */
 function errorCode(error: unknown): string {
-  if (error instanceof RateLimitError) return "rate_limited";
-  if (error instanceof StructuredOutputError) return "invalid_output";
-  if (error instanceof Error && /rate.?limit/i.test(error.message)) {
-    return "rate_limited";
-  }
-  return "failed";
+  return classifyAiError(error);
 }

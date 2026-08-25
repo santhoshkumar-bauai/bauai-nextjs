@@ -100,3 +100,27 @@ export class StructuredOutputError extends Error {
     this.name = "StructuredOutputError";
   }
 }
+
+/**
+ * Thrown when a provider safety filter blocked the prompt or the completion.
+ *
+ * Its own class because it is the one failure here that is neither our bug nor
+ * the user's, and it needs its own message: "the AI service is busy" is wrong
+ * and "failed" is useless. Azure content filtering has no Gemini analogue in
+ * this codebase, and probe P12 confirmed it blocks ordinary German
+ * procurement text — a Leistungsverzeichnis covering Sprengarbeiten,
+ * correctional facilities and medical waste is routine construction work here.
+ *
+ * The dangerous shape is the completion-side one: HTTP **200** with
+ * `finish_reason: "content_filter"` and empty content, invisible to any status
+ * check. Adapters must detect it explicitly and throw this.
+ */
+export class ContentFilterError extends Error {
+  /** "prompt" | "completion" — which side tripped, when the provider says. */
+  readonly stage: "prompt" | "completion" | "unknown";
+  constructor(message: string, stage: "prompt" | "completion" | "unknown" = "unknown") {
+    super(message);
+    this.name = "ContentFilterError";
+    this.stage = stage;
+  }
+}

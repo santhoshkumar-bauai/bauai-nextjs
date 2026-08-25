@@ -6,6 +6,7 @@ import { GaebWorkspace } from "@/components/gaeb/gaeb-workspace";
 import { EditorWorkspace } from "@/components/onlyoffice/editor-workspace";
 import { getCompanyContext } from "@/lib/company/context";
 import { WorkspaceDocument } from "@/models/workspace-document";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 export default async function DocumentEditorPage({
   params,
@@ -28,9 +29,7 @@ export default async function DocumentEditorPage({
   // Same provider gate the chat routes enforce; computed server-side so the
   // panel can explain itself instead of failing on first use.
   const aiAvailable = Boolean(
-    process.env.GEMINI_API_KEY ||
-      process.env.OPENAI_API_KEY ||
-      process.env.ANTHROPIC_API_KEY,
+    aiProviderConfigured(),
   );
   // GAEB bills of quantities open in the BAU AI BOQ editor; they are not an
   // ONLYOFFICE format and must never reach the editor iframe.

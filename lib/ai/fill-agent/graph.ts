@@ -4,7 +4,7 @@ import { aiEnv } from "../config/env.ts";
 import { getClaraCheckpointer } from "../agent/checkpointer.ts";
 import { getChatModel } from "../agent/model.ts";
 import type { CompiledAgentGraph } from "../agent/service.ts";
-import { buildToolLoopGraph } from "../agent/tool-loop.ts";
+import { buildToolLoopGraph, toolLoopRecursionLimit } from "../agent/tool-loop.ts";
 import type { FillAgentRunContext } from "./context.ts";
 import { fillAgentEnv } from "./env.ts";
 import { buildFillAgentSystemPrompt } from "./prompts.ts";
@@ -16,27 +16,14 @@ import { buildFillAgentTools } from "./tools.ts";
  * shared with Clara/Dora; the `fillagent:` thread-key namespace keeps state
  * disjoint.
  *
- * The streamEvents wrapper exists for ONE reason (docs/agentic-ai/06-review
- * §6.1): runChatTurn sets no recursionLimit, LangGraph defaults to 25, and
- * this agent legitimately chains fill→repair→fill inside a turn. Worst case
- * the loop takes 2 supersteps per iteration (+begin/finalize), so the default
- * would throw GraphRecursionError mid-repair and surface as a bare "failed".
- * Promotion step: move the limit into service.ts and drop this wrapper.
+ * This agent legitimately chains fill→repair→fill inside a single turn, so it
+ * needs a wider superstep budget than the shared default in runChatTurn. The
+ * limit is passed per turn rather than wrapped around the graph — that wrapper
+ * was always meant to be temporary (docs/agentic-ai/06-review §6.1) and
+ * runChatTurn now sets a limit for every agent.
  */
 export function fillAgentRecursionLimit(maxIterations: number): number {
-  return 2 * maxIterations + 4;
-}
-
-/** Wrap a compiled graph so every streamEvents call carries the limit —
- * ours must win even if a caller ever starts passing one. */
-export function withRecursionLimit(
-  graph: CompiledAgentGraph,
-  recursionLimit: number,
-): CompiledAgentGraph {
-  return {
-    streamEvents: (input, options) =>
-      graph.streamEvents(input, { ...options, recursionLimit }),
-  };
+  return toolLoopRecursionLimit(maxIterations);
 }
 
 export async function buildFillAgentGraph(
@@ -50,7 +37,8 @@ export async function buildFillAgentGraph(
     systemPrompt: new SystemMessage(buildFillAgentSystemPrompt(ctx)),
     maxIterations: fillEnv.maxIterations,
     historyMaxMessages: env.agentHistoryMaxMessages,
+    historyMaxTokens: env.agentHistoryMaxTokens,
     checkpointer: await getClaraCheckpointer(),
   });
-  return withRecursionLimit(graph, fillAgentRecursionLimit(fillEnv.maxIterations));
+  return graph;
 }

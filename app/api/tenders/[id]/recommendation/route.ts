@@ -8,6 +8,7 @@ import { mongoDatabase } from "@/lib/db/mongodb";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import type { TenderDocument } from "@/lib/ingestion/types";
 import { serializeTenderDetail } from "@/lib/tenders/detail";
+import { aiRoleConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * Company-fit analysis for a tender. GET returns the cached, tenant-scoped
@@ -46,8 +47,8 @@ export async function POST(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json({ error: "Gemini is not configured." }, { status: 503 });
+  if (!aiRoleConfigured("reasoning")) {
+    return NextResponse.json({ error: "No AI provider is configured." }, { status: 503 });
   }
 
   const { id } = await params;

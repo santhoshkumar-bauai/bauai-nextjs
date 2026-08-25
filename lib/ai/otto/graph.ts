@@ -212,6 +212,7 @@ export async function buildOttoGraph(ctx: OttoRunContext) {
       new SystemMessage(buildOttoSystemPrompt(ctx, state as OttoStateType)),
     maxIterations: env.agentMaxIterations,
     historyMaxMessages: env.agentHistoryMaxMessages,
+    historyMaxTokens: env.agentHistoryMaxTokens,
   });
 
   /**

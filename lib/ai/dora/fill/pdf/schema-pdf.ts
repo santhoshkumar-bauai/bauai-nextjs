@@ -82,8 +82,16 @@ export const PDF_FILL_DISCOVERY_JSON_SCHEMA = {
             description:
               "overlay_text only: the label text preceding the blank, copied verbatim from the manifest line and unique in the whole document. Never the underscore run.",
           },
+          // `rect` and `value` are `.nullable()` in Zod above, and the
+          // provider schema has to say so. Listing them as required
+          // non-nullable told the model both were mandatory, so on a field it
+          // could not fill it invented geometry and a value rather than
+          // returning null — silent fabrication in a document we then fill.
+          // A type union is the portable spelling: Gemini accepts it in
+          // responseJsonSchema, and OpenAI strict mode requires it, since
+          // strict has no way to express "may be absent".
           rect: {
-            type: "object",
+            type: ["object", "null"],
             properties: {
               x: { type: "number", minimum: 0 },
               y: { type: "number", minimum: 0 },
@@ -93,7 +101,7 @@ export const PDF_FILL_DISCOVERY_JSON_SCHEMA = {
             required: ["x", "y", "width", "height"],
             additionalProperties: false,
           },
-          value: { type: "string" },
+          value: { type: ["string", "null"] },
           confidence: { type: "number", minimum: 0, maximum: 1 },
           evidenceReferences: { type: "array", items: { type: "string" } },
           reason: { type: "string" },

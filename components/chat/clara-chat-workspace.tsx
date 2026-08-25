@@ -15,6 +15,7 @@ import { SessionsSidebar } from "./sessions-sidebar";
 import { TenderReportPanel } from "./tender-report-panel";
 import { useChatSessions } from "./use-chat-sessions";
 import { useClaraChat } from "./use-clara-chat";
+import { useAiErrorMessage } from "./use-ai-error-message";
 
 /**
  * The full-page Clara chat (ChatGPT-style): sessions sidebar + thread view.
@@ -24,6 +25,7 @@ import { useClaraChat } from "./use-clara-chat";
  */
 export function ClaraChatWorkspace() {
   const t = useTranslations("Chat");
+  const aiErrorMessage = useAiErrorMessage();
   const tReport = useTranslations("Tenders.report");
   const locale = useLocale() as "en" | "de";
   const router = useRouter();
@@ -255,7 +257,7 @@ export function ClaraChatWorkspace() {
             )}
             {chat.error && (
               <p className="pt-3 text-center text-xs text-rose-600">
-                {chat.error === "rate_limited" ? t("rateLimited") : t("error")}
+                {aiErrorMessage(chat.error)}
               </p>
             )}
           </div>

@@ -27,6 +27,7 @@ export async function buildClaraGraph(ctx: AgentRunContext) {
     systemPrompt: new SystemMessage(buildClaraSystemPrompt(ctx)),
     maxIterations,
     historyMaxMessages: env.agentHistoryMaxMessages,
+    historyMaxTokens: env.agentHistoryMaxTokens,
     checkpointer: await getClaraCheckpointer(),
   });
 }

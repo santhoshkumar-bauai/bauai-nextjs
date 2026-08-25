@@ -13,11 +13,23 @@ import {
   planDoraEditTransaction,
 } from "../../dora-gateway/edit-v2.ts";
 import { recordEditTransactionState } from "../../dora-gateway/audit.ts";
+import { classifyAiError, redactProviderDetail, type AiFailureCode } from "../agent/errors.ts";
 import { resolveRole } from "../gateway/config.ts";
 
 const HEARTBEAT_INTERVAL_MS = 25_000;
 const EDIT_TIMEOUT_MS = 120_000;
 
+/**
+ * Planner failure codes.
+ *
+ * Two families, and keeping them apart is the point. `invalid_edit_plan:*` and
+ * `planner_schema_invalid` are OUR tokens — the plan compiler rejected a
+ * structurally valid response — so they are decided here. Everything else is
+ * the provider's failure and goes through the shared classifier, which reads
+ * typed errors and HTTP status before it reads prose. The regexes this
+ * replaced were written against Gemini's wording and silently mislabelled
+ * every Azure failure as a generic one.
+ */
 function plannerFailureCode(error: unknown): string {
   if (!(error instanceof Error)) return "planner_failed";
   if (error.name === "ZodError") return "planner_schema_invalid";
@@ -27,29 +39,38 @@ function plannerFailureCode(error: unknown): string {
       ? `invalid_edit_plan:${reason}`
       : "invalid_edit_plan";
   }
-  if (error.message === "aborted") return "aborted";
-  if (/rate.?limit/i.test(error.message)) return "rate_limited";
-  if (/schema|response.?format|invalid.?argument|\b400\b/i.test(error.message)) {
-    return "planner_schema_rejected";
-  }
-  if (/model.*(?:not found|not supported|unavailable)|\b404\b/i.test(error.message)) {
-    return "planner_model_unavailable";
-  }
-  if (/api.?key|unauthori[sz]ed|forbidden|\b401\b|\b403\b/i.test(error.message)) {
-    return "planner_auth_failed";
-  }
-  if (/fetch failed|network|socket|econn|timeout/i.test(error.message)) {
-    return "planner_network_failed";
-  }
-  return "planner_provider_failed";
+
+  const code = classifyAiError(error);
+  if (code === "aborted") return "aborted";
+  if (code === "rate_limited") return "rate_limited";
+  return PLANNER_FAILURE_CODES[code] ?? "planner_provider_failed";
 }
 
+/** Shared codes → the planner-scoped names the editor audit trail records. */
+const PLANNER_FAILURE_CODES: Partial<Record<AiFailureCode, string>> = {
+  provider_rejected: "planner_schema_rejected",
+  invalid_output: "planner_schema_invalid",
+  content_filtered: "planner_content_filtered",
+  too_long: "planner_too_long",
+  model_unavailable: "planner_model_unavailable",
+  auth_failed: "planner_auth_failed",
+  network_failed: "planner_network_failed",
+  timeout: "planner_network_failed",
+  loop_exhausted: "planner_loop_exhausted",
+};
+
+/**
+ * Provider text kept alongside the failure. Recorded for the two codes whose
+ * cause lives in the provider's own words — a rejected schema, and a filter
+ * block whose category only the payload names.
+ */
 function plannerFailureDetail(error: unknown, failureCode: string): string | null {
-  if (!(error instanceof Error) || failureCode !== "planner_schema_rejected") return null;
-  return error.message
-    .replace(/https?:\/\/\S+/gi, "[provider-url]")
-    .replace(/AIza[A-Za-z0-9_-]+/g, "[redacted-key]")
-    .slice(0, 1_000);
+  const carriesDetail =
+    failureCode === "planner_schema_rejected" ||
+    failureCode === "planner_content_filtered" ||
+    failureCode === "planner_too_long";
+  if (!carriesDetail) return null;
+  return redactProviderDetail(error);
 }
 
 async function recentConversation(

@@ -22,6 +22,7 @@ import {
 import { corsHeadersFor, handlePreflight, withCors } from "@/lib/dora-gateway/cors";
 import { isLikelyEditIntent } from "@/lib/dora-gateway/edit-v2";
 import { getSpreadsheetContext } from "@/lib/dora-gateway/spreadsheet-contexts";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 import {
   doraEditEngineV2Enabled,
   getDoraSnapshot,
@@ -67,7 +68,7 @@ export function OPTIONS(request: Request) {
 export async function POST(request: Request, { params }: RouteParams) {
   const cors = corsHeadersFor(request);
   if (!cors) return NextResponse.json({ error: "origin_not_allowed" }, { status: 403 });
-  if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+  if (!aiProviderConfigured()) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503, headers: cors });
   }
 

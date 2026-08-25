@@ -13,6 +13,7 @@ import { PdfPreview } from "./pdf-preview";
 import { SessionStatus } from "./session-status";
 import { useFillSession } from "./use-fill-session";
 import { ValuesForm } from "./values-form";
+import { useAiErrorMessage } from "../chat/use-ai-error-message";
 
 /**
  * The fill-agent workspace: chat on the left (Clara's endpoint-parameterized
@@ -42,6 +43,7 @@ export function FillChatWorkspace({
   backLabelKey?: "back" | "chooserBack";
 }) {
   const t = useTranslations("FillAgent");
+  const aiErrorMessage = useAiErrorMessage();
   const locale = useLocale() as "en" | "de";
   const chat = useClaraChat(`/api/poc/fill-chat/${sessionId}/chat`, { locale });
   const { session, refresh, renderVersion } = useFillSession(sessionId);
@@ -174,7 +176,7 @@ export function FillChatWorkspace({
             )}
             {chat.error && (
               <p className="pt-2 text-center text-xs text-rose-600">
-                {chat.error === "rate_limited" ? t("rateLimited") : t("chatError")}
+                {aiErrorMessage(chat.error)}
               </p>
             )}
           </div>

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { ReportRunState } from "@/lib/ai/report/runs";
 import type { SerializedTenderReport } from "@/lib/ai/report/service";
+import { useAiErrorMessage } from "../../chat/use-ai-error-message";
 
 /**
  * The report page's data lifecycle, built around a run record the SERVER owns.
@@ -42,10 +43,10 @@ export function useTenderReport(tenderId: string) {
   // re-runs the load effect — exactly the behaviour we want.
   const endpoint = `/api/tenders/${tenderId}/report?locale=${locale}`;
 
+  const aiErrorMessage = useAiErrorMessage();
   const errorMessage = useCallback(
-    (code: string | null) =>
-      code === "rate_limited" ? t("rateLimited") : t("error"),
-    [t],
+    (code: string | null) => aiErrorMessage(code),
+    [aiErrorMessage],
   );
 
   const read = useCallback(

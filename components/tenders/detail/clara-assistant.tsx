@@ -19,6 +19,7 @@ import { MessageList } from "@/components/chat/message-list";
 import { useClaraChat } from "@/components/chat/use-clara-chat";
 import { cn } from "@/lib/utils";
 import { FitSection, type FitSectionProps } from "./ai-tab";
+import { useAiErrorMessage } from "../../chat/use-ai-error-message";
 
 /**
  * Clara — the floating tender assistant. A chat over the tender's structured
@@ -42,6 +43,7 @@ export function ClaraAssistant({
 }) {
   const t = useTranslations("Tenders.chat");
   const tc = useTranslations("Chat");
+  const aiErrorMessage = useAiErrorMessage();
   const tr = useTranslations("Tenders.report");
   const locale = useLocale() as "en" | "de";
   const [open, setOpen] = useState(false);
@@ -160,7 +162,7 @@ export function ClaraAssistant({
             )}
             {chat.error && (
               <p className="pt-2 text-center text-[11px] text-rose-600">
-                {chat.error === "rate_limited" ? tc("rateLimited") : tc("error")}
+                {aiErrorMessage(chat.error)}
               </p>
             )}
           </div>

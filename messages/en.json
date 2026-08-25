@@ -1,4 +1,18 @@
 {
+  "AiErrors": {
+    "rate_limited": "The AI is rate limited right now. Try again in a moment.",
+    "content_filtered": "The AI provider's safety filter blocked this content. This can happen with tenders covering demolition, security, correctional or medical work. Contact support if it keeps happening.",
+    "too_long": "This document is too long for the AI to process in one pass. Try narrowing the selection or splitting the file.",
+    "provider_rejected": "The AI provider rejected the request. This is a configuration problem on our side — please contact support.",
+    "auth_failed": "The AI service credentials are not valid. Please contact support.",
+    "model_unavailable": "The configured AI model is unavailable. Please contact support.",
+    "network_failed": "Couldn't reach the AI service. Check your connection and try again.",
+    "timeout": "The AI took too long to respond. Please try again.",
+    "loop_exhausted": "The assistant kept working without reaching an answer and was stopped. Try rephrasing your request.",
+    "invalid_output": "The AI returned an unusable answer. Please try again.",
+    "aborted": "Stopped.",
+    "failed": "Something went wrong. Try again."
+  },
   "Language": {
     "select": "Select language"
   },

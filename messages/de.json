@@ -1,4 +1,18 @@
 {
+  "AiErrors": {
+    "rate_limited": "Die KI ist derzeit ausgelastet. Bitte gleich erneut versuchen.",
+    "content_filtered": "Der Sicherheitsfilter des KI-Anbieters hat diesen Inhalt blockiert. Das kann bei Ausschreibungen zu Abbruch-, Sicherheits-, Justizvollzugs- oder medizinischen Leistungen vorkommen. Bitte den Support kontaktieren, falls es weiterhin auftritt.",
+    "too_long": "Dieses Dokument ist zu lang für eine Verarbeitung in einem Durchgang. Bitte die Auswahl eingrenzen oder die Datei aufteilen.",
+    "provider_rejected": "Der KI-Anbieter hat die Anfrage abgelehnt. Das ist ein Konfigurationsproblem auf unserer Seite — bitte den Support kontaktieren.",
+    "auth_failed": "Die Zugangsdaten für den KI-Dienst sind ungültig. Bitte den Support kontaktieren.",
+    "model_unavailable": "Das konfigurierte KI-Modell ist nicht verfügbar. Bitte den Support kontaktieren.",
+    "network_failed": "Der KI-Dienst war nicht erreichbar. Bitte Verbindung prüfen und erneut versuchen.",
+    "timeout": "Die KI hat zu lange gebraucht. Bitte erneut versuchen.",
+    "loop_exhausted": "Der Assistent hat ohne Ergebnis weitergearbeitet und wurde gestoppt. Bitte die Anfrage anders formulieren.",
+    "invalid_output": "Die KI hat eine unbrauchbare Antwort geliefert. Bitte erneut versuchen.",
+    "aborted": "Gestoppt.",
+    "failed": "Etwas ist schiefgelaufen. Bitte erneut versuchen."
+  },
   "Language": {
     "select": "Sprache auswählen"
   },
