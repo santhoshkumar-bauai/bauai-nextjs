@@ -69,14 +69,46 @@ measure as nothing and never trim.
 
 Ordered by what would pay off soonest.
 
-### Verify the canary properly
+### Raise the deployment quota (blocking for production)
 
-Every role is on Azure by default now, but only `agent`, `otto`, `dora_fast`,
-`report`, `extraction` and `dora_gaeb_web` have been exercised end to end
-against the live deployment. Before this is load-bearing, walk the remaining
-ones: a full tender report, a PDF fill run, a GAEB pricing run over real
-positions, and a fill-agent session. `dora_edit_transactions` records the real
-failure codes — trust it over the UI.
+**`luna-dev` is provisioned at 10 000 tokens/minute and 10 requests/minute.**
+Measured from the response headers:
+
+```
+x-ratelimit-limit-tokens=10000   x-ratelimit-limit-requests=10
+```
+
+That is a development allowance, and two of our workloads do not fit inside it
+*at all*:
+
+- **The report's translation pass cannot succeed.** Translating a finished
+  report means sending it back as input: ~52 000 characters, roughly 15 000
+  tokens in one request. A single call exceeds the per-minute token budget, so
+  it 429s no matter how long you wait between attempts. This was observed live
+  — the German analysis completed and persisted, and the English translation
+  failed. The degradation is correct by design (a failed translation must not
+  lose the analysis, so the language is simply absent and the reader falls back
+  with a notice) but the English report will never appear until the quota rises.
+- **The match judge would be crippled.** ~20 judge calls per company per
+  refresh against a 10 RPM ceiling means a single company's refresh takes two
+  minutes of pure rate-limit waiting, and concurrent tenants queue behind it.
+
+Nothing in the code can work around this; it is a capacity purchase. Until it
+is raised, expect `rate_limited` on any report, and treat single-language
+reports as expected rather than as a bug.
+
+### Finish the canary
+
+Verified end to end against the live deployment: `agent` (multi-tool loop with
+streaming), `otto`, `dora_fast`, `extraction` (Lane A), `dora_gaeb_web` (web
+search with real citations), `dora_gaeb_fill` (classify + pricing),
+`dora_pdf_fill` (native PDF + vision + strict schema), and `report` (full
+German report, 8 sections, 31 citations, stamped `azure:gpt-5.6-luna`).
+
+Still unexercised: **`fill_agent`** (it drives the Python sandbox, so it needs
+the sidecar running), **`dora`** chat inside a live ONLYOFFICE session, and
+**`match`** — which is blocked on the quota above rather than on correctness.
+`dora_edit_transactions` records the real failure codes; trust it over the UI.
 
 ### Content-filter policy (highest operational risk)
 

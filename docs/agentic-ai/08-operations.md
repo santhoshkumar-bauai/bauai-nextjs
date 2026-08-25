@@ -81,6 +81,14 @@ Ladder: `none | low | medium | high | xhigh | max`, clamped per provider
 > reads as "the model said nothing". The Azure adapter detects that shape and
 > names `AI_ROLE_MAX_OUTPUT_TOKENS` in the error it throws.
 
+> **The budgets above assume a quota the dev deployment does not have.**
+> `luna-dev` is provisioned at **10 000 TPM / 10 RPM**
+> (`x-ratelimit-limit-tokens` / `-requests`). The report's translation pass
+> sends the whole report back as input — ~15 000 tokens in one request — so it
+> exceeds the per-minute budget on its own and 429s regardless of backoff. A
+> single-language report on dev is expected, not a bug. See
+> [§9.4](09-azure-migration.md).
+
 ### Agent loop
 
 | Var | Default | Effect |
