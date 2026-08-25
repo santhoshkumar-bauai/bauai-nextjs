@@ -72,12 +72,33 @@ function azureEnv(roles: Record<string, string>, extra: Record<string, string> =
 }
 
 describe("getAgentChatModel", () => {
-  it("defaults the agent role to gemini-3.5-flash", async () => {
-    process.env.GEMINI_API_KEY = "test-key";
+  it("defaults every generation role to azure luna", async () => {
+    process.env.AZURE_OPENAI_ENDPOINT = "https://test.openai.azure.com/";
+    process.env.AZURE_OPENAI_DEPLOYMENT = "luna-dev";
+    resetAiEnvCache();
     const model = await getAgentChatModel();
+    expect(model.constructor.name).toBe("ChatOpenAI");
+    expect(fieldsOf(model).model).toBe("gpt-5.6-luna");
+  });
+
+  it("keeps embeddings on gemini after the cutover", async () => {
+    // luna-dev is a chat deployment, and moving this role means re-embedding
+    // the whole corpus and rebuilding both Atlas vector indexes.
+    const { resolveRole } = await import("../gateway/config.ts");
+    expect(resolveRole("embedding")).toEqual({
+      provider: "gemini",
+      model: "gemini-embedding-001",
+    });
+  });
+
+  it("moves a single role back to gemini via its shortcut", async () => {
+    // The rollback path: one env var, no code change.
+    process.env.GEMINI_API_KEY = "test-key";
+    process.env.AI_DORA_FILL_MODEL = "gemini:gemini-3.7-flash";
+    resetAiEnvCache();
+    const model = await getChatModel({ role: "dora_fill" });
     expect(model.constructor.name).toBe("ChatGoogleGenerativeAI");
-    expect((model as { model?: string }).model).toContain("gemini-3.5-flash");
-    expect((model as { temperature?: number }).temperature).toBe(0.2);
+    expect(fieldsOf(model).model).toBe("gemini-3.7-flash");
   });
 
   it("omits sampling parameters rejected by Gemini 3.6 and newer", async () => {
@@ -133,6 +154,7 @@ describe("getAgentChatModel", () => {
 describe("reasoning effort is clamped per provider", () => {
   it("folds the two top rungs into Gemini's HIGH thinking level", async () => {
     process.env.GEMINI_API_KEY = "test-key";
+    process.env.AI_MODEL_ROLES = JSON.stringify({ agent: "gemini:gemini-3.5-flash" });
     process.env.AI_ROLE_REASONING = JSON.stringify({ agent: "xhigh" });
     resetAiEnvCache();
 

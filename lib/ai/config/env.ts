@@ -232,17 +232,34 @@ function parseModelRoles(raw: string | undefined) {
   }
 }
 
-/** Honors the pre-existing GEMINI_MODEL env for generation roles so the
- * gateway migration is behavior-identical for already-deployed setups. */
+/**
+ * Role defaults.
+ *
+ * Every generation role runs on Azure `gpt-5.6-luna`. Per-role differentiation
+ * moved from the MODEL to the reasoning effort and output budget below — one
+ * deployment, thirteen distinct operating points — which is why the fill roles
+ * no longer need separate pins to stay isolated from chat-model changes.
+ *
+ * `embedding` deliberately stays on Gemini. It is not a chat role, luna-dev is
+ * a chat deployment, and moving it means re-embedding every stored vector and
+ * rebuilding both Atlas vector indexes. `AzureOpenAIProvider.embed()` throws
+ * with that explanation so a one-line role edit cannot start a silent corpus
+ * rebuild.
+ *
+ * The `AI_*_MODEL` shortcuts still win where they are set, so a deployment
+ * that has pinned a role keeps it, and `AI_MODEL_ROLES` overrides everything.
+ */
 function defaultModelRoles(): Record<string, string> {
-  const generation = `gemini:${process.env.GEMINI_MODEL || "gemini-2.5-flash-lite"}`;
-  const agent = "gemini:gemini-3.5-flash";
+  const luna = `azure:${process.env.AZURE_OPENAI_MODEL || "gpt-5.6-luna"}`;
+  // Gemini remains reachable: setting any AI_*_MODEL shortcut to "gemini:…"
+  // moves that one role back with no code change, which is the rollback path.
+  const generation = process.env.GEMINI_MODEL ? `gemini:${process.env.GEMINI_MODEL}` : luna;
+  const agent = luna;
   return {
+    // NOT luna — see the note above.
     embedding: `gemini:${process.env.EMBEDDING_MODEL || "gemini-embedding-001"}`,
     extraction: generation,
     reasoning: generation,
-    // The agent needs stronger multi-step tool reasoning than the pipeline
-    // roles; deliberately NOT derived from GEMINI_MODEL.
     agent,
     /**
      * The report deserves the best model available. Point it at one explicitly
@@ -274,28 +291,26 @@ function defaultModelRoles(): Record<string, string> {
       process.env.AI_DORA_MODEL ||
       process.env.AI_REPORT_MODEL ||
       agent,
-    // Fill discovery is pinned independently so chat model changes cannot
-    // silently alter generated legal/business documents.
-    dora_fill: process.env.AI_DORA_FILL_MODEL || "gemini:gemini-3.7-flash",
+    // The fill roles were pinned to their own model so chat-model changes
+    // could not silently alter generated legal documents or priced offers.
+    // With one deployment behind every role that isolation now comes from the
+    // per-role effort and budget below — but the shortcuts still work, so any
+    // of them can be pinned again the moment there is a second deployment.
+    dora_fill: process.env.AI_DORA_FILL_MODEL || luna,
     // PDF discovery reads the file natively (layout, tables, scanned pages),
     // so it needs a PDF-capable model. Falls back to the Word fill model.
     dora_pdf_fill:
-      process.env.AI_DORA_PDF_FILL_MODEL ||
-      process.env.AI_DORA_FILL_MODEL ||
-      "gemini:gemini-3.7-flash",
+      process.env.AI_DORA_PDF_FILL_MODEL || process.env.AI_DORA_FILL_MODEL || luna,
     // GAEB position classification + price suggestion batches. Pinned like the
     // other fill roles so chat model changes cannot alter priced offers.
     dora_gaeb_fill:
-      process.env.AI_DORA_GAEB_FILL_MODEL ||
-      process.env.AI_DORA_FILL_MODEL ||
-      "gemini:gemini-3.7-flash",
+      process.env.AI_DORA_GAEB_FILL_MODEL || process.env.AI_DORA_FILL_MODEL || luna,
     // Search-grounded product price lookups. Needs a provider with a native
-    // web-search tool (Gemini googleSearch); web pricing degrades to "no
-    // evidence" when the configured provider cannot search.
+    // web-search tool — Gemini googleSearch or the OpenAI/Azure web_search
+    // server tool. Web pricing degrades to "no evidence" on a provider that
+    // cannot search (see agent/web-search.ts).
     dora_gaeb_web:
-      process.env.AI_DORA_GAEB_WEB_MODEL ||
-      process.env.AI_DORA_GAEB_FILL_MODEL ||
-      "gemini:gemini-3.7-flash",
+      process.env.AI_DORA_GAEB_WEB_MODEL || process.env.AI_DORA_GAEB_FILL_MODEL || luna,
     /**
      * Otto guides a brand-new user through the product. It is the first thing
      * anyone experiences, and its planning step has to reason about a whole
@@ -303,11 +318,11 @@ function defaultModelRoles(): Record<string, string> {
      * Falls back through the report model so an unconfigured deployment works.
      */
     otto: process.env.AI_OTTO_MODEL || process.env.AI_REPORT_MODEL || agent,
-    // Chat-based PDF form-filling agent (POC). Pinned to the flagship Gemini
-    // tier: it orchestrates tools, writes sandbox Python and reads rendered
-    // pages + 400dpi crops, so it needs vision + strong reasoning — and like
-    // the other fill roles it must not drift with chat model upgrades.
-    fill_agent: process.env.AI_FILL_AGENT_MODEL || "gemini:gemini-3.7-pro",
+    // Chat-based PDF form-filling agent (POC). Orchestrates tools, writes
+    // sandbox Python and reads rendered pages plus 400dpi crops, so it needs
+    // vision and the strongest reasoning in the product — which it gets from
+    // its effort setting rather than a separate model.
+    fill_agent: process.env.AI_FILL_AGENT_MODEL || luna,
   };
 }
 

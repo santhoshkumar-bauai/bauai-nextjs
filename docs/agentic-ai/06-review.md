@@ -38,6 +38,11 @@ Before the criticism, the things that would be a mistake to "refactor":
 
 ## 6.1 The recursion limit is two supersteps away
 
+> **RESOLVED.** `runChatTurn` now sets a superstep budget for every graph via
+> `toolLoopRecursionLimit(maxIterations, extraNodes)`, sized for the widest
+> loop plus Otto's extra nodes, and a test per graph fails when a cap outgrows
+> it. The fill agent's private wrapper is gone in favour of the shared formula.
+
 **Severity: P1 · Verified · Evidence:** `recursionLimit` appears nowhere in
 `lib/`, `app/` or `workers/`. `@langchain/langgraph@1.4.9` sets
 `DEFAULT_RECURSION_LIMIT = 25` (`dist/pregel/utils/config.js:36`).
@@ -212,29 +217,41 @@ results and 30 messages containing a 20 000-char `read_tender_document` result
 are wildly different token counts, and the second is what actually blows a
 context window.
 
-**Fix.** Move to token-budget trimming. `@langchain/core@1.2.5` exports
-`trimMessages`, which supports `strategy: "last"`, `startOn: "human"` (exactly
-`windowFromUserTurn`'s intent), `includeSystem`, and a custom `tokenCounter`:
+**Fix — DONE.** Token-budget trimming, behind `AI_AGENT_HISTORY_MAX_TOKENS`.
+Unset keeps the message-count window exactly as it was; the Azure roles set it
+to 200 000. `windowFromUserTurn` stays as the fallback and as the hard ceiling,
+because it encodes a Gemini 400 a naive swap would reintroduce.
+
+Two corrections to the fix as originally sketched here, both found while
+implementing it:
+
+**`tokenCounter: model` is wrong**, though `trimMessages` does accept a
+`BaseLanguageModel`. It resolves the model to a tiktoken encoding and fetches
+it from `https://tiktoken.pages.dev` on first use — a network call on the hot
+path of every model invocation, which fails closed in a locked-down container.
+Worse, `getNumTokens` sums only `type: "text"` blocks
+(`language_models/base.js:205-209`), so **image and file blocks count as zero**.
+A fill-agent window carrying 50 rendered pages would measure as nothing and
+never trim, which is exactly the window that needs trimming. Use the local
+media-aware `approxMessageTokens` instead.
+
+**`includeSystem` is a no-op here.** The system prompt is not in `state.messages`
+— it is prepended per model call — so the flag has nothing to include.
+
+One more thing worth knowing: `trimMessages` returns `[]` when even the newest
+human turn exceeds the budget. `windowFromUserTurn` deliberately overshoots in
+that case ("a window slightly over max beats a guaranteed 400"), and the
+implementation preserves that.
 
 ```ts
-import { trimMessages } from "@langchain/core/messages";
-
-const contextWindow = async (messages: BaseMessage[]) =>
-  sanitizeToolPairs(
-    await trimMessages(messages, {
-      maxTokens:    env.agentHistoryMaxTokens,   // new knob, e.g. 120_000
-      strategy:     "last",
-      startOn:      "human",                     // exactly windowFromUserTurn's intent
-      tokenCounter: model,                       // a BaseLanguageModel is accepted directly
-    }),
-  );
+const trimmed = await trimMessages(capped, {
+  maxTokens: input.historyMaxTokens,
+  strategy: "last",
+  startOn: "human",
+  tokenCounter: approxMessageTokens,   // local; charges images and files
+});
+return sanitizeToolPairs(trimmed.length > 0 ? trimmed : capped.slice(-1));
 ```
-
-Keep `sanitizeToolPairs` on the output regardless — `trimMessages` understands
-tool pairs but not the *dangling call left by our finalize path*.
-
-Do **not** drop `windowFromUserTurn` before this is measured; it encodes a
-Gemini 400 that a naive swap would reintroduce.
 
 ---
 
@@ -286,6 +303,16 @@ should not be replayed.
 ---
 
 ## 6.5 Every failure is `"failed"`
+
+> **RESOLVED**, except the correlation id. `classifyAiError`
+> ([`lib/ai/agent/errors.ts`](../../lib/ai/agent/errors.ts)) reads typed errors
+> first, then HTTP status, and provider prose only last — the old order was the
+> reverse, and its regexes were shaped around Gemini's wording, so every Azure
+> failure would have degraded to "something went wrong". Three codes are new
+> and earned their place: `content_filtered` (Azure blocks ordinary German
+> procurement text — runbook R10), `too_long`, and `loop_exhausted`. All six
+> chat surfaces render them from one `AiErrors` catalog, so the next code needs
+> no component change.
 
 **Severity: P2 · Operability**
 
@@ -512,15 +539,15 @@ measurable. See [§7.8](07-observability-langfuse.md#78-phase-3--datasets-and-ev
 ## 6.13 Suggested sequence
 
 ```
-Now        1. recursionLimit + a test that fails when a cap outgrows it        §6.1
-           2. MongoDBSaver ttl + setup(); fix the stale index comment          §6.2
+DONE       1. recursionLimit + a test that fails when a cap outgrows it        §6.1
+           5. Error taxonomy (+ content_filtered, too_long, loop_exhausted)    §6.5
+           7. Token-budget trimming to replace the message-count window        §6.3
+
+Now        2. MongoDBSaver ttl + setup(); fix the stale index comment          §6.2
            3. deleteThread helper; drop the three hand-rolled deletions        §6.6
 
 Next       4. Langfuse phase 1: tracing on all four agents                     §7.4–7.5
-           5. Error taxonomy + correlation id == trace id                      §6.5
            6. Langfuse phase 2: lane A + the non-graph Dora call sites         §7.6
-
-Then       7. Token-budget trimming to replace the message-count window        §6.3
            8. Langfuse phase 3: datasets, experiments, scores                  §7.8
            9. RetryPolicy on DB-reading nodes                                  §6.8
 
@@ -529,6 +556,12 @@ Later      10. tenderRefs into graph state (when replay/subgraphs are needed)  �
            12. streamEvents → streamMode                                       §6.10
 ```
 
-Items 1–3 are a half-day and remove two production-shaped hazards. Everything
-after item 4 is easier to justify and easier to verify once traces exist —
-which is the argument for doing tracing before any further optimization.
+Items 1, 5 and 7 came forward out of order because the Azure migration forced
+or unlocked them: the error taxonomy because the old classifier regex-matched
+Gemini's wording and would have mislabelled every Azure failure, and the
+trimming because a 30-message window against a 1.1M-token context throws away
+almost the whole conversation for no reason.
+
+The correlation id from item 5 is still outstanding — it was scoped to arrive
+with tracing, and that argument still holds. Everything after item 4 remains
+easier to justify and easier to verify once traces exist.

@@ -10,24 +10,76 @@ All agent-relevant variables. Full schema in
 
 ### Model routing
 
+Every generation role runs on Azure `gpt-5.6-luna`. **`embedding` stays on
+Gemini** — luna-dev is a chat deployment, and moving that role means
+re-embedding every stored vector and rebuilding both Atlas vector indexes.
+`AzureOpenAIProvider.embed()` throws with that explanation rather than letting
+a one-line role edit start a silent corpus rebuild.
+
 | Var | Default | Effect |
 |---|---|---|
 | `AI_MODEL_ROLES` | see below | JSON `{role: "provider:model"}`. Merged **over** the defaults, so partial overrides work. |
-| `GEMINI_API_KEY` | — | required by every Gemini path; asserted at call time, not import time |
+| `AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_CLIENT_SECRET` | — | service principal; `DefaultAzureCredential` also takes managed identity with no code change |
+| `AZURE_OPENAI_ENDPOINT` | — | required by every azure role |
+| `AZURE_OPENAI_DEPLOYMENT` | — | the deployment name that goes on the wire |
+| `AZURE_OPENAI_MODEL` | `gpt-5.6-luna` | the real model id; drives reasoning detection and the telemetry stamp |
+| `AI_AZURE_DEPLOYMENTS` | `{}` | model id → deployment. Only needed with more than one deployment |
+| `AI_AZURE_RESPONSES` | `true` | Responses API. **Leave on** — see below |
+| `AI_AZURE_SCHEMA_STRIP_BOUNDS` | `false` | drop `maxLength`/`maximum`/… from strict schemas; this deployment accepts them |
+| `GEMINI_API_KEY` | — | required for embeddings, and for any role moved back to Gemini |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | — | required only if a role resolves to that provider |
-| `GEMINI_MODEL` | `gemini-2.5-flash-lite` | legacy shortcut for the `extraction` + `reasoning` roles only |
-| `AI_REPORT_MODEL` | falls back to `agent` | the top-tier fallback for `report`, `match`, `dora`, `otto` |
-| `AI_MATCH_MODEL` · `AI_DORA_MODEL` · `AI_OTTO_MODEL` | chain via `AI_REPORT_MODEL` | per-surface pins |
-| `AI_DORA_FAST_MODEL` | chains via `AI_DORA_MODEL` | streamed single-point edits; latency-optimized |
-| `AI_DORA_FILL_MODEL` | `gemini:gemini-3.7-flash` | **pinned**, not chained — protects generated documents |
-| `AI_DORA_PDF_FILL_MODEL` | chains via `AI_DORA_FILL_MODEL` | needs a PDF-capable model |
-| `AI_DORA_GAEB_FILL_MODEL` | chains via `AI_DORA_FILL_MODEL` | **pinned** — protects priced offers |
-| `AI_DORA_GAEB_WEB_MODEL` | chains via `AI_DORA_GAEB_FILL_MODEL` | needs a provider with native web search |
+| `GEMINI_MODEL` | unset | moves `extraction` + `reasoning` back to Gemini when set |
+| `AI_REPORT_MODEL` · `AI_MATCH_MODEL` · `AI_DORA_MODEL` · `AI_OTTO_MODEL` · `AI_DORA_FAST_MODEL` · `AI_DORA_*_FILL_MODEL` · `AI_FILL_AGENT_MODEL` | luna | per-role override — **the rollback path: one env var moves one role, no code change** |
 
-> Roles that chain through `AI_REPORT_MODEL` exist so an unconfigured
-> deployment still runs. Roles that are **pinned** exist so a chat-model upgrade
-> cannot silently change a legal document or a price. Do not "simplify" a pinned
-> role into the chain.
+> **Why `AI_AZURE_RESPONSES` must stay on.** `/v1/chat/completions` rejects
+> function tools combined with any `reasoning_effort` above `none`: *"Function
+> tools with reasoning_effort are not supported for luna-dev in
+> /v1/chat/completions. To use function tools, use /v1/responses or set
+> reasoning_effort to 'none'."* Every agent here is a tool loop, so turning it
+> off gives up reasoning on every tool-calling role.
+
+> **The fill roles are no longer pinned to a separate model, and that is fine.**
+> They were pinned so a chat-model upgrade could not silently change a legal
+> document or a price. With one deployment behind every role, that isolation now
+> comes from the per-role effort and budget table below. The shortcuts still
+> exist — pin them again the moment there is a second deployment.
+
+### Reasoning effort per role
+
+The heart of the Azure configuration. Effort is spent where a wrong answer is
+expensive and withheld where waiting is the damage; reasoning tokens are billed
+from the **same** budget as the answer, so both columns move together.
+
+Ladder: `none | low | medium | high | xhigh | max`, clamped per provider
+(gpt-5.6 rejects `max` and `minimal`; Gemini's `thinkingLevel` stops at `HIGH`).
+
+| Role | Effort | maxOutput | Why |
+|---|---|---|---|
+| `extraction` | low | 8 192 | Schema-shaped, but German legal text distinguishes *Bindefrist* from *Zuschlagsfrist*, and `cpv-derive` is asked to refuse when vague |
+| `reasoning` | medium | 16 384 | Bilingual synthesis behind a user-facing page, cached per corpus hash |
+| `agent` (Clara) | medium | 16 384 | Her visible failure mode is tool ordering, which is what reasoning buys |
+| `report` | **xhigh** | 65 536 | Background job, nobody watching a stream, highest-value artifact in the product |
+| `report` translations | low | — | Its own model: translating is not analysis and must not pay the analysis effort once per locale |
+| `match` | medium | 12 288 | **Top cost-watch item**: ~20 calls per company per refresh, for every tenant. First knob to lower |
+| `dora` | medium | 16 384 | Flagship conversational surface, 13 tools over the open document |
+| `dora_fast` | **none** | 6 000 | Streamed into the document; first-token latency *is* the product |
+| `dora_fill` | medium | 24 576 | Up to 500 Word fields with exact node ids, and a user is waiting |
+| `dora_pdf_fill` | high | 32 768 | Vision over a scan plus anchor-text geometry — where effort pays most |
+| `dora_gaeb_fill` | medium | 24 576 | Price estimation with money at stake, batched 20 at a time |
+| `dora_gaeb_web` | low | 8 192 | The search results carry the work, not the thinking |
+| `otto` | **low** | 12 288 | First thing a new user experiences; `sanitizePlan()` enforces correctness in code |
+| `fill_agent` | high | 16 384 | Sandbox Python, vision and multi-tool repair — the hardest surface here |
+
+| Var | Default | Effect |
+|---|---|---|
+| `AI_ROLE_REASONING` | table above | JSON `{role: effort}`, merged over the defaults |
+| `AI_ROLE_MAX_OUTPUT_TOKENS` | table above | JSON `{role: tokens}`, merged over the defaults |
+| `AI_AGENT_REASONING` / `AI_REPORT_REASONING` | — | legacy shortcuts; still win for their two roles |
+
+> Under-budgeting does not raise an error. Probe P14: an exhausted budget
+> returns HTTP 200 with `finish_reason: "length"` and **empty content**, so it
+> reads as "the model said nothing". The Azure adapter detects that shape and
+> names `AI_ROLE_MAX_OUTPUT_TOKENS` in the error it throws.
 
 ### Agent loop
 
@@ -184,12 +236,49 @@ npm run typecheck
 
 1. Edit `AI_MODEL_ROLES` (or the per-role shortcut env var). **No code change.**
 2. Restart. Roles resolve lazily but `aiEnv()` caches for the process lifetime.
-3. If it is a Gemini 3.6+ model, confirm `geminiUsesFixedSampling` matches it —
-   a legacy `temperature` in `generationConfig` is a 400, not a warning.
-4. If it is a new provider, `requireKey` will name the missing env var in its
-   error. Run `npm run ai:agent:smoke` before anything else.
-5. **Never** repoint a pinned fill role casually. Generated documents and priced
-   offers will change.
+3. Run `npm run ai:azure:probe` if the deployment or model changed. It asks the
+   live endpoint every question the integration depends on, and it overturned
+   two design decisions the first time it ran.
+4. Run `npm run ai:agent:smoke`.
+5. **Never** repoint the `embedding` role. It is the one role that cannot be
+   moved by configuration alone.
+6. Watch for these, all hard 400s rather than degradations:
+   - **The model id is not the deployment name.** `AI_MODEL_ROLES` names the
+     MODEL (`azure:gpt-5.6-luna`); the deployment comes from
+     `AZURE_OPENAI_DEPLOYMENT` or `AI_AZURE_DEPLOYMENTS`. LangChain decides
+     `max_completion_tokens` vs `max_tokens` from the model string, and
+     `max_tokens` is rejected outright by this model.
+   - **Reasoning models take no temperature.** Only the default is accepted.
+   - **The effort ladder differs by generation.** gpt-5.0 spells "no thinking"
+     as `minimal`; gpt-5.1+ spell it `none` and reject `minimal`.
+   - **Gemini 3.6+** rejects the legacy sampling knobs — confirm
+     `geminiUsesFixedSampling` matches any Gemini model you move a role back to.
+
+### R10 — "The AI refuses a perfectly normal tender"
+
+Symptom: a chat turn, brief or fill run fails with `content_filtered`, usually
+on one specific document while everything else works.
+
+This is Azure's content filter, and it is **not** a bug in our prompt. Probe
+P12 confirmed it blocks ordinary German procurement text: a
+Leistungsverzeichnis covering *Sprengarbeiten*, a *Justizvollzugsanstalt* and
+medical waste was blocked outright. Demolition, blasting, correctional, defence
+(CPV 35000000) and hospital work are routine construction procurement in this
+market, and the classifiers do not know that.
+
+1. Confirm the code is `content_filtered`, not `provider_rejected`. The user
+   sees a message naming this specific cause — `AiErrors.content_filtered` in
+   `messages/{en,de}.json`.
+2. Check which side tripped. `ContentFilterError.stage` is `"prompt"` (an HTTP
+   400 with `code: content_filter`) or `"completion"` — the dangerous one,
+   which arrives as an **HTTP 200** with `finish_reason: "content_filter"` and
+   empty content, invisible to any status check.
+3. Retrying will not help and bills twice; `isRetryableFailure` excludes it.
+4. The real fix is on the Azure side: content-filter severity is configurable
+   per deployment in Foundry. Lowering the violence thresholds for this
+   workload is a deliberate, documented decision — not something to do quietly.
+5. `dora_edit_transactions` records `planner_content_filtered` with the
+   redacted provider detail, which names the triggering category.
 
 ### R4 — Changing the graph shape or thread-key format
 

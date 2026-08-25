@@ -129,41 +129,54 @@ The one thing both lanes share. `AI_MODEL_ROLES` is a JSON env var mapping a
 **role** to `"provider:model"`; call sites only ever name roles.
 
 ```jsonc
-// AI_MODEL_ROLES
+// AI_MODEL_ROLES — every generation role on one Azure deployment
 {
-  "embedding":     "gemini:gemini-embedding-001",
-  "extraction":    "gemini:gemini-2.5-flash-lite",
-  "reasoning":     "gemini:gemini-2.5-flash-lite",
-  "agent":         "gemini:gemini-3.5-flash",
-  "report":        "gemini:gemini-3.7-pro",
-  "match":         "gemini:gemini-3.7-pro",
-  "dora":          "gemini:gemini-3.7-pro",
-  "dora_fast":     "gemini:gemini-3.5-flash",
-  "dora_fill":     "gemini:gemini-3.7-flash",
-  "dora_pdf_fill": "gemini:gemini-3.7-flash",
-  "dora_gaeb_fill":"gemini:gemini-3.7-flash",
-  "dora_gaeb_web": "gemini:gemini-3.7-flash",
-  "otto":          "gemini:gemini-3.7-pro"
+  "embedding":     "gemini:gemini-embedding-001",   // ← NOT azure; see below
+  "extraction":    "azure:gpt-5.6-luna",
+  "reasoning":     "azure:gpt-5.6-luna",
+  "agent":         "azure:gpt-5.6-luna",
+  "report":        "azure:gpt-5.6-luna",
+  "match":         "azure:gpt-5.6-luna",
+  "dora":          "azure:gpt-5.6-luna",
+  "dora_fast":     "azure:gpt-5.6-luna",
+  "dora_fill":     "azure:gpt-5.6-luna",
+  "dora_pdf_fill": "azure:gpt-5.6-luna",
+  "dora_gaeb_fill":"azure:gpt-5.6-luna",
+  "dora_gaeb_web": "azure:gpt-5.6-luna",
+  "otto":          "azure:gpt-5.6-luna",
+  "fill_agent":    "azure:gpt-5.6-luna"
 }
 ```
 
 Defaults and per-role env shortcuts live in
 [`lib/ai/config/env.ts`](../../lib/ai/config/env.ts) (`defaultModelRoles()`).
-The fallback chains are deliberate: flagship roles fall back through
-`AI_REPORT_MODEL` to the agent model, so an unconfigured deployment still runs,
-while the **fill** roles are pinned to explicit models so that changing the chat
-model can never silently alter a generated legal document or a priced offer.
 
-Three design rules encoded here, worth keeping:
+**Note what a role names.** The ref carries the MODEL id, never the deployment
+— the deployment comes from `AZURE_OPENAI_DEPLOYMENT` or `AI_AZURE_DEPLOYMENTS`
+and is swapped in by the transport. That split is load-bearing twice over:
+LangChain decides `max_completion_tokens` vs `max_tokens` from the model
+string (and `max_tokens` is a hard 400 on this model), and the model id is what
+gets stamped on every cached extraction and report — so renaming a deployment
+must not invalidate stored artifacts.
 
-1. **A role per product surface, not per model tier.** `report`, `match`,
-   `dora` and `otto` each get their own role even when they resolve to the same
-   model today, so any one of them can be moved without touching the others.
-2. **Fill roles are pinned, chat roles are chained.** Generated documents must
-   not change because someone upgraded the chat model.
-3. **`agent` is deliberately not derived from `GEMINI_MODEL`.** The pipeline
-   roles honour the legacy env for behavioural compatibility; the agent does
-   not, because it needs stronger multi-step tool reasoning.
+Four design rules encoded here, worth keeping:
+
+1. **A role per product surface, not per model tier.** All fourteen resolve to
+   one deployment today, and that is exactly why the roles still matter: any
+   one of them can be moved without touching the others.
+2. **Differentiation moved from the model to the effort.** The roles used to
+   differ by model tier; now they differ by reasoning effort and output budget
+   (see [`08-operations.md`](08-operations.md)). One deployment, fourteen
+   operating points.
+3. **The fill roles no longer need separate pins.** They were pinned so a
+   chat-model upgrade could not silently change a legal document or a price;
+   with one deployment that isolation comes from the effort table instead. The
+   shortcuts still exist — pin them again when there is a second deployment.
+4. **`embedding` is the one role configuration cannot move.** It stays on
+   Gemini because luna-dev is a chat deployment and changing the embedding
+   model means re-embedding every stored vector and rebuilding both Atlas
+   vector indexes. `AzureOpenAIProvider.embed()` throws with that explanation
+   rather than letting a one-line edit start a silent corpus rebuild.
 
 ## 1.3 What an "agent" is in this codebase
 

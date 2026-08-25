@@ -57,30 +57,58 @@ means a missing key for an unused provider is never a startup failure.
 
 ### Per-provider reasoning-effort mapping
 
-One product-level concept (`"none" | "low" | "medium" | "high"`) mapped onto
-three incompatible provider knobs:
+One product-level ladder — `none | low | medium | high | xhigh | max` — mapped
+onto four incompatible provider knobs. Every branch **clamps**, because no
+provider accepts all six rungs and a role raised to `xhigh` must never 400 a
+deployment that has never heard of it.
 
 ```ts
-// Gemini: thinkingConfig
+// Gemini: thinkingConfig. thinkingLevel stops at HIGH, so the two top
+// rungs fold into it.
 effort === "none"
   ? { thinkingConfig: { thinkingBudget: 0 } }
-  : { thinkingConfig: { thinkingLevel: effort.toUpperCase() } }
+  : { thinkingConfig: { thinkingLevel: geminiThinkingLevel(effort) } }
 
-// OpenAI: reasoningEffort, with "none" → "minimal"
-{ reasoningEffort: effort === "none" ? "minimal" : effort }
+// OpenAI / Azure: reasoning.effort, spelled per model generation.
+{ reasoning: { effort: openAiEffort(ref.model, effort) } }
 
 // Anthropic: an explicit token budget that must sit below maxTokens
-const ANTHROPIC_THINKING_BUDGET = { low: 2_048, medium: 6_144, high: 12_288 };
+const ANTHROPIC_THINKING_BUDGET =
+  { low: 2_048, medium: 6_144, high: 12_288, xhigh: 24_576, max: 32_768 };
 { thinking: { type: "enabled", budget_tokens: budget },
   maxTokens: budget + maxOutputTokens }
 ```
 
 Leaving `effort` unset means "provider default" (dynamic thinking) — the map
-never invents a value.
+never invents a value. Per-role defaults live in `defaultRoleReasoning()`; the
+table is in [`08-operations.md`](08-operations.md).
 
-### Two hard-won provider quirks
+### The `reasoning` vs `reasoningEffort` trap
 
-Both of these are already-paid-for bugs. Do not "clean them up".
+`reasoningEffort` is a **call option**, not a constructor field
+(`@langchain/openai` `chat_models/base.d.ts:118`); the constructor stores only
+`this.reasoning` (`base.js:249`). So this, which is what the OpenAI branch used
+to say, silently sent nothing:
+
+```ts
+new ChatOpenAI({ reasoningEffort: "high" })   // ← dropped, never reaches the wire
+new ChatOpenAI({ reasoning: { effort: "high" } })   // ← correct
+```
+
+It went unnoticed for as long as the OpenAI path was unexercised. Never set
+`reasoning.summary` unintentionally either: it is treated as a Responses-only
+kwarg and silently forces that API (`chat_models/index.js:573`).
+
+### Three hard-won provider quirks
+
+All of these are already-paid-for bugs. Do not "clean them up".
+
+```ts
+// 0. gpt-5.x reasoning models accept ONLY their default temperature; 0.2 is a
+//    400 ("Unsupported value: 'temperature' does not support 0.2 with this
+//    model"). LangChain does NOT strip it, so the azure branch never sends
+//    one — same shape as the Gemini quirk below.
+```
 
 ```ts
 // 1. Gemini 3.6+ rejects the legacy sampling knobs with INVALID_ARGUMENT.
@@ -103,13 +131,21 @@ maxTokens: budget ? budget + maxOutputTokens : maxOutputTokens,
 
 ### Output-token budgets
 
-`maxOutputTokens` defaults to `AI_AGENT_MAX_OUTPUT_TOKENS` (8192) except for the
-`report` role, which gets `AI_REPORT_MAX_OUTPUT_TOKENS` (32 768). 8192 for the
-agent is not generosity — it is a fix:
+`maxOutputTokens` comes from the per-role table in `defaultRoleMaxOutputTokens()`,
+overridable by `AI_ROLE_MAX_OUTPUT_TOKENS` and by the call site. The budgets are
+generous for one reason, which the original agent comment already recorded:
 
 > Generous because thinking models spend reasoning tokens from the SAME
 > budget — 2048 starved gemini-3.5-flash into empty answers on complex
 > multi-tool turns. — `lib/ai/config/env.ts`
+
+That failure mode is now the norm rather than the exception, because every role
+runs on a reasoning model. It is also **silent**: probe P14 confirmed an
+exhausted budget returns HTTP 200 with `finish_reason: "length"` and empty
+content, not an error. `routeAfterModel` already sends an empty answer to
+`finalize`, which is the safety net — but `finalize` re-invokes at the same
+budget, so if that also comes back empty the fix is
+`AI_ROLE_MAX_OUTPUT_TOKENS`, not the prompt.
 
 ## 2.3 Messages
 
@@ -255,21 +291,37 @@ untraced** today and each one is a separate model call the metrics never see.
 
 ## 2.7 Multi-provider readiness — is it real?
 
-Partly. Honest assessment:
+Yes, now. It was not before: this table used to read "provider-portable in
+principle and Gemini-only in practice", and proving it wrong took a migration.
 
-| Capability | Gemini | OpenAI | Anthropic |
-|---|---|---|---|
-| Chat + tool calling via `getChatModel` | ✅ exercised daily | ⚠️ code path exists, unexercised | ⚠️ code path exists, unexercised |
-| Reasoning-effort mapping | ✅ | ✅ written | ✅ written |
-| Lane A (`embed`, `generateStructured`) | ✅ | ❌ no adapter | ❌ no adapter |
-| Native web search (`dora_gaeb_web`) | ✅ `googleSearch` | ❌ | ❌ |
+| Capability | Azure (gpt-5.6-luna) | Gemini | OpenAI | Anthropic |
+|---|---|---|---|---|
+| Chat + tool calling via `getChatModel` | ✅ every role | ✅ still works | ⚠️ path exists, unexercised | ⚠️ path exists, unexercised |
+| Reasoning-effort mapping | ✅ 6 rungs, clamped | ✅ clamped to HIGH | ✅ | ✅ |
+| Lane A (`generateStructured`) | ✅ | ✅ | ❌ no adapter | ❌ no adapter |
+| Lane A (`embed`) | ❌ **deliberately** | ✅ the only one | ❌ | ❌ |
+| Native web search (`dora_gaeb_web`) | ✅ `web_search` | ✅ `googleSearch` | ✅ `web_search` | ❌ |
 
-So: **the agents are provider-portable in principle and Gemini-only in
-practice.** The `dora_gaeb_web` role is explicitly documented to degrade to "no
-evidence" when the configured provider cannot search. Before claiming
-portability to anyone, run the smoke test (`npm run ai:agent:smoke`) against the
-target provider and expect to find at least the history-hygiene assumptions in
-[`tool-loop.ts`](../../lib/ai/agent/tool-loop.ts) to be Gemini-shaped.
+`embed` is the one genuine hole, and it is deliberate: moving it means
+re-embedding every stored vector and rebuilding both Atlas vector indexes, so
+`AzureOpenAIProvider.embed()` throws with that explanation.
+
+Two things learned the hard way, both worth keeping in mind before assuming the
+next provider will drop in:
+
+1. **The library's own Azure integration was unusable.** `AzureChatOpenAI`
+   hard-codes a `/openai/deployments/{name}` base URL, and our resource serves
+   only the OpenAI-compatible `/openai/v1` surface. Plain `ChatOpenAI` with a
+   custom base URL and a fetch wrapper is what works — see
+   [`config/azure.ts`](../../lib/ai/config/azure.ts).
+2. **The history hygiene in [`tool-loop.ts`](../../lib/ai/agent/tool-loop.ts)
+   turned out to be portable.** `sanitizeToolPairs` and `windowFromUserTurn`
+   were written for Gemini's strictness and neither had to change. Being
+   stricter than the provider requires cost nothing here.
+
+Before claiming portability to a NEW provider, run `npm run ai:azure:probe`'s
+equivalent questions against it. That script exists because assumptions about
+provider behaviour are worth exactly what they cost to verify.
 
 ## 2.8 Testing the LangChain layer
 
