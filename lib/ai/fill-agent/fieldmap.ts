@@ -75,9 +75,18 @@ export const fillFieldmapResponseSchema = z.object({
 });
 
 /** Repair output: a PATCH, never a rewrite (anti-oscillation invariant). */
+const fillFieldUpdateSchema = fillFieldSchema.partial().extend({
+  id: z.string().min(1),
+  // The complete-field schema supplies drawing defaults. A repair patch must
+  // preserve omission so the trust boundary can distinguish an anchor-only
+  // update from model-emitted coordinates or label changes.
+  box: z.tuple([z.number(), z.number(), z.number(), z.number()]).optional(),
+  label: z.string().max(300).optional(),
+});
+
 export const fillPatchSchema = z.object({
   update: z
-    .array(fillFieldSchema.partial().extend({ id: z.string().min(1) }))
+    .array(fillFieldUpdateSchema)
     .default([]),
   add: z.array(fillFieldSchema).default([]),
   remove: z.array(z.string()).default([]),

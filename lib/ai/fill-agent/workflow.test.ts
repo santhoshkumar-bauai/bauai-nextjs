@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { fillPatchSchema } from "./fieldmap.ts";
 import { assertLocalizedPatch } from "./planner.ts";
 import { buildDecisionGroups, repairBatchesForIssues, retainExistingValues } from "./workflow-graph.ts";
 import { emptyFillWorkflow } from "./workflow-wire.ts";
@@ -57,6 +58,21 @@ describe("adaptive fill workflow", () => {
 
     expect(() => assertLocalizedPatch(
       { update: [{ id: "page_1_field", anchorId: "p1:cell:a" }], add: [], remove: [] },
+      1,
+      new Set(["page_1_field"]),
+      new Set(["p1:cell:a"]),
+    )).not.toThrow();
+  });
+
+  it("does not inject full-field coordinate defaults into anchor-only repairs", () => {
+    const patch = fillPatchSchema.parse({
+      update: [{ id: "page_1_field", anchorId: "p1:cell:a" }],
+    });
+
+    expect(patch.update[0]).not.toHaveProperty("box");
+    expect(patch.update[0]).not.toHaveProperty("label");
+    expect(() => assertLocalizedPatch(
+      patch,
       1,
       new Set(["page_1_field"]),
       new Set(["p1:cell:a"]),
