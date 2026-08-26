@@ -85,6 +85,14 @@ export async function POST(
         { status: 502 },
       );
     }
+    // Log the STACK before collapsing to a message. Without this every 502
+    // here reaches the user as a bare sentence with no frame behind it —
+    // "Maximum call stack size exceeded" is unactionable on its own, and the
+    // stack is the only thing that names the recursion.
+    console.error(
+      `[recommendation] generateFit failed for tender ${id}`,
+      error instanceof Error ? (error.stack ?? error.message) : error,
+    );
     const message =
       error instanceof Error ? error.message : "AI recommendation failed.";
     return NextResponse.json({ error: message }, { status: 502 });

@@ -12,15 +12,30 @@ import type { CompanyContextInput } from "./company-context.ts";
  * hash differs is stale — company data changed since it was generated.
  */
 
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(canonicalize);
+/**
+ * Key-sorted deep copy, with a cycle guard.
+ *
+ * `path` tracks the ANCESTORS of the current node, not every object seen, so a
+ * value legitimately referenced twice still hashes normally — only a true
+ * back-reference short-circuits. The guard exists because this walk once ran
+ * off a Mongoose subdocument's parent pointer and took the whole request down
+ * with a stack overflow; callers now hand over POJOs
+ * (`companyProfileInput`), but a hash function must never be the thing that
+ * throws, so the belt stays on with the braces.
+ */
+function canonicalize(value: unknown, path = new WeakSet<object>()): unknown {
+  if (Array.isArray(value)) return value.map((entry) => canonicalize(entry, path));
   if (value && typeof value === "object") {
-    return Object.fromEntries(
+    if (path.has(value)) return "[circular]";
+    path.add(value);
+    const result = Object.fromEntries(
       Object.entries(value as Record<string, unknown>)
         .filter(([, v]) => v !== undefined)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, v]) => [key, canonicalize(v)]),
+        .map(([key, v]) => [key, canonicalize(v, path)]),
     );
+    path.delete(value);
+    return result;
   }
   return value;
 }

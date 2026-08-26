@@ -1822,5 +1822,215 @@
       "stale": "The document bytes changed (restore or new upload). Existing prices refer to the previous version.",
       "reset": "Start fresh for current version"
     }
+  },
+  "GenUi": {
+    "title": "Iris",
+    "subtitle": "Generative interface for tender work",
+    "poc": "POC",
+    "back": "Dashboard",
+    "reset": "New session",
+    "dismiss": "Dismiss",
+    "thinking": "Working on it…",
+    "scrollToBottom": "Jump to latest",
+    "blocksRendered": "{count, plural, one {# view} other {# views}}",
+    "unavailable": "No AI model is configured for Iris on this deployment.",
+    "canvas": {
+      "title": "Pinned",
+      "close": "Close panel",
+      "toggle": "Toggle pinned panel"
+    },
+    "composer": {
+      "placeholder": "Ask about your tenders — Iris answers by drawing the view.",
+      "hint": "Enter to send · Shift+Enter for a new line · ⌘K to focus",
+      "send": "Send",
+      "stop": "Stop"
+    },
+    "activity": {
+      "running": "{count, plural, one {# view assembling} other {# views assembling}}…",
+      "done": "{count, plural, one {# view assembled} other {# views assembled}}"
+    },
+    "followups": {
+      "label": "Next"
+    },
+    "empty": {
+      "eyebrow": "Generative interface",
+      "greeting": "What should {company} look at today?",
+      "lede": "Iris answers with the interface, not with paragraphs. Ask a question and it picks the view that fits — a ranked grid, a comparison table, a verdict panel, a timeline — and fills it with your real data.",
+      "footnote": "Everything below is built from your live feed, board and documents. Nothing is mocked.",
+      "cards": {
+        "metrics": {
+          "title": "Portfolio overview",
+          "detail": "Matched opportunities, deadlines closing, work in flight.",
+          "prompt": "Give me the portfolio overview"
+        },
+        "feed": {
+          "title": "What should we bid on?",
+          "detail": "Your ranked feed as scannable cards with match breakdowns.",
+          "prompt": "What should we bid on this week?"
+        },
+        "compare": {
+          "title": "Compare tenders",
+          "detail": "Two to five opportunities side by side on the criteria that decide.",
+          "prompt": "Show me my top matches so I can compare them"
+        },
+        "verdict": {
+          "title": "Should we bid?",
+          "detail": "The stored decision with its score axes, risks and blockers.",
+          "prompt": "Which tender on my board has a bid decision already?"
+        },
+        "requirements": {
+          "title": "Can we qualify?",
+          "detail": "Requirements checked against your profile and documents.",
+          "prompt": "What are the requirements on my most urgent tender?"
+        },
+        "board": {
+          "title": "My pipeline",
+          "detail": "The board, ordered by the deadline that actually threatens you.",
+          "prompt": "Show my bid pipeline"
+        }
+      }
+    },
+    "tools": {
+      "show_portfolio_metrics": "Portfolio numbers",
+      "show_opportunity_feed": "Matched opportunities",
+      "show_tender_spotlight": "Tender detail",
+      "compare_tenders_view": "Comparison",
+      "show_bid_verdict": "Bid decision",
+      "show_requirements": "Requirements",
+      "show_deadlines": "Timeline",
+      "show_tender_documents": "Tender documents",
+      "show_company_documents": "Company documents",
+      "search_evidence": "Evidence search",
+      "show_pipeline_board": "Pipeline board",
+      "explore_cpv_codes": "CPV catalogue",
+      "show_company_snapshot": "Company profile",
+      "ask_user_choice": "Question",
+      "offer_filters": "Filters"
+    },
+    "blocks": {
+      "pin": "Pin to panel",
+      "assembling": "Assembling…",
+      "kind": {
+        "metric-summary": "Overview",
+        "tender-grid": "Opportunities",
+        "tender-spotlight": "Tender",
+        "tender-compare": "Comparison",
+        "bid-verdict": "Decision",
+        "requirement-checklist": "Requirements",
+        "deadline-timeline": "Timeline",
+        "document-shelf": "Documents",
+        "evidence-panel": "Evidence",
+        "pipeline-board": "Pipeline",
+        "cpv-explorer": "CPV codes",
+        "company-snapshot": "Company",
+        "choice-prompt": "Question",
+        "filter-refine": "Filters"
+      },
+      "untitled": "Untitled tender",
+      "unknownBuyer": "Buyer unknown",
+      "match": "Match",
+      "daysLeft": "{days, plural, one {# day left} other {# days left}}",
+      "closed": "Closed",
+      "select": "Select",
+      "selectHint": "Select cards to compare them",
+      "selectedCount": "{count} selected",
+      "compareSelected": "Compare",
+      "shouldWeBid": "Should we bid?",
+      "comparePrompt": "Compare these tenders side by side: {ids}",
+      "verdictPrompt": "Should we bid on tender {id}?",
+      "requirementsPrompt": "What are the requirements for tender {id}?",
+      "timelinePrompt": "Show the timeline for tender {id}",
+      "showingOf": "Showing {shown} of {total}",
+      "noResults": "No opportunities match.",
+      "signal": {
+        "cpv": "Sector",
+        "location": "Distance",
+        "timing": "Timing"
+      },
+      "board": {
+        "interested": "Interested",
+        "preparing": "Preparing",
+        "submitted": "Submitted",
+        "won": "Won",
+        "lost": "Lost",
+        "deadzone": "Dead zone"
+      },
+      "decision": {
+        "bid": "Bid",
+        "conditional": "Conditional",
+        "no_bid": "No bid"
+      },
+      "deadline": "Deadline",
+      "noDeadline": "No deadline",
+      "value": "Value",
+      "procedure": "Procedure",
+      "contractType": "Contract type",
+      "open": "Open",
+      "source": "Source notice",
+      "whatWeKnow": "What we already have",
+      "filesCount": "{count, plural, one {# file} other {# files}}",
+      "indexedChunks": "{count, plural, =0 {Not indexed} other {# passages indexed}}",
+      "extractionsCount": "{count, plural, =0 {No extractions} other {# extractions}}",
+      "verdictReady": "Verdict ready",
+      "verdictMissing": "No verdict",
+      "reportReady": "Report ready",
+      "reportMissing": "No report",
+      "askRequirements": "Requirements",
+      "askTimeline": "Key dates",
+      "criterion": "Criterion",
+      "verdictTitle": "Bid decision",
+      "stale": "Stale",
+      "blockers": "Blocking requirements",
+      "risks": "Risks",
+      "severity": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "uncited": "no source",
+      "openQuestions": "Open questions",
+      "generatedAt": "Generated {date}",
+      "mandatory": "Mandatory",
+      "requirementStatus": {
+        "met": "Met",
+        "partial": "Partial",
+        "gap": "Gap",
+        "unknown": "Unknown"
+      },
+      "noRequirements": "No requirements have been extracted yet.",
+      "noDates": "No dates are known yet.",
+      "noDocuments": "No documents yet.",
+      "notReadable": "Not readable",
+      "indexed": "Searchable",
+      "notIndexed": "Not indexed",
+      "showMore": "Show {count} more",
+      "showLess": "Show less",
+      "noEvidence": "No passages match.",
+      "page": "p. {page}",
+      "scope": {
+        "tender": "Tender documents",
+        "company": "Our documents"
+      },
+      "whatDoesThisMean": "What does this mean for us?",
+      "explainPrompt": "What does this passage mean for our bid? “{quote}”",
+      "emptyBoard": "Nothing on the board yet.",
+      "noCpv": "No matching CPV codes.",
+      "cpvPrompt": "Find tenders under CPV {code} ({name})",
+      "cpvProfileHint": "Highlighted codes are already on your company profile.",
+      "employees": "Employees",
+      "founded": "Founded",
+      "region": "Region",
+      "documents": "Indexed docs",
+      "capabilities": "Capabilities",
+      "cpvOnProfile": "CPV codes on profile",
+      "orTypeInstead": "Or type your own answer below.",
+      "deadlineWindow": "Deadline window",
+      "withinDays": "{days} days",
+      "deadlineWithin": "deadline within {days} days",
+      "noFiltersPicked": "Pick at least one filter",
+      "filtersPicked": "{count, plural, one {# filter} other {# filters}}",
+      "applyFilters": "Apply",
+      "refinePrompt": "Narrow the results to — {filters}"
+    }
   }
 }

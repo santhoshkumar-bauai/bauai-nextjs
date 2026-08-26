@@ -37,6 +37,14 @@ export type ModelRole =
   | "dora_gaeb_web"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
   | "otto"
+  /**
+   * Iris, the generative-UI agent (POC). Every turn is a routing decision —
+   * which of fifteen view tools to call, with which ids — and the answer is
+   * two sentences beside the rendered block. Latency is what the surface is
+   * judged on, so it gets its own role rather than inheriting the chat
+   * agent's depth-first settings.
+   */
+  | "iris"
   /** Chat-based PDF form-filling agent (POC). Pinned like the other fill
    * roles — a chat model change must not silently alter a filled form — and
    * vision-capable: it reads rendered pages and 400dpi inspection crops. */

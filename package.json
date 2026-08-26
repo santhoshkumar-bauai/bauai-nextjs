@@ -56,6 +56,7 @@
     "sandbox:fill": "docker compose -f docker/fill-sandbox/docker-compose.yml up -d --build",
     "sandbox:fill:test": "docker compose -f docker/fill-sandbox/docker-compose.yml run --rm fill-sandbox python -m pytest /opt/tests -q",
     "poc:fill:smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/poc/fill-agent-smoke.mts",
+    "poc:iris:smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/poc/iris-smoke.mts",
     "ai:azure:probe": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/azure-probe.mts",
     "ai:fill:roles": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/ai-fill-roles.mts",
     "test:pdf": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/make-test-pdf.mts"

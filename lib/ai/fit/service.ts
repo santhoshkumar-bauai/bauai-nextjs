@@ -21,11 +21,29 @@ import { buildFitPrompt, FIT_PROMPT_VERSION } from "./prompt.ts";
 
 const EVIDENCE_K = 8;
 
-/** Plain profile snapshot from the Mongoose company document. */
+/**
+ * Plain profile snapshot from the Mongoose company document.
+ *
+ * PLAIN is the load-bearing word. `insurances`, `referenceProjects` and
+ * `projectSizeRange` are sub-schemas, so reading them off a hydrated document
+ * yields Mongoose subdocuments — and every one of those holds a reference back
+ * to its parent. `hashCompanyData` walks this structure recursively to build a
+ * staleness hash, and on a company that has any of them filled in that walk
+ * follows the back-reference and never terminates:
+ *
+ *   RangeError: Maximum call stack size exceeded
+ *     at canonicalize … at mongoose/lib/types/array/methods … at canonicalize …
+ *
+ * That surfaced as a 502 on the AI-recommendation endpoint and as failed
+ * staleness checks everywhere else (verdict, report, tender coverage). The
+ * `knowledgeBase` line below used to be the only field defended this way; the
+ * round-trip now covers the whole object, which is the actual invariant —
+ * nothing Mongoose-owned may escape this function.
+ */
 export function companyProfileInput(
   company: CompanyContext["company"],
 ): CompanyContextInput {
-  return {
+  const profile = {
     name: company.name,
     businessDomain: company.businessDomain,
     region: company.region,
@@ -39,10 +57,11 @@ export function companyProfileInput(
     projectSizeRange: company.projectSizeRange ?? null,
     insurances: company.insurances,
     referenceProjects: company.referenceProjects,
-    knowledgeBase: company.knowledgeBase
-      ? (JSON.parse(JSON.stringify(company.knowledgeBase)) as CompanyContextInput["knowledgeBase"])
-      : null,
+    knowledgeBase: company.knowledgeBase ?? null,
   };
+  // Mongoose's toJSON runs here, flattening documents, subdocuments and
+  // DocumentArrays into POJOs and dropping every internal back-reference.
+  return JSON.parse(JSON.stringify(profile)) as CompanyContextInput;
 }
 
 async function fitRepository(context: CompanyContext) {

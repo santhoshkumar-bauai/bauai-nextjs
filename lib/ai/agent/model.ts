@@ -104,6 +104,7 @@ export interface ChatModelOptions extends AgentModelOptions {
     | "dora_gaeb_fill"
     | "dora_gaeb_web"
     | "otto"
+    | "iris"
     | "fill_agent"
     | "fill_agent_plan"
     | "fill_agent_critique"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { ReportRunState } from "@/lib/ai/report/runs";
@@ -72,6 +72,23 @@ export function useTenderReport(tenderId: string) {
     [errorMessage],
   );
 
+  /**
+   * `apply` reached through a ref, and deliberately NOT in the effect deps
+   * below.
+   *
+   * Both effects should re-run when the ENDPOINT changes (a locale switch) and
+   * at no other time. Depending on `apply` instead ties them to a callback
+   * identity that is only as stable as the weakest thing it closes over — and
+   * when that broke, the load effect re-ran on every render, aborted its own
+   * in-flight request and issued another, hundreds of times, so the page never
+   * rendered at all. `read` is memoized on `endpoint`, so `[read]` expresses
+   * the real dependency directly and cannot be destabilised from outside.
+   */
+  const applyRef = useRef(apply);
+  useEffect(() => {
+    applyRef.current = apply;
+  }, [apply]);
+
   // Initial load — and, when a generation is already in flight (started here
   // before a reload, or by a colleague), it is picked up rather than hidden.
   useEffect(() => {
@@ -80,7 +97,7 @@ export function useTenderReport(tenderId: string) {
       setLoading(true);
       read(controller.signal)
         .then((json) => {
-          if (json) apply(json);
+          if (json) applyRef.current(json);
         })
         .catch(() => undefined)
         .finally(() => {
@@ -91,7 +108,7 @@ export function useTenderReport(tenderId: string) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [read, apply]);
+  }, [read]);
 
   // Poll only while something is actually running.
   const active = run?.status === "running" || starting;
@@ -101,7 +118,7 @@ export function useTenderReport(tenderId: string) {
     const id = setInterval(() => {
       void read(controller.signal)
         .then((json) => {
-          if (json) apply(json);
+          if (json) applyRef.current(json);
         })
         .catch(() => undefined);
     }, POLL_INTERVAL_MS);
@@ -109,7 +126,7 @@ export function useTenderReport(tenderId: string) {
       clearInterval(id);
       controller.abort();
     };
-  }, [active, read, apply]);
+  }, [active, read]);
 
   const generate = useCallback(async () => {
     setStarting(true);

@@ -353,6 +353,13 @@ function defaultModelRoles(): Record<string, string> {
      * Falls back through the report model so an unconfigured deployment works.
      */
     otto: process.env.AI_OTTO_MODEL || process.env.AI_REPORT_MODEL || agent,
+    /**
+     * Iris renders the product's own UI from a fixed component catalog. Its
+     * hard part is tool ROUTING, not synthesis — so it shares the chat agent's
+     * model by default and buys its speed from effort, not from a smaller
+     * deployment.
+     */
+    iris: process.env.AI_IRIS_MODEL || agent,
     // Chat-based PDF form-filling agent (POC). Orchestrates tools, writes
     // sandbox Python and reads rendered pages plus 400dpi crops, so it needs
     // vision and the strongest reasoning in the product — which it gets from
@@ -473,6 +480,11 @@ function defaultRoleReasoning(): Record<string, string> {
     // prompt and sanitizePlan() enforces correctness in code, so latency is
     // the thing worth optimising.
     otto: "low",
+    // The block catalog and its routing rules are already spelled out in the
+    // prompt, and every payload is built server-side from real collections —
+    // so thinking harder cannot make the view more correct, only slower. The
+    // user is watching a skeleton until the first tool starts.
+    iris: "low",
     // Orchestrates a Python sandbox, vision and multi-tool repair — the
     // hardest reasoning surface in the product, behind a feature flag.
     fill_agent: "high",
@@ -512,6 +524,9 @@ function defaultRoleMaxOutputTokens(): Record<string, number> {
     dora_gaeb_fill: 24_576,
     dora_gaeb_web: 8_192,
     otto: 12_288,
+    // Blocks carry the content; the prose beside them is two or three
+    // sentences. The budget is sized for the tool-call arguments, not an essay.
+    iris: 8_192,
     fill_agent: 16_384,
     // High reasoning shares this completion budget with the emitted fieldmap.
     // Long 25-50 page forms need headroom so JSON is never cut mid-string.

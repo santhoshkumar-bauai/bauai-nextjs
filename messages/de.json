@@ -1822,5 +1822,215 @@
       "stale": "Die Dokumentdaten haben sich geändert (Wiederherstellung oder neuer Upload). Vorhandene Preise beziehen sich auf die vorherige Version.",
       "reset": "Für aktuelle Version neu beginnen"
     }
+  },
+  "GenUi": {
+    "title": "Iris",
+    "subtitle": "Generative Oberfläche für Ausschreibungen",
+    "poc": "POC",
+    "back": "Dashboard",
+    "reset": "Neue Sitzung",
+    "dismiss": "Schließen",
+    "thinking": "Einen Moment…",
+    "scrollToBottom": "Zum Ende springen",
+    "blocksRendered": "{count, plural, one {# Ansicht} other {# Ansichten}}",
+    "unavailable": "Für Iris ist auf dieser Umgebung kein KI-Modell konfiguriert.",
+    "canvas": {
+      "title": "Angeheftet",
+      "close": "Panel schließen",
+      "toggle": "Panel ein-/ausblenden"
+    },
+    "composer": {
+      "placeholder": "Frag nach deinen Ausschreibungen — Iris antwortet mit der passenden Ansicht.",
+      "hint": "Enter zum Senden · Umschalt+Enter für neue Zeile · ⌘K zum Fokussieren",
+      "send": "Senden",
+      "stop": "Stoppen"
+    },
+    "activity": {
+      "running": "{count, plural, one {# Ansicht wird gebaut} other {# Ansichten werden gebaut}}…",
+      "done": "{count, plural, one {# Ansicht erstellt} other {# Ansichten erstellt}}"
+    },
+    "followups": {
+      "label": "Weiter"
+    },
+    "empty": {
+      "eyebrow": "Generative Oberfläche",
+      "greeting": "Worauf soll {company} heute schauen?",
+      "lede": "Iris antwortet mit der Oberfläche statt mit Absätzen. Stell eine Frage — Iris wählt die passende Ansicht (Trefferliste, Vergleichstabelle, Entscheidungs-Panel, Zeitplan) und füllt sie mit deinen echten Daten.",
+      "footnote": "Alles hier entsteht aus deinem Live-Feed, deinem Board und deinen Dokumenten. Nichts ist simuliert.",
+      "cards": {
+        "metrics": {
+          "title": "Portfolio-Überblick",
+          "detail": "Passende Ausschreibungen, auslaufende Fristen, laufende Arbeit.",
+          "prompt": "Gib mir den Portfolio-Überblick"
+        },
+        "feed": {
+          "title": "Worauf sollen wir bieten?",
+          "detail": "Dein gerankter Feed als Karten mit Match-Aufschlüsselung.",
+          "prompt": "Worauf sollten wir diese Woche bieten?"
+        },
+        "compare": {
+          "title": "Ausschreibungen vergleichen",
+          "detail": "Zwei bis fünf Chancen nebeneinander, auf den entscheidenden Kriterien.",
+          "prompt": "Zeig mir meine besten Treffer, damit ich sie vergleichen kann"
+        },
+        "verdict": {
+          "title": "Sollen wir bieten?",
+          "detail": "Die gespeicherte Entscheidung mit Score-Achsen, Risiken und Blockern.",
+          "prompt": "Für welche Ausschreibung auf meinem Board gibt es bereits eine Bid-Entscheidung?"
+        },
+        "requirements": {
+          "title": "Erfüllen wir das?",
+          "detail": "Anforderungen, geprüft gegen dein Profil und deine Dokumente.",
+          "prompt": "Welche Anforderungen stellt meine dringendste Ausschreibung?"
+        },
+        "board": {
+          "title": "Meine Pipeline",
+          "detail": "Das Board, sortiert nach der Frist, die dich wirklich unter Druck setzt.",
+          "prompt": "Zeig meine Bid-Pipeline"
+        }
+      }
+    },
+    "tools": {
+      "show_portfolio_metrics": "Portfolio-Kennzahlen",
+      "show_opportunity_feed": "Passende Ausschreibungen",
+      "show_tender_spotlight": "Ausschreibungsdetail",
+      "compare_tenders_view": "Vergleich",
+      "show_bid_verdict": "Bid-Entscheidung",
+      "show_requirements": "Anforderungen",
+      "show_deadlines": "Zeitplan",
+      "show_tender_documents": "Vergabeunterlagen",
+      "show_company_documents": "Firmendokumente",
+      "search_evidence": "Belegsuche",
+      "show_pipeline_board": "Pipeline-Board",
+      "explore_cpv_codes": "CPV-Katalog",
+      "show_company_snapshot": "Firmenprofil",
+      "ask_user_choice": "Rückfrage",
+      "offer_filters": "Filter"
+    },
+    "blocks": {
+      "pin": "Anheften",
+      "assembling": "Wird erstellt…",
+      "kind": {
+        "metric-summary": "Überblick",
+        "tender-grid": "Ausschreibungen",
+        "tender-spotlight": "Ausschreibung",
+        "tender-compare": "Vergleich",
+        "bid-verdict": "Entscheidung",
+        "requirement-checklist": "Anforderungen",
+        "deadline-timeline": "Zeitplan",
+        "document-shelf": "Dokumente",
+        "evidence-panel": "Belege",
+        "pipeline-board": "Pipeline",
+        "cpv-explorer": "CPV-Codes",
+        "company-snapshot": "Unternehmen",
+        "choice-prompt": "Rückfrage",
+        "filter-refine": "Filter"
+      },
+      "untitled": "Ohne Titel",
+      "unknownBuyer": "Auftraggeber unbekannt",
+      "match": "Match",
+      "daysLeft": "{days, plural, one {noch # Tag} other {noch # Tage}}",
+      "closed": "Abgelaufen",
+      "select": "Auswählen",
+      "selectHint": "Karten auswählen, um sie zu vergleichen",
+      "selectedCount": "{count} ausgewählt",
+      "compareSelected": "Vergleichen",
+      "shouldWeBid": "Sollen wir bieten?",
+      "comparePrompt": "Vergleiche diese Ausschreibungen nebeneinander: {ids}",
+      "verdictPrompt": "Sollen wir auf Ausschreibung {id} bieten?",
+      "requirementsPrompt": "Welche Anforderungen stellt Ausschreibung {id}?",
+      "timelinePrompt": "Zeig den Zeitplan für Ausschreibung {id}",
+      "showingOf": "{shown} von {total}",
+      "noResults": "Keine passenden Ausschreibungen.",
+      "signal": {
+        "cpv": "Gewerk",
+        "location": "Entfernung",
+        "timing": "Timing"
+      },
+      "board": {
+        "interested": "Interessant",
+        "preparing": "In Bearbeitung",
+        "submitted": "Abgegeben",
+        "won": "Gewonnen",
+        "lost": "Verloren",
+        "deadzone": "Dead Zone"
+      },
+      "decision": {
+        "bid": "Bieten",
+        "conditional": "Bedingt",
+        "no_bid": "Nicht bieten"
+      },
+      "deadline": "Frist",
+      "noDeadline": "Keine Frist",
+      "value": "Auftragswert",
+      "procedure": "Verfahren",
+      "contractType": "Auftragsart",
+      "open": "Öffnen",
+      "source": "Bekanntmachung",
+      "whatWeKnow": "Was bereits vorliegt",
+      "filesCount": "{count, plural, one {# Datei} other {# Dateien}}",
+      "indexedChunks": "{count, plural, =0 {Nicht indiziert} other {# Passagen indiziert}}",
+      "extractionsCount": "{count, plural, =0 {Keine Extraktionen} other {# Extraktionen}}",
+      "verdictReady": "Verdict vorhanden",
+      "verdictMissing": "Kein Verdict",
+      "reportReady": "Report vorhanden",
+      "reportMissing": "Kein Report",
+      "askRequirements": "Anforderungen",
+      "askTimeline": "Termine",
+      "criterion": "Kriterium",
+      "verdictTitle": "Bid-Entscheidung",
+      "stale": "Veraltet",
+      "blockers": "Ausschlusskriterien",
+      "risks": "Risiken",
+      "severity": {
+        "high": "Hoch",
+        "medium": "Mittel",
+        "low": "Niedrig"
+      },
+      "uncited": "ohne Beleg",
+      "openQuestions": "Offene Fragen",
+      "generatedAt": "Erstellt am {date}",
+      "mandatory": "Pflicht",
+      "requirementStatus": {
+        "met": "Erfüllt",
+        "partial": "Teilweise",
+        "gap": "Lücke",
+        "unknown": "Unklar"
+      },
+      "noRequirements": "Es wurden noch keine Anforderungen extrahiert.",
+      "noDates": "Es sind noch keine Termine bekannt.",
+      "noDocuments": "Noch keine Dokumente.",
+      "notReadable": "Nicht lesbar",
+      "indexed": "Durchsuchbar",
+      "notIndexed": "Nicht indiziert",
+      "showMore": "{count} weitere anzeigen",
+      "showLess": "Weniger anzeigen",
+      "noEvidence": "Keine passenden Passagen.",
+      "page": "S. {page}",
+      "scope": {
+        "tender": "Vergabeunterlagen",
+        "company": "Eigene Dokumente"
+      },
+      "whatDoesThisMean": "Was bedeutet das für uns?",
+      "explainPrompt": "Was bedeutet diese Passage für unser Angebot? „{quote}“",
+      "emptyBoard": "Noch nichts auf dem Board.",
+      "noCpv": "Keine passenden CPV-Codes.",
+      "cpvPrompt": "Finde Ausschreibungen unter CPV {code} ({name})",
+      "cpvProfileHint": "Hervorgehobene Codes stehen bereits in deinem Firmenprofil.",
+      "employees": "Mitarbeitende",
+      "founded": "Gegründet",
+      "region": "Region",
+      "documents": "Indizierte Doks",
+      "capabilities": "Leistungen",
+      "cpvOnProfile": "CPV-Codes im Profil",
+      "orTypeInstead": "Oder schreib deine eigene Antwort unten.",
+      "deadlineWindow": "Fristfenster",
+      "withinDays": "{days} Tage",
+      "deadlineWithin": "Frist innerhalb von {days} Tagen",
+      "noFiltersPicked": "Mindestens einen Filter wählen",
+      "filtersPicked": "{count, plural, one {# Filter} other {# Filter}}",
+      "applyFilters": "Anwenden",
+      "refinePrompt": "Grenze die Treffer ein auf — {filters}"
+    }
   }
 }
