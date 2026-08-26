@@ -15,7 +15,11 @@ import {
 } from "./fieldmap.ts";
 import { ADAPTIVE_PDF_SKILL } from "./adaptive-pdf-skill.ts";
 import { fillAgentEnv } from "./env.ts";
-import { proposeFieldmapWithModel, repairRegionWithModel } from "./planner.ts";
+import {
+  critiqueFillWithModel,
+  proposeFieldmapWithModel,
+  repairRegionWithModel,
+} from "./planner.ts";
 import { updateFillSession } from "./store.ts";
 import { FillWorkflowState, type FillWorkflowStateType } from "./workflow-state.ts";
 import {
@@ -35,8 +39,8 @@ const DECLARATION_RE = /ausschluss|bescheinigung|datenbank|insolven|fehlverhalte
 const SIGNATURE_RE = /unterschrift|signature|signatur/i;
 
 /** Supersteps the linear part of the graph costs: inspect → classify → skill →
- * company context → map → ground → await_input → fill → validate. */
-const PROLOGUE_STEPS = 9;
+ * company context → map → ground → await_input → fill → validate → verify. */
+const PROLOGUE_STEPS = 10;
 /** assemble → final_validate. */
 const EPILOGUE_STEPS = 2;
 /** crop_issues → repair_region → fill_repair_batch → validate_repair_batch. */
@@ -564,28 +568,84 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
       }));
     const result = await ctx.sandbox.runValidate(await ctx.ensureSandbox());
-    const errors = result.issues.filter((issue) => issue.severity === "error");
-    const batches = repairBatchesForIssues(ctx.session.pdf.pageCount, state.pageStrategies, errors);
-    const status: FillWorkflowStatus = errors.length === 0
-      ? "assembling"
-      : batches.length > 0 ? "repairing" : "needs_review";
     const updated = await updateFillSession(ctx.tenantId, ctx.session._id!, {
       issues: result.issues,
       score: result.score,
     });
     if (updated) ctx.session = updated;
+    const errors = result.issues.filter((issue) => issue.severity === "error");
+    // Repair planning moved to verify_placement: the visual pass runs against
+    // THESE issues (so its crops are ordered by them) and can add its own
+    // before the batches are cut.
+    const { activity } = await persist(state, { status: "filling" },
+      eventFor(state, "validate_document", "completed",
+        `Full-document score ${result.score.toFixed(2)}; ${errors.length} deterministic errors`, {
+        pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
+        score: result.score, remainingIssues: result.issues.length, elapsedMs: Date.now() - started,
+      }));
+    return { status: "filling" as const, issues: result.issues, activity };
+  };
+
+  /**
+   * The workflow's only VISUAL check, and the only thing in it that can judge
+   * placement. Every deterministic check measures the produced ink against the
+   * box `snap_fieldmap` wrote, so a value snapped onto the wrong row is
+   * self-consistent and scores 1.0 — geometry cannot see it, and until this
+   * node existed the graph had no vision pass at all (`critique_fill` is a chat
+   * tool, which the ownership guard refuses while a run owns the document).
+   *
+   * Add-only, exactly like that tool: it may raise issues, never clear them, so
+   * it cannot be talked into approving a hard failure. The sandbox's number
+   * stays the score; the critique only creates work.
+   */
+  const verifyPlacement = async (state: FillWorkflowStateType) => {
+    const started = Date.now();
+    await persist(state, { status: "filling" },
+      eventFor(state, "verify_placement", "started",
+        "Checking every value against the label it is printed beside", {
+        pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
+      }));
+    let added: FillIssue[] = [];
+    let failed = false;
+    try {
+      added = await critiqueFillWithModel(ctx, { escalate: false });
+    } catch {
+      // A visual pass that cannot run must not sink the run: the deterministic
+      // issues below are still actionable.
+      failed = true;
+    }
+    const issues = [...state.issues, ...added];
+    const errors = issues.filter((issue) => issue.severity === "error");
+    const batches = repairBatchesForIssues(ctx.session.pdf.pageCount, state.pageStrategies, errors);
+    const status: FillWorkflowStatus = errors.length === 0
+      ? "assembling"
+      : batches.length > 0 ? "repairing" : "needs_review";
+    const updated = await updateFillSession(ctx.tenantId, ctx.session._id!, {
+      issues,
+      critiqued: true,
+    });
+    if (updated) ctx.session = updated;
+    const misplaced = added.filter((issue) => /LABEL|PLACE|OVERLAP|WRONG/i.test(issue.code)).length;
     const { activity } = await persist(state, {
       status,
       batches,
       currentBatchId: batches[0]?.id ?? null,
-    }, eventFor(state, "validate_document", "completed",
-      errors.length === 0
-        ? `Full-document score ${result.score.toFixed(2)}; no repair batches needed`
-        : `Full-document score ${result.score.toFixed(2)}; planned ${batches.length} repair batches`, {
-        pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
-        score: result.score, remainingIssues: result.issues.length, elapsedMs: Date.now() - started,
-      }));
-    return { status, issues: result.issues, batches, currentBatchIndex: 0, activity };
+    }, eventFor(state, "verify_placement", failed ? "paused" : "completed",
+      failed
+        ? "Visual placement check unavailable; continuing on the deterministic issues"
+        : `Visual check added ${added.length} issues; planned ${batches.length} repair batches`, {
+      pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
+      remainingIssues: issues.length, elapsedMs: Date.now() - started,
+      output: failed ? undefined : {
+        title: "Placement check",
+        lines: [
+          `${added.length} issues raised that coordinate checks cannot see`,
+          `${misplaced} of them are values sitting beside the wrong label`,
+          `${errors.length} errors now gate the document`,
+        ],
+      },
+    }));
+    return { status, issues, batches, currentBatchIndex: 0, activity };
   };
 
   const cropIssues = async (state: FillWorkflowStateType) => {
@@ -601,6 +661,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       fieldId: pair.field_id, page: pair.page, dpi: pair.dpi, cropBox: pair.cropBox,
       pixelSize: pair.pixelSize, beforePath: pair.beforePath, afterPath: pair.afterPath,
       comparisonPath: pair.comparisonPath,
+      targetComparisonPath: pair.targetComparisonPath ?? null,
     }));
     const { activity } = await persist(state, { status: "repairing", activeCrop: activeCrops[0] ?? null },
       eventFor(state, "crop_issues", "completed", `Rendered ${activeCrops.length} local 400-DPI comparisons`, {
@@ -777,6 +838,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     .addNode("await_input", awaitInput)
     .addNode("fill_document", fillDocument)
     .addNode("validate_document", validateDocument)
+    .addNode("verify_placement", verifyPlacement)
     .addNode("crop_issues", cropIssues)
     .addNode("repair_region", repairRegion)
     .addNode("fill_repair_batch", fillRepairBatch)
@@ -793,7 +855,8 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     .addEdge("ground_values", "await_input")
     .addConditionalEdges("await_input", (state) => state.status === "awaiting_input" ? "wait" : "fill", { wait: "await_input", fill: "fill_document" })
     .addEdge("fill_document", "validate_document")
-    .addConditionalEdges("validate_document", (state) => state.status === "repairing" ? "repair" : state.status === "needs_review" ? "end" : "assemble", { repair: "crop_issues", assemble: "assemble", end: END })
+    .addEdge("validate_document", "verify_placement")
+    .addConditionalEdges("verify_placement", (state) => state.status === "repairing" ? "repair" : state.status === "needs_review" ? "end" : "assemble", { repair: "crop_issues", assemble: "assemble", end: END })
     .addEdge("crop_issues", "repair_region")
     // Every edge that can re-enter the repair loop checks the run-wide budget
     // first. Without this exit the loop's only bound is the number of failing

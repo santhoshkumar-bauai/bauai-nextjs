@@ -233,7 +233,26 @@ Do not rewrite the fieldmap. Touch only fields named in the issues; every field
 you leave alone stays as it is. Rewriting regresses correct work and makes the
 loop oscillate instead of converge.
 
+FIRST decide which of two failures you are looking at — they need opposite fixes:
+
+- MISPLACED: the value is rendered cleanly but beside the WRONG printed label.
+  It will look perfectly correct in its own close-up, because it is sitting
+  inside a real entry box — just not its own. Judge this from the full page and
+  from the TARGET strip, never from the landed close-up alone. The fix is to
+  re-select the field's anchorId for the entry beside its correct label. Do not
+  resize, shrink or nudge a misplaced value; that only makes it a tidy value in
+  the wrong place. If a value moves off a row that another value belongs on,
+  fix only the field the issues name — the next round sees the rest.
+- DAMAGED: the value is on the right row but overflows, is clipped, is too
+  small, or its cover ate template ink. Judge this from the 400-DPI close-up.
+  The fixes below apply.
+
 Common fixes:
+- LABEL_MISMATCH    -> the value is on the wrong row. Re-select anchorId for the
+                       entry the issue names. Never "fix" this by changing the
+                       value or the font size.
+- UNRESOLVED_ANCHOR -> the anchorId named no entry on this page (stale id, or a
+                       kind that has none). Select one that is actually listed.
 - OVERFLOW_X / UNWRAPPABLE_WORD -> widen the box within the printed cell, or
   lower font_size, or shorten the value. Prefer widening if room exists.
 - BOX_TOO_SMALL     -> shorten the value; do not go below 6pt.

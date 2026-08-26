@@ -1666,6 +1666,8 @@
     "previewFilled": "Ausgefüllt",
     "previewEmpty": "Seitenvorschauen erscheinen, sobald der Assistent das Dokument analysiert hat.",
     "previewFilledEmpty": "Die ausgefüllte Vorschau erscheint nach dem ersten Ausfüll-Lauf.",
+    "cropLanded": "Wo der Wert gelandet ist — vorher (oben) / nachher (unten)",
+    "cropTarget": "Wo die zugehörige Beschriftung steht — das richtige Eingabefeld",
     "page": "Seite {page}",
     "lightboxClose": "Vorschau schließen",
     "exportCurrent": "PDF exportieren (aktueller Stand)",

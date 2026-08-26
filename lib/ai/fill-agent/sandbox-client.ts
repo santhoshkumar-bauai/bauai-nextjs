@@ -94,6 +94,18 @@ export interface SandboxCropPair {
   afterPath: string;
   comparisonPath: string;
   localAnchors: FillAnchor[];
+  /** Codes of the issues that named this field, in issue order. */
+  issueCodes?: string[];
+  /**
+   * Where the value BELONGS: the band around the field's printed label and the
+   * entry beside it, located sandbox-side from the page words. Null when the
+   * label could not be found or the destination is already inside the landed
+   * crop — a value on the wrong row looks perfectly correct in its own crop,
+   * so without this the repair model cannot see its mistake at all.
+   */
+  targetBox: [number, number, number, number] | null;
+  targetComparisonPath: string | null;
+  targetAnchors: FillAnchor[];
   measurements: { inkLost: number };
 }
 

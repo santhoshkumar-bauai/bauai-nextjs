@@ -1666,6 +1666,8 @@
     "previewFilled": "Filled",
     "previewEmpty": "Page previews appear once the agent has analyzed the document.",
     "previewFilledEmpty": "The filled preview appears after the first fill run.",
+    "cropLanded": "Where the value landed — before (top) / after (bottom)",
+    "cropTarget": "Where its printed label is — the entry it belongs in",
     "page": "Page {page}",
     "lightboxClose": "Close preview",
     "exportCurrent": "Export PDF (current state)",

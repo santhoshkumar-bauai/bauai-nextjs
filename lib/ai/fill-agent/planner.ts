@@ -430,8 +430,25 @@ export async function repairFieldmapWithModel(
   return invokeJson(content, fillPatchSchema, { role: "fill_agent_repair" });
 }
 
-/** Repair one 400-DPI crop. The model sees no other pages or coordinates and
- * cannot touch fields outside the crop. */
+/**
+ * Repair one region. The model sees three things and may still touch only the
+ * fields the issues name:
+ *
+ *   1. the filled page at 110 DPI — WHERE the value went, and next to which
+ *      printed label. A crop cannot answer that; the page is too coarse to
+ *      read 6-8pt German form text, which is why (2) exists rather than
+ *      replacing it.
+ *   2. the 400-DPI before/after strip of where the value LANDED — damage a
+ *      full page physically cannot resolve (a 1pt cover overlap is ~1.5px at
+ *      110 DPI).
+ *   3. the 400-DPI strip of where the value BELONGS, when the sandbox could
+ *      locate the field's printed label somewhere else on the page.
+ *
+ * (3) is what makes a misplacement repairable at all. A value snapped onto the
+ * wrong row sits perfectly inside a real entry box, so nothing in its own crop
+ * says it is wrong — and the anchor guard used to reject the correct
+ * destination for being outside that crop.
+ */
 export async function repairRegionWithModel(
   ctx: FillAgentRunContext,
   crop: SandboxCropPair,
@@ -450,15 +467,27 @@ export async function repairRegionWithModel(
   const affectedFields = ctx.session.fieldmap.filter(
     (field) => field.page === crop.page && affectedIds.has(field.id),
   );
-  const localAnchorIds = new Set(crop.localAnchors.map((anchor) => anchor.anchorId));
-  const image = await ctx.sandbox.downloadFile(workspaceId, crop.comparisonPath);
+
+  // The shown anchors are what the payload can afford; the GUARD is the page,
+  // because the destination of a misplaced value is by definition somewhere
+  // else on it. Page anchors come from the sandbox's own inventory — this side
+  // never derives a coordinate. Without an analyze result the guard falls back
+  // to the shown regions, which is tighter, never looser.
+  const shownAnchors = [...crop.localAnchors, ...(crop.targetAnchors ?? [])];
+  const pageAnchors = ctx.analyzeResult?.anchors?.filter(
+    (anchor) => anchor.page === crop.page,
+  );
+  const allowedAnchorIds = new Set(
+    (pageAnchors?.length ? pageAnchors : shownAnchors).map((anchor) => anchor.anchorId),
+  );
+
   const content: ContentPart[] = [
     {
       type: "text",
       text:
-        `${ADAPTIVE_PDF_SKILL.instructions}\n\n${FILL_REPAIR_PROMPT}\n\nLOCAL REPAIR ONLY. ` +
+        `${FILL_REPAIR_PROMPT}\n\nLOCAL REPAIR ONLY. ` +
         `Allowed field ids: ${JSON.stringify([...affectedIds])}. ` +
-        `Allowed anchor ids: ${JSON.stringify([...localAnchorIds])}. ` +
+        `You may select any anchorId listed under localAnchors or targetAnchors below. ` +
         `Do not emit box coordinates. Select anchorId when geometry changes.\n` +
         JSON.stringify({
           crop: {
@@ -467,17 +496,40 @@ export async function repairRegionWithModel(
             cropBox: crop.cropBox,
             pixelSize: crop.pixelSize,
             measurements: crop.measurements,
+            issueCodes: crop.issueCodes ?? [],
           },
+          target: crop.targetBox
+            ? { box: crop.targetBox, note: "where this field's printed label is" }
+            : null,
           issues,
           affectedFields,
           localAnchors: crop.localAnchors,
-        }).slice(0, 80_000),
+          targetAnchors: crop.targetAnchors ?? [],
+        }).slice(0, fillAgentEnv().repairPayloadCharCap),
     },
-    imagePart(image),
   ];
+
+  content.push(...(await pageImageParts(ctx, workspaceId, "output_pages", [crop.page], 1)));
+  content.push(
+    { type: "text", text: "--- LANDED region, 400dpi, BEFORE (top) / AFTER (bottom) ---" },
+    imagePart(await ctx.sandbox.downloadFile(workspaceId, crop.comparisonPath)),
+  );
+  if (crop.targetComparisonPath) {
+    content.push(
+      {
+        type: "text",
+        text:
+          "--- TARGET region, 400dpi: where this field's printed label is. If the " +
+          "value belongs here rather than where it landed, re-select its anchorId " +
+          "from targetAnchors ---",
+      },
+      imagePart(await ctx.sandbox.downloadFile(workspaceId, crop.targetComparisonPath)),
+    );
+  }
+
   const patch = await invokeJson(content, fillPatchSchema, { role: "fill_agent_repair" });
 
-  assertLocalizedPatch(patch, crop.page, affectedIds, localAnchorIds);
+  assertLocalizedPatch(patch, crop.page, affectedIds, allowedAnchorIds);
   return patch;
 }
 
@@ -485,7 +537,7 @@ export function assertLocalizedPatch(
   patch: FillPatch,
   cropPage: number,
   affectedIds: ReadonlySet<string>,
-  localAnchorIds: ReadonlySet<string>,
+  allowedAnchorIds: ReadonlySet<string>,
 ): void {
   const outside = [
     ...patch.update.map((field) => field.id),
@@ -496,8 +548,8 @@ export function assertLocalizedPatch(
   }
   for (const update of patch.update) {
     if (update.box) throw new Error("Localized repair emitted arbitrary coordinates.");
-    if (update.anchorId && !localAnchorIds.has(update.anchorId)) {
-      throw new Error("Localized repair selected an anchor outside its crop.");
+    if (update.anchorId && !allowedAnchorIds.has(update.anchorId)) {
+      throw new Error("Localized repair selected an anchor outside its page.");
     }
   }
   if (patch.add.length > 0) {

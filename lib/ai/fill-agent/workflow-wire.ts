@@ -72,6 +72,11 @@ export interface FillCropRef {
   beforePath: string;
   afterPath: string;
   comparisonPath: string;
+  /** Strip of where the value BELONGS — its printed label and the entry beside
+   * it. Null when the label could not be located or the destination is already
+   * inside the landed crop. Shown next to the landed strip so the panel
+   * displays the same context the repair model was given. */
+  targetComparisonPath?: string | null;
 }
 
 export type FillBatchStatus =
@@ -108,6 +113,7 @@ export type FillActivityAction =
   | "await_input"
   | "fill_document"
   | "validate_document"
+  | "verify_placement"
   | "crop_issues"
   | "repair_region"
   | "fill_repair_batch"

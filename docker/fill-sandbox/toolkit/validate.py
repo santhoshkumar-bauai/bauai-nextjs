@@ -66,7 +66,18 @@ def pre_checks(fieldmap: list[dict], geometry: dict[str, Any]) -> list[dict]:
             continue
         x0, top, x1, bottom = box
         if x1 <= x0 or bottom <= top:
-            issues.append(_issue("error", "INVERTED_BOX", f"{box}", fid, pno))
+            # An anchor-backed field with a degenerate box means prepare could
+            # not resolve the id it named — a stale hash, the wrong page, or a
+            # kind the snapper does not handle. Saying so is the difference
+            # between a fixable report and a value silently drawn at the page's
+            # top-left corner behind an opaque "INVERTED_BOX [0,0,0,0]".
+            if f.get("anchorId") and f.get("anchor_kind") in (None, "none"):
+                issues.append(_issue("error", "UNRESOLVED_ANCHOR",
+                                     f"anchorId {f['anchorId']!r} resolved to no entry "
+                                     f"position on page {pno}; re-select an anchor id "
+                                     f"from this page's geometry", fid, pno))
+            else:
+                issues.append(_issue("error", "INVERTED_BOX", f"{box}", fid, pno))
             continue
         if x0 < 0 or top < 0 or x1 > pg["width"] or bottom > pg["height"]:
             issues.append(_issue("error", "OUT_OF_BOUNDS",
@@ -159,6 +170,123 @@ def pre_checks(fieldmap: list[dict], geometry: dict[str, Any]) -> list[dict]:
                                  "or leader line) on this page; re-derive it from the "
                                  "geometry instead of estimating from the page image",
                                  f.get("id"), f.get("page")))
+
+    issues.extend(_label_mismatches(fieldmap, geometry))
+    return issues
+
+
+# ------------------------------------------------------- placement vs. label
+
+# A printed label sits on the value's own row, or on the line directly above it.
+LABEL_BAND_PT = 14.0
+# Short words ("der", "und", "ja") carry no identifying signal.
+MIN_LABEL_TOKEN_LEN = 4
+
+
+def _tokens(text: str) -> set[str]:
+    """Identifying words of a label. German folding, punctuation dropped."""
+    lowered = (text or "").casefold().replace("ß", "ss")
+    out, current = set(), []
+    for char in lowered:
+        if char.isalnum():
+            current.append(char)
+        elif current:
+            out.add("".join(current))
+            current = []
+    if current:
+        out.add("".join(current))
+    return {t for t in out if len(t) >= MIN_LABEL_TOKEN_LEN}
+
+
+def _row_index(words: list[dict]) -> dict[int, list[dict]]:
+    """Words bucketed by row band — a per-field label lookup must not rescan
+    a dense page's several thousand words."""
+    buckets: dict[int, list[dict]] = {}
+    for w in words:
+        center = (float(w["top"]) + float(w["bottom"])) / 2
+        buckets.setdefault(int(center // LABEL_BAND_PT), []).append(w)
+    return buckets
+
+
+def _label_tokens_beside(buckets: dict[int, list[dict]], box: list[float]) -> set[str]:
+    """Words reading as this box's printed label: on its row and to its left,
+    or on the line directly above it."""
+    x0, top, x1, bottom = (float(v) for v in box)
+    center = (top + bottom) / 2
+    found: set[str] = set()
+    lo = int((top - LABEL_BAND_PT) // LABEL_BAND_PT)
+    hi = int((bottom + LABEL_BAND_PT) // LABEL_BAND_PT)
+    for key in range(lo, hi + 1):
+        for w in buckets.get(key, []):
+            wx0, wx1 = float(w["x0"]), float(w["x1"])
+            wcenter = (float(w["top"]) + float(w["bottom"])) / 2
+            same_row = abs(wcenter - center) <= LABEL_BAND_PT and wx1 <= x0 + 2
+            above = (0 <= top - float(w["bottom"]) <= LABEL_BAND_PT
+                     and wx1 > x0 - 4 and wx0 < x1 + 4)
+            if same_row or above:
+                found |= _tokens(w.get("text", ""))
+    return found
+
+
+def _label_mismatches(fieldmap: list[dict], geometry: dict[str, Any]) -> list[dict]:
+    """A value sitting beside the WRONG printed label.
+
+    This is the one failure the rest of this module structurally cannot see.
+    `snap_fieldmap` rewrites the box, `fill.py` draws that box and every check
+    here measures the ink against that same box — so a whole column shifted one
+    row is self-consistent and scores 1.0. The planner's recorded `label` is the
+    only surviving statement of intent, so it is what we check against.
+
+    Reported only when BOTH hold: no token of the label appears beside the
+    value, AND the label does appear beside a different entry position on the
+    page. One side alone is far too noisy on dense German forms — labels are
+    routinely abbreviated, split across lines, or absent from the text layer.
+    """
+    from .anchors import public_anchors
+
+    issues: list[dict] = []
+    for page in geometry.get("pages", []):
+        pno = page["page"]
+        words = page.get("words") or []
+        if not words:
+            continue
+        fields = [f for f in fieldmap
+                  if f.get("page") == pno and f.get("kind") == "text"
+                  and f.get("value") and f.get("label")
+                  and len(f.get("box") or []) == 4]
+        if not fields:
+            continue
+
+        # A label shared by several fields is a column header, not a per-row
+        # label — every row would "mismatch" against the header's own row.
+        seen: dict[str, int] = {}
+        for f in fields:
+            key = _norm(f["label"])
+            seen[key] = seen.get(key, 0) + 1
+
+        buckets = _row_index(words)
+        entries = [a["box"] for a in public_anchors(geometry, {int(pno)})]
+        entry_tokens = [(box, _label_tokens_beside(buckets, box)) for box in entries]
+
+        for f in fields:
+            if seen.get(_norm(f["label"]), 0) != 1:
+                continue
+            wanted = _tokens(f["label"])
+            if not wanted:
+                continue
+            if wanted & _label_tokens_beside(buckets, f["box"]):
+                continue
+            for box, there in entry_tokens:
+                if _rects_overlap(box, f["box"]) or not wanted <= there:
+                    continue
+                issues.append(_issue(
+                    "warning", "LABEL_MISMATCH",
+                    f"value sits where no part of its label {f['label']!r} is printed; "
+                    f"that label is printed beside the entry at "
+                    f"[{box[0]:.0f},{box[1]:.0f},{box[2]:.0f},{box[3]:.0f}] — "
+                    f"re-select the anchor for THAT entry",
+                    f.get("id"), pno))
+                break
     return issues
 
 

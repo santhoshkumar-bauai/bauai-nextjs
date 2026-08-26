@@ -124,6 +124,33 @@ describe("adaptive fill workflow", () => {
     )).not.toThrow();
   });
 
+  it("lets a repair move a value to another entry on ITS OWN page", () => {
+    // The destination of a misplaced value is by definition outside the crop it
+    // landed in. Restricting anchors to the crop made misplacement structurally
+    // unfixable: three attempts, then review.
+    const pageAnchors = new Set(["p1:cell:a", "p1:empty_box:elsewhere"]);
+    expect(() => assertLocalizedPatch(
+      { update: [{ id: "page_1_field", anchorId: "p1:empty_box:elsewhere" }], add: [], remove: [] },
+      1,
+      new Set(["page_1_field"]),
+      pageAnchors,
+    )).not.toThrow();
+
+    // Everything else still holds.
+    expect(() => assertLocalizedPatch(
+      { update: [{ id: "page_1_field", anchorId: "p2:cell:other_page" }], add: [], remove: [] },
+      1,
+      new Set(["page_1_field"]),
+      pageAnchors,
+    )).toThrow(/outside its page/);
+    expect(() => assertLocalizedPatch(
+      { update: [], add: [{ id: "invented", page: 1, kind: "text", box: [1, 2, 3, 4], label: "" }], remove: [] },
+      1,
+      new Set(["page_1_field"]),
+      pageAnchors,
+    )).toThrow(/may not add ungrounded fields/);
+  });
+
   it("does not inject full-field coordinate defaults into anchor-only repairs", () => {
     const patch = fillPatchSchema.parse({
       update: [{ id: "page_1_field", anchorId: "p1:cell:a" }],

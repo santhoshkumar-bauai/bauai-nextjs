@@ -335,8 +335,12 @@ def run_crops(session_id: str, body: CropsRequest) -> dict:
         _read_json(session_id, "geometry.json"),
     )
     for p in pairs:
-        for key in ("path", "beforePath", "afterPath", "comparisonPath"):
-            p[key] = os.path.relpath(p[key], base).replace(os.sep, "/")
+        # targetComparisonPath is absent whenever the label could not be
+        # located or the destination is already inside the landed crop.
+        for key in ("path", "beforePath", "afterPath", "comparisonPath",
+                    "targetComparisonPath"):
+            if p.get(key):
+                p[key] = os.path.relpath(p[key], base).replace(os.sep, "/")
     return {"pairs": pairs}
 
 

@@ -14,10 +14,17 @@ export const ADAPTIVE_PDF_SKILL = {
 - Preserve native AcroForms and validate field ids, options, inherited values, widgets, and appearances.
 - OCR scanned pages at 300 DPI with German and English language support.
 - Ground values in user or company evidence. Legal decisions require explicit confirmation; never auto-fill signatures.
-- Validate the fully filled document before repair.
+- Validate the fully filled document before repair, then run a visual placement
+  check: geometry measures ink against the box it wrote, so a value on the wrong
+  row is self-consistent and invisible to it.
 - Batch only failed placement/layout repairs, at most four pages per batch.
-- A repair model receives one 400-DPI before/after crop, local issues, affected fields, measurements, and local anchors only.
-- Reject arbitrary coordinates and cross-crop mutations; allow at most three attempts per region.
+- Crop the region the ISSUE names, never an arbitrary field.
+- A repair model receives the filled page (placement), a 400-DPI before/after crop
+  of where the value landed (damage), and a 400-DPI strip of where its printed
+  label is (destination), plus local issues, affected fields, measurements and
+  the anchors of both regions.
+- Reject arbitrary coordinates and cross-page mutations; a repair may re-select any
+  anchor on its own page. Allow at most three attempts per region.
 - Reassemble once from immutable source plus canonical field map and perform final full validation.
 - Stream structured progress, never hidden reasoning or raw prompts.`,
 } as const;

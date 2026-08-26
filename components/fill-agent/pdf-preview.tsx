@@ -81,17 +81,41 @@ export function PdfPreview({
         ))}
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        {/* The same context the repair model was given. The target strip only
+            exists for a value whose printed label was located elsewhere on the
+            page — without it the panel showed a stray value with nothing to
+            compare it against, which reads as the crop being wrong. */}
         {activeCrop && (
-          <figure className="rounded-xl border border-primary/30 bg-primary/5 p-2">
-            <figcaption className="pb-1.5 text-[10px] font-medium text-foreground">
-              Active 400-DPI repair crop · page {activeCrop.page}
+          <figure className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-2">
+            <figcaption className="text-[10px] font-medium text-foreground">
+              {activeCrop.targetComparisonPath
+                ? `Repair context · page ${activeCrop.page} · where the value landed, and where its label is`
+                : `Active 400-DPI repair crop · page ${activeCrop.page}`}
             </figcaption>
-            {/* eslint-disable-next-line @next/next/no-img-element -- sandbox artifact */}
-            <img
-              src={`/api/poc/fill-chat/${sessionId}/artifacts/${activeCrop.comparisonPath}?v=${renderVersion}`}
-              alt={`Before and after crop on page ${activeCrop.page}`}
-              className="w-full rounded-lg border border-border bg-white"
-            />
+            <div>
+              <p className="pb-1 text-[10px] text-muted-foreground">
+                {t("cropLanded")}
+              </p>
+              {/* eslint-disable-next-line @next/next/no-img-element -- sandbox artifact */}
+              <img
+                src={`/api/poc/fill-chat/${sessionId}/artifacts/${activeCrop.comparisonPath}?v=${renderVersion}`}
+                alt={`Before and after crop on page ${activeCrop.page}`}
+                className="w-full rounded-lg border border-border bg-white"
+              />
+            </div>
+            {activeCrop.targetComparisonPath && (
+              <div>
+                <p className="pb-1 text-[10px] text-muted-foreground">
+                  {t("cropTarget")}
+                </p>
+                {/* eslint-disable-next-line @next/next/no-img-element -- sandbox artifact */}
+                <img
+                  src={`/api/poc/fill-chat/${sessionId}/artifacts/${activeCrop.targetComparisonPath}?v=${renderVersion}`}
+                  alt={`Region of the printed label on page ${activeCrop.page}`}
+                  className="w-full rounded-lg border border-border bg-white"
+                />
+              </div>
+            )}
           </figure>
         )}
         {tab === "filled" && !hasOutput ? (
