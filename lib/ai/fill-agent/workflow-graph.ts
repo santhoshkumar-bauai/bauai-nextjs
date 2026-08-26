@@ -14,6 +14,7 @@ import {
   type FillIssue,
 } from "./fieldmap.ts";
 import { ADAPTIVE_PDF_SKILL } from "./adaptive-pdf-skill.ts";
+import { fillAgentEnv } from "./env.ts";
 import { proposeFieldmapWithModel, repairRegionWithModel } from "./planner.ts";
 import { updateFillSession } from "./store.ts";
 import { FillWorkflowState, type FillWorkflowStateType } from "./workflow-state.ts";
@@ -30,12 +31,67 @@ import {
 } from "./workflow-wire.ts";
 
 const REPAIR_BATCH_SIZE = 4;
-const MAX_REGION_ATTEMPTS = 3;
 const DECLARATION_RE = /ausschluss|bescheinigung|datenbank|insolven|fehlverhalten|interessen.konflikt|sanktion|erkl.rung|ja\b|nein\b/i;
 const SIGNATURE_RE = /unterschrift|signature|signatur/i;
 
+/** Supersteps the linear part of the graph costs: inspect → classify → skill →
+ * company context → map → ground → await_input → fill → validate. */
+const PROLOGUE_STEPS = 9;
+/** assemble → final_validate. */
+const EPILOGUE_STEPS = 2;
+/** crop_issues → repair_region → fill_repair_batch → validate_repair_batch. */
+const STEPS_PER_REPAIR_ATTEMPT = 4;
+/** Re-entering await_input after a resume, one freeze per batch, START. */
+const SLACK_STEPS = 12;
+
+/**
+ * The graph's superstep budget, DERIVED from the repair budget rather than a
+ * magic number. The old hard-coded 200 had no relationship to the work the
+ * graph could schedule: the repair loop capped attempts per region but nothing
+ * capped the number of regions, so a form with many failing positions ran the
+ * loop past 200 and died with GraphRecursionError instead of delivering a
+ * reviewable document. Now the graph stops itself at `maxRepairAttempts` and
+ * this limit is only the backstop behind that.
+ */
+export function fillWorkflowRecursionLimit(pageCount: number): number {
+  // Same constant `repairBatchesForIssues` groups by, so the bound cannot
+  // drift from the number of batches the graph actually schedules.
+  const maxBatches = Math.ceil(Math.max(1, pageCount) / REPAIR_BATCH_SIZE);
+  return (
+    PROLOGUE_STEPS +
+    EPILOGUE_STEPS +
+    fillAgentEnv().maxRepairAttempts * STEPS_PER_REPAIR_ATTEMPT +
+    maxBatches +
+    SLACK_STEPS
+  );
+}
+
+/** Run-wide repair budget spent — every repair edge routes to assemble. */
+function repairBudgetSpent(state: FillWorkflowStateType): boolean {
+  return state.repairAttempts >= fillAgentEnv().maxRepairAttempts;
+}
+
+function currentRunId(ctx: FillAgentRunContext): number {
+  return ctx.session.workflow?.runId ?? 0;
+}
+
 function workflowThreadId(ctx: FillAgentRunContext): string {
-  return `fillworkflow:${ctx.tenantId}:${ctx.session._id}:${ctx.session.workflow?.runId ?? 0}`;
+  return `fillworkflow:${ctx.tenantId}:${ctx.session._id}:${currentRunId(ctx)}`;
+}
+
+/**
+ * Raised when a retry started a newer run while this one was still executing.
+ * A retry bumps `runId` (a fresh checkpoint thread), but the continuation of
+ * the old run keeps going in the background and would otherwise interleave its
+ * writes into the new run's session state. The first `persist` after the bump
+ * stops the old run instead; the route treats this as a quiet exit, not a
+ * failure, because nothing is wrong — it was replaced.
+ */
+export class SupersededFillRunError extends Error {
+  constructor(runId: number, current: number) {
+    super(`Fill workflow run ${runId} was superseded by run ${current}.`);
+    this.name = "SupersededFillRunError";
+  }
 }
 
 function nowIso(): string {
@@ -89,14 +145,17 @@ function withBatch(
   );
 }
 
-async function persist(
+async function persistWorkflow(
   ctx: FillAgentRunContext,
   state: FillWorkflowStateType,
   patch: Partial<FillWorkflowSnapshot>,
-  event?: Omit<FillActivityEvent, "cursor" | "at">,
+  event: Omit<FillActivityEvent, "cursor" | "at"> | undefined,
+  runId: number,
 ): Promise<{ workflow: FillWorkflowSnapshot; activity: FillActivityEvent[] }> {
   const fresh = await ctx.reloadSession();
   const previous = fresh.workflow ?? emptyFillWorkflow();
+  // Single-writer per session: a retry that bumped runId owns the state now.
+  if (previous.runId !== runId) throw new SupersededFillRunError(runId, previous.runId);
   // The state passed to a long-running node is stale while the browser polls.
   // Always append to durable activity, otherwise a node's completion event can
   // accidentally overwrite its already-visible started event.
@@ -252,11 +311,18 @@ async function groundBatchValues(
 }
 
 export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
+  // Pinned at build time, like the checkpoint thread id: every write this run
+  // makes is checked against it, so a retry cleanly ends the previous run.
+  const runId = currentRunId(ctx);
+  const persist = (
+    state: FillWorkflowStateType,
+    patch: Partial<FillWorkflowSnapshot>,
+    event?: Omit<FillActivityEvent, "cursor" | "at">,
+  ) => persistWorkflow(ctx, state, patch, event, runId);
+
   const inspectDocument = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(
-      ctx,
-      state,
+    await persist(state,
       { status: "inspecting", currentBatchId: null, batches: [] },
       eventFor(state, "inspect_document", "started", "Inspecting the complete document", {
         pageStart: 1,
@@ -269,9 +335,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       { length: ctx.session.pdf.pageCount },
       (_, index) => analyze.pageStrategies?.find((item) => item.page === index + 1)?.strategy ?? analyze.kind,
     );
-    const { activity } = await persist(
-      ctx,
-      state,
+    const { activity } = await persist(state,
       { status: "inspecting", batches: [], currentBatchId: null },
       eventFor(state, "inspect_document", "completed", `Inspected ${ctx.session.pdf.pageCount} pages`, {
         elapsedMs: Date.now() - started, pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
@@ -283,9 +347,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
   const classifyStrategy = async (state: FillWorkflowStateType) => {
     const unsupported = state.pageStrategies.some((strategy) => strategy === "unsupported" || strategy === "xfa");
     const status: FillWorkflowStatus = unsupported ? "needs_review" : "mapping";
-    const { activity } = await persist(
-      ctx,
-      state,
+    const { activity } = await persist(state,
       { status },
       eventFor(state, "classify_strategy", unsupported ? "paused" : "completed",
         unsupported ? "XFA or damaged pages require human review" : "Selected per-page fill strategies"),
@@ -299,9 +361,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       version: ADAPTIVE_PDF_SKILL.version,
       sourceUrl: ADAPTIVE_PDF_SKILL.sourceUrl,
     };
-    const { activity } = await persist(
-      ctx,
-      state,
+    const { activity } = await persist(state,
       { status: "mapping", skill },
       eventFor(state, "load_skill", "completed", "Loaded the adaptive PDF filling skill"),
     );
@@ -310,9 +370,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
 
   const loadCompanyContext = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(
-      ctx,
-      state,
+    await persist(state,
       { status: "mapping" },
       eventFor(state, "load_company_context", "started", "Loading company profile and company documents"),
     );
@@ -333,9 +391,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
           ? `Documents: ${companyContext.documentNames.join(", ")}`
           : "No indexed company documents were needed or available",
       ];
-      const { activity } = await persist(
-        ctx,
-        state,
+      const { activity } = await persist(state,
         { status: "mapping", companyContext },
         eventFor(state, "load_company_context", "completed", "Loaded company context", {
           elapsedMs: Date.now() - started,
@@ -352,9 +408,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
         documentNames: [],
         loadedAt: nowIso(),
       };
-      const { activity } = await persist(
-        ctx,
-        state,
+      const { activity } = await persist(state,
         { status: "mapping", companyContext },
         eventFor(state, "load_company_context", "completed", "Company context unavailable; continuing without it", {
           elapsedMs: Date.now() - started,
@@ -370,9 +424,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
 
   const mapDocument = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(
-      ctx,
-      state,
+    await persist(state,
       { status: "mapping" },
       eventFor(state, "map_document", "started", "Planning fields across the complete PDF", {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
@@ -392,9 +444,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     const requiredMissing = fieldmap.filter((field) =>
       field.required && (field.value == null || String(field.value).trim() === ""),
     ).length;
-    const { activity } = await persist(
-      ctx,
-      state,
+    const { activity } = await persist(state,
       { status: "mapping" },
       eventFor(state, "map_document", "completed", `Mapped ${fieldmap.length} fields across the complete PDF`, {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
@@ -433,9 +483,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       workflow: { ...(ctx.session.workflow ?? emptyFillWorkflow()), evidence: grounded.evidence, decisions },
     });
     if (updated) ctx.session = updated;
-    const { activity } = await persist(
-      ctx,
-      state,
+    const { activity } = await persist(state,
       { evidence: grounded.evidence, decisions },
       eventFor(state, "ground_values", "completed", "Grounded values and recorded provenance", {
         output: (() => {
@@ -469,9 +517,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     const alreadyPaused = freshBeforeInterrupt.workflow?.status === "awaiting_input";
     const activity = alreadyPaused
       ? freshBeforeInterrupt.workflow?.activity ?? state.activity
-      : (await persist(
-          ctx,
-          state,
+      : (await persist(state,
           { status: "awaiting_input" },
           eventFor(state, "await_input", "paused", `${questions.length} values and ${decisions.length} decisions need confirmation`),
         )).activity;
@@ -491,7 +537,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
 
   const fillDocument = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(ctx, state, { status: "filling" },
+    await persist(state, { status: "filling" },
       eventFor(state, "fill_document", "started", "Writing the complete PDF from the canonical field map", {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
       }));
@@ -504,7 +550,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       fillIterations: ctx.session.fillIterations + 1,
     });
     if (updated) ctx.session = updated;
-    const { activity } = await persist(ctx, state, { status: "filling" },
+    const { activity } = await persist(state, { status: "filling" },
       eventFor(state, "fill_document", "completed", "Filled the complete PDF", {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount, elapsedMs: Date.now() - started,
       }));
@@ -513,7 +559,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
 
   const validateDocument = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(ctx, state, { status: "filling" },
+    await persist(state, { status: "filling" },
       eventFor(state, "validate_document", "started", "Validating the complete filled PDF", {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
       }));
@@ -528,7 +574,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       score: result.score,
     });
     if (updated) ctx.session = updated;
-    const { activity } = await persist(ctx, state, {
+    const { activity } = await persist(state, {
       status,
       batches,
       currentBatchId: batches[0]?.id ?? null,
@@ -548,7 +594,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       issue.page != null && issue.page >= batch.pageStart && issue.page <= batch.pageEnd,
     );
     const workspaceId = await ctx.ensureSandbox();
-    await persist(ctx, state, { status: "repairing" },
+    await persist(state, { status: "repairing" },
       eventFor(state, "crop_issues", "started", `Rendering local 400-DPI crops for ${batch.id}`));
     const result = await ctx.sandbox.runCrops(workspaceId, localIssues, batch.outputFile ?? "filled.pdf");
     const activeCrops: FillCropRef[] = result.pairs.map((pair) => ({
@@ -556,7 +602,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       pixelSize: pair.pixelSize, beforePath: pair.beforePath, afterPath: pair.afterPath,
       comparisonPath: pair.comparisonPath,
     }));
-    const { activity } = await persist(ctx, state, { status: "repairing", activeCrop: activeCrops[0] ?? null },
+    const { activity } = await persist(state, { status: "repairing", activeCrop: activeCrops[0] ?? null },
       eventFor(state, "crop_issues", "completed", `Rendered ${activeCrops.length} local 400-DPI comparisons`, {
         crop: activeCrops[0],
       }));
@@ -564,7 +610,20 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
   };
 
   const repairRegion = async (state: FillWorkflowStateType) => {
+    const env = fillAgentEnv();
     const batch = currentBatch(state);
+    // Run-wide gate BEFORE any sandbox work: the per-region cap below only
+    // bounds one region, and a document with dozens of failing positions would
+    // otherwise keep the four-node repair loop going until LangGraph aborted
+    // the whole run. Stopping here hands `assemble` a partially repaired
+    // fieldmap, which still produces a document plus a review list.
+    if (repairBudgetSpent(state)) {
+      const batches = withBatch(state, { status: "needs_review" });
+      const { activity } = await persist(state, { status: "repairing", batches },
+        eventFor(state, "repair_region", "paused",
+          `Repair budget of ${env.maxRepairAttempts} region repairs is spent; assembling what is fixed and sending the rest to review`));
+      return { status: "repairing" as const, batches, activity };
+    }
     const localBatchIssues = state.issues.filter((issue) =>
       issue.page != null && issue.page >= batch.pageStart && issue.page <= batch.pageEnd,
     );
@@ -575,15 +634,16 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     if (!pair) return { batches: withBatch(state, { status: "needs_review" }) };
     const regionKey = `${pair.page}:${pair.field_id ?? "page"}`;
     const attempts = batch.attemptsByRegion[regionKey] ?? 0;
-    if (attempts >= MAX_REGION_ATTEMPTS) {
+    if (attempts >= env.regionRepairAttempts) {
       const batches = withBatch(state, { status: "needs_review" });
-      await persist(ctx, state, { status: "repairing", batches },
-        eventFor(state, "repair_region", "paused", "Region reached the three-attempt review limit"));
+      await persist(state, { status: "repairing", batches },
+        eventFor(state, "repair_region", "paused",
+          `Region reached the ${env.regionRepairAttempts}-attempt review limit`));
       return { status: "repairing" as const, batches };
     }
     const localIssues = state.issues.filter((issue) => issue.page === pair.page &&
       (!pair.field_id || issue.field_id === pair.field_id));
-    await persist(ctx, state, { status: "repairing", activeCrop: state.activeCrops[0] ?? null },
+    await persist(state, { status: "repairing", activeCrop: state.activeCrops[0] ?? null },
       eventFor(state, "repair_region", "started", `Reviewing one crop on page ${pair.page}`, {
         model: { name: "gpt-5.6-sol", effort: "high" }, crop: state.activeCrops[0],
       }));
@@ -595,26 +655,28 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     });
     const updated = await updateFillSession(ctx.tenantId, ctx.session._id!, { fieldmap });
     if (updated) ctx.session = updated;
-    const { activity } = await persist(ctx, state, { batches, activeCrop: null },
-      eventFor(state, "repair_region", "completed", `Applied crop-local patch for ${regionKey}`, {
+    const repairAttempts = state.repairAttempts + 1;
+    const { activity } = await persist(state, { batches, activeCrop: null },
+      eventFor(state, "repair_region", "completed",
+        `Applied crop-local patch for ${regionKey} (repair ${repairAttempts}/${env.maxRepairAttempts})`, {
         model: { name: "gpt-5.6-sol", effort: "high" },
         anchorId: patch.update.find((item) => item.anchorId)?.anchorId,
         patchSummary: { updated: patch.update.length, added: 0, removed: patch.remove.length },
       }));
-    return { fieldmap, batches, activeCrops: [], activity };
+    return { fieldmap, batches, activeCrops: [], activity, repairAttempts };
   };
 
   const fillRepairBatch = async (state: FillWorkflowStateType) => {
     const batch = currentBatch(state);
     const started = Date.now();
-    await persist(ctx, state, { status: "repairing" },
+    await persist(state, { status: "repairing" },
       eventFor(state, "fill_repair_batch", "started", `Applying local fixes to pages ${batch.pageStart}-${batch.pageEnd}`));
     const workspaceId = await ctx.ensureSandbox();
     await ctx.sandbox.uploadFile(workspaceId, "fieldmap.json", Buffer.from(JSON.stringify({ fields: state.fieldmap })));
     await ctx.sandbox.runPrepare(workspaceId);
     const result = await ctx.sandbox.runFillBatch(workspaceId, batch.pageStart, batch.pageEnd);
     const batches = withBatch(state, { status: "validating", outputFile: result.outputFile });
-    const { activity } = await persist(ctx, state, { status: "repairing", batches },
+    const { activity } = await persist(state, { status: "repairing", batches },
       eventFor(state, "fill_repair_batch", "completed", `Regenerated repair pages ${batch.pageStart}-${batch.pageEnd}`, {
         elapsedMs: Date.now() - started,
       }));
@@ -637,7 +699,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       issue.page == null || issue.page < batch.pageStart || issue.page > batch.pageEnd,
     );
     const issues = [...unrelated, ...result.issues];
-    const { activity } = await persist(ctx, state, { batches },
+    const { activity } = await persist(state, { batches },
       eventFor(state, "validate_repair_batch", "completed", `Repair batch score ${result.score.toFixed(2)}`, {
         score: result.score, remainingIssues: result.issues.length,
       }));
@@ -648,13 +710,13 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     const nextIndex = state.currentBatchIndex + 1;
     const completed = currentBatch(state);
     if (nextIndex >= state.batches.length) {
-      const { activity } = await persist(ctx, state, { status: "assembling", currentBatchId: null },
+      const { activity } = await persist(state, { status: "assembling", currentBatchId: null },
         eventFor(state, "freeze_batch", completed.status === "needs_review" ? "paused" : "completed",
           completed.status === "needs_review" ? `${completed.id} needs human review` : `Frozen ${completed.id}`));
       return { status: "assembling" as const, issues: [], activity };
     }
     const next = state.batches[nextIndex];
-    const { activity } = await persist(ctx, state, { status: "repairing", currentBatchId: next.id },
+    const { activity } = await persist(state, { status: "repairing", currentBatchId: next.id },
       eventFor(state, "freeze_batch", completed.status === "needs_review" ? "paused" : "completed",
         `${completed.status === "needs_review" ? "Deferred" : "Frozen"} ${completed.id}; moving to ${next.id}`));
     return { status: "repairing" as const, currentBatchIndex: nextIndex, activity };
@@ -662,13 +724,13 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
 
   const assemble = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(ctx, state, { status: "assembling", currentBatchId: null },
+    await persist(state, { status: "assembling", currentBatchId: null },
       eventFor(state, "assemble_document", "started", "Rebuilding the complete PDF from immutable source"));
     const workspaceId = await ctx.ensureSandbox();
     await ctx.sandbox.uploadFile(workspaceId, "fieldmap.json", Buffer.from(JSON.stringify({ fields: state.fieldmap })));
     await ctx.sandbox.runPrepare(workspaceId);
     await ctx.sandbox.runAssembleDocument(workspaceId);
-    const { activity } = await persist(ctx, state, { status: "assembling", currentBatchId: null },
+    const { activity } = await persist(state, { status: "assembling", currentBatchId: null },
       eventFor(state, "assemble_document", "completed", "Rebuilt the document once from the immutable source", {
         elapsedMs: Date.now() - started,
       }));
@@ -677,7 +739,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
 
   const finalValidate = async (state: FillWorkflowStateType) => {
     const started = Date.now();
-    await persist(ctx, state, { status: "assembling" },
+    await persist(state, { status: "assembling" },
       eventFor(state, "final_validate", "started", "Running final full-document verification"));
     const workspaceId = await ctx.ensureSandbox();
     const result = await ctx.sandbox.runValidate(workspaceId);
@@ -692,7 +754,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
         score: result.score, verifiedAt: new Date() };
     }
     const status: FillWorkflowStatus = passed ? "completed" : "needs_review";
-    const { activity } = await persist(ctx, state, { status, activeCrop: null },
+    const { activity } = await persist(state, { status, activeCrop: null },
       eventFor(state, "final_validate", passed ? "completed" : "paused",
         passed ? "Final verification passed; download is ready" : "Final verification needs review", {
           score: result.score, remainingIssues: result.issues.length, elapsedMs: Date.now() - started,
@@ -733,10 +795,23 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     .addEdge("fill_document", "validate_document")
     .addConditionalEdges("validate_document", (state) => state.status === "repairing" ? "repair" : state.status === "needs_review" ? "end" : "assemble", { repair: "crop_issues", assemble: "assemble", end: END })
     .addEdge("crop_issues", "repair_region")
-    .addConditionalEdges("repair_region", (state) => currentBatch(state).status === "needs_review" ? "next" : "fill", { next: "next_repair_batch", fill: "fill_repair_batch" })
+    // Every edge that can re-enter the repair loop checks the run-wide budget
+    // first. Without this exit the loop's only bound is the number of failing
+    // regions, which is exactly how a run reached the recursion limit.
+    .addConditionalEdges("repair_region", (state) =>
+      repairBudgetSpent(state) ? "assemble"
+        : currentBatch(state).status === "needs_review" ? "next"
+          : "fill",
+    { next: "next_repair_batch", fill: "fill_repair_batch", assemble: "assemble" })
     .addEdge("fill_repair_batch", "validate_repair_batch")
-    .addConditionalEdges("validate_repair_batch", (state) => currentBatch(state).status === "repairing" ? "repair" : "next", { repair: "crop_issues", next: "next_repair_batch" })
-    .addConditionalEdges("next_repair_batch", (state) => state.status === "assembling" ? "assemble" : "repair", { assemble: "assemble", repair: "crop_issues" })
+    .addConditionalEdges("validate_repair_batch", (state) =>
+      repairBudgetSpent(state) ? "assemble"
+        : currentBatch(state).status === "repairing" ? "repair"
+          : "next",
+    { repair: "crop_issues", next: "next_repair_batch", assemble: "assemble" })
+    .addConditionalEdges("next_repair_batch", (state) =>
+      state.status === "assembling" || repairBudgetSpent(state) ? "assemble" : "repair",
+    { assemble: "assemble", repair: "crop_issues" })
     .addEdge("assemble", "final_validate")
     .addEdge("final_validate", END)
     .compile({ checkpointer: await getClaraCheckpointer() });
@@ -747,7 +822,10 @@ export async function runFillWorkflow(
   resume?: unknown,
 ): Promise<void> {
   const graph = await buildFillWorkflowGraph(ctx);
-  const config = { configurable: { thread_id: workflowThreadId(ctx) }, recursionLimit: 200 };
+  const config = {
+    configurable: { thread_id: workflowThreadId(ctx) },
+    recursionLimit: fillWorkflowRecursionLimit(ctx.session.pdf.pageCount),
+  };
   if (resume !== undefined) {
     await graph.invoke(new Command({ resume }), config);
   } else {

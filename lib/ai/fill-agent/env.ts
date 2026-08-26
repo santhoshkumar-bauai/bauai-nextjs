@@ -44,6 +44,12 @@ export interface FillAgentEnv {
   /** Adaptive workflow limits. */
   batchSize: number;
   regionRepairAttempts: number;
+  /** Crop repairs allowed across a WHOLE workflow run. `regionRepairAttempts`
+   * caps one region; without a run-wide cap the repair loop is bounded only by
+   * the number of distinct failing regions, and a form with many of them walks
+   * straight into LangGraph's recursion limit instead of stopping cleanly.
+   * `fillWorkflowRecursionLimit` is derived from this, so the two cannot drift. */
+  maxRepairAttempts: number;
 }
 
 let cached: FillAgentEnv | null = null;
@@ -80,7 +86,8 @@ export function fillAgentEnv(): FillAgentEnv {
     nativeFieldsCharCap: intFromEnv("AI_FILL_AGENT_NATIVE_FIELDS_CHAR_CAP", 120_000),
     repairPayloadCharCap: intFromEnv("AI_FILL_AGENT_REPAIR_PAYLOAD_CHAR_CAP", 80_000),
     batchSize: 4,
-    regionRepairAttempts: 3,
+    regionRepairAttempts: intFromEnv("AI_FILL_AGENT_REGION_REPAIR_ATTEMPTS", 3),
+    maxRepairAttempts: intFromEnv("AI_FILL_AGENT_MAX_REPAIR_ATTEMPTS", 40),
   };
   return cached;
 }

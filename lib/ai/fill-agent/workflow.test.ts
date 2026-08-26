@@ -1,11 +1,71 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { resetFillAgentEnvForTests } from "./env.ts";
 import { fillPatchSchema } from "./fieldmap.ts";
 import { assertLocalizedPatch } from "./planner.ts";
-import { buildDecisionGroups, repairBatchesForIssues, retainExistingValues } from "./workflow-graph.ts";
-import { emptyFillWorkflow } from "./workflow-wire.ts";
+import {
+  buildDecisionGroups,
+  fillWorkflowRecursionLimit,
+  repairBatchesForIssues,
+  retainExistingValues,
+  SupersededFillRunError,
+} from "./workflow-graph.ts";
+import {
+  emptyFillWorkflow,
+  workflowOwnsDocument,
+  type FillWorkflowStatus,
+} from "./workflow-wire.ts";
 
 describe("adaptive fill workflow", () => {
+  afterEach(() => {
+    delete process.env.AI_FILL_AGENT_MAX_REPAIR_ATTEMPTS;
+    resetFillAgentEnvForTests();
+  });
+
+  it("keeps the superstep budget above what the repair loop can schedule", () => {
+    // The repair loop costs four supersteps per attempt and one freeze per
+    // batch; the run-wide repair budget is what makes that finite. A limit
+    // below the worst case is the GraphRecursionError this replaced.
+    for (const pageCount of [1, 4, 25, 50]) {
+      const maxBatches = Math.ceil(pageCount / 4);
+      const worstCase = 9 + 2 + 40 * 4 + maxBatches;
+      expect(fillWorkflowRecursionLimit(pageCount)).toBeGreaterThan(worstCase);
+    }
+  });
+
+  it("scales the superstep budget with the repair budget instead of a constant", () => {
+    const atDefault = fillWorkflowRecursionLimit(25);
+    process.env.AI_FILL_AGENT_MAX_REPAIR_ATTEMPTS = "80";
+    resetFillAgentEnvForTests();
+    expect(fillWorkflowRecursionLimit(25)).toBe(atDefault + 40 * 4);
+  });
+
+  it("names the superseded run and the one that replaced it", () => {
+    // A retry bumps runId onto a fresh checkpoint thread while the previous
+    // run is still executing; its next persist stops it rather than
+    // interleaving writes into the new run's session state.
+    const error = new SupersededFillRunError(2, 3);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("SupersededFillRunError");
+    expect(error.message).toMatch(/run 2 was superseded by run 3/);
+  });
+
+  it("gives the workflow exclusive ownership only while a run is live", () => {
+    const owned: FillWorkflowStatus[] = [
+      "inspecting", "mapping", "awaiting_input", "filling", "repairing", "assembling",
+    ];
+    for (const status of owned) {
+      expect(workflowOwnsDocument({ ...emptyFillWorkflow(), status })).toBe(true);
+    }
+    // `queued` = never started (the editor panel never starts one) and the
+    // two terminal states hand the document back to the chat agent.
+    for (const status of ["queued", "completed", "needs_review"] as FillWorkflowStatus[]) {
+      expect(workflowOwnsDocument({ ...emptyFillWorkflow(), status })).toBe(false);
+    }
+    expect(workflowOwnsDocument(null)).toBe(false);
+    expect(workflowOwnsDocument(undefined)).toBe(false);
+  });
+
   it("starts each new workflow on a durable run id with no assumed company context", () => {
     expect(emptyFillWorkflow()).toMatchObject({ runId: 1, companyContext: null });
   });

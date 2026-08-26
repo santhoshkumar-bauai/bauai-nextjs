@@ -8,7 +8,7 @@ const thread = await db.collection("chat_threads").findOne({ threadKey: { $regex
 const msgs = await db.collection("chat_messages").find({ threadId: thread!._id }).sort({ _id: 1 }).toArray();
 console.log(`messages: ${msgs.length}`);
 for (const m of msgs.slice(-4)) {
-  console.log(`[${m.role}] status=${m.status} tools=${JSON.stringify((m.toolEvents ?? []).map((t: any) => `${t.name}(${t.durationMs}ms)`))}`);
+  console.log(`[${m.role}] status=${m.status} tools=${JSON.stringify((m.toolEvents ?? []).map((t: { name: string; durationMs: number }) => `${t.name}(${t.durationMs}ms)`))}`);
   console.log(`   ${String(m.content ?? "").slice(0, 300)}`);
 }
 const sess = await db.collection("fill_agent_sessions").findOne({ _id: new ObjectId(SID) });

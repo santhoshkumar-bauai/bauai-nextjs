@@ -22,6 +22,7 @@ const { buildFillAgentTools } = await import("./tools.ts");
 import type { FillAgentRunContext } from "./context.ts";
 import type { FillAgentSessionDocument } from "./store.ts";
 import type { FillIssue } from "./fieldmap.ts";
+import { emptyFillWorkflow } from "./workflow-wire.ts";
 
 function baseSession(): FillAgentSessionDocument {
   return {
@@ -434,5 +435,78 @@ describe("run_python", () => {
     );
     expect(sandbox.exec).toHaveBeenCalledWith("ws1", "print('hi')", undefined);
     expect(result.note).toMatch(/observation only/i);
+  });
+});
+
+describe("workflow ownership", () => {
+  // The workflow graph and this chat agent write ONE fieldmap and share ONE
+  // sandbox workspace. While a run owns the document the chat's duplicate
+  // pipeline must be inert, or the two analyses contradict each other.
+  const PIPELINE_TOOLS = [
+    "analyze_pdf",
+    "propose_fieldmap",
+    "fill_and_validate",
+    "repair_fieldmap",
+    "critique_fill",
+    "run_python",
+  ] as const;
+
+  it("refuses the chat's own pipeline while a run owns the document", async () => {
+    for (const status of ["inspecting", "mapping", "awaiting_input", "filling", "repairing", "assembling"] as const) {
+      for (const name of PIPELINE_TOOLS) {
+        currentSession = {
+          ...baseSession(),
+          issues: [{ severity: "error", code: "OVERFLOW_X", field_id: "company_name", page: 1, detail: "d" }],
+          workflow: { ...emptyFillWorkflow(), status },
+        };
+        const sandbox = fakeSandbox({ issues: [], score: 1, summary: "" });
+        const ctx = buildCtx(currentSession, sandbox);
+        const result = JSON.parse(
+          (await toolByName(ctx, name).invoke(
+            name === "run_python" ? { code: "print(1)" } : {},
+          )) as string,
+        );
+        expect(result, `${name} during ${status}`).toMatchObject({
+          refused: true,
+          reason: "workflow_owns_document",
+          workflowStatus: status,
+        });
+        expect(sandbox.runFill).not.toHaveBeenCalled();
+        expect(sandbox.exec).not.toHaveBeenCalled();
+        expect(vi.mocked(planner.proposeFieldmapWithModel)).not.toHaveBeenCalled();
+        expect(vi.mocked(planner.repairFieldmapWithModel)).not.toHaveBeenCalled();
+      }
+    }
+  });
+
+  it("keeps value collection and grounding open — that is the handoff await_input waits for", async () => {
+    currentSession = {
+      ...baseSession(),
+      workflow: { ...emptyFillWorkflow(), status: "awaiting_input" },
+    };
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const applied = JSON.parse(
+      (await toolByName(ctx, "set_field_values").invoke({
+        values: [{ fieldId: "company_name", value: "Muster Bau GmbH" }],
+      })) as string,
+    );
+    expect(applied.applied).toEqual(["company_name"]);
+
+    const status = JSON.parse(
+      (await toolByName(ctx, "get_session_status").invoke({})) as string,
+    );
+    expect(status.workflow).toMatchObject({ status: "awaiting_input", ownsDocument: true });
+  });
+
+  it("hands the pipeline back once the run is over or was never started", async () => {
+    for (const status of ["queued", "completed", "needs_review"] as const) {
+      currentSession = { ...baseSession(), workflow: { ...emptyFillWorkflow(), status } };
+      const sandbox = fakeSandbox({ issues: [], score: 0.97, summary: "" });
+      const result = JSON.parse(
+        (await toolByName(buildCtx(currentSession, sandbox), "fill_and_validate").invoke({})) as string,
+      );
+      expect(result.refused, `fill during ${status}`).toBeUndefined();
+      expect(sandbox.runFill).toHaveBeenCalled();
+    }
   });
 });

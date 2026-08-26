@@ -16,7 +16,7 @@ if (sessions[0]) {
     const msgs = await db.collection("chat_messages").find({ threadId: thread._id }).sort({ _id: 1 }).toArray();
     console.log(`messages: ${msgs.length}`);
     for (const m of msgs.slice(-6)) {
-      console.log(`  [${m.role}] status=${m.status} tools=${JSON.stringify((m.toolEvents ?? []).map((t: any) => t.name))}`);
+      console.log(`  [${m.role}] status=${m.status} tools=${JSON.stringify((m.toolEvents ?? []).map((t: { name: string }) => t.name))}`);
       console.log(`     ${String(m.content ?? "").slice(0, 150)}`);
     }
   }

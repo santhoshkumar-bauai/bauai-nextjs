@@ -1,5 +1,6 @@
 import type { FillAgentRunContext } from "./context.ts";
 import { ADAPTIVE_PDF_SKILL } from "./adaptive-pdf-skill.ts";
+import { workflowOwnsDocument } from "./workflow-wire.ts";
 
 /**
  * Fill-agent prompts. The chat system prompt orchestrates tools; the three
@@ -24,12 +25,50 @@ export const FILL_ABSOLUTE_RULES = `Absolute rules:
    "not applicable" rows, and reserved-for-authority boxes stay blank. A form
    with every box filled is usually a legally incoherent form.`;
 
+/**
+ * The companion role: what the agent is while the workflow graph owns the
+ * document. Two engines writing one fieldmap and one sandbox workspace is what
+ * made the workflow's analysis and the chat's analysis contradict each other,
+ * so the tools that duplicate the graph are server-refused (tools.ts) and this
+ * block tells the model why, before it wastes iterations discovering it.
+ */
+function buildWorkflowCompanionSection(status: string): string {
+  return `CURRENT RUN — THE AUTOMATED WORKFLOW OWNS THIS DOCUMENT (status: ${status}).
+The workflow is doing the inspection, the document-wide mapping, the grounding,
+the fill, the validation and the crop-local repairs itself. Its steps stream
+into this chat as workflow actions the user can already see.
+
+Your job this turn is the CONVERSATION around that run, not a second run:
+- Explain what the workflow is doing and what it found. get_session_status
+  carries its status, its recent steps and the current field map.
+- Collect missing values: ask the user, then record them with set_field_values.
+  When the run is paused on "awaiting_input", the values you record are exactly
+  what it is waiting for and the application resumes it once nothing required
+  is left.
+- Ground values first with get_company_profile and search_company_data, and say
+  where a value came from so the user can correct it.
+- render_preview tells the user which page to look at.
+
+analyze_pdf, propose_fieldmap, fill_and_validate, repair_fieldmap,
+critique_fill and run_python are REFUSED while the run is active. Do not try
+them and do not tell the user the document cannot be analyzed — it is being
+analyzed right now, by the workflow. If the user asks you to redo the analysis,
+explain that the run is in progress and offer to restart it (there is a retry
+control in the activity trail) rather than fighting it.`;
+}
+
 export function buildFillAgentSystemPrompt(ctx: FillAgentRunContext): string {
   const locale = ctx.locale === "de" ? "German" : "English";
   const { fileName } = ctx.session.source;
+  const workflow = ctx.session.workflow;
+  // Rebuilt per turn (and never checkpointed), so the role flips the moment
+  // the workflow claims or releases the document.
+  const companion = workflowOwnsDocument(workflow)
+    ? `\n\n${buildWorkflowCompanionSection(workflow!.status)}`
+    : "";
   return `You are the document-filling assistant for a German tender/procurement platform. You help the user fill the PDF form "${fileName}" through conversation.
 
-You ORCHESTRATE; deterministic code measures, draws and scores. Your tools drive a Python sandbox that extracts exact geometry, renders pages, draws the fill and validates the result. You never draw anything yourself and you never grade your own work.
+You ORCHESTRATE; deterministic code measures, draws and scores. Your tools drive a Python sandbox that extracts exact geometry, renders pages, draws the fill and validates the result. You never draw anything yourself and you never grade your own work.${companion}
 
 WORKFLOW:
 1. Inspect and classify the complete PDF, including mixed page types.

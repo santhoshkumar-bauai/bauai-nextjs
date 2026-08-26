@@ -5,6 +5,11 @@ import { resetAiEnvCache } from "../../config/env.ts";
 import { ContentFilterError, RateLimitError, StructuredOutputError } from "../types.ts";
 import { AzureOpenAIProvider, retryAfterMs, type AzureChatClient } from "./azure-openai.ts";
 
+/** Drill-anywhere view of the JSON schema the provider puts on the wire. */
+interface SchemaView {
+  [key: string]: SchemaView;
+}
+
 const KEYS = [
   "AI_MODEL_ROLES",
   "AI_ROLE_REASONING",
@@ -83,7 +88,7 @@ describe("AzureOpenAIProvider.generateStructured", () => {
     const { client, calls } = fakeClient([ok('{"label":"x"}')]);
     await new AzureOpenAIProvider({ client }).generateStructured("gpt-5.6-luna", request);
 
-    const body = calls[0] as Record<string, any>;
+    const body = calls[0] as unknown as SchemaView;
     // max_tokens is a hard 400 on this model family.
     expect(body).toHaveProperty("max_completion_tokens");
     expect(body).not.toHaveProperty("max_tokens");
@@ -110,7 +115,11 @@ describe("AzureOpenAIProvider.generateStructured", () => {
       },
       zod: z.object({ a: z.string(), b: z.string().nullable() }),
     });
-    const sent = (calls[0] as any).response_format.json_schema.schema;
+    const sent = (
+      calls[0] as unknown as {
+        response_format: { json_schema: { schema: SchemaView } };
+      }
+    ).response_format.json_schema.schema;
     expect(sent.required).toEqual(["a", "b"]);
     expect(sent.properties.b.type).toEqual(["string", "null"]);
   });

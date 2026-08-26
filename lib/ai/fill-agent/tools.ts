@@ -25,6 +25,7 @@ import {
 import { SandboxUnavailableError } from "./sandbox-client.ts";
 import { updateFillSession } from "./store.ts";
 import { applyUserFieldValues } from "./values.ts";
+import { workflowOwnsDocument } from "./workflow-wire.ts";
 
 /**
  * The fill agent's tool registry. Same invariants as Clara/Dora tools: every
@@ -63,6 +64,31 @@ async function withSandbox(run: () => Promise<string>): Promise<string> {
   }
 }
 
+/**
+ * The document pipeline is single-writer. While a workflow run owns the
+ * session (lib/ai/fill-agent/workflow-graph.ts), the chat agent's own
+ * analyze→plan→fill→repair tools are refused: they rewrite the canonical
+ * fieldmap the graph is mid-way through and race it for the ONE sandbox
+ * workspace both sides write `fieldmap.json` and `filled.pdf` into. Running
+ * them concurrently is what makes a workflow's analysis and the chat's
+ * analysis contradict each other.
+ *
+ * Conversation, grounding and value collection stay open — those are the
+ * handoff the graph's `await_input` node is parked waiting for.
+ */
+function buildWorkflowGuard(ctx: FillAgentRunContext) {
+  return async (alternative: string): Promise<string | null> => {
+    const session = await ctx.reloadSession();
+    if (!workflowOwnsDocument(session.workflow)) return null;
+    return JSON.stringify({
+      refused: true,
+      reason: "workflow_owns_document",
+      workflowStatus: session.workflow!.status,
+      hint: `The automated fill workflow is running this document (status: ${session.workflow!.status}) and owns the field map, the sandbox and the score. ${alternative} Never re-run your own analysis while it is active — tell the user what the workflow is doing instead; its steps stream into this chat.`,
+    });
+  };
+}
+
 async function persistFieldmap(
   ctx: FillAgentRunContext,
   fields: FillField[],
@@ -84,9 +110,15 @@ async function persistFieldmap(
 export function buildFillAgentTools(
   ctx: FillAgentRunContext,
 ): StructuredToolInterface[] {
+  const guardWorkflow = buildWorkflowGuard(ctx);
+
   const analyzePdf = tool(
     async () =>
       withSandbox(async () => {
+        const blocked = await guardWorkflow(
+          "It inspects and classifies the document itself; get_session_status reports what it found.",
+        );
+        if (blocked) return blocked;
         const workspaceId = await ctx.ensureSandbox();
         // ensureSandbox ran analyze on (re)build; re-run cheaply if this
         // workspace predates the current process and we hold no result.
@@ -129,6 +161,10 @@ export function buildFillAgentTools(
   const proposeFieldmap = tool(
     async ({ instructions }: { instructions?: string }) =>
       withSandbox(async () => {
+        const blocked = await guardWorkflow(
+          "Its map_document node maps the whole document; a second mapping would overwrite it mid-run.",
+        );
+        if (blocked) return blocked;
         const session = await ctx.reloadSession();
         // Server gate, not prompt trust: once a validate has scored a real
         // fieldmap, re-planning wholesale replaces correct work and the score
@@ -218,6 +254,10 @@ export function buildFillAgentTools(
   const fillAndValidate = tool(
     async () =>
       withSandbox(async () => {
+        const blocked = await guardWorkflow(
+          "Its fill_document and validate_document nodes produce and score the PDF; a second fill would overwrite filled.pdf under them.",
+        );
+        if (blocked) return blocked;
         const session = await ctx.reloadSession();
         if (session.fieldmap.length === 0) {
           return JSON.stringify({
@@ -328,6 +368,10 @@ export function buildFillAgentTools(
   const critiqueFill = tool(
     async () =>
       withSandbox(async () => {
+        const blocked = await guardWorkflow(
+          "Its final_validate node scores the assembled document; wait for the run to finish before adding a visual pass.",
+        );
+        if (blocked) return blocked;
         const session = await ctx.reloadSession();
         if (session.critiqued) {
           return JSON.stringify({
@@ -389,6 +433,10 @@ export function buildFillAgentTools(
   const repairFieldmap = tool(
     async () =>
       withSandbox(async () => {
+        const blocked = await guardWorkflow(
+          "Its crop_issues → repair_region loop is already repairing the failing regions from local 400-DPI crops.",
+        );
+        if (blocked) return blocked;
         const session = await ctx.reloadSession();
         if (session.issues.length === 0) {
           return JSON.stringify({
@@ -444,6 +492,13 @@ export function buildFillAgentTools(
   const runPython = tool(
     async ({ code, timeoutMs }: { code: string; timeoutMs?: number }) =>
       withSandbox(async () => {
+        // Gated too: exec writes into the same workspace the graph's prepare /
+        // fill / crop steps read, so an "observation only" script can still
+        // clobber fieldmap.json or filled.pdf mid-run.
+        const blocked = await guardWorkflow(
+          "The sandbox workspace is being written by the run; inspecting it now would read half-written artifacts.",
+        );
+        if (blocked) return blocked;
         const workspaceId = await ctx.ensureSandbox();
         const result = await ctx.sandbox.exec(workspaceId, code, timeoutMs);
         return JSON.stringify({
@@ -539,8 +594,26 @@ export function buildFillAgentTools(
   const getSessionStatus = tool(
     async () => {
       const session = await ctx.reloadSession();
+      const workflow = session.workflow;
       return JSON.stringify({
         status: session.status,
+        // The workflow's own view of the document — what to summarize for the
+        // user instead of re-deriving it with the (refused) pipeline tools.
+        workflow: workflow
+          ? {
+              status: workflow.status,
+              ownsDocument: workflowOwnsDocument(workflow),
+              pageCount: session.pdf.pageCount,
+              currentBatchId: workflow.currentBatchId,
+              batches: workflow.batches.length,
+              companyContext: workflow.companyContext?.status ?? null,
+              recentSteps: workflow.activity.slice(-6).map((event) => ({
+                action: event.action,
+                status: event.status,
+                message: event.message,
+              })),
+            }
+          : null,
         fieldCount: session.fieldmap.length,
         fieldIds: session.fieldmap.slice(0, 100).map((field) => field.id),
         openQuestions: session.openQuestions.slice(0, MAX_LISTED_OPEN_QUESTIONS),

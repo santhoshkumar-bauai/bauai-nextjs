@@ -29,6 +29,11 @@ export const FillWorkflowState = Annotation.Root({
   issues: replace<FillIssue[]>(() => []),
   activeCrops: replace<FillCropRef[]>(() => []),
   activity: replace<FillActivityEvent[]>(() => []),
+  /** Crop repairs spent across the WHOLE run — the run-wide counterpart to a
+   * batch's per-region `attemptsByRegion`. Checkpointed with the rest of the
+   * state, so it survives an await_input pause and cannot be reset by a
+   * resume. See `fillWorkflowRecursionLimit`. */
+  repairAttempts: replace<number>(() => 0),
 });
 
 export type FillWorkflowStateType = typeof FillWorkflowState.State;

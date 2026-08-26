@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { adaptJsonSchema, dialectForProvider, toProviderSafeJsonSchema } from "./json-schema.ts";
 
+/**
+ * Drill-anywhere view of an adapted schema. The adapter's return type is
+ * deliberately opaque (it is whatever the dialect emits), and these tests
+ * assert on nested keywords — this keeps that reachable without `any`.
+ */
+interface SchemaView {
+  [key: string]: SchemaView;
+}
+
 describe("gemini dialect", () => {
   it("drops validation-only keywords its response-schema validator rejects", () => {
     expect(
@@ -106,7 +115,7 @@ describe("openai-strict dialect", () => {
         required: ["rows", "either"],
       },
       "openai-strict",
-    ) as Record<string, any>;
+    ) as unknown as SchemaView;
 
     expect(adapted.$defs.Row.required).toEqual(["a"]);
     expect(adapted.$defs.Row.additionalProperties).toBe(false);
@@ -122,7 +131,7 @@ describe("openai-strict dialect", () => {
       adaptJsonSchema(schema, "openai-strict", { stripBounds: true }),
     ).toMatchObject({ properties: { n: { type: "number" } } });
     expect(
-      (adaptJsonSchema(schema, "openai-strict", { stripBounds: true }).properties as any).n,
+      (adaptJsonSchema(schema, "openai-strict", { stripBounds: true }).properties as unknown as SchemaView).n,
     ).not.toHaveProperty("maximum");
   });
 
@@ -141,7 +150,7 @@ describe("openai-strict dialect", () => {
       { type: "object", properties: { a: { type: ["string", "null"] } }, required: [] },
       "openai-strict",
     );
-    expect((adapted.properties as any).a.type).toEqual(["string", "null"]);
+    expect((adapted.properties as unknown as SchemaView).a.type).toEqual(["string", "null"]);
   });
 });
 
@@ -161,7 +170,7 @@ describe("real schemas from the codebase", () => {
     const { GAEB_PRICING_BATCH_JSON_SCHEMA } = await import(
       "../dora/fill/gaeb/schema-gaeb.ts"
     );
-    const adapted = adaptJsonSchema(GAEB_PRICING_BATCH_JSON_SCHEMA, "openai-strict") as any;
+    const adapted = adaptJsonSchema(GAEB_PRICING_BATCH_JSON_SCHEMA, "openai-strict") as unknown as SchemaView;
     const item = adapted.properties.items.items;
     expect(item.required).toEqual(Object.keys(item.properties));
     expect(item.additionalProperties).toBe(false);
@@ -173,7 +182,7 @@ describe("real schemas from the codebase", () => {
     const { PDF_FILL_DISCOVERY_JSON_SCHEMA } = await import(
       "../dora/fill/pdf/schema-pdf.ts"
     );
-    const adapted = adaptJsonSchema(PDF_FILL_DISCOVERY_JSON_SCHEMA, "openai-strict") as any;
+    const adapted = adaptJsonSchema(PDF_FILL_DISCOVERY_JSON_SCHEMA, "openai-strict") as unknown as SchemaView;
     const field = adapted.properties.fields.items;
     expect(field.required).toEqual(Object.keys(field.properties));
     // `value` and `rect` are nullable in Zod; strict mode must be told, or the

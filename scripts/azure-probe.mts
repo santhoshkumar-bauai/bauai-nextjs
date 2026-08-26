@@ -86,6 +86,13 @@ async function bearer(): Promise<string> {
 interface Call {
   status: number;
   ok: boolean;
+  /**
+   * The provider's raw JSON. Deliberately untyped: this script exists to find
+   * out what the API actually returns for an undocumented deployment, so
+   * pinning a shape here would assume the very thing it probes. The exemption
+   * is scoped to this one declaration rather than repeated at each read.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: any;
   raw: string;
 }
@@ -157,9 +164,9 @@ function responsesText(call: Call): string {
   const output = call.body?.output;
   if (!Array.isArray(output)) return "";
   return output
-    .flatMap((item: any) => (Array.isArray(item?.content) ? item.content : []))
-    .filter((part: any) => part?.type === "output_text")
-    .map((part: any) => part.text ?? "")
+    .flatMap((item) => (Array.isArray(item?.content) ? item.content : []))
+    .filter((part) => part?.type === "output_text")
+    .map((part) => part.text ?? "")
     .join("");
 }
 
@@ -326,7 +333,9 @@ await probe("P7", "strict json_schema, with and without bounds keywords", async 
     },
     required: ["label", "items", "score"],
   };
-  const bounded = structuredClone(base) as any;
+  const bounded = structuredClone(base) as unknown as {
+    properties: Record<string, Record<string, number>>;
+  };
   bounded.properties.items.maxItems = 5;
   bounded.properties.items.minItems = 1;
   bounded.properties.label.maxLength = 32;

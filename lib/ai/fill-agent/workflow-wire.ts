@@ -160,6 +160,33 @@ export interface FillWorkflowSnapshot {
   decisions: DecisionGroup[];
 }
 
+/**
+ * Whether a workflow RUN currently owns the document: its nodes are the only
+ * writers of the fieldmap, the sandbox workspace and the score.
+ *
+ * The chat agent and the workflow graph are two engines over one session and
+ * ONE sandbox workspace — both upload `fieldmap.json` and produce `filled.pdf`.
+ * Letting the chat's analyze→plan→fill→repair pipeline run against a live
+ * workflow rewrites the canonical fieldmap under the graph and races it for
+ * those files, so `buildFillAgentTools` refuses those tools while this is true.
+ *
+ * `queued` means no run was ever started — the ONLYOFFICE editor panel creates
+ * fill sessions and never starts a workflow, so the chat agent keeps its own
+ * pipeline there. The workflow route moves the status out of `queued`
+ * SYNCHRONOUSLY before it returns, so there is no window in which a chat turn
+ * can slip past this check into a run that is already starting.
+ *
+ * `completed`/`needs_review` are the hand-back states: the run is over and the
+ * chat agent is the one that continues the work with the human.
+ */
+export function workflowOwnsDocument(
+  workflow: FillWorkflowSnapshot | null | undefined,
+): boolean {
+  const status = workflow?.status;
+  if (status == null) return false;
+  return status !== "queued" && status !== "completed" && status !== "needs_review";
+}
+
 export function emptyFillWorkflow(): FillWorkflowSnapshot {
   return {
     status: "queued",

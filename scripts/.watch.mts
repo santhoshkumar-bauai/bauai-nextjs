@@ -10,7 +10,7 @@ for (let i = 0; i < 90; i++) {
   const last = msgs[0];
   if (last?.role === "assistant" && last.status !== "streaming" && (await db.collection("chat_messages").countDocuments({ threadId: thread!._id })) > before) {
     console.log(`status=${last.status}`);
-    console.log("tools:", JSON.stringify((last.toolEvents ?? []).map((t: any) => `${t.name}(${t.durationMs}ms)`)));
+    console.log("tools:", JSON.stringify((last.toolEvents ?? []).map((t: { name: string; durationMs: number }) => `${t.name}(${t.durationMs}ms)`)));
     console.log("content:", String(last.content ?? "").slice(0, 400));
     break;
   }
