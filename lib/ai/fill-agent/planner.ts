@@ -138,16 +138,21 @@ async function invokeJson<T>(
       const usage = (
         response as { usage_metadata?: { input_tokens?: number; output_tokens?: number; total_tokens?: number } }
       ).usage_metadata;
+      const finishReason = (response as { response_metadata?: { finish_reason?: unknown } })
+        .response_metadata?.finish_reason;
+      const responseText = textFromContent(response.content);
       log.info("planner_call", {
         ...routing,
         durationMs: Date.now() - startedAt,
         inputTokens: usage?.input_tokens,
         outputTokens: usage?.output_tokens,
         totalTokens: usage?.total_tokens,
+        outputChars: responseText.length,
+        finishReason,
         retry,
         ...(opts.escalated ? { escalated: true } : {}),
       });
-      return textFromContent(response.content);
+      return responseText;
     } catch (error) {
       const detail = error instanceof Error ? error.message.slice(0, 300) : String(error);
       log.error("planner_call_failed", {
@@ -169,14 +174,27 @@ async function invokeJson<T>(
     if (error instanceof Error && error.message.startsWith(`The ${opts.role} model call failed`)) {
       throw error; // transport — do not resend the payload
     }
+    const detail = error instanceof Error ? error.message.slice(0, 300) : "parse error";
+    const looksTruncated = /unterminated|unexpected end|end of json/i.test(detail);
     const note: ContentPart = {
       type: "text",
       text:
-        "Your previous output was not valid JSON for the required shape " +
-        `(${error instanceof Error ? error.message.slice(0, 300) : "parse error"}). ` +
-        "Output raw JSON only — no prose, no fences.",
+        (looksTruncated
+          ? "Your previous response was truncated before the JSON object closed. Use the compact field format: omit box for anchor/native fields and omit optional defaults, but include every page. "
+          : "Your previous output was not valid JSON for the required shape. ") +
+        `Parser detail: ${detail}. Output one complete raw JSON object only — no prose, no fences.`,
     };
-    return schema.parse(jsonFrom(await call([...content, note], true)));
+    try {
+      return schema.parse(jsonFrom(await call([...content, note], true)));
+    } catch (retryError) {
+      const retryDetail = retryError instanceof Error ? retryError.message : String(retryError);
+      if (/unterminated|unexpected end|end of json/i.test(retryDetail)) {
+        throw new Error(
+          "The document plan exceeded the model output limit twice. The complete PDF was not modified; retry with the compact planner output budget.",
+        );
+      }
+      throw retryError;
+    }
   }
 }
 
@@ -266,7 +284,11 @@ async function proposeFieldmapPages(
     });
   }
   try {
-    const grounding = await buildFillGrounding({ tenantId: ctx.tenantId, tenderId: null });
+    const grounding = ctx.companyGrounding === undefined
+      ? await buildFillGrounding({ tenantId: ctx.tenantId, tenderId: null })
+      : ctx.companyGrounding;
+    if (ctx.companyGrounding === undefined) ctx.companyGrounding = grounding;
+    if (!grounding) throw new Error("company_context_unavailable");
     const lines = [...grounding.profileLines, ...grounding.corpusLines];
     if (lines.length > 0) {
       content.push({

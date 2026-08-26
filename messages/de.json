@@ -1672,6 +1672,8 @@
     "exportPartial": "PDF exportieren (teilweise ausgefüllt)",
     "formTitle": "Fehlende Angaben",
     "formHint": "Tragen Sie ein, was Sie wissen — oder überspringen; nur Pflichtfelder blockieren die Ausfüllung.",
+    "formProgress": "{completed}/{total} erforderlich",
+    "formLegalTitle": "Rechtliche Ja/Nein-Bestätigungen",
     "formRequired": "Pflichtfeld",
     "formSubmit": "{count, plural, =0 {Werte übernehmen} one {# Wert übernehmen} other {# Werte übernehmen}}",
     "formSkip": "Überspringen",

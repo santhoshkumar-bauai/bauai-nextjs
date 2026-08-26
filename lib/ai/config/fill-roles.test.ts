@@ -149,7 +149,7 @@ describe("fill-agent tier resolution", () => {
     expect(roleReasoningEffort("fill_agent_plan")).toBe("high");
     expect(roleReasoningEffort("fill_agent_critique")).toBe("high");
     expect(roleReasoningEffort("fill_agent_repair")).toBe("high");
-    expect(roleMaxOutputTokens("fill_agent_plan")).toBe(16_384);
+    expect(roleMaxOutputTokens("fill_agent_plan")).toBe(32_768);
     expect(roleMaxOutputTokens("fill_agent_critique")).toBe(8_192);
     expect(roleMaxOutputTokens("fill_agent_repair")).toBe(8_192);
   });

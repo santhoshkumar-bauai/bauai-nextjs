@@ -192,7 +192,9 @@ export function serializeFillSession(
   doc: FillAgentSessionDocument,
   options?: { activityAfter?: number },
 ) {
-  const workflow = doc.workflow ?? emptyFillWorkflow();
+  // Backfill newly added wire fields for sessions created on older workflow
+  // versions without requiring a destructive Mongo migration.
+  const workflow = { ...emptyFillWorkflow(), ...(doc.workflow ?? {}) };
   const activity = workflow.activity
     .filter((event) => event.cursor > (options?.activityAfter ?? -1))
     .slice(-100);

@@ -7,6 +7,7 @@ import type { AgentRunContext } from "../agent/context.ts";
 import { TenderRefCollector } from "../agent/tender-refs.ts";
 import { UiCallCollector } from "../agent/ui-calls.ts";
 import { forCompanyContext } from "../tenant/repository.ts";
+import type { FillGrounding } from "../dora/fill/grounding.ts";
 import {
   getSandboxClient,
   SandboxRequestError,
@@ -35,6 +36,8 @@ export interface FillAgentRunContext extends AgentRunContext {
   sandbox: SandboxClient;
   /** Latest sidecar analyze result for this run, if it ran. */
   analyzeResult: SandboxAnalyzeResult | null;
+  /** Server-only cache populated by the explicit company-context graph node. */
+  companyGrounding: FillGrounding | null | undefined;
   ensureSandbox(): Promise<string>;
   /** Re-read the session after a store update so tools see fresh budgets. */
   reloadSession(): Promise<FillAgentSessionDocument>;
@@ -66,6 +69,7 @@ export async function buildFillAgentRunContext(input: {
     session,
     sandbox,
     analyzeResult: null,
+    companyGrounding: undefined,
 
     async reloadSession() {
       const fresh = await getFillSession(tenantId, sessionId);

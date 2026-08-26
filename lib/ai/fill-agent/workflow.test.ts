@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { assertLocalizedPatch } from "./planner.ts";
 import { buildDecisionGroups, repairBatchesForIssues, retainExistingValues } from "./workflow-graph.ts";
+import { emptyFillWorkflow } from "./workflow-wire.ts";
 
 describe("adaptive fill workflow", () => {
+  it("starts each new workflow on a durable run id with no assumed company context", () => {
+    expect(emptyFillWorkflow()).toMatchObject({ runId: 1, companyContext: null });
+  });
   it("creates four-page batches only for pages with post-fill errors", () => {
     const strategies25 = Array.from({ length: 25 }, () => "digital" as const);
     const batches25 = repairBatchesForIssues(25, strategies25, [

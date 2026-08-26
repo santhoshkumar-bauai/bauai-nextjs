@@ -47,6 +47,21 @@ export function FillChatWorkspace({
   const locale = useLocale() as "en" | "de";
   const chat = useClaraChat(`/api/poc/fill-chat/${sessionId}/chat`, { locale });
   const { session, refresh, renderVersion } = useFillSession(sessionId);
+  const [retryingWorkflow, setRetryingWorkflow] = useState(false);
+
+  const retryWorkflow = async () => {
+    setRetryingWorkflow(true);
+    try {
+      await fetch(`/api/poc/fill-chat/${sessionId}/workflow`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "retry" }),
+      });
+      await refresh();
+    } finally {
+      setRetryingWorkflow(false);
+    }
+  };
 
   // ---- live activity trail: accumulate activeTool transitions per turn ----
   const [trail, setTrail] = useState<string[]>([]);
@@ -138,7 +153,7 @@ export function FillChatWorkspace({
     .find((message) => message.role === "assistant");
 
   return (
-    <div className="flex h-svh min-h-0 flex-col bg-background">
+    <div className="fixed inset-0 flex min-h-0 flex-col overflow-clip bg-background">
       <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <Link
           href={backHref}
@@ -191,7 +206,13 @@ export function FillChatWorkspace({
             {chat.sending && (
               <LiveActivityTrail steps={trail} activeTool={chat.activeTool} />
             )}
-            {session && <WorkflowActivityTrail workflow={session.workflow} />}
+            {session && (
+              <WorkflowActivityTrail
+                workflow={session.workflow}
+                retrying={retryingWorkflow}
+                onRetry={session.status === "failed" ? () => void retryWorkflow() : undefined}
+              />
+            )}
             {chat.error && (
               <p className="pt-2 text-center text-xs text-rose-600">
                 {aiErrorMessage(chat.error)}
@@ -200,7 +221,7 @@ export function FillChatWorkspace({
           </div>
 
           {showForm && (
-            <div className="shrink-0 border-t border-border px-4 py-3">
+            <div className="min-h-0 shrink-0 border-t border-border px-4 py-3">
               <ValuesForm
                 sessionId={sessionId}
                 questions={openQuestions}

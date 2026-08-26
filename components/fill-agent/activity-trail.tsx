@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronRight, Loader2, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -109,7 +109,15 @@ export function MessageSteps({ toolEvents }: { toolEvents: WireToolEvent[] }) {
   );
 }
 
-export function WorkflowActivityTrail({ workflow }: { workflow: FillWorkflowSnapshot }) {
+export function WorkflowActivityTrail({
+  workflow,
+  onRetry,
+  retrying = false,
+}: {
+  workflow: FillWorkflowSnapshot;
+  onRetry?: () => void;
+  retrying?: boolean;
+}) {
   const events = workflow.activity.slice(-16);
   const running = !["completed", "needs_review", "awaiting_input"].includes(workflow.status);
   const [open, setOpen] = useState(true);
@@ -150,8 +158,9 @@ export function WorkflowActivityTrail({ workflow }: { workflow: FillWorkflowSnap
       </button>
 
       {open && (
-        <ol className="space-y-2 border-t border-border px-3 py-2.5">
-          {events.map((event, index) => {
+        <div className="border-t border-border px-3 py-2.5">
+          <ol className="space-y-2">
+            {events.map((event, index) => {
             const isCurrent = running && index === events.length - 1 && event.status === "started";
             return (
               <li key={event.cursor} className="flex gap-2 text-[10px] text-muted-foreground">
@@ -180,11 +189,33 @@ export function WorkflowActivityTrail({ workflow }: { workflow: FillWorkflowSnap
                     {event.remainingIssues != null && <span>{event.remainingIssues} issues</span>}
                     {event.crop && <span>400 DPI crop · page {event.crop.page}</span>}
                   </span>
+                  {event.output && (
+                    <span className="mt-1.5 block border-l-2 border-primary/20 pl-2.5">
+                      <span className="block font-medium text-foreground/80">{event.output.title}</span>
+                      <span className="mt-0.5 block space-y-0.5">
+                        {event.output.lines.map((line) => (
+                          <span key={line} className="block leading-relaxed">{line}</span>
+                        ))}
+                      </span>
+                    </span>
+                  )}
                 </span>
               </li>
-            );
-          })}
-        </ol>
+              );
+            })}
+          </ol>
+          {onRetry && (
+            <button
+              type="button"
+              disabled={retrying}
+              onClick={onRetry}
+              className="mt-3 flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium text-foreground hover:bg-muted disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {retrying ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />}
+              Retry document workflow
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

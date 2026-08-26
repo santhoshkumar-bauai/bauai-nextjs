@@ -1672,6 +1672,8 @@
     "exportPartial": "Export PDF (partial fill)",
     "formTitle": "Missing details",
     "formHint": "Fill in what you know — or skip; only required fields block the fill.",
+    "formProgress": "{completed}/{total} required",
+    "formLegalTitle": "Legal Yes/No confirmations",
     "formRequired": "required",
     "formSubmit": "Apply {count, plural, =0 {values} one {# value} other {# values}}",
     "formSkip": "Skip",

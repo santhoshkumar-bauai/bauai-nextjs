@@ -43,7 +43,9 @@ export const fillFieldSchema = z.object({
   id: z.string().min(1).max(80),
   page: z.number().int().min(1),
   kind: z.enum(FILL_FIELD_KINDS),
-  box: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+  /** Planner may omit this for anchor-backed fields. The trusted sidecar
+   * replaces the sentinel from `anchorId` before any drawing or validation. */
+  box: z.tuple([z.number(), z.number(), z.number(), z.number()]).default([0, 0, 0, 0]),
   /** Stable deterministic anchor selected by the model. Trusted sidecar code
    * owns the coordinates and overwrites `box` from this id. */
   anchorId: z.string().min(1).max(100).optional(),

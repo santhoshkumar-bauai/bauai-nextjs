@@ -43,6 +43,14 @@ export interface ValueEvidence {
   recordedAt: string;
 }
 
+export interface CompanyContextSummary {
+  status: "loaded" | "unavailable";
+  profileFacts: number;
+  documentChunks: number;
+  documentNames: string[];
+  loadedAt: string;
+}
+
 export interface DecisionGroup {
   id: string;
   label: string;
@@ -94,6 +102,7 @@ export type FillActivityAction =
   | "inspect_document"
   | "classify_strategy"
   | "load_skill"
+  | "load_company_context"
   | "map_document"
   | "ground_values"
   | "await_input"
@@ -123,16 +132,24 @@ export interface FillActivityEvent {
   score?: number;
   elapsedMs?: number;
   remainingIssues?: number;
+  /** Safe structured result for the chat, never raw prompts or reasoning. */
+  output?: {
+    title: string;
+    lines: string[];
+  };
 }
 
 export interface FillWorkflowSnapshot {
   status: FillWorkflowStatus;
+  /** Bumped for an explicit retry so LangGraph starts a fresh checkpoint thread. */
+  runId: number;
   geometryVersion: number;
   skill: {
     name: string;
     version: string;
     sourceUrl: string;
   } | null;
+  companyContext: CompanyContextSummary | null;
   batchSize: number;
   currentBatchId: string | null;
   batches: FillBatchState[];
@@ -146,8 +163,10 @@ export interface FillWorkflowSnapshot {
 export function emptyFillWorkflow(): FillWorkflowSnapshot {
   return {
     status: "queued",
+    runId: 1,
     geometryVersion: 2,
     skill: null,
+    companyContext: null,
     batchSize: 4,
     currentBatchId: null,
     batches: [],

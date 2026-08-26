@@ -1,22 +1,13 @@
 import { after, NextResponse } from "next/server";
-import { z } from "zod";
 
 import { buildFillAgentRunContext } from "@/lib/ai/fill-agent/context";
 import { updateFillSession } from "@/lib/ai/fill-agent/store";
 import { runFillWorkflow } from "@/lib/ai/fill-agent/workflow-graph";
+import { fillWorkflowRequestSchema } from "@/lib/ai/fill-agent/workflow-request";
 import { emptyFillWorkflow } from "@/lib/ai/fill-agent/workflow-wire";
 import { applyWorkflowInput } from "@/lib/ai/fill-agent/values";
 import { getCompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
-
-const bodySchema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("start") }),
-  z.object({
-    action: z.literal("resume"),
-    values: z.array(z.object({ fieldId: z.string().min(1).max(80), value: z.string().max(2000) })).max(60).default([]),
-    decisions: z.array(z.object({ groupId: z.string().min(1).max(200), fieldId: z.string().min(1).max(80) })).max(60).default([]),
-  }),
-]);
 
 export async function POST(
   request: Request,
@@ -25,7 +16,7 @@ export async function POST(
   const companyContext = await getCompanyContext();
   if (!companyContext) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { sessionId } = await params;
-  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
+  const parsed = fillWorkflowRequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid workflow request" }, { status: 400 });
   const ctx = await buildFillAgentRunContext({
     companyContext,
@@ -42,6 +33,22 @@ export async function POST(
       values: parsed.data.values,
       decisions: parsed.data.decisions,
     });
+  } else if (parsed.data.action === "retry") {
+    const workflow = { ...emptyFillWorkflow(), ...(ctx.session.workflow ?? {}) };
+    const updated = await updateFillSession(ctx.tenantId, ctx.session._id!, {
+      status: "ready",
+      score: null,
+      issues: [],
+      workflow: {
+        ...workflow,
+        runId: (ctx.session.workflow?.runId ?? 0) + 1,
+        status: "queued",
+        currentBatchId: null,
+        batches: [],
+        activeCrop: null,
+      },
+    });
+    if (updated) ctx.session = updated;
   }
   // The graph and its Mongo checkpoint thread are independent from the chat
   // request. `after` lets the route return immediately; interrupts persist
@@ -75,5 +82,8 @@ export async function POST(
       });
     }
   });
-  return NextResponse.json({ accepted: true, status: parsed.data.action === "start" ? "queued" : "resuming" }, { status: 202 });
+  return NextResponse.json({
+    accepted: true,
+    status: parsed.data.action === "resume" ? "resuming" : "queued",
+  }, { status: 202 });
 }

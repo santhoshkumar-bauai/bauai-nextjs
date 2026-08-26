@@ -31,7 +31,9 @@ const { logMock } = vi.hoisted(() => {
 vi.mock("../../ingestion/observability/logger.ts", () => ({ logger: logMock }));
 vi.mock("../agent/model.ts", () => ({ getChatModel: vi.fn() }));
 vi.mock("../dora/fill/grounding.ts", () => ({
-  buildFillGrounding: vi.fn(async () => ({ profileLines: [], corpusLines: [] })),
+  buildFillGrounding: vi.fn(async () => ({
+    evidence: new Map(), profileLines: [], corpusLines: [], companyDocumentNames: [],
+  })),
 }));
 
 const model = await import("../agent/model.ts");
@@ -97,6 +99,34 @@ describe("planner tier routing", () => {
     ctx.session.pdf.pageCount = 20;
     await proposeFieldmapWithModel(ctx);
     expect(m.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts compact anchor-only plan fields without model coordinates", async () => {
+    vi.mocked(model.getChatModel).mockResolvedValue(fakeModel({
+      fields: [{
+        id: "company_name",
+        page: 1,
+        kind: "text",
+        anchorId: "p1:placeholder:company",
+        label: "Company name",
+      }],
+    }) as never);
+    const fields = await proposeFieldmapWithModel(buildCtx());
+    expect(fields[0]).toMatchObject({
+      anchorId: "p1:placeholder:company",
+      box: [0, 0, 0, 0],
+    });
+  });
+
+  it("turns repeated truncated JSON into a safe retry message", async () => {
+    const m = {
+      invoke: vi.fn(async () => new AIMessage({ content: '{"fields":[{"id":"cut off' })),
+    };
+    vi.mocked(model.getChatModel).mockResolvedValue(m as never);
+    await expect(proposeFieldmapWithModel(buildCtx())).rejects.toThrow(
+      /exceeded the model output limit twice.*not modified/i,
+    );
+    expect(m.invoke).toHaveBeenCalledTimes(2);
   });
 
   it("critique runs on fill_agent_critique by default", async () => {

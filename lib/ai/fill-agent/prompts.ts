@@ -72,7 +72,6 @@ For each entry position that needs data, emit one field object:
  "page": 2,
  "kind": "text" | "checkbox" | "cover" | "restore_text" | "restore_rule",
  "anchorId": "p2:placeholder:...",  // copied verbatim from GEOMETRY
- "box": [x0, top, x1, bottom],      // compatibility copy; code overwrites it from anchorId
  "value": "the text to draw",
  "value_type": "eur" | "eur_sym" | "number" | "integer" | "percent" | "date" | "phone" | "text",
  "align": "left" | "center" | "right",
@@ -122,6 +121,13 @@ Values:
 Native AcroForm fields (when NATIVE ACROFORM FIELDS is present): prefer them —
 use the native field name as "id" and set "target": "acroform". Overlay fields
 are only for positions no native field covers.
+
+Keep the response compact so the complete document fits in one result:
+- Omit "box" for every anchor-backed or native field; trusted code supplies it.
+- Omit optional align, valign, value_type, required, and exclusive_group when
+  their default/absence is correct.
+- Keep labels concise (the nearest printed label, not a paragraph).
+- Still include every field on every page; compactness must never drop pages.
 
 Repair of pre-existing damage:
 If a previous fill left text overlapping a border, running off the page edge, or

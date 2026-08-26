@@ -35,7 +35,7 @@ const DECLARATION_RE = /ausschluss|bescheinigung|datenbank|insolven|fehlverhalte
 const SIGNATURE_RE = /unterschrift|signature|signatur/i;
 
 function workflowThreadId(ctx: FillAgentRunContext): string {
-  return `fillworkflow:${ctx.tenantId}:${ctx.session._id}`;
+  return `fillworkflow:${ctx.tenantId}:${ctx.session._id}:${ctx.session.workflow?.runId ?? 0}`;
 }
 
 function nowIso(): string {
@@ -205,14 +205,15 @@ async function groundBatchValues(
   existing: Record<string, ValueEvidence>,
 ): Promise<{ fields: FillField[]; evidence: Record<string, ValueEvidence> }> {
   const evidence = { ...existing };
-  let profile = "";
-  let corpus = "";
+  let grounding = ctx.companyGrounding;
   try {
-    const grounding = await buildFillGrounding({ tenantId: ctx.tenantId, tenderId: null });
-    profile = grounding.profileLines.join("\n");
-    corpus = grounding.corpusLines.join("\n");
+    if (grounding === undefined) {
+      grounding = await buildFillGrounding({ tenantId: ctx.tenantId, tenderId: null });
+      ctx.companyGrounding = grounding;
+    }
   } catch {
-    // Missing company data simply leaves the value unresolved.
+    grounding = null;
+    ctx.companyGrounding = null;
   }
   const grounded = fields.map((field) => {
     const raw = field.value == null ? "" : String(field.value).trim();
@@ -223,12 +224,23 @@ async function groundBatchValues(
     if (Object.hasOwn(ctx.session.values, field.id) && ctx.session.values[field.id] === raw) {
       item = { fieldId: field.id, value: raw, source: "user", sourceRef: `fill_session:${ctx.session._id}`,
         confidence: 1, authorized: true, recordedAt: nowIso() };
-    } else if (profile.includes(raw)) {
-      item = { fieldId: field.id, value: raw, source: "company_profile", sourceRef: "company_profile",
+    } else if (grounding) {
+      const companyHit = [...grounding.evidence.entries()].find(([, candidate]) =>
+        candidate.source === "company_profile" && candidate.excerpt.trim() === raw,
+      );
+      const documentHit = companyHit ? undefined : [...grounding.evidence.entries()].find(([, candidate]) =>
+        candidate.source === "company_document" && candidate.excerpt.includes(raw),
+      );
+      if (companyHit) {
+        item = { fieldId: field.id, value: raw, source: "company_profile", sourceRef: companyHit[0],
         confidence: 0.98, authorized: true, recordedAt: nowIso() };
-    } else if (corpus.includes(raw)) {
-      item = { fieldId: field.id, value: raw, source: "company_document", sourceRef: "company_corpus",
-        confidence: 0.9, authorized: true, recordedAt: nowIso() };
+      } else if (documentHit) {
+        item = { fieldId: field.id, value: raw, source: "company_document", sourceRef: documentHit[0],
+          confidence: 0.9, authorized: true, recordedAt: nowIso() };
+      } else {
+        item = { fieldId: field.id, value: raw, source: "model_inference", sourceRef: "document_mapper",
+          confidence: 0.5, authorized: false, recordedAt: nowIso() };
+      }
     } else {
       item = { fieldId: field.id, value: raw, source: "model_inference", sourceRef: "document_mapper",
         confidence: 0.5, authorized: false, recordedAt: nowIso() };
@@ -296,6 +308,66 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     return { status: "mapping" as const, activity };
   };
 
+  const loadCompanyContext = async (state: FillWorkflowStateType) => {
+    const started = Date.now();
+    await persist(
+      ctx,
+      state,
+      { status: "mapping" },
+      eventFor(state, "load_company_context", "started", "Loading company profile and company documents"),
+    );
+    try {
+      const grounding = await buildFillGrounding({ tenantId: ctx.tenantId, tenderId: null });
+      ctx.companyGrounding = grounding;
+      const companyContext = {
+        status: "loaded" as const,
+        profileFacts: grounding.profileLines.length,
+        documentChunks: grounding.corpusLines.length,
+        documentNames: grounding.companyDocumentNames.slice(0, 12),
+        loadedAt: nowIso(),
+      };
+      const lines = [
+        `${companyContext.profileFacts} structured profile facts`,
+        `${companyContext.documentChunks} indexed company-document sections`,
+        companyContext.documentNames.length > 0
+          ? `Documents: ${companyContext.documentNames.join(", ")}`
+          : "No indexed company documents were needed or available",
+      ];
+      const { activity } = await persist(
+        ctx,
+        state,
+        { status: "mapping", companyContext },
+        eventFor(state, "load_company_context", "completed", "Loaded company context", {
+          elapsedMs: Date.now() - started,
+          output: { title: "Company context", lines },
+        }),
+      );
+      return { activity };
+    } catch {
+      ctx.companyGrounding = null;
+      const companyContext = {
+        status: "unavailable" as const,
+        profileFacts: 0,
+        documentChunks: 0,
+        documentNames: [],
+        loadedAt: nowIso(),
+      };
+      const { activity } = await persist(
+        ctx,
+        state,
+        { status: "mapping", companyContext },
+        eventFor(state, "load_company_context", "completed", "Company context unavailable; continuing without it", {
+          elapsedMs: Date.now() - started,
+          output: {
+            title: "Company context",
+            lines: ["No company profile or indexed company-document evidence was available for this run"],
+          },
+        }),
+      );
+      return { activity };
+    }
+  };
+
   const mapDocument = async (state: FillWorkflowStateType) => {
     const started = Date.now();
     await persist(
@@ -314,6 +386,12 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       if (updated) ctx.session = updated;
     }
     const fieldmap = retainedResult.fields.sort((a, b) => a.page - b.page);
+    const mappedPages = new Set(fieldmap.map((field) => field.page));
+    const choiceFields = fieldmap.filter((field) => field.kind === "checkbox").length;
+    const proposedValues = fieldmap.filter((field) => field.value != null && String(field.value).trim()).length;
+    const requiredMissing = fieldmap.filter((field) =>
+      field.required && (field.value == null || String(field.value).trim() === ""),
+    ).length;
     const { activity } = await persist(
       ctx,
       state,
@@ -322,6 +400,15 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
         pageStart: 1, pageEnd: ctx.session.pdf.pageCount,
         model: { name: "gpt-5.6-sol", effort: "high" },
         elapsedMs: Date.now() - started,
+        output: {
+          title: "Document plan",
+          lines: [
+            `${fieldmap.length} fill positions mapped across ${mappedPages.size} pages`,
+            `${fieldmap.length - choiceFields} text/overlay fields · ${choiceFields} choice fields`,
+            `${proposedValues} candidate values found before evidence verification`,
+            `${requiredMissing} required fields still missing before grounding`,
+          ],
+        },
       }),
     );
     return { status: "mapping" as const, fieldmap, activity };
@@ -350,7 +437,26 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
       ctx,
       state,
       { evidence: grounded.evidence, decisions },
-      eventFor(state, "ground_values", "completed", "Grounded values and recorded provenance"),
+      eventFor(state, "ground_values", "completed", "Grounded values and recorded provenance", {
+        output: (() => {
+          const items = Object.values(grounded.evidence);
+          const profileItems = items.filter((item) => item.authorized && item.source === "company_profile");
+          const documentItems = items.filter((item) => item.authorized && item.source === "company_document");
+          const userItems = items.filter((item) => item.authorized && item.source === "user");
+          const labels = [...profileItems, ...documentItems]
+            .map((item) => ratcheted.find((field) => field.id === item.fieldId)?.label || item.fieldId)
+            .slice(0, 8);
+          return {
+            title: "Grounding result",
+            lines: [
+              `${profileItems.length} values authorized from the company profile`,
+              `${documentItems.length} values authorized from company documents`,
+              `${userItems.length} values retained from user input`,
+              labels.length > 0 ? `Company-grounded fields: ${labels.join(", ")}` : "No fields matched company evidence",
+            ],
+          };
+        })(),
+      }),
     );
     return { fieldmap: ratcheted, evidence: grounded.evidence, decisions, openQuestions, activity };
   };
@@ -603,6 +709,7 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     .addNode("inspect_document", inspectDocument)
     .addNode("classify_strategy", classifyStrategy)
     .addNode("load_skill", loadSkill)
+    .addNode("load_company_context", loadCompanyContext)
     .addNode("map_document", mapDocument)
     .addNode("ground_values", groundValues)
     .addNode("await_input", awaitInput)
@@ -618,7 +725,8 @@ export async function buildFillWorkflowGraph(ctx: FillAgentRunContext) {
     .addEdge(START, "inspect_document")
     .addEdge("inspect_document", "classify_strategy")
     .addConditionalEdges("classify_strategy", (state) => state.status === "needs_review" ? "end" : "skill", { end: END, skill: "load_skill" })
-    .addEdge("load_skill", "map_document")
+    .addEdge("load_skill", "load_company_context")
+    .addEdge("load_company_context", "map_document")
     .addEdge("map_document", "ground_values")
     .addEdge("ground_values", "await_input")
     .addConditionalEdges("await_input", (state) => state.status === "awaiting_input" ? "wait" : "fill", { wait: "await_input", fill: "fill_document" })

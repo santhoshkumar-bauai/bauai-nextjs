@@ -513,9 +513,9 @@ function defaultRoleMaxOutputTokens(): Record<string, number> {
     dora_gaeb_web: 8_192,
     otto: 12_288,
     fill_agent: 16_384,
-    // Same numbers the planner used to hard-code per call — now here so they
-    // are env-overridable via AI_ROLE_MAX_OUTPUT_TOKENS like every other role.
-    fill_agent_plan: 16_384,
+    // High reasoning shares this completion budget with the emitted fieldmap.
+    // Long 25-50 page forms need headroom so JSON is never cut mid-string.
+    fill_agent_plan: 32_768,
     fill_agent_critique: 8_192,
     fill_agent_repair: 8_192,
   } as Record<string, number>;
