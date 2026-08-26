@@ -9,7 +9,12 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { MessageList } from "@/components/chat/message-list";
 import { useClaraChat } from "@/components/chat/use-clara-chat";
 import { workflowOwnsDocument } from "@/lib/ai/fill-agent/workflow-wire";
-import { LiveActivityTrail, MessageSteps, WorkflowActivityTrail } from "./activity-trail";
+import {
+  LiveActivityTrail,
+  MessageSteps,
+  WorkflowActivityTrail,
+  WorkflowStatusLine,
+} from "./activity-trail";
 import { PdfPreview } from "./pdf-preview";
 import { SessionStatus } from "./session-status";
 import { useFillSession } from "./use-fill-session";
@@ -190,6 +195,8 @@ export function FillChatWorkspace({
   const pendingDecisions = session?.workflow.decisions.filter(
     (decision) => decision.required && !decision.selection,
   ) ?? [];
+  /** The run is parked on a question — answering it is the only useful action. */
+  const awaitingInput = showForm && session?.workflow.status === "awaiting_input";
   const currentBatch = session?.workflow.batches.find(
     (batch) => batch.id === session.workflow.currentBatchId,
   ) ?? null;
@@ -219,6 +226,10 @@ export function FillChatWorkspace({
       <div className="flex min-h-0 flex-1">
         <section className="flex min-h-0 min-w-0 flex-1 flex-col border-r border-border">
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+            {/* The run's one thread into the conversation. Its detail lives in
+                the document panel — two progress trails stacked in this column
+                were two answers to the same question. */}
+            {session && workflowOwns && <WorkflowStatusLine workflow={session.workflow} />}
             {!aiAvailable ? (
               <p className="rounded-xl border border-dashed border-border px-3 py-2.5 text-xs text-muted-foreground">
                 {t("noProvider")}
@@ -244,27 +255,17 @@ export function FillChatWorkspace({
                   thinkingText={t("thinking")}
                   autoScroll="pinned"
                 />
-                {!chat.sending && lastAssistant && (
+                {/* The agent's own step list belongs in the conversation only
+                    when the agent is the one doing the work. During a run it
+                    can just ground and record values, and its steps would sit
+                    beside the run's — two trails for one process. */}
+                {!chat.sending && !workflowOwns && lastAssistant && (
                   <MessageSteps toolEvents={lastAssistant.toolEvents} />
                 )}
               </>
             )}
-            {chat.sending && (
+            {chat.sending && !workflowOwns && (
               <LiveActivityTrail steps={trail} activeTool={chat.activeTool} />
-            )}
-            {session && (
-              <WorkflowActivityTrail
-                workflow={session.workflow}
-                retrying={retryingWorkflow}
-                // Also offered mid-run: the chat's own pipeline is refused
-                // while the workflow owns the document, so restarting the run
-                // is the user's way out of one that has gone wrong.
-                onRetry={
-                  session.status === "failed" || workflowOwns
-                    ? () => void retryWorkflow()
-                    : undefined
-                }
-              />
             )}
             {chat.error && (
               <p className="pt-2 text-center text-xs text-rose-600">
@@ -274,7 +275,11 @@ export function FillChatWorkspace({
           </div>
 
           {showForm && (
-            <div className="min-h-0 shrink-0 border-t border-border px-4 py-3">
+            <div
+              className={`min-h-0 shrink-0 border-t px-4 py-3 ${
+                awaitingInput ? "border-primary/30 bg-primary/[0.03]" : "border-border"
+              }`}
+            >
               <ValuesForm
                 sessionId={sessionId}
                 questions={openQuestions}
@@ -298,18 +303,47 @@ export function FillChatWorkspace({
             </div>
           )}
 
-          <ChatInput
-            onSend={chat.send}
-            onStop={chat.stop}
-            sending={chat.sending}
-            disabled={!aiAvailable}
-            allowAttachments={false}
-            placeholder={t("placeholder")}
-          />
+          {/* One obvious action at a time. When the run is parked on a
+              question the form IS the action, so the input recedes to a hint
+              rather than offering a second, equal-looking way to answer. It is
+              never disabled — asking about the document stays valid. */}
+          <div className={awaitingInput ? "opacity-70 transition-opacity focus-within:opacity-100" : undefined}>
+            <ChatInput
+              onSend={chat.send}
+              onStop={chat.stop}
+              sending={chat.sending}
+              disabled={!aiAvailable}
+              // Unlike Dora's panel, the open PDF is not the only subject here:
+              // the evidence for a value (a register extract, a certificate)
+              // routinely lives in another file the user has to hand.
+              allowAttachments
+              placeholder={
+                awaitingInput
+                  ? t("placeholderAwaitingInput")
+                  : workflowOwns
+                    ? t("placeholderRunning")
+                    : t("placeholder")
+              }
+            />
+          </div>
         </section>
 
         <aside className="flex w-[380px] shrink-0 flex-col gap-3 overflow-y-auto p-3">
           {session && <SessionStatus session={session} />}
+          {session && (
+            <WorkflowActivityTrail
+              workflow={session.workflow}
+              retrying={retryingWorkflow}
+              // Also offered mid-run: the chat's own pipeline is refused while
+              // the workflow owns the document, so restarting the run is the
+              // user's way out of one that has gone wrong.
+              onRetry={
+                session.status === "failed" || workflowOwns
+                  ? () => void retryWorkflow()
+                  : undefined
+              }
+            />
+          )}
           {session && (
             <PdfPreview
               sessionId={sessionId}

@@ -18,9 +18,23 @@ import { aiProviderConfigured } from "@/lib/ai/gateway/config";
  * its own recursionLimit; see lib/ai/fill-agent/graph.ts.
  */
 
-const postSchema = z.object({
-  message: z.string().min(1).max(4000),
-});
+/**
+ * Attachments are the fastest path from "the value is in this PDF" to a filled
+ * field: the extract/vision content rides inside the user turn, the agent reads
+ * the value off it and records it with `set_field_values` — which stays open
+ * while a workflow run owns the document, so an upload can unblock a run parked
+ * on `awaiting_input`. Same claim path and per-message cap as every other chat
+ * surface (only the uploader's own unclaimed ids resolve).
+ */
+const postSchema = z
+  .object({
+    message: z.string().max(4000),
+    attachmentIds: z.array(z.string().length(24)).max(4).optional(),
+  })
+  .refine(
+    (data) => data.message.trim().length > 0 || (data.attachmentIds?.length ?? 0) > 0,
+    { message: "Message or attachment required" },
+  );
 
 /** Bootstrap for the chat hook: history for this session's thread. */
 export async function GET(
