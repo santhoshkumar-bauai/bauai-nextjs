@@ -1,0 +1,61 @@
+name: bauai-fill-sandbox
+
+# Production topology (Dokploy):
+#
+#   app -> gateway(socat) -> fill-sandbox:8000
+#
+# `sandbox_internal` stays internal:true here, exactly as in dev — the
+# container that runs LLM-written Python has no route to the internet.
+# The socat gateway is the only bridge, joined to both networks, and it
+# only forwards the API port inward. Nothing is published to the host and
+# no Traefik domain is attached: the sidecar is reachable only from other
+# services on dokploy-network.
+
+services:
+  fill-sandbox:
+    build: .
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - fill_work:/work
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 256
+    environment:
+      FILL_SANDBOX_TOKEN: ${FILL_SANDBOX_TOKEN:?FILL_SANDBOX_TOKEN is required}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - sandbox_internal
+
+  gateway:
+    image: alpine/socat
+    restart: unless-stopped
+    command: TCP-LISTEN:8000,fork,reuseaddr TCP:fill-sandbox:8000
+    depends_on:
+      - fill-sandbox
+    networks:
+      sandbox_internal: {}
+      dokploy-network:
+        aliases:
+          - fill-sandbox-gateway
+
+volumes:
+  fill_work:
+
+networks:
+  sandbox_internal:
+    internal: true
+  dokploy-network:
+    external: true

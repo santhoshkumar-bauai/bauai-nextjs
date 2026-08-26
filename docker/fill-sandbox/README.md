@@ -55,9 +55,21 @@ All coordinates in this container are **PDF points, top-left origin**
 `[x0, top, x1, bottom]` (pdfplumber convention). The Node side never converts
 or produces coordinates — they live and die here.
 
-## Production (Coolify/Dokploy)
+## Production (Dokploy)
 
-Drop the `gateway` service, attach `fill-sandbox` to the shared internal
-network (like `docker/onlyoffice/`), set a real `FILL_SANDBOX_TOKEN`, and
-point `FILL_SANDBOX_URL` at the internal DNS name. Hardening beyond POC grade
-(per-exec uid, seccomp, gVisor) slots in behind the same API.
+`docker-compose.dokploy.yml` is the deployed file: same containment as dev,
+minus the published port. Dokploy's shared `dokploy-network` is *not*
+`internal: true`, so the gateway is kept in prod rather than attaching
+`fill-sandbox` to it directly — attaching directly would hand LLM-executed
+code internet access. The gateway straddles both networks and forwards only
+the API port inward, under the alias `fill-sandbox-gateway`.
+
+Deploy it as its own Dokploy **Compose** service pointed at
+`docker/fill-sandbox/docker-compose.dokploy.yml`, with `FILL_SANDBOX_TOKEN`
+set in the service env and **no domain attached**. On the app service set
+`FILL_SANDBOX_URL=http://fill-sandbox-gateway:8000` (the gateway's listen
+port; 8971 is only the dev host mapping) and the same token.
+
+`fill_work` is a cache, not truth — S3 + Mongo hold the state and
+`ensureSandbox()` re-hydrates, so the volume needs no backup. Hardening
+beyond POC grade (per-exec uid, seccomp, gVisor) slots in behind the same API.
