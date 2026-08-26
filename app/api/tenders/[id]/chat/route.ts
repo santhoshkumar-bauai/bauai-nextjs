@@ -8,6 +8,7 @@ import { clearThread, ensureTenderThread } from "@/lib/ai/agent/threads";
 import { getAiCollections } from "@/lib/ai/db/collections";
 import { getCompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * Clara chat for one tender. GET bootstraps the thread + history, POST streams
@@ -82,7 +83,7 @@ export async function POST(
 ) {
   const context = await getCompanyContext();
   if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+  if (!aiProviderConfigured()) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503 });
   }
 

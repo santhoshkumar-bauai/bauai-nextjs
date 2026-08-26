@@ -8,6 +8,7 @@ import type { StreamEvent } from "@langchain/core/tracers/log_stream";
 import type { ObjectId } from "mongodb";
 
 import { logger } from "../../ingestion/observability/logger.ts";
+import { aiEnv } from "../config/env.ts";
 import { getAiCollections } from "../db/collections.ts";
 import type { ChatAttachmentDocument, ChatMessageDocument } from "../types.ts";
 import { attachmentMeta, buildUserTurnContent } from "./attachments.ts";
@@ -15,6 +16,7 @@ import { textFromContent } from "./content.ts";
 import type { AgentRunContext } from "./context.ts";
 import { buildClaraGraph } from "./graph.ts";
 import { bumpThread } from "./threads.ts";
+import { toolLoopRecursionLimit } from "./tool-loop.ts";
 import type { TenderRef } from "./tender-refs.ts";
 import type { WireChatMessage, WireUiCall } from "./wire.ts";
 
@@ -108,6 +110,14 @@ export async function runChatTurn(input: {
    * text extraction cannot reach it (a scanned PDF).
    */
   extraContent?: MessageContentComplex[];
+  /**
+   * Supersteps this graph may take. Every agent passes its own via
+   * `toolLoopRecursionLimit(maxIterations, extraNodes)` — LangGraph's default
+   * of 25 left the tool loops with three supersteps of headroom, so raising
+   * the iteration cap would have thrown GraphRecursionError in production
+   * rather than failing a test.
+   */
+  recursionLimit?: number;
 }): Promise<{ userMessage: ChatMessageDocument; assistantMessage: ChatMessageDocument }> {
   const { ctx, threadId, userText, signal, callbacks } = input;
   const attachments = input.attachments ?? [];
@@ -156,9 +166,21 @@ export async function runChatTurn(input: {
         ];
 
   const graph = input.buildGraph ? await input.buildGraph() : await buildClaraGraph(ctx);
+  // Every graph gets an explicit superstep budget. The default is sized for
+  // the widest tool loop in the product (the global chat's longer iteration
+  // cap) plus the four extra nodes Otto's graph adds around it, so no agent
+  // relies on LangGraph's default of 25 — which they were all within three
+  // supersteps of. Agents whose loops are legitimately longer pass their own.
+  const env = aiEnv();
   const config = {
     configurable: { thread_id: input.threadKey },
     signal,
+    recursionLimit:
+      input.recursionLimit ??
+      toolLoopRecursionLimit(
+        Math.max(env.agentMaxIterations, env.agentGlobalMaxIterations),
+        4,
+      ),
   };
 
   let content = "";

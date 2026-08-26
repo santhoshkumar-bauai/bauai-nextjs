@@ -15,6 +15,7 @@ import { ensureOnboardingThread, resetOnboardingThread } from "@/lib/ai/otto/thr
 import { getCompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
 import { PROFILE_CHOICES } from "@/lib/ai/otto/wire";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * Otto, the onboarding guide. GET bootstraps the user's private thread, its
@@ -89,9 +90,7 @@ export async function POST(request: Request) {
   const context = await getCompanyContext();
   if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   if (
-    !process.env.GEMINI_API_KEY &&
-    !process.env.OPENAI_API_KEY &&
-    !process.env.ANTHROPIC_API_KEY
+    !aiProviderConfigured()
   ) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503 });
   }

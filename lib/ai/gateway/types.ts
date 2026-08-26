@@ -36,7 +36,23 @@ export type ModelRole =
   /** Search-grounded product price lookups for GAEB pricing evidence. */
   | "dora_gaeb_web"
   /** Otto, the onboarding guide: profiling, planning and step-by-step guidance. */
-  | "otto";
+  | "otto"
+  /** Chat-based PDF form-filling agent (POC). Pinned like the other fill
+   * roles — a chat model change must not silently alter a filled form — and
+   * vision-capable: it reads rendered pages and 400dpi inspection crops. */
+  | "fill_agent"
+  /** Fill-agent planning (node_plan): maps a whole template into a fieldmap.
+   * The hardest reasoning in the loop and it runs once per template — the
+   * sol tier. Falls back to `fill_agent` until a sol deployment exists. */
+  | "fill_agent_plan"
+  /** Fill-agent visual critique (node_critique): a narrow checklist over
+   * rendered pages and 400dpi crops — needs vision, not depth. The terra
+   * tier; falls back to `fill_agent`. On the final iteration before
+   * escalation the critique is promoted to the plan tier instead. */
+  | "fill_agent_critique"
+  /** Fill-agent repair (node_repair): structured issues in, small JSON patch
+   * out. The luna tier; falls back to `fill_agent`. */
+  | "fill_agent_repair";
 
 /** Mirrors the retrieval asymmetry of embedding models: documents and
  * queries are embedded with different task hints. */
@@ -94,5 +110,29 @@ export class StructuredOutputError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "StructuredOutputError";
+  }
+}
+
+/**
+ * Thrown when a provider safety filter blocked the prompt or the completion.
+ *
+ * Its own class because it is the one failure here that is neither our bug nor
+ * the user's, and it needs its own message: "the AI service is busy" is wrong
+ * and "failed" is useless. Azure content filtering has no Gemini analogue in
+ * this codebase, and probe P12 confirmed it blocks ordinary German
+ * procurement text — a Leistungsverzeichnis covering Sprengarbeiten,
+ * correctional facilities and medical waste is routine construction work here.
+ *
+ * The dangerous shape is the completion-side one: HTTP **200** with
+ * `finish_reason: "content_filter"` and empty content, invisible to any status
+ * check. Adapters must detect it explicitly and throw this.
+ */
+export class ContentFilterError extends Error {
+  /** "prompt" | "completion" — which side tripped, when the provider says. */
+  readonly stage: "prompt" | "completion" | "unknown";
+  constructor(message: string, stage: "prompt" | "completion" | "unknown" = "unknown") {
+    super(message);
+    this.name = "ContentFilterError";
+    this.stage = stage;
   }
 }

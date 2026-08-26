@@ -219,7 +219,7 @@ export interface TenderVerdictDocument {
 export interface ChatThreadDocument {
   _id?: ObjectId;
   tenantId: ObjectId;
-  kind: "tender" | "global" | "document" | "onboarding";
+  kind: "tender" | "global" | "document" | "onboarding" | "fill_session";
   tenderId: ObjectId | null;
   /** Workspace document a "document" (Dora) thread is bound to; else null. */
   documentId?: ObjectId | null;
@@ -229,7 +229,7 @@ export interface ChatThreadDocument {
   /** Dora document chats: 0 = the legacy frozen-key thread, 1+ = "new chat"
    * generations. Highest generation is the active conversation. */
   generation?: number;
-  agent: "clara" | "dora" | "otto";
+  agent: "clara" | "dora" | "otto" | "fill_agent";
   createdBy: string;
   graphVersion: string;
   lastMessageAt: Date;

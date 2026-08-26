@@ -52,6 +52,7 @@ export interface FillGrounding {
   evidence: Map<string, DocumentFillEvidence>;
   profileLines: string[];
   corpusLines: string[];
+  companyDocumentNames: string[];
 }
 
 /**
@@ -100,5 +101,12 @@ export async function buildFillGrounding(input: {
     return `${ref} (${chunk.fileName}, ${chunk.sectionPath.join(" > ")}): ${chunk.text}`;
   });
 
-  return { evidence, profileLines, corpusLines };
+  return {
+    evidence,
+    profileLines,
+    corpusLines,
+    companyDocumentNames: [
+      ...new Set(corpus.filter((chunk) => chunk.tenantId).map((chunk) => chunk.fileName)),
+    ],
+  };
 }

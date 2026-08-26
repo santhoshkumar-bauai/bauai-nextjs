@@ -10,12 +10,23 @@ export const DORA_BRIEF_PROMPT_VERSION = "dora-brief-p1";
  * unknown IDs, so a fabricated citation cannot survive.
  *
  * The content is generated in TWO calls (analysis + action plan) and
- * translated per language afterwards — empirically, gemini-3.5-flash's
- * structured-output validator rejects schemas with more than ~4
- * array-of-object properties with a bare 400 ("Request contains an invalid
- * argument"), so the full brief cannot be one declaration. Never merge these
- * schemas into one model call. (No `.nullable()` anywhere for the same
- * reason: JSON-Schema null unions are also rejected.)
+ * translated per language afterwards.
+ *
+ * That split began as a workaround: gemini-3.5-flash's structured-output
+ * validator rejected schemas with more than ~4 array-of-object properties
+ * with a bare 400 ("Request contains an invalid argument"). On the Azure
+ * models that constraint is gone — but the split is worth keeping on its own
+ * merits, and those are the reasons that now hold it in place:
+ *
+ *   1. The two calls run in `Promise.all`. Merging them serialises a surface
+ *      that renders a visible progress bar.
+ *   2. Budget isolation. Two calls give twice the combined reasoning+output
+ *      headroom, and an overrun loses one half rather than both.
+ *
+ * The old prohibition on `.nullable()` is genuinely dead and has been
+ * removed: OpenAI strict mode actively REQUIRES null unions, since it has no
+ * way to express an optional property. Null unions are now the portable
+ * spelling for "this field may legitimately be empty".
  */
 
 const evidenceIds = z

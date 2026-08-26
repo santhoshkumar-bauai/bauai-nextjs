@@ -142,6 +142,22 @@ export function windowFromUserTurn(
   return sanitizeToolPairs(messages.slice(begin < 0 ? cut : begin));
 }
 
+/**
+ * Supersteps a tool loop can take, plus headroom.
+ *
+ * `beginTurn` + n × (`model`, `tools`) + `model` + `finalize`, and every node
+ * is its own superstep. LangGraph's default `recursionLimit` is 25, which left
+ * Clara at 21 and Otto at 22 — three supersteps of headroom on a limit nobody
+ * had set, and raising AI_AGENT_MAX_ITERATIONS by one would have pushed Otto
+ * past it in production rather than in CI.
+ *
+ * `extraNodes` covers host graphs that wrap the loop: Otto adds plan, verify
+ * and an auto-advance pass.
+ */
+export function toolLoopRecursionLimit(maxIterations: number, extraNodes = 0): number {
+  return 2 * maxIterations + 4 + extraNodes;
+}
+
 export interface ToolLoopNodesInput {
   model: BaseChatModel;
   tools: StructuredToolInterface[];
@@ -153,11 +169,81 @@ export interface ToolLoopNodesInput {
    */
   systemPrompt: SystemMessage | ((state: ToolLoopStateType) => SystemMessage);
   maxIterations: number;
+  /**
+   * Hard message ceiling, and the whole window strategy when
+   * `historyMaxTokens` is unset. Keep it: `windowFromUserTurn` encodes a
+   * paid-for Gemini 400 that a naive replacement would reintroduce.
+   */
   historyMaxMessages: number;
+  /**
+   * Token budget for the model-visible window. When set, it supersedes the
+   * message count — 30 messages is under two turns of a tool-heavy chat, and
+   * on a million-token context that throws away almost the whole conversation
+   * for no reason. Unset keeps today's behaviour exactly.
+   */
+  historyMaxTokens?: number;
 }
 
 export interface ToolLoopGraphInput extends ToolLoopNodesInput {
   checkpointer: BaseCheckpointSaver;
+}
+
+/**
+ * Rough token count for a message window.
+ *
+ * Deliberately local rather than `tokenCounter: model`, which LangChain
+ * supports and which would be wrong here twice over. It resolves the model to
+ * a tiktoken encoding and fetches it from `tiktoken.pages.dev` on first use —
+ * a network call on the hot path of every model invocation — and its
+ * `getNumTokens` sums only `type: "text"` blocks, so images and files count as
+ * ZERO. A fill-agent window carrying 50 rendered pages would measure as
+ * nothing and never trim, which is precisely the window that needs trimming.
+ *
+ * Accuracy beyond "the right order of magnitude" buys nothing: the budget is
+ * a safety margin, not an invoice.
+ */
+const CHARS_PER_TOKEN = 3.5; // German prose and JSON both run denser than English
+const IMAGE_TOKENS = 1_100; // one rendered page at default detail
+const FILE_TOKENS = 4_000; // a PDF the model reads natively
+
+export function approxMessageTokens(messages: BaseMessage[]): number {
+  let total = 0;
+  for (const message of messages) {
+    total += 4; // role and framing overhead
+
+    const content = message.content;
+    if (typeof content === "string") {
+      total += Math.ceil(content.length / CHARS_PER_TOKEN);
+    } else if (Array.isArray(content)) {
+      for (const part of content as unknown[]) {
+        if (typeof part === "string") {
+          total += Math.ceil(part.length / CHARS_PER_TOKEN);
+          continue;
+        }
+        const block = part as { type?: string; text?: string; mimeType?: string };
+        if (block.type === "text" && typeof block.text === "string") {
+          total += Math.ceil(block.text.length / CHARS_PER_TOKEN);
+        } else if (block.type === "image_url") {
+          total += IMAGE_TOKENS;
+        } else if (block.type === "media_ref") {
+          // Trimming runs BEFORE resolveMediaParts, so attachments are still
+          // cheap refs here — charge what they will cost once materialized.
+          total += block.mimeType?.startsWith("image/") ? IMAGE_TOKENS : FILE_TOKENS;
+        } else if (block.type === "file") {
+          total += FILE_TOKENS;
+        }
+      }
+    }
+
+    // Always, never inside the content branches: a tool-calling turn carries
+    // its arguments beside an empty string content, so charging these only for
+    // array content would score the entire tool loop at ~0.
+    const toolCalls = (message as { tool_calls?: unknown[] }).tool_calls;
+    if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+      total += Math.ceil(JSON.stringify(toolCalls).length / CHARS_PER_TOKEN);
+    }
+  }
+  return total;
 }
 
 /**
@@ -189,8 +275,38 @@ export function createToolLoopNodes(input: ToolLoopNodesInput) {
 
   // Repairs both slice damage (a window starting mid tool-loop) and dangling
   // tool-call turns left in state by the finalize path.
-  const contextWindow = (messages: BaseMessage[]): BaseMessage[] =>
-    windowFromUserTurn(messages, input.historyMaxMessages);
+  const contextWindow = async (messages: BaseMessage[]): Promise<BaseMessage[]> => {
+    if (!input.historyMaxTokens) {
+      return windowFromUserTurn(messages, input.historyMaxMessages);
+    }
+
+    // Bound the work first: without this, trimMessages walks the entire
+    // thread on every superstep of every turn.
+    const ceiling = Math.max(input.historyMaxMessages * 4, 120);
+    const capped = messages.slice(-ceiling);
+
+    const { trimMessages } = await import("@langchain/core/messages");
+    const trimmed = await trimMessages(capped, {
+      maxTokens: input.historyMaxTokens,
+      strategy: "last",
+      // Same intent as windowFromUserTurn: a function-call turn may not open
+      // the window, or Gemini rejects the whole request.
+      startOn: "human",
+      tokenCounter: approxMessageTokens,
+      // `includeSystem` would be a no-op — the system prompt is not in state,
+      // it is prepended per model call below.
+    });
+
+    // trimMessages returns [] when even the newest human turn exceeds the
+    // budget. windowFromUserTurn deliberately overshoots in that case ("a
+    // window slightly over max beats a guaranteed 400"); keep that.
+    const window = trimmed.length > 0 ? trimmed : capped.slice(-1);
+
+    // Always, and after trimming. trimMessages understands tool pairs, but not
+    // the DANGLING tool-call request the finalize path leaves in checkpointed
+    // state — a concat reducer can only append.
+    return sanitizeToolPairs(window);
+  };
 
   // Attached images are checkpointed as tiny media_ref parts; the base64
   // payload is materialized here, per model call, cached for the turn.
@@ -199,7 +315,7 @@ export function createToolLoopNodes(input: ToolLoopNodesInput) {
   // Forwarding `config` into every model invocation is what propagates the
   // callback manager — without it, streamEvents sees no token/tool events.
   const modelNode = async (state: ToolLoopStateType, config: RunnableConfig) => {
-    const window = await resolveMediaParts(contextWindow(state.messages), mediaCache);
+    const window = await resolveMediaParts(await contextWindow(state.messages), mediaCache);
     const response = await boundModel.invoke([resolvePrompt(state), ...window], config);
     return { messages: [response], iterations: state.iterations + 1 };
   };
@@ -214,7 +330,7 @@ export function createToolLoopNodes(input: ToolLoopNodesInput) {
     const messages = hasToolCalls(lastMessage(state))
       ? state.messages.slice(0, -1)
       : state.messages;
-    const window = await resolveMediaParts(contextWindow(messages), mediaCache);
+    const window = await resolveMediaParts(await contextWindow(messages), mediaCache);
     const nudge = new HumanMessage(
       "Stop gathering. Using ONLY the information collected above, give your final answer to my original question now, in plain prose. If something could not be determined, say so explicitly. Do not request any tools.",
     );

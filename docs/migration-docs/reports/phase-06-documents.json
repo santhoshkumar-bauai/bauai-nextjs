@@ -1,0 +1,24 @@
+{
+  "phase": "06-documents",
+  "ranAt": "2026-08-25T12:08:42.983Z",
+  "signedOffBy": "Santhosh Kumar",
+  "includeChatAttachments": false,
+  "kinds": {
+    "company-document": 40,
+    "chat-attachment": 461,
+    "tender-artifact": 567
+  },
+  "totals": {
+    "planned": 40,
+    "copied": 40,
+    "alreadyPresent": 0,
+    "failed": 1,
+    "logos": 1
+  },
+  "failures": [
+    {
+      "fileName": "logo:hansa-bauunternehmung.de",
+      "reason": "unreadable logo_url"
+    }
+  ]
+}

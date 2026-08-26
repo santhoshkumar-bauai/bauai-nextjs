@@ -27,6 +27,7 @@ import { getAiCollections } from "@/lib/ai/db/collections";
 import { getCompanyContext } from "@/lib/company/context";
 import { loadGaebRouteScope, type GaebRouteScope } from "@/lib/gaeb/route-context";
 import { getOrParseGaebDocument } from "@/lib/gaeb/store";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 import {
   enqueueDocumentFillAnalysis,
   enqueueDocumentFillGeneration,
@@ -123,7 +124,7 @@ export async function POST(
   const { action } = parsedBody.data;
 
   if (action === "analyze") {
-    if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+    if (!aiProviderConfigured()) {
       return NextResponse.json({ error: "no_ai_provider" }, { status: 503 });
     }
     const active = await latestFillRun(scope.tenantId, scope.documentId);

@@ -42,6 +42,7 @@ import {
   gaebPricingBatchSchema,
 } from "./schema-gaeb";
 import { lookupWebPrices, type GaebWebPriceFinding } from "./web-prices";
+import { withProviderStructuredOutput } from "../../../agent/structured.ts";
 
 /**
  * The GAEB pricing engine. Stage mapping onto the shared ladder:
@@ -270,8 +271,9 @@ async function extractTenderContext(parsed: GaebDocument): Promise<GaebTenderCon
       maxOutputTokens: 4_096,
       temperature: 0,
     });
-    const structured = model.withStructuredOutput(GAEB_CONTEXT_JSON_SCHEMA as never, {
+    const structured = withProviderStructuredOutput(model, GAEB_CONTEXT_JSON_SCHEMA, {
       name: "gaeb_tender_context",
+      role: "dora_gaeb_fill",
     });
     const raw = await structured.invoke(
       buildGaebContextPrompt({ document: parsed, locale: SUGGESTION_LOCALE }),
@@ -327,7 +329,8 @@ async function classifyPending(input: {
     maxOutputTokens: input.env.gaebFillMaxOutputTokens,
     temperature: 0,
   });
-  const structured = model.withStructuredOutput(GAEB_CLASSIFY_BATCH_JSON_SCHEMA as never, {
+  const structured = withProviderStructuredOutput(model, GAEB_CLASSIFY_BATCH_JSON_SCHEMA, {
+    role: "dora_gaeb_fill",
     name: "gaeb_classify_batch",
   });
 
@@ -427,7 +430,8 @@ async function priceClassified(input: {
     maxOutputTokens: input.env.gaebFillMaxOutputTokens,
     temperature: 0,
   });
-  const structured = model.withStructuredOutput(GAEB_PRICING_BATCH_JSON_SCHEMA as never, {
+  const structured = withProviderStructuredOutput(model, GAEB_PRICING_BATCH_JSON_SCHEMA, {
+    role: "dora_gaeb_fill",
     name: "gaeb_pricing_batch",
   });
 

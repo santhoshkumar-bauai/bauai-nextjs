@@ -21,15 +21,23 @@ procurement terms ↔ English identifiers), [`docs/ONLYOFFICE/`](../ONLYOFFICE/)
 | 6 | [Implementation review](06-review.md) | What is genuinely good, what is fragile, ranked concrete improvements |
 | 7 | [Observability with Langfuse](07-observability-langfuse.md) | **Proposed.** Full integration design, code, rollout, dashboards, cost control |
 | 8 | [Operations](08-operations.md) | Every env knob, runbooks, resets, tests, cost levers, incident playbooks |
+| 9 | [The Azure migration](09-azure-migration.md) | What the live deployment actually does, the two library bugs it exposed, and the backlog |
 
 ## One-page summary
 
 **Two lanes.** Deterministic pipelines (embedding, extraction, classification,
 matching, overview, fit) go through a hand-written provider gateway
-(`lib/ai/gateway/`, raw `fetch`, no SDK). Conversational agents go through
-LangChain chat models driven by LangGraph state machines (`lib/ai/agent/`,
-`dora/`, `otto/`). The two lanes share one thing: the **model-role registry**,
-so `AI_MODEL_ROLES` is the single place any model or provider changes.
+(`lib/ai/gateway/`). Conversational agents go through LangChain chat models
+driven by LangGraph state machines (`lib/ai/agent/`, `dora/`, `otto/`). The two
+lanes share one thing: the **model-role registry**, so `AI_MODEL_ROLES` is the
+single place any model or provider changes.
+
+**One model, fourteen operating points.** Every generation role runs on Azure
+OpenAI `gpt-5.6-luna`; the roles differ by **reasoning effort and output
+budget**, not by model — `dora_fast` does no thinking because it streams into a
+document, `report` gets the top rung because nobody is watching it. `embedding`
+is the one role that stays on Gemini, because moving it means re-embedding the
+whole corpus. See [§9](09-azure-migration.md).
 
 **Four graphs, one loop.** Clara (tender chat), Dora (document assistant),
 Dora-Spreadsheet, and Otto (onboarding) all compile from

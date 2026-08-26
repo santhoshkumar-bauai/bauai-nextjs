@@ -24,6 +24,7 @@ import {
   verdictOutputSchema,
   type VerdictOutput,
 } from "./schema.ts";
+import { withProviderStructuredOutput } from "../agent/structured.ts";
 
 const log = logger.child("ai.verdict");
 
@@ -147,9 +148,10 @@ export async function generateVerdict(input: {
 
   input.onProgress?.("drafting");
   const model = await getAgentChatModel({ maxOutputTokens: 4096 });
-  const structured = model.withStructuredOutput<VerdictOutput>(
-    VERDICT_JSON_SCHEMA as never,
-    { name: "tender_verdict" },
+  const structured = withProviderStructuredOutput<VerdictOutput>(
+    model,
+    VERDICT_JSON_SCHEMA,
+    { name: "tender_verdict", role: "agent" },
   );
   const raw = await structured.invoke(prompt);
   const output = verdictOutputSchema.parse(raw);

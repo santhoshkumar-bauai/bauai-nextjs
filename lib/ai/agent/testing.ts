@@ -55,7 +55,24 @@ export class FakeToolCallingChatModel extends BaseChatModel {
       await runManager.handleLLMNewToken(text.slice(0, mid));
       await runManager.handleLLMNewToken(text.slice(mid));
     }
-    return { generations: [{ text, message }] };
+    // An AIMessageChunk, not a plain AIMessage — real chat models yield chunks
+    // and `BaseChatModel.withStructuredOutput`'s generic pipeline asserts on
+    // it ("Input is not an AIMessageChunk"). Returning an AIMessage meant
+    // Otto's planner ALWAYS threw in tests and always fell back to registry
+    // order, so the planned path was never actually exercised; the assertions
+    // pass either way, which is what hid it. A chunk is still an AIMessage,
+    // so nothing downstream notices the difference.
+    return {
+      generations: [
+        {
+          text,
+          message: new AIMessageChunk({
+            content: message.content,
+            ...(message.tool_calls?.length ? { tool_calls: message.tool_calls } : {}),
+          }),
+        },
+      ],
+    };
   }
 
   async *_streamResponseChunks(

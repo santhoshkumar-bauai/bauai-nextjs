@@ -278,3 +278,62 @@ describe("Otto graph", () => {
     expect(after.state.attemptCount).toBeGreaterThan(0);
   });
 });
+
+describe("Otto planner (the LLM-chosen path)", () => {
+  it("uses the plan the model returns, in the model's order", async () => {
+    // Until the fake model was fixed to yield an AIMessageChunk, the planner
+    // ALWAYS threw and every one of these tests silently measured the
+    // registry-order fallback instead. Scripting a real planner tool call is
+    // what proves the planned path works at all.
+    complete.add("complete_company_profile");
+
+    const chosen: MilestoneId[] = ["ask_clara", "save_first_tender"];
+    setAgentModelForTests(
+      new FakeToolCallingChatModel([
+        new AIMessage("q1"),
+        new AIMessage("q2"),
+        new AIMessage("q3"),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              name: "onboarding_plan",
+              args: { milestoneIds: chosen },
+              id: "plan-1",
+              type: "tool_call",
+            },
+          ],
+        }),
+        new AIMessage("Let's start with Clara."),
+      ]),
+    );
+    const graph = await buildOttoGraph(fakeCtx());
+
+    await turn(graph, "t-planner", "hi");
+    await turn(graph, "t-planner", "owner");
+    await turn(graph, "t-planner", "findTenders");
+    const { state } = await turn(graph, "t-planner", "solo");
+
+    expect(state.plannedMilestones).toEqual(chosen);
+    expect(state.currentMilestoneId).toBe("ask_clara");
+    // sanitizePlan still enforces the registry's rules in code, so an
+    // already-complete milestone cannot be planned even if the model names it.
+    expect(state.plannedMilestones).not.toContain("complete_company_profile");
+  });
+});
+
+describe("Otto planner schema (strict-mode contract)", () => {
+  it("has no optional properties", async () => {
+    // This schema goes to withStructuredOutput directly, so LangChain converts
+    // it with strict: true and WITHOUT the optional-to-nullable widening that
+    // lib/ai/gateway/json-schema.ts applies everywhere else. An `.optional()`
+    // here would be a 400 at runtime with nothing to catch it at build time.
+    const { OttoPlanSchema } = await import("./graph.ts");
+    const { z } = await import("zod");
+    const json = z.toJSONSchema(OttoPlanSchema, { target: "draft-7" }) as {
+      properties: Record<string, unknown>;
+      required?: string[];
+    };
+    expect(json.required ?? []).toEqual(Object.keys(json.properties));
+  });
+});

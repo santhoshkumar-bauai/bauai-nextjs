@@ -1,7 +1,15 @@
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { ReasoningEffort as OpenAIReasoningEffort } from "openai/resources/shared";
 
-import { aiEnv, requireGeminiApiKey } from "../config/env.ts";
-import { resolveRole } from "../gateway/config.ts";
+import {
+  aiEnv,
+  requireGeminiApiKey,
+  roleMaxOutputTokens,
+  roleReasoningEffort,
+  type ReasoningEffort,
+} from "../config/env.ts";
+import { azureClientOptions } from "../config/azure.ts";
+import { resolveAzureDeployment, resolveRole } from "../gateway/config.ts";
 import type { ModelRole } from "../gateway/types.ts";
 
 /**
@@ -37,11 +45,50 @@ export interface AgentModelOptions {
   temperature?: number;
 }
 
-type ReasoningEffort = "none" | "low" | "medium" | "high";
+export type { ReasoningEffort };
 
 function geminiUsesFixedSampling(model: string): boolean {
   const match = model.replace(/^models\//, "").match(/^gemini-3\.(\d+)(?:-|$)/);
   return match !== null && Number(match[1]) >= 6;
+}
+
+/**
+ * The product effort ladder has six rungs; no provider accepts all six. Each
+ * mapper below clamps into its own vocabulary, so raising a role to `xhigh`
+ * can never 400 a deployment that has never heard of it.
+ */
+
+/** Gemini's thinkingLevel stops at HIGH — the two top rungs fold into it. */
+function geminiThinkingLevel(effort: Exclude<ReasoningEffort, "none">): "LOW" | "MEDIUM" | "HIGH" {
+  if (effort === "low") return "LOW";
+  if (effort === "medium") return "MEDIUM";
+  return "HIGH";
+}
+
+/**
+ * OpenAI-family effort, per model generation.
+ *
+ * Only gpt-5.0 spells "no thinking" as `minimal`; gpt-5.1 and later spell it
+ * `none` and reject `minimal` outright:
+ *
+ *   "Unsupported value: 'minimal' is not supported with the
+ *    'gpt-5.6-luna-2026-07-09' model. Supported values are: 'none', 'low',
+ *    'medium', 'high', 'xhigh', and 'max'."
+ *
+ * Note the separator class excludes `.` deliberately — `[-._]` would make
+ * "gpt-5.6-luna" match the gpt-5.0 branch and send `minimal`, which is exactly
+ * the 400 above.
+ *
+ * `max` is passed through: the Responses API accepts it (see the message
+ * above) and that is the surface we run on. The chat/completions escape hatch
+ * has a shorter ladder, but it cannot combine tools with any effort at all, so
+ * it is already a degraded mode.
+ */
+function openAiEffort(model: string, effort: ReasoningEffort): OpenAIReasoningEffort {
+  const isGpt5Zero = /^gpt-5(\.0)?([-_]|$)/.test(model);
+  if (effort === "none") return isGpt5Zero ? "minimal" : "none";
+  if (effort === "max" && isGpt5Zero) return "high";
+  return effort;
 }
 
 export interface ChatModelOptions extends AgentModelOptions {
@@ -57,16 +104,22 @@ export interface ChatModelOptions extends AgentModelOptions {
     | "dora_gaeb_fill"
     | "dora_gaeb_web"
     | "otto"
+    | "fill_agent"
+    | "fill_agent_plan"
+    | "fill_agent_critique"
+    | "fill_agent_repair"
   >;
   /** Overrides the env-configured effort for this role. */
   reasoningEffort?: ReasoningEffort;
 }
 
 /** Anthropic extended-thinking budgets; must stay below maxTokens. */
-const ANTHROPIC_THINKING_BUDGET: Record<"low" | "medium" | "high", number> = {
+const ANTHROPIC_THINKING_BUDGET: Record<Exclude<ReasoningEffort, "none">, number> = {
   low: 2_048,
   medium: 6_144,
   high: 12_288,
+  xhigh: 24_576,
+  max: 32_768,
 };
 
 /** The chat model for one role — "agent" unless told otherwise. */
@@ -78,16 +131,16 @@ export async function getChatModel(
   const env = aiEnv();
   const role = options.role ?? "agent";
   const ref = resolveRole(role);
-  const maxOutputTokens =
-    options.maxOutputTokens ??
-    (role === "report" ? env.reportMaxOutputTokens : env.agentMaxOutputTokens);
+  // Per-role budget and effort, overridable at the call site. On a reasoning
+  // model this budget is SHARED with the thinking, so the role table sizes it
+  // for both — see defaultRoleMaxOutputTokens().
+  const maxOutputTokens = options.maxOutputTokens ?? roleMaxOutputTokens(role);
   const temperature = options.temperature ?? 0.2;
   // Thinking-model support: reasoning content parts are already handled on
   // the way out (textFromContent); this maps the requested effort onto each
   // provider's own knob. Unset = provider default (dynamic thinking).
   const effort: ReasoningEffort | undefined =
-    options.reasoningEffort ??
-    (role === "report" ? env.reportReasoningEffort : env.agentReasoningEffort);
+    options.reasoningEffort ?? roleReasoningEffort(role);
 
   switch (ref.provider) {
     case "gemini": {
@@ -103,11 +156,7 @@ export async function getChatModel(
         ...(effort === "none"
           ? { thinkingConfig: { thinkingBudget: 0 } }
           : effort
-            ? {
-                thinkingConfig: {
-                  thinkingLevel: effort.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
-                },
-              }
+            ? { thinkingConfig: { thinkingLevel: geminiThinkingLevel(effort) } }
             : {}),
       });
     }
@@ -118,12 +167,52 @@ export async function getChatModel(
         apiKey: requireKey("OPENAI_API_KEY", "openai", role),
         temperature,
         maxTokens: maxOutputTokens,
-        ...(effort ? { reasoningEffort: effort === "none" ? "minimal" : effort } : {}),
+        // `reasoning: { effort }`, NOT `reasoningEffort`. The latter is a CALL
+        // option only (`chat_models/base.d.ts:118`); the constructor stores
+        // just `this.reasoning` (`base.js:249`), so the old spelling here was
+        // silently dropped and this branch never sent reasoning_effort at all.
+        // Never set `reasoning.summary` unintentionally — it is treated as a
+        // Responses-only kwarg and would force that API (`index.js:573`).
+        ...(effort ? { reasoning: { effort: openAiEffort(ref.model, effort) } } : {}),
+      });
+    }
+    case "azure": {
+      const { ChatOpenAI } = await import("@langchain/openai");
+      const deployment = resolveAzureDeployment(ref.model);
+      const configuration = await azureClientOptions(deployment, role);
+
+      // Plain ChatOpenAI, not AzureChatOpenAI: this resource serves only the
+      // OpenAI-compatible /openai/v1 surface, and AzureChatOpenAI hard-codes a
+      // /openai/deployments/... base URL that 404s here. See config/azure.ts.
+      return new ChatOpenAI({
+        // The real model id, never the deployment — it drives isReasoningModel
+        // (hence max_completion_tokens, which is mandatory here) and is what
+        // gets stamped on cached artifacts. azureClientOptions swaps in the
+        // deployment name on the way out.
+        model: ref.model,
+        apiKey: "entra",
+        configuration,
+        // gpt-5.x accepts only its default temperature of 1 and 400s on
+        // anything else, so we never send one. Same shape as the Gemini 3.6+
+        // fixed-sampling quirk above: leaving it undefined keeps it off the
+        // wire entirely.
+        maxTokens: maxOutputTokens,
+        ...(effort ? { reasoning: { effort: openAiEffort(ref.model, effort) } } : {}),
+        // Not a preference: /v1/chat/completions rejects function tools
+        // combined with any reasoning_effort above "none", and every agent
+        // here is a tool loop. Responses is the only surface that gives us
+        // both. AI_AZURE_RESPONSES=false is an escape hatch that costs
+        // reasoning on every tool-calling role.
+        useResponsesApi: env.azureUseResponsesApi,
+        // Long stable system prompts with short varying tails is exactly the
+        // caching shape; probe P11 measured 8526 of 8529 tokens served warm.
+        promptCacheKey: `bauai:${role}`,
       });
     }
     case "anthropic": {
       const { ChatAnthropic } = await import("@langchain/anthropic");
-      const budget = effort && effort !== "none" ? ANTHROPIC_THINKING_BUDGET[effort] : null;
+      const budget =
+        effort && effort !== "none" ? ANTHROPIC_THINKING_BUDGET[effort] : null;
       return new ChatAnthropic({
         model: ref.model,
         apiKey: requireKey("ANTHROPIC_API_KEY", "anthropic", role),
@@ -136,7 +225,7 @@ export async function getChatModel(
     }
     default:
       throw new Error(
-        `Unknown ${role} provider "${ref.provider}". Known: gemini, openai, anthropic.`,
+        `Unknown ${role} provider "${ref.provider}". Known: gemini, openai, anthropic, azure.`,
       );
   }
 }

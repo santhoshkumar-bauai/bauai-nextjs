@@ -52,6 +52,16 @@ const log = logger.child("ai.otto");
  *    questions directly instead.
  */
 
+/**
+ * The only Zod schema handed straight to `withStructuredOutput` rather than
+ * through `withProviderStructuredOutput` — LangChain converts it internally.
+ *
+ * That path hard-codes `strict: true` and does NOT implement the
+ * optional-to-nullable widening our own adapter does, so every property here
+ * must be required. It is today (one field, `.min(1)`), and this schema is
+ * small enough that keeping it that way is easy — but adding an `.optional()`
+ * would 400 at runtime with no compile-time signal. `graph.test.ts` pins it.
+ */
 const PlanSchema = z.object({
   milestoneIds: z
     .array(z.enum(MILESTONE_IDS))
@@ -59,6 +69,8 @@ const PlanSchema = z.object({
     .max(MILESTONE_IDS.length)
     .describe("The chosen milestone ids, in the order the user should do them."),
 });
+
+export { PlanSchema as OttoPlanSchema };
 
 /** Last human turn, which is how an answer to a profile question arrives. */
 function lastUserText(state: OttoStateType): string {
@@ -212,6 +224,7 @@ export async function buildOttoGraph(ctx: OttoRunContext) {
       new SystemMessage(buildOttoSystemPrompt(ctx, state as OttoStateType)),
     maxIterations: env.agentMaxIterations,
     historyMaxMessages: env.agentHistoryMaxMessages,
+    historyMaxTokens: env.agentHistoryMaxTokens,
   });
 
   /**

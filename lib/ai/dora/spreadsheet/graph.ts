@@ -21,6 +21,7 @@ export async function buildDoraSpreadsheetGraph(
     systemPrompt: new SystemMessage(buildDoraSpreadsheetSystemPrompt(ctx, context)),
     maxIterations: env.agentMaxIterations,
     historyMaxMessages: env.agentHistoryMaxMessages,
+    historyMaxTokens: env.agentHistoryMaxTokens,
     checkpointer: await getClaraCheckpointer(),
   });
 }

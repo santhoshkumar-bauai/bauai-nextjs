@@ -8,6 +8,7 @@ import type { AgentSseEvent } from "../agent/wire.ts";
 import type { DoraRunContext } from "./context.ts";
 import type { StoredDoraSnapshot } from "../../dora-gateway/snapshot-schema.ts";
 import { recordEditTransactionState } from "../../dora-gateway/audit.ts";
+import { classifyAiError } from "../agent/errors.ts";
 import { resolveRole } from "../gateway/config.ts";
 
 /**
@@ -243,12 +244,15 @@ export function streamDoraEditStreamResponse(input: {
           });
           send({ type: "message", message: serializeChatMessage(assistantMessage) });
         } catch (error) {
+          // `empty_stream` is ours and stays first; everything else is the
+          // provider's failure and goes through the shared classifier.
+          const classified = classifyAiError(error);
           const failureCode =
-            error instanceof Error && /rate.?limit/i.test(error.message)
-              ? "rate_limited"
-              : error instanceof Error && error.message === "empty_stream"
-                ? "empty_stream"
-                : "stream_failed";
+            error instanceof Error && error.message === "empty_stream"
+              ? "empty_stream"
+              : classified === "failed"
+                ? "stream_failed"
+                : classified;
           await audit("failed", failureCode);
           send({
             type: "edit_result",
@@ -258,7 +262,7 @@ export function streamDoraEditStreamResponse(input: {
             finalText,
             results: [],
           });
-          send({ type: "error", message: failureCode === "rate_limited" ? "rate_limited" : "failed" });
+          send({ type: "error", message: classified });
         } finally {
           close();
         }

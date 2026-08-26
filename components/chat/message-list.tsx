@@ -51,6 +51,17 @@ const TOOL_LABEL_KEYS = [
   "get_document_brief",
   "get_document_info",
   "get_tender_context",
+  // Fill agent (POC) tools — same catalog, same generic fallback.
+  "analyze_pdf",
+  "propose_fieldmap",
+  "set_field_values",
+  "fill_and_validate",
+  "critique_fill",
+  "repair_fieldmap",
+  "run_python",
+  "render_preview",
+  "get_session_status",
+  "search_company_data",
 ] as const;
 
 const VERDICT_STAGES = ["loading_artifacts", "retrieving_gaps", "drafting"] as const;
@@ -203,6 +214,7 @@ export function MessageList({
   activeStage = null,
   liveTenderRefs = [],
   thinkingText,
+  autoScroll = "always",
 }: {
   messages: WireChatMessage[];
   streamingText: string;
@@ -221,13 +233,42 @@ export function MessageList({
    * flight; the finished message carries the same list persistently.
    */
   liveTenderRefs?: WireTenderRef[];
+  /**
+   * "always" (default, legacy behavior) scrolls to the bottom on every
+   * update. "pinned" only follows while the user IS at the bottom — reading
+   * an earlier message is never yanked away by a streaming token; scrolling
+   * back down re-pins. First history load always jumps to the latest.
+   */
+  autoScroll?: "always" | "pinned";
 }) {
   const t = useTranslations("Chat");
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Continuously tracked by an IntersectionObserver so update time doesn't
+  // have to guess scroll positions across unknown scroll containers.
+  const pinnedRef = useRef(true);
+  const hadMessagesRef = useRef(false);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, streamingText, pending]);
+    if (autoScroll !== "pinned" || !bottomRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        pinnedRef.current = entry.isIntersecting;
+      },
+      { rootMargin: "0px 0px 120px 0px" },
+    );
+    observer.observe(bottomRef.current);
+    return () => observer.disconnect();
+  }, [autoScroll]);
+
+  useEffect(() => {
+    const firstLoad = !hadMessagesRef.current && messages.length > 0;
+    hadMessagesRef.current = hadMessagesRef.current || messages.length > 0;
+    if (autoScroll === "pinned" && !pinnedRef.current && !firstLoad) return;
+    bottomRef.current?.scrollIntoView({
+      behavior: firstLoad ? "instant" : "smooth",
+      block: "end",
+    });
+  }, [messages.length, streamingText, pending, autoScroll]);
 
   return (
     <div className="flex flex-col gap-3">

@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { CitationChips } from "@/components/chat/citation-chip";
 import type { WireBriefRunState, WireBriefStatus, WireDocumentBrief } from "@/lib/ai/dora/wire";
 import { cn } from "@/lib/utils";
+import { useAiErrorMessage } from "../chat/use-ai-error-message";
 
 /**
  * The Document Brief: staged progress while generating (resumable across
@@ -34,6 +35,7 @@ export function BriefSection({
   onGenerate: (refresh: boolean) => void;
 }) {
   const t = useTranslations("Dora");
+  const aiErrorMessage = useAiErrorMessage();
 
   if (!aiAvailable) {
     return <Note>{t("noProvider")}</Note>;
@@ -57,9 +59,7 @@ export function BriefSection({
           <span className="text-[11px] text-rose-700">
             {error === "not_ready"
               ? t("notReady")
-              : status.run?.error === "rate_limited"
-                ? t("rateLimited")
-                : t("failed")}
+              : aiErrorMessage(status.run?.error)}
           </span>
           <button
             type="button"

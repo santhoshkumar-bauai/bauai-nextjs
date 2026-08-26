@@ -9,6 +9,7 @@ import { MessageList } from "@/components/chat/message-list";
 import { useClaraChat } from "@/components/chat/use-clara-chat";
 import { BriefSection } from "./brief-section";
 import { useDoraBrief } from "./use-dora-brief";
+import { useAiErrorMessage } from "../chat/use-ai-error-message";
 
 /**
  * Dora — the document assistant panel beside the ONLYOFFICE editor. Brief on
@@ -26,6 +27,7 @@ export function DoraPanel({
   onClose: () => void;
 }) {
   const t = useTranslations("Dora");
+  const aiErrorMessage = useAiErrorMessage();
   const locale = useLocale() as "en" | "de";
   const chat = useClaraChat(`/api/workspace-documents/${documentId}/dora/chat`, {
     locale,
@@ -113,7 +115,7 @@ export function DoraPanel({
           )}
           {chat.error && (
             <p className="pt-2 text-center text-[11px] text-rose-600">
-              {chat.error === "rate_limited" ? t("rateLimited") : t("chatError")}
+              {aiErrorMessage(chat.error)}
             </p>
           )}
         </div>

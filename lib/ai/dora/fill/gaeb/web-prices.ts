@@ -1,7 +1,10 @@
 import { getChatModel } from "@/lib/ai/agent/model";
 import { aiEnv } from "@/lib/ai/config/env";
+import { resolveRole } from "../../../gateway/config.ts";
+import { bindWebSearch, citationUrls } from "../../../agent/web-search.ts";
 
 import { GAEB_WEB_PRICE_JSON_SCHEMA, gaebWebPriceSchema } from "./schema-gaeb";
+import { withProviderStructuredOutput } from "../../../agent/structured.ts";
 
 /**
  * Search-grounded market-price evidence for named products. Strictly an
@@ -9,10 +12,20 @@ import { GAEB_WEB_PRICE_JSON_SCHEMA, gaebWebPriceSchema } from "./schema-gaeb";
  * degrade to "no web evidence" plus a run warning — pricing itself never
  * blocks on the web.
  *
- * Two-step by necessity: Gemini cannot combine googleSearch grounding with
- * forced function calling in one request, so grounded research produces text
- * (step 1, one call per product) and a separate structured call distills the
- * findings (step 2, batched).
+ * Two steps, and they stay two steps.
+ *
+ * The original reason was a Gemini limitation — grounding could not be
+ * combined with forced function calling in one request — and on the Responses
+ * API that is no longer true. The reasons that hold now are better ones:
+ *
+ *   1. Economics. Research is per-product (up to gaebWebPricingMaxLookups);
+ *      distillation is batched. Merging turns ~4 structured calls into ~40.
+ *   2. Role separation. Research runs on `dora_gaeb_web`; distillation runs on
+ *      `dora_gaeb_fill`, the role pinned precisely so that chat-model changes
+ *      cannot alter priced offers. Merging puts a searching model inside the
+ *      pricing path.
+ *   3. Partial-failure isolation. A failed distillation still leaves the
+ *      grounded text; a merged call loses both.
  */
 
 export interface GaebWebPriceFinding {
@@ -26,16 +39,6 @@ export interface GaebWebPriceFinding {
 }
 
 const RESEARCH_BATCH = 10;
-
-function urlsFrom(value: unknown): string[] {
-  const out = new Set<string>();
-  const text = JSON.stringify(value ?? "");
-  for (const match of text.matchAll(/https?:\/\/[^\s"'\\)\]}>]+/g)) {
-    out.add(match[0]);
-    if (out.size >= 5) break;
-  }
-  return [...out];
-}
 
 function textFrom(content: unknown): string {
   if (typeof content === "string") return content;
@@ -71,12 +74,16 @@ export async function lookupWebPrices(input: {
   try {
     const model = await getChatModel({
       role: "dora_gaeb_web",
-      maxOutputTokens: 2_048,
+      // No explicit budget: the role table sizes it. 2048 was safe when the
+      // response was only search results; a reasoning model bills its
+      // thinking from the same allowance and would return empty text —
+      // which this stage is designed to swallow as "no evidence".
       reasoningEffort: "low",
     });
-    // Native web search — provider-specific. Anything the binding rejects
-    // lands in the catch below and the stage degrades cleanly.
-    const searching = model.bindTools?.([{ googleSearch: {} } as never]);
+    // Native web search — genuinely provider-specific, so the branch lives in
+    // one helper. null means this provider cannot search, and the catch below
+    // degrades the stage to "no web evidence".
+    const searching = await bindWebSearch(model, resolveRole("dora_gaeb_web").provider);
     if (!searching) throw new Error("web_search_unsupported_provider");
 
     let done = 0;
@@ -93,7 +100,7 @@ export async function lookupWebPrices(input: {
         grounded.push({
           product,
           text: textFrom(response.content).slice(0, 2_000),
-          urls: urlsFrom(response.response_metadata),
+          urls: citationUrls(response),
         });
       } catch (error) {
         warnings.push(
@@ -120,8 +127,9 @@ export async function lookupWebPrices(input: {
       maxOutputTokens: 4_096,
       temperature: 0,
     });
-    const structured = extractor.withStructuredOutput(GAEB_WEB_PRICE_JSON_SCHEMA as never, {
+    const structured = withProviderStructuredOutput(extractor, GAEB_WEB_PRICE_JSON_SCHEMA, {
       name: "gaeb_web_price_findings",
+      role: "dora_gaeb_fill",
     });
     for (let index = 0; index < grounded.length; index += RESEARCH_BATCH) {
       const slice = grounded.slice(index, index + RESEARCH_BATCH);

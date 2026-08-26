@@ -22,6 +22,7 @@ export async function buildDoraGraph(ctx: DoraRunContext) {
     systemPrompt: new SystemMessage(buildDoraSystemPrompt(ctx)),
     maxIterations: env.agentMaxIterations,
     historyMaxMessages: env.agentHistoryMaxMessages,
+    historyMaxTokens: env.agentHistoryMaxTokens,
     checkpointer: await getClaraCheckpointer(),
   });
 }

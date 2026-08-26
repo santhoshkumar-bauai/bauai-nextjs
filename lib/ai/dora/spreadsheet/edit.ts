@@ -12,6 +12,7 @@ import type {
   WireSpreadsheetChangeOperation,
   WireSpreadsheetChangeSet,
 } from "./edit-wire";
+import { withProviderStructuredOutput } from "../../agent/structured.ts";
 
 const scalarSchema = z.union([
   z.string().max(4_000), z.number().finite(), z.boolean(), z.null(),
@@ -146,9 +147,16 @@ export async function planSpreadsheetChangeSet(input: {
 
   const planner = input.planner ?? await (async () => {
     const model = await getChatModel({ role: "dora", maxOutputTokens: 6_000, temperature: 0.1, reasoningEffort: "low" });
-    const structured = model.withStructuredOutput<z.infer<typeof rawPlanSchema>>(
-      RAW_PLAN_JSON_SCHEMA as never,
-      { name: "dora_spreadsheet_change_set_v1", method: "functionCalling" },
+    const structured = withProviderStructuredOutput<z.infer<typeof rawPlanSchema>>(
+      model,
+      RAW_PLAN_JSON_SCHEMA,
+      {
+        name: "dora_spreadsheet_change_set_v1",
+        role: "dora",
+        // Gemini only: on OpenAI/Azure, jsonSchema is the guaranteed-
+        // conformance path and already the library default.
+        forceFunctionCalling: true,
+      },
     );
     const ref = resolveRole("dora");
     return { invoke: (prompt: string) => structured.invoke(prompt), provider: ref.provider, providerModel: ref.model };

@@ -21,6 +21,7 @@ import { buildFullCompanyContext } from "@/lib/ai/fit/company-context";
 import { companyProfileInput } from "@/lib/ai/fit/service";
 
 import type { DoraSnapshotNode, StoredDoraSnapshot } from "./snapshot-schema";
+import { withProviderStructuredOutput } from "@/lib/ai/agent/structured";
 
 export const DORA_EDIT_SCHEMA_VERSION = "dora-edit-v2";
 export const DORA_EDIT_PROMPT_VERSION = "dora-edit-p3";
@@ -67,44 +68,21 @@ const rawPlanSchema = z.object({
 
 export type RawDoraEditPlan = z.infer<typeof rawPlanSchema>;
 
-const PROVIDER_SAFE_SCHEMA_KEYS = new Set([
-  "type",
-  "format",
-  "description",
-  "nullable",
-  "enum",
-  "items",
-  "properties",
-  "required",
-]);
+/**
+ * @deprecated Re-exported from the shared adapter so existing importers keep
+ * working. New code should call `adaptJsonSchema(schema, dialect)` directly.
+ */
+export { toProviderSafeJsonSchema } from "../ai/gateway/json-schema.ts";
 
-/** Gemini accepts only a small OpenAPI subset for responseSchema. Keep the
- * planner contract portable by removing validation-only JSON Schema keywords;
- * the full Zod schema still validates the returned plan on the server. */
-export function toProviderSafeJsonSchema(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(toProviderSafeJsonSchema);
-  if (!value || typeof value !== "object") return value;
-  const source = value as Record<string, unknown>;
-  const result: Record<string, unknown> = {};
-  for (const [key, entry] of Object.entries(source)) {
-    if (!PROVIDER_SAFE_SCHEMA_KEYS.has(key)) continue;
-    if (key === "properties" && entry && typeof entry === "object" && !Array.isArray(entry)) {
-      result.properties = Object.fromEntries(
-        Object.entries(entry as Record<string, unknown>).map(([property, schema]) => [
-          property,
-          toProviderSafeJsonSchema(schema),
-        ]),
-      );
-      continue;
-    }
-    result[key] = toProviderSafeJsonSchema(entry);
-  }
-  return result;
-}
-
-const RAW_PLAN_JSON_SCHEMA = toProviderSafeJsonSchema(
-  z.toJSONSchema(rawPlanSchema, { target: "draft-7" }),
-) as Record<string, unknown>;
+/**
+ * The RAW schema, in the honest dialect. Adaptation happens at the call site,
+ * against whichever provider the role actually resolves to — baking one
+ * provider's subset into a module-scope constant is how this planner ended up
+ * handing an already-lobotomised schema to every other provider.
+ */
+const RAW_PLAN_JSON_SCHEMA = z.toJSONSchema(rawPlanSchema, {
+  target: "draft-7",
+}) as Record<string, unknown>;
 
 const formatSchema = z
   .object({
@@ -551,9 +529,16 @@ export async function planDoraEditTransaction(input: {
       temperature: 0.1,
       reasoningEffort: "low",
     });
-    const structured = model.withStructuredOutput<z.infer<typeof rawPlanSchema>>(
-      RAW_PLAN_JSON_SCHEMA as never,
-      { name: "dora_edit_transaction_v2", method: "functionCalling" },
+    const structured = withProviderStructuredOutput<z.infer<typeof rawPlanSchema>>(
+      model,
+      RAW_PLAN_JSON_SCHEMA,
+      {
+        name: "dora_edit_transaction_v2",
+        role: "dora",
+        // Gemini only — see structured.ts. A forced function tool_choice also
+        // cannot coexist with a server-side tool such as web search.
+        forceFunctionCalling: true,
+      },
     );
     const modelRef = resolveRole("dora");
     return {

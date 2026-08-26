@@ -1,4 +1,5 @@
 import { resolveRole } from "./config.ts";
+import { AzureOpenAIProvider } from "./providers/azure-openai.ts";
 import { GeminiProvider } from "./providers/gemini.ts";
 import type {
   EmbedRequest,
@@ -24,6 +25,7 @@ interface Provider {
 
 const providers: Record<string, () => Provider> = {
   gemini: () => new GeminiProvider(),
+  azure: () => new AzureOpenAIProvider(),
 };
 
 const instances = new Map<string, Provider>();

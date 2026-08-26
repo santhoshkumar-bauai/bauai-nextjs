@@ -9,6 +9,7 @@ import { streamChatTurnResponse } from "@/lib/ai/agent/sse-turn";
 import { getAiCollections } from "@/lib/ai/db/collections";
 import { getCompanyContext } from "@/lib/company/context";
 import { resolveRequestLocale } from "@/lib/i18n/request-locale";
+import { aiProviderConfigured } from "@/lib/ai/gateway/config";
 
 /**
  * Dora chat for one workspace document. GET bootstraps the (company-shared)
@@ -66,7 +67,7 @@ export async function POST(
 ) {
   const context = await getCompanyContext();
   if (!context) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!process.env.GEMINI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+  if (!aiProviderConfigured()) {
     return NextResponse.json({ error: "No AI provider configured." }, { status: 503 });
   }
 
