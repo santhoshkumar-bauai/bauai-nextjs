@@ -76,6 +76,14 @@ def build_overlay(fields: list[dict], page_w: float, page_h: float):
              "checkbox": 2, "text": 2}
     for f in sorted(fields, key=lambda f: order.get(f["kind"], 3)):
         kind = f["kind"]
+        # Placeholder-backed text fields cover exactly the original '-' glyph,
+        # never the full row and never the nearby label.
+        if kind == "text" and len(f.get("replace_box", [])) == 4:
+            rx0, rtop, rx1, rbottom = f["replace_box"]
+            c.setFillColorRGB(1, 1, 1)
+            c.rect(rx0 - .5, page_h - (rbottom + .5), (rx1 - rx0) + 1,
+                   (rbottom - rtop) + 1, stroke=0, fill=1)
+            c.setFillColorRGB(0, 0, 0)
         if kind == "cover":
             x0, top, x1, bottom = f["box"]
             c.setFillColorRGB(1, 1, 1)

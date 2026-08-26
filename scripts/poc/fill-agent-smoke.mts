@@ -83,7 +83,7 @@ async function main() {
     const ws = await sandbox.createSession();
     await sandbox.uploadFile(ws, "source.pdf", await digitalSample());
     const analyze = await sandbox.runAnalyze(ws);
-    check("digital classifies as flattened", analyze.kind === "flattened", analyze.kind);
+    check("digital classifies as digital", analyze.kind === "digital", analyze.kind);
     check("digital finds empty boxes", (analyze.emptyBoxCount ?? 0) >= 2);
 
     const fieldmap = {
@@ -120,7 +120,7 @@ async function main() {
     );
     check(
       "free-form exec lane works (toolkit importable)",
-      execResult.exitCode === 0 && execResult.stdout.includes("flattened"),
+      execResult.exitCode === 0 && execResult.stdout.includes("digital"),
       execResult.stderr.slice(0, 120),
     );
     await sandbox.deleteSession(ws);

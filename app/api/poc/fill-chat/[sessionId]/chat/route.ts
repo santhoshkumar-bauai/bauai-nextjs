@@ -97,7 +97,9 @@ export async function POST(
     request,
     buildGraph: () => buildFillAgentGraph(ctx),
     // Wider than the shared default: this agent chains fill→repair→fill
-    // inside a single turn.
+    // inside a single turn, and a 25-50 page form's planning call plus
+    // repair loop legitimately outlives the 300s chat timeout.
     recursionLimit: fillAgentRecursionLimit(fillAgentEnv().maxIterations),
+    turnTimeoutMs: fillAgentEnv().turnTimeoutMs,
   });
 }

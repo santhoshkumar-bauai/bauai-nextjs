@@ -35,7 +35,8 @@ const { DefaultAzureCredential } = await import("@azure/identity");
 
 const SCOPE = "https://cognitiveservices.azure.com/.default";
 const endpoint = (process.env.AZURE_OPENAI_ENDPOINT ?? "").replace(/\/+$/, "");
-const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? "";
+const deployment =
+  process.env.AZURE_OPENAI_DEPLOYMENT ?? process.env.AZURE_OPENAI_DEPLOYMENT_LUNA ?? "";
 /** Model identity for telemetry and capability detection, NOT for the wire. */
 const MODEL_ID = process.env.AZURE_OPENAI_MODEL ?? "gpt-5.6-luna";
 const apiVersion = process.env.AZURE_OPENAI_API_VERSION ?? "";

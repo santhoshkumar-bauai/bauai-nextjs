@@ -39,6 +39,12 @@ export function streamChatTurnResponse(input: {
   buildGraph?: () => Promise<CompiledAgentGraph>;
   /** Superstep budget for that graph; see runChatTurn. */
   recursionLimit?: number;
+  /**
+   * Per-turn hard timeout override. The 300s default is sized for chat
+   * agents; a fill-agent turn on a 25-50 page form legitimately runs a
+   * planning call over dozens of page renders plus several repair rounds.
+   */
+  turnTimeoutMs?: number;
   /** Extra multimodal parts for the user turn; see runChatTurn. */
   extraContent?: MessageContentComplex[];
   /**
@@ -53,7 +59,10 @@ export function streamChatTurnResponse(input: {
 
   // Compose client disconnect with a hard per-turn timeout.
   const turnController = new AbortController();
-  const timeout = setTimeout(() => turnController.abort(), TURN_TIMEOUT_MS);
+  const timeout = setTimeout(
+    () => turnController.abort(),
+    input.turnTimeoutMs ?? TURN_TIMEOUT_MS,
+  );
   request.signal.addEventListener("abort", () => turnController.abort(), {
     once: true,
   });

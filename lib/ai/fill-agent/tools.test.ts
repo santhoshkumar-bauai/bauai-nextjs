@@ -1,5 +1,7 @@
 import { ObjectId } from "mongodb";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { resetFillAgentEnvForTests } from "./env.ts";
 
 vi.mock("./store.ts", () => ({ updateFillSession: vi.fn() }));
 vi.mock("./planner.ts", () => ({
@@ -310,6 +312,17 @@ describe("propose_fieldmap re-plan gate (server-enforced)", () => {
 });
 
 describe("repair budget (server-enforced, re-armed by validate)", () => {
+  // Pin the budget to 2 for these tests — the shipped default is sized for
+  // long-form convergence and would make the fixtures unwieldy.
+  beforeEach(() => {
+    process.env.AI_FILL_AGENT_REPAIR_ROUNDS = "2";
+    resetFillAgentEnvForTests();
+  });
+  afterEach(() => {
+    delete process.env.AI_FILL_AGENT_REPAIR_ROUNDS;
+    resetFillAgentEnvForTests();
+  });
+
   it("refuses the third repair round since the last validate", async () => {
     currentSession = {
       ...baseSession(),

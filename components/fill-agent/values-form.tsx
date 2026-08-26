@@ -5,6 +5,7 @@ import { Check, Loader2, SkipForward } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import type { OpenQuestion } from "@/lib/ai/fill-agent/fieldmap";
+import type { DecisionGroup } from "@/lib/ai/fill-agent/workflow-wire";
 
 /**
  * The generative gap-filling form: rendered from the session's server-held
@@ -18,12 +19,16 @@ export function ValuesForm({
   questions,
   onApplied,
   onSkipped,
+  decisions = [],
+  resumeWorkflow = false,
 }: {
   sessionId: string;
   questions: OpenQuestion[];
   /** Called after a successful submit with the count of provided values. */
   onApplied: (count: number) => void;
   onSkipped: () => void;
+  decisions?: DecisionGroup[];
+  resumeWorkflow?: boolean;
 }) {
   const t = useTranslations("FillAgent");
   const editable = useMemo(
@@ -35,28 +40,42 @@ export function ValuesForm({
     [questions],
   );
   const [values, setValues] = useState<Record<string, string>>({});
+  const [decisionValues, setDecisionValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
 
-  if (editable.length === 0 && sensitive.length === 0) return null;
+  if (editable.length === 0 && sensitive.length === 0 && decisions.length === 0) return null;
 
   const provided = Object.entries(values).filter(([, value]) => value.trim() !== "");
+  const requiredValueIds = new Set(editable.filter((question) => question.reason === "missing_required").map((question) => question.fieldId));
+  const allRequiredValuesProvided = [...requiredValueIds].every((fieldId) => (values[fieldId] ?? "").trim() !== "");
+  const allDecisionsProvided = decisions.every((decision) => Boolean(decisionValues[decision.id]));
+  const canResume = !resumeWorkflow || (allRequiredValuesProvided && allDecisionsProvided);
 
   const submit = async () => {
-    if (provided.length === 0) return;
+    const selectedDecisions = Object.entries(decisionValues);
+    if (provided.length === 0 && selectedDecisions.length === 0) return;
     setSubmitting(true);
     setError(false);
     try {
-      const response = await fetch(`/api/poc/fill-chat/${sessionId}/values`, {
+      const response = await fetch(
+        resumeWorkflow
+          ? `/api/poc/fill-chat/${sessionId}/workflow`
+          : `/api/poc/fill-chat/${sessionId}/values`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
+          ...(resumeWorkflow ? { action: "resume" } : {}),
           values: provided.map(([fieldId, value]) => ({ fieldId, value: value.trim() })),
+          ...(resumeWorkflow
+            ? { decisions: selectedDecisions.map(([groupId, fieldId]) => ({ groupId, fieldId })) }
+            : {}),
         }),
       });
       if (!response.ok) throw new Error("values_failed");
       setValues({});
-      onApplied(provided.length);
+      setDecisionValues({});
+      onApplied(provided.length + selectedDecisions.length);
     } catch {
       setError(true);
     } finally {
@@ -112,11 +131,41 @@ export function ValuesForm({
                     [question.fieldId]: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </label>
           ))}
         </div>
+      )}
+
+      {decisions.length > 0 && (
+        <fieldset className="max-h-72 space-y-3 overflow-y-auto pr-1">
+          <legend className="text-[11px] font-semibold text-foreground">
+            Legal Ja/Nein confirmations
+          </legend>
+          {decisions.map((decision) => (
+            <div key={decision.id} className="space-y-1">
+              <p className="text-[11px] text-foreground">{decision.label}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {decision.options.map((option) => (
+                  <label key={option.fieldId} className="cursor-pointer">
+                    <input
+                      type="radio"
+                      name={decision.id}
+                      value={option.fieldId}
+                      checked={decisionValues[decision.id] === option.fieldId}
+                      onChange={() => setDecisionValues((previous) => ({ ...previous, [decision.id]: option.fieldId }))}
+                      className="peer sr-only"
+                    />
+                    <span className="block rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] text-foreground peer-checked:border-primary peer-checked:bg-primary/10 peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2">
+                      {option.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </fieldset>
       )}
 
       {sensitive.length > 0 && (
@@ -136,7 +185,7 @@ export function ValuesForm({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          disabled={submitting || provided.length === 0}
+          disabled={submitting || !canResume || (provided.length === 0 && Object.keys(decisionValues).length === 0)}
           onClick={() => void submit()}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
@@ -147,9 +196,9 @@ export function ValuesForm({
               <Check className="size-3.5" />
             )}
           </span>
-          <span>{t("formSubmit", { count: provided.length })}</span>
+          <span>{t("formSubmit", { count: provided.length + Object.keys(decisionValues).length })}</span>
         </button>
-        <button
+        {!resumeWorkflow && <button
           type="button"
           disabled={submitting}
           onClick={onSkipped}
@@ -157,7 +206,7 @@ export function ValuesForm({
         >
           <SkipForward className="size-3.5" />
           <span>{t("formSkip")}</span>
-        </button>
+        </button>}
       </div>
     </div>
   );

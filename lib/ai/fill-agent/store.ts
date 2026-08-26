@@ -3,6 +3,10 @@ import { ObjectId, type Collection } from "mongodb";
 import { getIngestionDb } from "../../ingestion/db/client.ts";
 import type { SandboxNativeField } from "./sandbox-client.ts";
 import type { FillField, FillIssue, OpenQuestion } from "./fieldmap.ts";
+import {
+  emptyFillWorkflow,
+  type FillWorkflowSnapshot,
+} from "./workflow-wire.ts";
 
 /**
  * Fill-agent session store. Deliberately NOT registered in
@@ -73,6 +77,9 @@ export interface FillAgentSessionDocument {
     score: number;
     verifiedAt: Date;
   } | null;
+  /** Dedicated resumable fill workflow. Optional for sessions created before
+   * geometry v2; serializers materialize an empty snapshot on read. */
+  workflow?: FillWorkflowSnapshot;
   threadId: ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
@@ -130,6 +137,7 @@ export async function createFillSession(input: {
     issues: [],
     critiqued: false,
     output: null,
+    workflow: emptyFillWorkflow(),
     threadId: null,
     createdAt: now,
     updatedAt: now,
@@ -180,7 +188,14 @@ export async function deleteFillSession(
 }
 
 /** Wire shape for the POC UI. */
-export function serializeFillSession(doc: FillAgentSessionDocument) {
+export function serializeFillSession(
+  doc: FillAgentSessionDocument,
+  options?: { activityAfter?: number },
+) {
+  const workflow = doc.workflow ?? emptyFillWorkflow();
+  const activity = workflow.activity
+    .filter((event) => event.cursor > (options?.activityAfter ?? -1))
+    .slice(-100);
   return {
     id: String(doc._id),
     status: doc.status,
@@ -205,6 +220,12 @@ export function serializeFillSession(doc: FillAgentSessionDocument) {
     },
     critiqued: doc.critiqued,
     downloadReady: doc.output != null,
+    workflow: {
+      ...workflow,
+      // Keep polling payloads bounded. The cursor lets clients request older
+      // audit events separately later; the active workspace needs only recent activity.
+      activity,
+    },
     createdAt: doc.createdAt.toISOString(),
     updatedAt: doc.updatedAt.toISOString(),
   };

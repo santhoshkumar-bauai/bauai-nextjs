@@ -1,10 +1,11 @@
 "use client";
 
-import { Check, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import type { WireToolEvent } from "@/lib/ai/agent/wire";
+import type { FillWorkflowSnapshot } from "@/lib/ai/fill-agent/workflow-wire";
 
 /**
  * Claude-style "what is the agent doing" surfaces:
@@ -103,6 +104,87 @@ export function MessageSteps({ toolEvents }: { toolEvents: WireToolEvent[] }) {
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+export function WorkflowActivityTrail({ workflow }: { workflow: FillWorkflowSnapshot }) {
+  const events = workflow.activity.slice(-16);
+  const running = !["completed", "needs_review", "awaiting_input"].includes(workflow.status);
+  const [open, setOpen] = useState(true);
+  if (events.length === 0) return null;
+  const latest = events.at(-1)!;
+  return (
+    <div
+      className="my-3 max-w-2xl overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      role="status"
+      aria-live="polite"
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center">
+          {latest.status === "paused" || latest.status === "failed" ? (
+            <AlertTriangle className="size-4 text-amber-500" />
+          ) : running && latest.status === "started" ? (
+            <Loader2 className="size-4 animate-spin text-primary" />
+          ) : (
+            <Sparkles className="size-4 text-primary" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-foreground">{latest.message}</span>
+          <span className="mt-0.5 flex flex-wrap gap-x-2 text-[10px] text-muted-foreground">
+            <span>{workflow.status.replaceAll("_", " ")}</span>
+            {latest.pageStart != null && <span>pages {latest.pageStart}–{latest.pageEnd}</span>}
+            {latest.model && <span>{latest.model.name} · {latest.model.effort}</span>}
+            {workflow.skill && <span>skill {workflow.skill.name} v{workflow.skill.version}</span>}
+          </span>
+        </span>
+        <span className="mt-1 flex size-4 shrink-0 items-center justify-center text-muted-foreground">
+          {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+        </span>
+      </button>
+
+      {open && (
+        <ol className="space-y-2 border-t border-border px-3 py-2.5">
+          {events.map((event, index) => {
+            const isCurrent = running && index === events.length - 1 && event.status === "started";
+            return (
+              <li key={event.cursor} className="flex gap-2 text-[10px] text-muted-foreground">
+                <span className="mt-0.5 flex size-3 shrink-0 items-center justify-center">
+                  {isCurrent ? (
+                    <Loader2 className="size-3 animate-spin text-primary" />
+                  ) : event.status === "paused" || event.status === "failed" ? (
+                    <AlertTriangle className="size-3 text-amber-500" />
+                  ) : (
+                    <Check className="size-3 text-emerald-600" />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={isCurrent ? "font-medium text-foreground" : "text-foreground/85"}>
+                    {event.message}
+                  </span>
+                  <span className="mt-0.5 flex flex-wrap gap-x-2">
+                    {event.pageStart != null && <span>pages {event.pageStart}–{event.pageEnd}</span>}
+                    {event.model && <span>{event.model.name} · {event.model.effort}</span>}
+                    {event.anchorId && <span>anchor {event.anchorId}</span>}
+                    {event.patchSummary && (
+                      <span>{event.patchSummary.updated} updated · {event.patchSummary.removed} removed</span>
+                    )}
+                    {event.score != null && <span>score {event.score.toFixed(2)}</span>}
+                    {event.elapsedMs != null && <span>{(event.elapsedMs / 1000).toFixed(1)}s</span>}
+                    {event.remainingIssues != null && <span>{event.remainingIssues} issues</span>}
+                    {event.crop && <span>400 DPI crop · page {event.crop.page}</span>}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
       )}
     </div>
   );

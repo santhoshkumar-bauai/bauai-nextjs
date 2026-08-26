@@ -5,4 +5,4 @@ IMPORT these helpers, but the /run/* endpoints that produce the score always
 execute this exact code — the model cannot modify what grades its work.
 """
 
-TOOLKIT_VERSION = "1.1.0"
+TOOLKIT_VERSION = "1.2.0"

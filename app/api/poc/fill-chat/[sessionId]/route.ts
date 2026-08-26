@@ -20,7 +20,7 @@ import { deleteObject } from "@/lib/storage/s3";
 /** One fill session: state + chat history (GET), full teardown (DELETE). */
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ sessionId: string }> },
 ) {
   const context = await getCompanyContext();
@@ -47,8 +47,12 @@ export async function GET(
         .toArray()
     : [];
 
+  const rawCursor = new URL(request.url).searchParams.get("activityAfter");
+  const activityAfter = rawCursor == null ? undefined : Number.parseInt(rawCursor, 10);
   return NextResponse.json({
-    session: serializeFillSession(session),
+    session: serializeFillSession(session, {
+      ...(Number.isFinite(activityAfter) ? { activityAfter } : {}),
+    }),
     messages: messages.reverse().map(serializeChatMessage),
   });
 }

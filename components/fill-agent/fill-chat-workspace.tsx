@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { ChatInput } from "@/components/chat/chat-input";
 import { MessageList } from "@/components/chat/message-list";
 import { useClaraChat } from "@/components/chat/use-clara-chat";
-import { LiveActivityTrail, MessageSteps } from "./activity-trail";
+import { LiveActivityTrail, MessageSteps, WorkflowActivityTrail } from "./activity-trail";
 import { PdfPreview } from "./pdf-preview";
 import { SessionStatus } from "./session-status";
 import { useFillSession } from "./use-fill-session";
@@ -72,22 +72,27 @@ export function FillChatWorkspace({
   // the chat IS the request to analyze. Deferred a tick (repo convention) so
   // the kickoff send never runs inside the effect body.
   const autoStartedRef = useRef(false);
-  const autoAnalyzeMessage = t("autoAnalyzeMessage");
   useEffect(() => {
     if (autoStartedRef.current || !aiAvailable) return;
-    if (chat.loading || chat.sending || chat.messages.length > 0) return;
-    if (!session || session.status !== "ready") return;
+    if (chat.loading || chat.sending) return;
+    if (!session || session.workflow.status !== "queued" || session.workflow.activityCursor > 0) return;
     autoStartedRef.current = true;
-    const timer = setTimeout(() => chat.send(autoAnalyzeMessage), 0);
+    const timer = setTimeout(() => {
+      void fetch(`/api/poc/fill-chat/${sessionId}/workflow`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "start" }),
+      }).then(() => refresh());
+    }, 0);
     return () => clearTimeout(timer);
   }, [
     aiAvailable,
-    autoAnalyzeMessage,
     chat,
     chat.loading,
     chat.sending,
-    chat.messages.length,
     session,
+    sessionId,
+    refresh,
   ]);
 
   // Turn boundary: the send flag flipping off means tools may have moved
@@ -107,14 +112,26 @@ export function FillChatWorkspace({
     () => session?.openQuestions ?? [],
     [session?.openQuestions],
   );
-  const formKey = openQuestions.map((question) => question.fieldId).join("|");
+  const formKey = [
+    ...openQuestions.map((question) => question.fieldId),
+    ...(session?.workflow.decisions ?? [])
+      .filter((decision) => decision.required && !decision.selection)
+      .map((decision) => decision.id),
+  ].join("|");
   const showForm =
     aiAvailable &&
     !chat.sending &&
     session != null &&
     session.status !== "filled" &&
-    openQuestions.some((question) => question.reason !== "sensitive") &&
+    (openQuestions.some((question) => question.reason !== "sensitive") ||
+      session.workflow.decisions.some((decision) => decision.required && !decision.selection)) &&
     dismissedFormKey !== formKey;
+  const pendingDecisions = session?.workflow.decisions.filter(
+    (decision) => decision.required && !decision.selection,
+  ) ?? [];
+  const currentBatch = session?.workflow.batches.find(
+    (batch) => batch.id === session.workflow.currentBatchId,
+  ) ?? null;
 
   const lastAssistant = [...chat.messages]
     .reverse()
@@ -174,6 +191,7 @@ export function FillChatWorkspace({
             {chat.sending && (
               <LiveActivityTrail steps={trail} activeTool={chat.activeTool} />
             )}
+            {session && <WorkflowActivityTrail workflow={session.workflow} />}
             {chat.error && (
               <p className="pt-2 text-center text-xs text-rose-600">
                 {aiErrorMessage(chat.error)}
@@ -186,10 +204,14 @@ export function FillChatWorkspace({
               <ValuesForm
                 sessionId={sessionId}
                 questions={openQuestions}
+                decisions={pendingDecisions}
+                resumeWorkflow={session.workflow.status === "awaiting_input"}
                 onApplied={(count) => {
                   setDismissedFormKey(null);
                   void refresh();
-                  chat.send(t("formContinueMessage", { count }));
+                  if (session.workflow.status !== "awaiting_input") {
+                    chat.send(t("formContinueMessage", { count }));
+                  }
                 }}
                 onSkipped={() => {
                   setDismissedFormKey(formKey);
@@ -215,8 +237,12 @@ export function FillChatWorkspace({
             <PdfPreview
               sessionId={sessionId}
               pageCount={session.pageCount}
-              hasOutput={session.score != null}
+              hasOutput={session.score != null || currentBatch?.outputFile != null}
               renderVersion={renderVersion}
+              pageRange={currentBatch}
+              repairBatchReady={currentBatch?.outputFile != null}
+              activeCrop={session.workflow.activeCrop}
+              workflowStatus={session.workflow.status}
             />
           )}
         </aside>

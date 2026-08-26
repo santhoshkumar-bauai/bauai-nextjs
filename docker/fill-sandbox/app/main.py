@@ -187,10 +187,10 @@ def run_analyze(session_id: str, body: AnalyzeRequest) -> dict:
     norm = normalize.normalize(pdf_path, norm_path)
     pdf_path = norm_path
 
-    kind = extract.classify(pdf_path)
-    result: dict = {"kind": kind, "normalized": norm["changed"]}
-    if kind == "scanned":
-        # no geometry to extract — the caller refuses these upstream too
+    classification = extract.classify_document(pdf_path)
+    kind = classification["kind"]
+    result: dict = {**classification, "normalized": norm["changed"]}
+    if kind in ("unsupported", "xfa"):
         with open(os.path.join(base, "analyze.json"), "w") as fh:
             json.dump(result, fh)
         return result
@@ -202,15 +202,19 @@ def run_analyze(session_id: str, body: AnalyzeRequest) -> dict:
         json.dump(geometry, fh)
 
     images = extract.render_pages(pdf_path, os.path.join(base, "source_pages"))
-    native = acroform.describe_fields(pdf_path) if kind == "acroform" else []
+    native = acroform.describe_fields(pdf_path) if kind in ("acroform", "hybrid") else []
+    anchor_inventory = anchors.public_anchors(geometry)
 
     result.update({
         "pageCount": len(geometry["pages"]),
         "geometryFile": "geometry.json",
         "pageImages": [os.path.relpath(p, base).replace(os.sep, "/") for p in images],
         "nativeFields": native,
+        "anchors": anchor_inventory,
+        "anchorCount": len(anchor_inventory),
         "emptyBoxCount": sum(len(p["empty_boxes"]) for p in geometry["pages"]),
         "dottedLineCount": sum(len(p["dotted_lines"]) for p in geometry["pages"]),
+        "placeholderCount": sum(len(p.get("placeholder_lines") or []) for p in geometry["pages"]),
     })
     with open(os.path.join(base, "analyze.json"), "w") as fh:
         json.dump({"kind": kind, "pageCount": result["pageCount"]}, fh)
@@ -255,7 +259,19 @@ class FillRequest(BaseModel):
 
 def _native_values(fieldmap: list[dict]) -> dict[str, str]:
     return {f["id"]: str(f.get("value", "")) for f in fieldmap
-            if f.get("target") == "acroform" and f.get("value")}
+            if f.get("target") == "acroform" and f.get("value")
+            and f.get("kind") != "signature"}
+
+
+def _fill_document(pdf_path: str, fieldmap: list[dict], out_path: str,
+                   analyze: dict) -> None:
+    if analyze.get("kind") in ("acroform", "hybrid"):
+        acroform.fill_acroform(pdf_path, _native_values(fieldmap), out_path)
+        leftover = [f for f in fieldmap if f.get("target") != "acroform"]
+        if leftover:
+            fill.fill(out_path, leftover, out_path)
+    else:
+        fill.fill(pdf_path, fieldmap, out_path)
 
 
 @app.post("/sessions/{session_id}/run/fill", dependencies=[Depends(require_token)])
@@ -266,16 +282,7 @@ def run_fill(session_id: str, body: FillRequest) -> dict:
     analyze = _read_json(session_id, "analyze.json")
     out_path = safe_upload_path(session_id, body.out)
 
-    if analyze.get("kind") == "acroform":
-        # write the REAL fields, so the output stays a valid form
-        native = _native_values(fieldmap)
-        acroform.fill_acroform(pdf_path, native, out_path)
-        # anything an AcroForm can't express still gets stamped
-        leftover = [f for f in fieldmap if f.get("target") != "acroform"]
-        if leftover:
-            fill.fill(out_path, leftover, out_path)
-    else:
-        fill.fill(pdf_path, fieldmap, out_path)
+    _fill_document(pdf_path, fieldmap, out_path, analyze)
 
     images = extract.render_pages(out_path, os.path.join(base, "output_pages"))
     return {
@@ -299,7 +306,7 @@ def run_validate(session_id: str, body: ValidateRequest) -> dict:
     overlay = [f for f in fieldmap if f.get("target") != "acroform"]
     issues = (validate.pre_checks(overlay, geometry)
               + validate.post_checks(pdf_path, overlay, geometry))
-    if analyze.get("kind") == "acroform":
+    if analyze.get("kind") in ("acroform", "hybrid"):
         issues += acroform.verify_written(pdf_path, _native_values(fieldmap))
 
     return {
@@ -325,7 +332,92 @@ def run_crops(session_id: str, body: CropsRequest) -> dict:
         _fieldmap_from(_read_json(session_id, body.fieldmapFile)),
         body.issues,
         os.path.join(base, "crops"),
+        _read_json(session_id, "geometry.json"),
     )
     for p in pairs:
-        p["path"] = os.path.relpath(p["path"], base).replace(os.sep, "/")
+        for key in ("path", "beforePath", "afterPath", "comparisonPath"):
+            p[key] = os.path.relpath(p[key], base).replace(os.sep, "/")
     return {"pairs": pairs}
+
+
+class RenderRegionsRequest(BaseModel):
+    pdf: str = "filled.pdf"
+    regions: list[dict]
+    dpi: int = 400
+
+
+@app.post("/sessions/{session_id}/run/render-regions", dependencies=[Depends(require_token)])
+def run_render_regions(session_id: str, body: RenderRegionsRequest) -> dict:
+    base = session_dir(session_id)
+    dpi = max(150, min(int(body.dpi), 600))
+    rendered = crops.render_regions(
+        _pdf_for_read(session_id, body.pdf), body.regions,
+        os.path.join(base, "regions"), dpi=dpi,
+    )
+    for item in rendered:
+        item["path"] = os.path.relpath(item["path"], base).replace(os.sep, "/")
+    return {"regions": rendered}
+
+
+class BatchRequest(BaseModel):
+    pageStart: int
+    pageEnd: int
+    pdf: str = "source.pdf"
+    fieldmapFile: str = "fieldmap.prepared.json"
+    out: str | None = None
+
+
+def _batch_fields(session_id: str, body: BatchRequest) -> list[dict]:
+    if body.pageStart < 1 or body.pageEnd < body.pageStart or body.pageEnd - body.pageStart > 3:
+        raise HTTPException(status_code=422, detail="invalid_batch_range")
+    return [f for f in _fieldmap_from(_read_json(session_id, body.fieldmapFile))
+            if body.pageStart <= int(f.get("page") or 0) <= body.pageEnd]
+
+
+@app.post("/sessions/{session_id}/run/fill-batch", dependencies=[Depends(require_token)])
+def run_fill_batch(session_id: str, body: BatchRequest) -> dict:
+    base = session_dir(session_id)
+    fields = _batch_fields(session_id, body)
+    out_name = body.out or f"batch_{body.pageStart}_{body.pageEnd}.pdf"
+    out_path = safe_upload_path(session_id, out_name)
+    _fill_document(_pdf_for_read(session_id, body.pdf), fields, out_path,
+                   _read_json(session_id, "analyze.json"))
+    pages = set(range(body.pageStart, body.pageEnd + 1))
+    images = extract.render_pages(out_path, os.path.join(base, "batch_pages"), pages=pages)
+    return {"outputFile": out_name, "fieldCount": len(fields),
+            "pageImages": [os.path.relpath(p, base).replace(os.sep, "/") for p in images]}
+
+
+@app.post("/sessions/{session_id}/run/validate-batch", dependencies=[Depends(require_token)])
+def run_validate_batch(session_id: str, body: BatchRequest) -> dict:
+    fields = _batch_fields(session_id, body)
+    geometry = _read_json(session_id, "geometry.json")
+    batch_geometry = {"pages": [p for p in geometry.get("pages", [])
+                                 if body.pageStart <= int(p["page"]) <= body.pageEnd]}
+    pdf_name = body.out or f"batch_{body.pageStart}_{body.pageEnd}.pdf"
+    pdf_path = safe_read_path(session_id, pdf_name)
+    issues = validate.pre_checks(fields, batch_geometry) + validate.post_checks(pdf_path, fields, batch_geometry)
+    analyze = _read_json(session_id, "analyze.json")
+    if analyze.get("kind") in ("acroform", "hybrid"):
+        issues += acroform.verify_written(pdf_path, _native_values(fields))
+    return {"issues": issues, "score": validate.score(issues),
+            "summary": validate.summarise(issues, limit=20)}
+
+
+class AssembleRequest(BaseModel):
+    pdf: str = "source.pdf"
+    fieldmapFile: str = "fieldmap.prepared.json"
+    out: str = "filled.pdf"
+
+
+@app.post("/sessions/{session_id}/run/assemble-document", dependencies=[Depends(require_token)])
+def run_assemble_document(session_id: str, body: AssembleRequest) -> dict:
+    """Rebuild once from immutable source plus the canonical field map."""
+    fields = _fieldmap_from(_read_json(session_id, body.fieldmapFile))
+    out_path = safe_upload_path(session_id, body.out)
+    _fill_document(_pdf_for_read(session_id, body.pdf), fields, out_path,
+                   _read_json(session_id, "analyze.json"))
+    base = session_dir(session_id)
+    images = extract.render_pages(out_path, os.path.join(base, "output_pages"))
+    return {"outputFile": body.out, "fieldCount": len(fields),
+            "pageImages": [os.path.relpath(p, base).replace(os.sep, "/") for p in images]}

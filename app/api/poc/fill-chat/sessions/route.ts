@@ -29,7 +29,7 @@ export async function GET() {
 
   const tenantId = forCompanyContext(context).value;
   const sessions = await listFillSessions(tenantId);
-  return NextResponse.json({ sessions: sessions.map(serializeFillSession) });
+  return NextResponse.json({ sessions: sessions.map((session) => serializeFillSession(session)) });
 }
 
 export async function POST(request: Request) {

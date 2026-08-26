@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "project": {
+    "name": "bau-ai-nextjs",
+    "productType": null,
+    "stack": [
+      "nextjs",
+      "react",
+      "shadcn",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "app/globals.css"
+    ],
+    "components": [
+      "components/ui"
+    ],
+    "assets": [
+      "public/brand"
+    ],
+    "instructions": [
+      "AGENTS.md",
+      "CLAUDE.md"
+    ]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--color-background": {
+        "value": "#ffffff",
+        "source": "app/globals.css"
+      },
+      "--color-foreground": {
+        "value": "#191724",
+        "source": "app/globals.css"
+      },
+      "--color-primary": {
+        "value": "#5000a8",
+        "source": "app/globals.css"
+      },
+      "--color-primary-foreground": {
+        "value": "#ffffff",
+        "source": "app/globals.css"
+      },
+      "--color-border": {
+        "value": "#e7e1eb",
+        "source": "app/globals.css"
+      },
+      "--color-input": {
+        "value": "#e4e0e7",
+        "source": "app/globals.css"
+      },
+      "--color-ring": {
+        "value": "#7430c3",
+        "source": "app/globals.css"
+      },
+      "--color-muted": {
+        "value": "#f3f1f6",
+        "source": "app/globals.css"
+      },
+      "--color-muted-foreground": {
+        "value": "#8d8797",
+        "source": "app/globals.css"
+      },
+      "--color-card": {
+        "value": "#ffffff",
+        "source": "app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-sans": {
+        "value": "\"Inter Variable\", Inter, Arial, sans-serif",
+        "source": "app/globals.css"
+      }
+    },
+    "spacing": {},
+    "radius": {},
+    "shadows": {},
+    "motion": {},
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [
+      "badge",
+      "button",
+      "dialog",
+      "input",
+      "multi-select-combobox",
+      "popover",
+      "progress",
+      "skeleton",
+      "tabs"
+    ],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [],
+  "evidence": [
+    {
+      "fact": "components.installed",
+      "source": "components/ui"
+    },
+    {
+      "fact": "design.colorMode:light",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "CLAUDE.md"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:shadcn",
+      "source": "components.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-08-26T08:47:02.360Z"
+}

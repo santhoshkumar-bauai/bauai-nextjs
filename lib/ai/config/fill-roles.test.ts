@@ -18,8 +18,17 @@ const KEYS = [
   "AI_MODEL_ROLES",
   "AI_ROLE_REASONING",
   "AI_ROLE_MAX_OUTPUT_TOKENS",
+  "AI_AZURE_DEPLOYMENTS",
   "AZURE_OPENAI_MODEL",
+  "AZURE_OPENAI_MODEL_SOL",
+  "AZURE_OPENAI_MODEL_TERRA",
+  "AZURE_OPENAI_MODEL_LUNA",
+  "AZURE_OPENAI_DEPLOYMENT",
+  "AZURE_OPENAI_DEPLOYMENT_LUNA",
+  "AZURE_OPENAI_DEPLOYMENT_SOL",
+  "AZURE_OPENAI_DEPLOYMENT_TERRA",
   "AI_FILL_AGENT_MODEL",
+  "AI_FILL_AGENT_ADAPTIVE_MODEL",
   "AI_FILL_AGENT_PLAN_MODEL",
   "AI_FILL_AGENT_CRITIQUE_MODEL",
   "AI_FILL_AGENT_REPAIR_MODEL",
@@ -104,10 +113,42 @@ describe("fill-agent tier resolution", () => {
     expect(() => aiEnv()).toThrow(/AI_FILL_AGENT_FORCE_TIER/);
   });
 
+  it("AZURE_OPENAI_DEPLOYMENT_<TIER> vars both map deployments and activate tiers", () => {
+    process.env.AZURE_OPENAI_DEPLOYMENT_LUNA = "luna-dev";
+    process.env.AZURE_OPENAI_DEPLOYMENT_SOL = "sol-dev";
+    process.env.AZURE_OPENAI_DEPLOYMENT_TERRA = "terra-dev";
+    const env = aiEnv();
+    // The adaptive PDF workflow uses Sol/high for every reasoning role.
+    // Terra remains mapped for non-fill consumers and explicit overrides.
+    expect(env.modelRoles.fill_agent_plan).toBe("azure:gpt-5.6-sol");
+    expect(env.modelRoles.fill_agent_critique).toBe("azure:gpt-5.6-sol");
+    expect(env.modelRoles.fill_agent_repair).toBe("azure:gpt-5.6-sol");
+    expect(env.modelRoles.fill_agent).toBe("azure:gpt-5.6-sol");
+    expect(env.azureDeployments).toMatchObject({
+      "gpt-5.6-luna": "luna-dev",
+      "gpt-5.6-sol": "sol-dev",
+      "gpt-5.6-terra": "terra-dev",
+    });
+  });
+
+  it("AZURE_OPENAI_MODEL_<TIER> overrides a tier's model id", () => {
+    process.env.AZURE_OPENAI_DEPLOYMENT_SOL = "sol-dev";
+    process.env.AZURE_OPENAI_MODEL_SOL = "gpt-6.0-sol";
+    const env = aiEnv();
+    expect(env.modelRoles.fill_agent_plan).toBe("azure:gpt-6.0-sol");
+    expect(env.azureDeployments["gpt-6.0-sol"]).toBe("sol-dev");
+  });
+
+  it("explicit AI_AZURE_DEPLOYMENTS entries win over the tier shorthand", () => {
+    process.env.AZURE_OPENAI_DEPLOYMENT_SOL = "sol-dev";
+    process.env.AI_AZURE_DEPLOYMENTS = JSON.stringify({ "gpt-5.6-sol": "sol-canary" });
+    expect(aiEnv().azureDeployments["gpt-5.6-sol"]).toBe("sol-canary");
+  });
+
   it("per-tier effort and output budgets match the routing table", () => {
     expect(roleReasoningEffort("fill_agent_plan")).toBe("high");
-    expect(roleReasoningEffort("fill_agent_critique")).toBe("medium");
-    expect(roleReasoningEffort("fill_agent_repair")).toBe("low");
+    expect(roleReasoningEffort("fill_agent_critique")).toBe("high");
+    expect(roleReasoningEffort("fill_agent_repair")).toBe("high");
     expect(roleMaxOutputTokens("fill_agent_plan")).toBe(16_384);
     expect(roleMaxOutputTokens("fill_agent_critique")).toBe(8_192);
     expect(roleMaxOutputTokens("fill_agent_repair")).toBe(8_192);

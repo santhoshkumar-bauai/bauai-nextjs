@@ -37,6 +37,34 @@ def _write(tmp_path, data: bytes) -> str:
     return str(path)
 
 
+def _standalone_hyphen_form() -> bytes:
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    c.setFont("Helvetica", 9)
+    c.drawString(48, PAGE_H - 80, "Name des Wirtschaftsteilnehmers:")
+    c.drawString(48, PAGE_H - 96, "-")
+    c.drawString(48, PAGE_H - 125, "Straße und Hausnummer:")
+    c.drawString(48, PAGE_H - 141, "---")
+    # Inline punctuation and a decorated page number must not become fields.
+    c.drawString(48, PAGE_H - 180, "E-Mail-Adresse - optional")
+    c.drawCentredString(PAGE_W / 2, 20, "- 1 -")
+    c.save()
+    return buf.getvalue()
+
+
+def _continued_page_form() -> bytes:
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    c.setFont("Helvetica", 9)
+    c.drawString(48, PAGE_H - 54, "-")
+    c.drawString(48, PAGE_H - 74, "Ort")
+    c.drawString(48, PAGE_H - 92, "-")
+    c.drawString(48, PAGE_H - 112, "Unterschrift")
+    c.drawCentredString(PAGE_W / 2, 20, "- 25 -")
+    c.save()
+    return buf.getvalue()
+
+
 def test_filler_runs_are_recognised():
     assert extract.is_filler("___________________________")
     assert extract.is_filler("……………………")
@@ -44,6 +72,37 @@ def test_filler_runs_are_recognised():
     assert not extract.is_filler("Firmenname")
     assert not extract.is_filler("___")  # too short to be an entry line
     assert not extract.is_filler("Muster_Bau_GmbH")
+
+
+def test_standalone_hyphens_become_full_width_stable_anchors(tmp_path):
+    geo = extract.extract_geometry(_write(tmp_path, _standalone_hyphen_form()))
+    rows = geo["pages"][0]["placeholder_lines"]
+    assert len(rows) == 2, rows
+    assert all(row["w"] >= 90 for row in rows)
+    assert all(row["anchor_id"].startswith("p1:placeholder:") for row in rows)
+    assert all((row["replace_box"][2] - row["replace_box"][0]) < 15 for row in rows)
+
+    # IDs and boxes are deterministic across extraction runs.
+    again = extract.extract_geometry(_write(tmp_path, _standalone_hyphen_form()))
+    assert [r["anchor_id"] for r in rows] == [r["anchor_id"] for r in again["pages"][0]["placeholder_lines"]]
+
+
+def test_legacy_glyph_width_field_is_rebased_to_placeholder(tmp_path):
+    geo = extract.extract_geometry(_write(tmp_path, _standalone_hyphen_form()))
+    glyph = geo["pages"][0]["placeholder_lines"][0]["replace_box"]
+    legacy = [{"id": "company", "page": 1, "kind": "text", "box": glyph,
+               "value": "Wirl Ing (dev)"}]
+    prepared = anchors.snap_fieldmap(legacy, geo)[0]
+    assert prepared["anchor_kind"] == "placeholder"
+    assert prepared["box"][2] - prepared["box"][0] >= 90
+    assert prepared["replace_box"] == glyph
+
+
+def test_top_of_page_continuation_placeholder_is_detected(tmp_path):
+    geo = extract.extract_geometry(_write(tmp_path, _continued_page_form()))
+    rows = geo["pages"][0]["placeholder_lines"]
+    assert len(rows) == 2, rows
+    assert all(row["w"] >= 90 for row in rows)
 
 
 def test_underscore_boxes_become_anchors(tmp_path):

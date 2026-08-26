@@ -11,7 +11,13 @@ const KEYS = [
   "AI_AZURE_DEPLOYMENTS",
   "AZURE_OPENAI_ENDPOINT",
   "AZURE_OPENAI_DEPLOYMENT",
+  "AZURE_OPENAI_DEPLOYMENT_LUNA",
+  "AZURE_OPENAI_DEPLOYMENT_SOL",
+  "AZURE_OPENAI_DEPLOYMENT_TERRA",
   "AZURE_OPENAI_MODEL",
+  "AZURE_OPENAI_MODEL_SOL",
+  "AZURE_OPENAI_MODEL_TERRA",
+  "AZURE_OPENAI_MODEL_LUNA",
   "AI_FILL_AGENT_MODEL",
   "AI_FILL_AGENT_PLAN_MODEL",
   "AI_FILL_AGENT_CRITIQUE_MODEL",
@@ -57,6 +63,15 @@ describe("assertFillAgentRolesResolvable", () => {
 
   it("passes on the single-deployment default setup", () => {
     azureBase();
+    expect(() => assertFillAgentRolesResolvable()).not.toThrow();
+  });
+
+  it("passes on the per-tier deployment setup (no classic AZURE_OPENAI_DEPLOYMENT)", () => {
+    process.env.AZURE_OPENAI_ENDPOINT = "https://test.openai.azure.com/";
+    process.env.AZURE_OPENAI_DEPLOYMENT_LUNA = "luna-dev";
+    process.env.AZURE_OPENAI_DEPLOYMENT_SOL = "sol-dev";
+    process.env.AZURE_OPENAI_DEPLOYMENT_TERRA = "terra-dev";
+    resetAiEnvCache();
     expect(() => assertFillAgentRolesResolvable()).not.toThrow();
   });
 

@@ -37,8 +37,9 @@ export function resolveAzureDeployment(model: string): string {
   const mapped = aiEnv().azureDeployments[model] ?? process.env.AZURE_OPENAI_DEPLOYMENT;
   if (!mapped) {
     throw new Error(
-      `No Azure deployment for model "${model}". Set AZURE_OPENAI_DEPLOYMENT, or map it ` +
-        `in AI_AZURE_DEPLOYMENTS, e.g. {"${model}":"luna-dev"}.`,
+      `No Azure deployment for model "${model}". Set AZURE_OPENAI_DEPLOYMENT (or the ` +
+        `AZURE_OPENAI_DEPLOYMENT_<TIER> shorthand), or map it in AI_AZURE_DEPLOYMENTS, ` +
+        `e.g. {"${model}":"luna-dev"}.`,
     );
   }
   return mapped;
@@ -56,8 +57,12 @@ function providerConfigured(provider: string): boolean {
     case "azure":
       // Entra, not a key: DefaultAzureCredential resolves the service principal
       // locally and managed identity when deployed, so the endpoint is the only
-      // thing we can usefully check up front.
-      return Boolean(process.env.AZURE_OPENAI_ENDPOINT && process.env.AZURE_OPENAI_DEPLOYMENT);
+      // thing we can usefully check up front. Either the classic single
+      // deployment var or the per-tier LUNA spelling counts as configured.
+      return Boolean(
+        process.env.AZURE_OPENAI_ENDPOINT &&
+          (process.env.AZURE_OPENAI_DEPLOYMENT || process.env.AZURE_OPENAI_DEPLOYMENT_LUNA),
+      );
     default:
       return false;
   }

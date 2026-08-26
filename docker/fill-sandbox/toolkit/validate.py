@@ -216,16 +216,32 @@ def post_checks(output_pdf: str, fieldmap: list[dict],
                                  f.get("id"), pno))
             continue
 
-        span_x0 = min(w["x0"] for w in hits)
-        span_x1 = max(w["x1"] for w in hits)
-        if span_x1 > x1 + 3 or span_x0 < x0 - 3:
-            issues.append(_issue("error", "OVERFLOW_X",
-                                 f"rendered text spans {span_x0:.0f}-{span_x1:.0f}, "
-                                 f"box is {x0:.0f}-{x1:.0f}", f.get("id"), pno))
-        if span_x1 > pg["width"] - 5:
-            issues.append(_issue("error", "OFF_PAGE",
-                                 "rendered text runs to the page edge",
-                                 f.get("id"), pno))
+        # Bounds are measured over the ink the fill ADDED, not over everything
+        # in the region. Values are drawn ON leader lines, and pdfplumber
+        # merges value glyphs with the template's dot/underscore run into one
+        # "word" that ends wherever the leader artwork ends — observed as
+        # every field "spanning 302-602" because the underscores run to 602.
+        # A char-level diff against the source page separates our ink from the
+        # template's, so leaders, labels and neighbouring pre-print can never
+        # flag a correct fill. (The x-window extends 12pt past the box so a
+        # genuine escape still lands in the measurement.)
+        src_pg_chars = (src_pages.get(pno) or {}).get("chars") or []
+        src_keys = {(c["x0"], c["top"]) for c in src_pg_chars}
+        added = [c for c in (pg.get("chars") or [])
+                 if _rects_overlap([x0 - 3, top - 4, x1 + 12, bottom + 4],
+                                   [c["x0"], c["top"], c["x1"], c["bottom"]])
+                 and (c["x0"], c["top"]) not in src_keys]
+        if added:
+            span_x0 = min(c["x0"] for c in added)
+            span_x1 = max(c["x1"] for c in added)
+            if span_x1 > x1 + 3 or span_x0 < x0 - 3:
+                issues.append(_issue("error", "OVERFLOW_X",
+                                     f"added text spans {span_x0:.0f}-{span_x1:.0f}, "
+                                     f"box is {x0:.0f}-{x1:.0f}", f.get("id"), pno))
+            if span_x1 > pg["width"] - 5:
+                issues.append(_issue("error", "OFF_PAGE",
+                                     "added text runs to the page edge",
+                                     f.get("id"), pno))
 
     # Font-size parity: a value drawn noticeably smaller than the template
     # text around it reads as stamped-on. Deterministic per the house rule —

@@ -1,5 +1,6 @@
 import { fillAgentEnv } from "./env.ts";
 import type { FillIssue } from "./fieldmap.ts";
+import type { FillAnchor, FillPageStrategy } from "./workflow-wire.ts";
 
 /**
  * Typed client for the fill-sandbox sidecar (docker/fill-sandbox). Mirrors its
@@ -55,13 +56,22 @@ export interface SandboxNativeField {
 }
 
 export interface SandboxAnalyzeResult {
-  kind: "acroform" | "flattened" | "scanned";
+  kind: FillPageStrategy;
+  pageStrategies?: Array<{
+    page: number;
+    strategy: FillPageStrategy;
+    charCount: number;
+    imageCount: number;
+  }>;
   pageCount?: number;
   geometryFile?: string;
   pageImages?: string[];
   nativeFields?: SandboxNativeField[];
   emptyBoxCount?: number;
   dottedLineCount?: number;
+  placeholderCount?: number;
+  anchorCount?: number;
+  anchors?: FillAnchor[];
 }
 
 export interface SandboxValidateResult {
@@ -77,6 +87,22 @@ export interface SandboxCropPair {
   label: string;
   path: string;
   ink_lost: number;
+  dpi: number;
+  cropBox: [number, number, number, number];
+  pixelSize: { width: number; height: number };
+  beforePath: string;
+  afterPath: string;
+  comparisonPath: string;
+  localAnchors: FillAnchor[];
+  measurements: { inkLost: number };
+}
+
+export interface SandboxRegionRender {
+  page: number;
+  dpi: number;
+  cropBox: [number, number, number, number];
+  pixelSize: { width: number; height: number };
+  path: string;
 }
 
 export interface SandboxFileInfo {
@@ -106,7 +132,28 @@ export interface SandboxClient {
     sessionId: string,
   ): Promise<{ outputFile: string; pageImages: string[] }>;
   runValidate(sessionId: string): Promise<SandboxValidateResult>;
-  runCrops(sessionId: string, issues: FillIssue[]): Promise<{ pairs: SandboxCropPair[] }>;
+  runCrops(
+    sessionId: string,
+    issues: FillIssue[],
+    outputPdf?: string,
+  ): Promise<{ pairs: SandboxCropPair[] }>;
+  runRenderRegions(
+    sessionId: string,
+    regions: Array<{ page: number; box: [number, number, number, number] }>,
+    pdf?: string,
+  ): Promise<{ regions: SandboxRegionRender[] }>;
+  runFillBatch(
+    sessionId: string,
+    pageStart: number,
+    pageEnd: number,
+  ): Promise<{ outputFile: string; fieldCount: number; pageImages: string[] }>;
+  runValidateBatch(
+    sessionId: string,
+    pageStart: number,
+    pageEnd: number,
+    out?: string,
+  ): Promise<SandboxValidateResult>;
+  runAssembleDocument(sessionId: string): Promise<{ outputFile: string; fieldCount: number }>;
 }
 
 let testOverride: SandboxClient | null = null;
@@ -205,11 +252,35 @@ function realClient(): SandboxClient {
         body: JSON.stringify({}),
       })) as SandboxValidateResult;
     },
-    async runCrops(sessionId, issues) {
+    async runCrops(sessionId, issues, outputPdf) {
       return (await request(`/sessions/${sessionId}/run/crops`, {
         method: "POST",
-        body: JSON.stringify({ issues }),
+        body: JSON.stringify({ issues, ...(outputPdf ? { outputPdf } : {}) }),
       })) as { pairs: SandboxCropPair[] };
+    },
+    async runRenderRegions(sessionId, regions, pdf = "filled.pdf") {
+      return (await request(`/sessions/${sessionId}/run/render-regions`, {
+        method: "POST",
+        body: JSON.stringify({ pdf, regions, dpi: 400 }),
+      })) as { regions: SandboxRegionRender[] };
+    },
+    async runFillBatch(sessionId, pageStart, pageEnd) {
+      return (await request(`/sessions/${sessionId}/run/fill-batch`, {
+        method: "POST",
+        body: JSON.stringify({ pageStart, pageEnd }),
+      })) as { outputFile: string; fieldCount: number; pageImages: string[] };
+    },
+    async runValidateBatch(sessionId, pageStart, pageEnd, out) {
+      return (await request(`/sessions/${sessionId}/run/validate-batch`, {
+        method: "POST",
+        body: JSON.stringify({ pageStart, pageEnd, ...(out ? { out } : {}) }),
+      })) as SandboxValidateResult;
+    },
+    async runAssembleDocument(sessionId) {
+      return (await request(`/sessions/${sessionId}/run/assemble-document`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      })) as { outputFile: string; fieldCount: number };
     },
   };
 }

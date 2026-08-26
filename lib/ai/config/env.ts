@@ -249,13 +249,47 @@ function parseModelRoles(raw: string | undefined) {
  * The `AI_*_MODEL` shortcuts still win where they are set, so a deployment
  * that has pinned a role keeps it, and `AI_MODEL_ROLES` overrides everything.
  */
+/**
+ * Azure model id for one tier. `AZURE_OPENAI_MODEL_<TIER>` overrides; the
+ * family default is `gpt-5.6-<tier>` (plain `AZURE_OPENAI_MODEL` keeps naming
+ * luna's, as before the tiers existed).
+ */
+export function azureTierModel(tier: FillAgentTier): string {
+  const override = process.env[`AZURE_OPENAI_MODEL_${tier.toUpperCase()}`];
+  if (override) return override;
+  if (tier === "luna") return process.env.AZURE_OPENAI_MODEL || "gpt-5.6-luna";
+  return `gpt-5.6-${tier}`;
+}
+
+/**
+ * `AZURE_OPENAI_DEPLOYMENT_<TIER>` shorthand → the model-id-keyed deployment
+ * map, so the three-deployment setup needs no JSON. `_LUNA` is the new
+ * spelling of the old single `AZURE_OPENAI_DEPLOYMENT` (still honoured).
+ * Explicit `AI_AZURE_DEPLOYMENTS` entries win over these.
+ */
+function defaultAzureDeployments(): Record<string, string> {
+  const out: Record<string, string> = {};
+  const luna =
+    process.env.AZURE_OPENAI_DEPLOYMENT_LUNA || process.env.AZURE_OPENAI_DEPLOYMENT;
+  if (luna) out[azureTierModel("luna")] = luna;
+  for (const tier of ["sol", "terra"] as const) {
+    const deployment = process.env[`AZURE_OPENAI_DEPLOYMENT_${tier.toUpperCase()}`];
+    if (deployment) out[azureTierModel(tier)] = deployment;
+  }
+  return out;
+}
+
 function defaultModelRoles(): Record<string, string> {
-  const luna = `azure:${process.env.AZURE_OPENAI_MODEL || "gpt-5.6-luna"}`;
+  const luna = `azure:${azureTierModel("luna")}`;
   // Gemini remains reachable: setting any AI_*_MODEL shortcut to "gemini:…"
   // moves that one role back with no code change, which is the rollback path.
   const generation = process.env.GEMINI_MODEL ? `gemini:${process.env.GEMINI_MODEL}` : luna;
   const agent = luna;
-  const fillAgent = process.env.AI_FILL_AGENT_MODEL || luna;
+  const adaptiveFill =
+    process.env.AI_FILL_AGENT_ADAPTIVE_MODEL ||
+    process.env.AI_FILL_AGENT_MODEL ||
+    (process.env.AZURE_OPENAI_DEPLOYMENT_SOL ? `azure:${azureTierModel("sol")}` : luna);
+  const fillAgent = adaptiveFill;
   return {
     // NOT luna — see the note above.
     embedding: `gemini:${process.env.EMBEDDING_MODEL || "gemini-embedding-001"}`,
@@ -333,9 +367,12 @@ function defaultModelRoles(): Record<string, string> {
     // structured input, small JSON patch out). Every tier falls back to the
     // fill_agent resolution, so with no new env vars all three run exactly
     // where fill_agent runs today.
-    fill_agent_plan: process.env.AI_FILL_AGENT_PLAN_MODEL || fillAgent,
-    fill_agent_critique: process.env.AI_FILL_AGENT_CRITIQUE_MODEL || fillAgent,
-    fill_agent_repair: process.env.AI_FILL_AGENT_REPAIR_MODEL || fillAgent,
+    // A tier's AZURE_OPENAI_DEPLOYMENT_<TIER> var both maps the deployment
+    // AND activates the tier for its role — adding sol-dev/terra-dev to env
+    // is the whole cutover, no second knob to remember.
+    fill_agent_plan: process.env.AI_FILL_AGENT_PLAN_MODEL || adaptiveFill,
+    fill_agent_critique: process.env.AI_FILL_AGENT_CRITIQUE_MODEL || adaptiveFill,
+    fill_agent_repair: process.env.AI_FILL_AGENT_REPAIR_MODEL || adaptiveFill,
   };
 }
 
@@ -444,8 +481,8 @@ function defaultRoleReasoning(): Record<string, string> {
     // critique is a narrow visual checklist; repair consumes structured
     // issues and emits a small patch.
     fill_agent_plan: "high",
-    fill_agent_critique: "medium",
-    fill_agent_repair: "low",
+    fill_agent_critique: "high",
+    fill_agent_repair: "high",
   };
 }
 
@@ -509,7 +546,10 @@ export function aiEnv(): AiEnv {
       ...defaultRoleMaxOutputTokens(),
       ...parseJsonRecord(process.env.AI_ROLE_MAX_OUTPUT_TOKENS, "AI_ROLE_MAX_OUTPUT_TOKENS"),
     },
-    azureDeployments: parseJsonRecord(process.env.AI_AZURE_DEPLOYMENTS, "AI_AZURE_DEPLOYMENTS"),
+    azureDeployments: {
+      ...defaultAzureDeployments(),
+      ...parseJsonRecord(process.env.AI_AZURE_DEPLOYMENTS, "AI_AZURE_DEPLOYMENTS"),
+    },
     azureUseResponsesApi: process.env.AI_AZURE_RESPONSES,
     redisPrefix: process.env.AI_REDIS_PREFIX,
     workerConcurrency: process.env.AI_WORKER_CONCURRENCY,

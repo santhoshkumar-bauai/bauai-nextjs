@@ -87,7 +87,7 @@ export function SessionStatus({ session }: { session: SerializedFillSession }) {
       {session.score != null && (
         <div className="h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className={`h-full rounded-full transition-all ${
+            className={`h-full rounded-full transition-[width] duration-300 ${
               session.score >= session.targetScore ? "bg-emerald-500" : "bg-amber-500"
             }`}
             style={{ width: `${Math.round(session.score * 100)}%` }}

@@ -1,4 +1,4 @@
-import { FILL_AGENT_ROLES, aiEnv } from "./env.ts";
+import { FILL_AGENT_ROLES, aiEnv, azureTierModel } from "./env.ts";
 import {
   aiProviderConfigured,
   aiRoleConfigured,
@@ -33,13 +33,14 @@ function azureIssue(role: ModelRole, model: string): string | null {
   if (!process.env.AZURE_OPENAI_ENDPOINT) {
     return `role "${role}" resolves to azure:${model} but AZURE_OPENAI_ENDPOINT is not set`;
   }
-  const defaultModel = process.env.AZURE_OPENAI_MODEL || "gpt-5.6-luna";
+  const defaultModel = azureTierModel("luna");
   const explicit = aiEnv().azureDeployments[model];
   if (model !== defaultModel && !explicit) {
     return (
-      `role "${role}" resolves to azure:${model}, which has no entry in AI_AZURE_DEPLOYMENTS — ` +
+      `role "${role}" resolves to azure:${model}, which has no deployment mapping — ` +
       `the AZURE_OPENAI_DEPLOYMENT fallback would silently route it to the default deployment ` +
-      `under the wrong model identity. Map it explicitly, e.g. AI_AZURE_DEPLOYMENTS={"${model}":"<deployment>"}.`
+      `under the wrong model identity. Map it via AZURE_OPENAI_DEPLOYMENT_<TIER> or ` +
+      `AI_AZURE_DEPLOYMENTS={"${model}":"<deployment>"}.`
     );
   }
   try {

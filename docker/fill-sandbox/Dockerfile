@@ -6,6 +6,12 @@ FROM python:3.12-slim
 
 RUN useradd --uid 10001 --create-home --shell /usr/sbin/nologin sandbox
 
+# OCR is deterministic and local. German is the default language for the
+# procurement forms in scope; English remains as Tesseract's base language.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-deu \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
 

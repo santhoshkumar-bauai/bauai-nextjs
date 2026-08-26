@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { FillCropRef, FillWorkflowStatus } from "@/lib/ai/fill-agent/workflow-wire";
 
 /**
  * Page-image preview strip: the sidecar's renders (source + filled), proxied
@@ -16,6 +17,10 @@ export function PdfPreview({
   pageCount,
   hasOutput,
   renderVersion,
+  pageRange,
+  repairBatchReady = false,
+  activeCrop,
+  workflowStatus,
 }: {
   sessionId: string;
   pageCount: number;
@@ -23,11 +28,21 @@ export function PdfPreview({
   /** Cache identity of the sandbox renders — images remount and refetch
    * only when this changes, never on the routine status poll. */
   renderVersion: string;
+  pageRange?: { pageStart: number; pageEnd: number } | null;
+  /** True only after a localized repair batch has its own rendered pages. */
+  repairBatchReady?: boolean;
+  activeCrop?: FillCropRef | null;
+  workflowStatus?: FillWorkflowStatus;
 }) {
   const t = useTranslations("FillAgent");
   const [tab, setTab] = useState<"source" | "filled">(hasOutput ? "filled" : "source");
   const [lightbox, setLightbox] = useState<{ src: string; label: string } | null>(null);
-  const dir = tab === "filled" ? "output_pages" : "source_pages";
+  const dir = tab === "filled"
+    ? workflowStatus === "repairing" && repairBatchReady ? "batch_pages" : "output_pages"
+    : "source_pages";
+  const visiblePages = pageRange
+    ? Array.from({ length: pageRange.pageEnd - pageRange.pageStart + 1 }, (_, index) => pageRange.pageStart + index)
+    : Array.from({ length: pageCount }, (_, index) => index + 1);
 
   // The filled tab becomes available mid-session; follow it once output
   // exists (adjust-state-during-render pattern, not an effect).
@@ -66,12 +81,25 @@ export function PdfPreview({
         ))}
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
+        {activeCrop && (
+          <figure className="rounded-xl border border-primary/30 bg-primary/5 p-2">
+            <figcaption className="pb-1.5 text-[10px] font-medium text-foreground">
+              Active 400-DPI repair crop · page {activeCrop.page}
+            </figcaption>
+            {/* eslint-disable-next-line @next/next/no-img-element -- sandbox artifact */}
+            <img
+              src={`/api/poc/fill-chat/${sessionId}/artifacts/${activeCrop.comparisonPath}?v=${renderVersion}`}
+              alt={`Before and after crop on page ${activeCrop.page}`}
+              className="w-full rounded-lg border border-border bg-white"
+            />
+          </figure>
+        )}
         {tab === "filled" && !hasOutput ? (
           <p className="rounded-xl border border-dashed border-border px-3 py-2.5 text-[11px] text-muted-foreground">
             {t("previewFilledEmpty")}
           </p>
         ) : (
-          Array.from({ length: pageCount }, (_, index) => index + 1).map((page) => (
+          visiblePages.map((page) => (
             <PageImage
               key={`${dir}-${page}-${renderVersion}`}
               src={`/api/poc/fill-chat/${sessionId}/artifacts/${dir}/page_${page}.png?v=${renderVersion}`}
@@ -149,7 +177,7 @@ function PageImage({
       <button
         type="button"
         onClick={() => onOpen(src, label)}
-        className="block w-full cursor-zoom-in"
+        className="block w-full cursor-zoom-in rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         title={label}
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- sandbox proxy, not an optimizable asset */}

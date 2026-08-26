@@ -7,6 +7,7 @@ import { buildObjectKey, putObjectBuffer } from "../../storage/s3.ts";
 import { flattenCompanyProfile } from "../dora/fill/grounding.ts";
 import { hybridRetrieveCompanyChunks } from "../retrieval/hybrid.ts";
 import type { FillAgentRunContext } from "./context.ts";
+import { fillAgentEnv } from "./env.ts";
 import {
   applyFieldmapPatch,
   applySensitivityRatchet,
@@ -42,9 +43,6 @@ import { applyUserFieldValues } from "./values.ts";
 const EXEC_OUTPUT_CAP = 16_000;
 const MAX_LISTED_NATIVE_FIELDS = 150;
 const MAX_LISTED_OPEN_QUESTIONS = 40;
-/** Repair rounds allowed between validates — the prompt's "at most 2 repair
- * rounds", now server-enforced like every other budget. */
-const MAX_REPAIRS_PER_VALIDATE = 2;
 
 function sessionObjectId(ctx: FillAgentRunContext) {
   return ctx.session._id!;
@@ -314,7 +312,7 @@ export function buildFillAgentTools(
             : {
                 hint:
                   errors > 0
-                    ? "Errors gate the score to 0. Call repair_fieldmap (max 2 repair rounds per turn)."
+                    ? "Errors gate the score to 0. Call repair_fieldmap, then fill_and_validate again; keep looping until the layout converges."
                     : "No errors — warnings are advisory. critique_fill can add a visual check, or repair_fieldmap can address the warnings.",
               }),
         });
@@ -399,14 +397,16 @@ export function buildFillAgentTools(
             hint: "There are no recorded issues. Run fill_and_validate first.",
           });
         }
-        // The prompt's "at most 2 repair rounds" used to be trust; now it is
-        // a server-held counter, re-armed by each fill_and_validate.
+        // Anti-oscillation counter, re-armed by each fill_and_validate: the
+        // loop may run as long as it needs, but repairs must round-trip
+        // through the deterministic gate instead of stacking blind.
+        const maxRepairs = fillAgentEnv().repairRounds;
         const repairs = session.repairsSinceValidate ?? 0;
-        if (repairs >= MAX_REPAIRS_PER_VALIDATE) {
+        if (repairs >= maxRepairs) {
           return JSON.stringify({
             refused: true,
             reason: "repair_budget_exhausted",
-            hint: "Two repair rounds since the last validate. Run fill_and_validate to re-score, or summarize the remaining issues for the user.",
+            hint: `${maxRepairs} repair rounds since the last validate. Run fill_and_validate to re-score, or summarize the remaining issues for the user.`,
           });
         }
         const patch = await repairFieldmapWithModel(ctx);
@@ -428,7 +428,7 @@ export function buildFillAgentTools(
           updated: patch.update.length,
           added: patch.add.length,
           removed: patch.remove.length,
-          repairsRemaining: MAX_REPAIRS_PER_VALIDATE - repairs - 1,
+          repairsRemaining: maxRepairs - repairs - 1,
           issuesAddressed: summariseIssues(session.issues, 10),
           hint: "Now call fill_and_validate to re-score.",
         });
@@ -547,7 +547,7 @@ export function buildFillAgentTools(
         fillIterations: session.fillIterations,
         maxFillIterations: session.maxFillIterations,
         repairsSinceValidate: session.repairsSinceValidate ?? 0,
-        maxRepairsPerValidate: MAX_REPAIRS_PER_VALIDATE,
+        maxRepairsPerValidate: fillAgentEnv().repairRounds,
         score: session.score,
         targetScore: session.targetScore,
         critiqued: session.critiqued,

@@ -49,8 +49,9 @@ def _candidates(page: dict[str, Any]) -> list[tuple[dict, str]]:
     snap onto the same row from opposite descriptions, so the coarser
     duplicate is dropped and each row is offered exactly once.
     """
+    placeholders = [(p, "placeholder") for p in page.get("placeholder_lines") or []]
     boxes = [(b, "empty_box") for b in page.get("empty_boxes") or []]
-    kept: list[tuple[dict, str]] = list(boxes)
+    kept: list[tuple[dict, str]] = list(placeholders) + list(boxes)
     for line in page.get("entry_lines") or []:
         if not any(_overlaps(line, box) for box, _ in boxes):
             kept.append((line, "entry_line"))
@@ -58,6 +59,27 @@ def _candidates(page: dict[str, Any]) -> list[tuple[dict, str]]:
         if not any(_overlaps(cell, existing) for existing, _ in kept):
             kept.append((cell, "cell"))
     return kept
+
+
+def public_anchors(geometry: dict[str, Any], pages: set[int] | None = None) -> list[dict[str, Any]]:
+    """Wire-safe anchor inventory. Coordinates originate only in extraction."""
+    result: list[dict[str, Any]] = []
+    for page in geometry.get("pages", []):
+        if pages is not None and int(page["page"]) not in pages:
+            continue
+        for item, kind in _candidates(page):
+            result.append({
+                "anchorId": item.get("anchor_id"), "page": page["page"], "kind": kind,
+                "box": [item["x0"], item["top"], item["x1"], item["bottom"]],
+                **({"replaceBox": item["replace_box"]} if item.get("replace_box") else {}),
+            })
+        for item in page.get("checkboxes") or []:
+            result.append({
+                "anchorId": item.get("anchor_id"), "page": page["page"],
+                "kind": item.get("control_kind") or "checkbox",
+                "box": [item["x0"], item["top"], item["x1"], item["bottom"]],
+            })
+    return result
 
 
 def snap_fieldmap(
@@ -92,6 +114,14 @@ def snap_fieldmap(
     assigned: dict[int, tuple[dict, str]] = {}
     for page_no, indices in by_page.items():
         candidates = _candidates(pages[page_no])
+        by_id = {item.get("anchor_id"): (item, kind) for item, kind in candidates}
+        # New fieldmaps select a stable anchor id. Legacy maps are still
+        # remapped geometrically so existing sessions can be rebased.
+        for index in list(indices):
+            anchor_id = fields[index].get("anchorId") or fields[index].get("anchor_id")
+            if anchor_id and anchor_id in by_id:
+                assigned[index] = by_id[anchor_id]
+                indices.remove(index)
         candidates.sort(key=lambda item: (
             (float(item[0]["top"]) + float(item[0]["bottom"])) / 2,
             float(item[0]["x0"]),
@@ -112,10 +142,10 @@ def snap_fieldmap(
         x0, top, x1, bottom = (float(v) for v in field["box"])
         new_top, new_bottom = float(candidate["top"]), float(candidate["bottom"])
         new_x0, new_x1 = x0, x1
-        if kind in ("empty_box", "cell"):
+        if kind in ("empty_box", "cell", "placeholder"):
             new_x0 = max(x0, float(candidate["x0"]))
             new_x1 = min(x1, float(candidate["x1"]))
-            if new_x1 - new_x0 < MIN_SNAPPED_WIDTH_PT:
+            if kind == "placeholder" or new_x1 - new_x0 < MIN_SNAPPED_WIDTH_PT:
                 new_x0, new_x1 = float(candidate["x0"]), float(candidate["x1"])
 
         moved = max(
@@ -127,6 +157,9 @@ def snap_fieldmap(
         field["box"] = [round(new_x0, 2), round(new_top, 2),
                         round(new_x1, 2), round(new_bottom, 2)]
         field["anchor_kind"] = kind
+        field["anchorId"] = candidate.get("anchor_id")
+        if candidate.get("replace_box"):
+            field["replace_box"] = candidate["replace_box"]
         field["anchor_snapped"] = moved > SNAP_EPSILON_PT
         # Entry areas read correctly bottom-aligned: the value sits ON the
         # line, like handwriting, instead of floating in the middle of the row.

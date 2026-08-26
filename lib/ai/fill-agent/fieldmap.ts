@@ -44,6 +44,11 @@ export const fillFieldSchema = z.object({
   page: z.number().int().min(1),
   kind: z.enum(FILL_FIELD_KINDS),
   box: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+  /** Stable deterministic anchor selected by the model. Trusted sidecar code
+   * owns the coordinates and overwrites `box` from this id. */
+  anchorId: z.string().min(1).max(100).optional(),
+  /** Tiny placeholder glyph to replace; emitted by trusted preparation only. */
+  replace_box: z.tuple([z.number(), z.number(), z.number(), z.number()]).optional(),
   /** Raw value; German formatting happens sidecar-side via value_type. */
   value: z.union([z.string(), z.number()]).optional(),
   value_type: z.enum(FILL_VALUE_TYPES).optional(),
@@ -64,7 +69,7 @@ export const fillFieldSchema = z.object({
 export type FillField = z.infer<typeof fillFieldSchema>;
 
 export const fillFieldmapResponseSchema = z.object({
-  fields: z.array(fillFieldSchema).max(400),
+  fields: z.array(fillFieldSchema).max(1200),
 });
 
 /** Repair output: a PATCH, never a rewrite (anti-oscillation invariant). */

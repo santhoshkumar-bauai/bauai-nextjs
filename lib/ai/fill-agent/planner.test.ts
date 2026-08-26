@@ -90,6 +90,15 @@ describe("planner tier routing", () => {
     });
   });
 
+  it("plans a multi-page document in one model call", async () => {
+    const m = fakeModel({ fields: [] });
+    vi.mocked(model.getChatModel).mockResolvedValue(m as never);
+    const ctx = buildCtx();
+    ctx.session.pdf.pageCount = 20;
+    await proposeFieldmapWithModel(ctx);
+    expect(m.invoke).toHaveBeenCalledTimes(1);
+  });
+
   it("critique runs on fill_agent_critique by default", async () => {
     vi.mocked(model.getChatModel).mockResolvedValue(fakeModel({ issues: [] }) as never);
     await critiqueFillWithModel(buildCtx());
@@ -134,6 +143,46 @@ describe("planner tier routing", () => {
         retry: false,
       }),
     );
+  });
+
+  it("passes a per-attempt abort signal (quota-starved deployments must fail fast)", async () => {
+    const m = fakeModel({ update: [], add: [], remove: [] });
+    vi.mocked(model.getChatModel).mockResolvedValue(m as never);
+    await repairFieldmapWithModel(buildCtx());
+    const options = (m.invoke.mock.calls[0] as unknown[])[1] as { signal?: AbortSignal };
+    expect(options.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("does NOT resend the payload on a transport failure — throws a readable error", async () => {
+    const m = {
+      invoke: vi.fn(async () => {
+        throw new Error("429 Your requests to gpt-5.6-sol for sol-dev have exceeded rate limit.");
+      }),
+    };
+    vi.mocked(model.getChatModel).mockResolvedValue(m as never);
+    await expect(repairFieldmapWithModel(buildCtx())).rejects.toThrow(
+      /fill_agent_repair model call failed[\s\S]*rate limit/,
+    );
+    expect(m.invoke).toHaveBeenCalledTimes(1); // an identical resend would just 429 again
+    expect(logMock.error).toHaveBeenCalledWith(
+      "planner_call_failed",
+      expect.objectContaining({ role: "fill_agent_repair" }),
+    );
+  });
+
+  it("still retries once on a PARSE failure, with the error appended", async () => {
+    let first = true;
+    const m = {
+      invoke: vi.fn(async () => {
+        const content = first ? "not json at all" : JSON.stringify({ update: [], add: [], remove: [] });
+        first = false;
+        return new AIMessage({ content });
+      }),
+    };
+    vi.mocked(model.getChatModel).mockResolvedValue(m as never);
+    const patch = await repairFieldmapWithModel(buildCtx());
+    expect(patch).toEqual({ update: [], add: [], remove: [] });
+    expect(m.invoke).toHaveBeenCalledTimes(2);
   });
 
   it("the escalated critique is marked in the log line", async () => {

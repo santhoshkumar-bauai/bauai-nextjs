@@ -230,8 +230,13 @@ export async function POST(request: Request, { params }: RouteParams) {
       // this the shared default applies, which equals fillAgentRecursionLimit
       // only at default envs — raising AI_FILL_AGENT_MAX_ITERATIONS would
       // break this route with GraphRecursionError while the POC route works.
+      // Same for the turn timeout: long-form fill turns outlive the 300s
+      // chat default.
       ...(fillCtx
-        ? { recursionLimit: fillAgentRecursionLimit(fillAgentEnv().maxIterations) }
+        ? {
+            recursionLimit: fillAgentRecursionLimit(fillAgentEnv().maxIterations),
+            turnTimeoutMs: fillAgentEnv().turnTimeoutMs,
+          }
         : {}),
       buildGraph: () =>
         fillCtx ? buildFillAgentGraph(fillCtx) : buildDoraGraph(ctx),

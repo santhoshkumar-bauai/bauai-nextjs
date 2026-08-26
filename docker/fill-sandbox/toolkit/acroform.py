@@ -21,6 +21,32 @@ from pypdf import PdfReader, PdfWriter
 from pypdf.generic import NameObject
 
 
+def _field_name(widget) -> str | None:
+    """Resolve inherited /T through the widget's parent chain."""
+    current = widget
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        name = current.get("/T")
+        if name is not None:
+            return str(name)
+        parent = current.get("/Parent")
+        current = parent.get_object() if parent is not None else None
+    return None
+
+
+def _effective(widget, key: str):
+    current = widget
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if current.get(key) is not None:
+            return current.get(key)
+        parent = current.get("/Parent")
+        current = parent.get_object() if parent is not None else None
+    return None
+
+
 def describe_fields(pdf_path: str) -> list[dict[str, Any]]:
     """Enumerate the real fields, with the metadata the planner needs.
 
@@ -39,10 +65,7 @@ def describe_fields(pdf_path: str) -> list[dict[str, Any]]:
             obj = annot.get_object()
             if obj.get("/Subtype") != "/Widget":
                 continue
-            name = obj.get("/T")
-            parent = obj.get("/Parent")
-            if name is None and parent is not None:
-                name = parent.get_object().get("/T")
+            name = _field_name(obj)
             if name is None:
                 continue
             r = [float(v) for v in obj.get("/Rect", [0, 0, 0, 0])]
@@ -97,8 +120,7 @@ def fill_acroform(source_pdf: str, values: dict[str, str], output_pdf: str,
         present = {}
         for annot in page.get("/Annots") or []:
             obj = annot.get_object()
-            name = obj.get("/T") or (obj.get("/Parent").get_object().get("/T")
-                                     if obj.get("/Parent") else None)
+            name = _field_name(obj)
             if name is not None and str(name) in values:
                 present[str(name)] = values[str(name)]
         if present:
@@ -127,7 +149,8 @@ def _flatten(writer: PdfWriter) -> None:
 def verify_written(output_pdf: str, values: dict[str, str]) -> list[dict]:
     """Read the values straight back out. Same principle as post_checks:
     confirm reality matches intent rather than trusting the write succeeded."""
-    got = PdfReader(output_pdf).get_fields() or {}
+    reader = PdfReader(output_pdf, strict=False)
+    got = reader.get_fields() or {}
     issues = []
     for k, want in values.items():
         have = str(got.get(k, {}).get("/V", "")) if k in got else None
@@ -139,4 +162,56 @@ def verify_written(output_pdf: str, values: dict[str, str]) -> list[dict]:
             issues.append({"severity": "error", "code": "VALUE_NOT_WRITTEN",
                            "field_id": k, "page": None,
                            "detail": f"wrote {want!r}, read back {have!r}"})
+    issues.extend(verify_integrity(reader, values))
+    return issues
+
+
+def verify_integrity(reader: PdfReader, expected: dict[str, str] | None = None) -> list[dict]:
+    """Validate canonical fields, widgets, inherited values and appearances."""
+    expected = expected or {}
+    issues: list[dict] = []
+    seen_widgets: set[tuple[str, int, tuple[float, ...]]] = set()
+    widget_names: set[str] = set()
+    root = reader.trailer.get("/Root") or {}
+    acro_ref = root.get("/AcroForm")
+    acro = acro_ref.get_object() if acro_ref is not None else {}
+    need_appearances = bool(acro.get("/NeedAppearances")) if acro else False
+
+    for pno, page in enumerate(reader.pages, start=1):
+        for annot in page.get("/Annots") or []:
+            widget = annot.get_object()
+            if widget.get("/Subtype") != "/Widget":
+                continue
+            name = _field_name(widget)
+            if not name:
+                issues.append({"severity": "error", "code": "ORPHAN_WIDGET",
+                               "field_id": None, "page": pno,
+                               "detail": "widget has no canonical or inherited field name"})
+                continue
+            widget_names.add(name)
+            rect = tuple(round(float(v), 2) for v in widget.get("/Rect", []))
+            key = (name, pno, rect)
+            if key in seen_widgets:
+                issues.append({"severity": "warning", "code": "DUPLICATE_WIDGET",
+                               "field_id": name, "page": pno,
+                               "detail": "duplicate widget with identical page and rectangle"})
+            seen_widgets.add(key)
+
+            value = str(_effective(widget, "/V") or "")
+            if expected.get(name) and expected[name] not in value:
+                issues.append({"severity": "error", "code": "WIDGET_VALUE_MISMATCH",
+                               "field_id": name, "page": pno,
+                               "detail": f"widget effective value is {value!r}"})
+            # /AP can live on the widget; NeedAppearances is an allowed viewer
+            # fallback, but at least one of them must exist for visible output.
+            if expected.get(name) and not widget.get("/AP") and not need_appearances:
+                issues.append({"severity": "error", "code": "APPEARANCE_MISSING",
+                               "field_id": name, "page": pno,
+                               "detail": "filled widget has no appearance stream"})
+
+    for name in (reader.get_fields() or {}):
+        if name not in widget_names:
+            issues.append({"severity": "warning", "code": "ORPHAN_FIELD",
+                           "field_id": name, "page": None,
+                           "detail": "canonical field has no page widget"})
     return issues

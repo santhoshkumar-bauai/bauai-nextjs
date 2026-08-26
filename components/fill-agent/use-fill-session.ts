@@ -40,6 +40,15 @@ export function useFillSession(sessionId: string) {
     };
   }, [refresh]);
 
+  useEffect(() => {
+    const status = session?.workflow.status;
+    if (!status || status === "completed" || status === "needs_review" || status === "awaiting_input") {
+      return;
+    }
+    const timer = setInterval(() => void refresh(), 2000);
+    return () => clearInterval(timer);
+  }, [refresh, session?.workflow.status]);
+
   /**
    * Cache identity of the sandbox page renders — changes ONLY when they can
    * actually differ (analyze produced source renders / a fill round produced
@@ -47,7 +56,7 @@ export function useFillSession(sessionId: string) {
    * the preview images, or they flicker for the whole turn.
    */
   const renderVersion = session
-    ? `${session.analyzed ? 1 : 0}-${session.fillIterations}`
+    ? `${session.analyzed ? 1 : 0}-${session.fillIterations}-${session.workflow.activityCursor}`
     : "0-0";
 
   return { session, loading, refresh, renderVersion };
