@@ -11,6 +11,10 @@ Two lanes with different trust levels:
 
 Workspace file conventions (all inside /work/{sessionId}/):
   source.pdf              uploaded by the app
+  normalized.pdf          written by /run/analyze — rotation baked, boxes
+                          anchored at (0,0), CropBox == MediaBox. EVERY
+                          downstream stage (geometry, fill, renders, crops)
+                          reads this twin, so one coordinate space rules all.
   geometry.json           written by /run/analyze (top-left coordinate space)
   analyze.json            classification summary written by /run/analyze
   fieldmap.json           uploaded by the app (raw values)
@@ -49,6 +53,7 @@ from toolkit import (
     extract,
     fill,
     formats,
+    normalize,
     style,
     validate,
 )
@@ -150,6 +155,21 @@ def _fieldmap_from(data) -> list[dict]:
     return data["fields"] if isinstance(data, dict) else data
 
 
+def _pdf_for_read(session_id: str, name: str) -> str:
+    """Prefer the normalised twin whenever the caller asks for source.pdf.
+
+    Keeps the client contract unchanged: requests still name "source.pdf",
+    but every geometry-consuming stage operates on the same normalised
+    coordinate space /run/analyze extracted from. Pre-normalisation
+    workspaces (no twin yet) fall back to the raw source."""
+    if name == "source.pdf":
+        try:
+            return safe_read_path(session_id, "normalized.pdf")
+        except HTTPException:
+            pass
+    return safe_read_path(session_id, name)
+
+
 class AnalyzeRequest(BaseModel):
     pdf: str = "source.pdf"
 
@@ -159,8 +179,16 @@ def run_analyze(session_id: str, body: AnalyzeRequest) -> dict:
     base = session_dir(session_id)
     pdf_path = safe_read_path(session_id, body.pdf)
 
+    # Normalisation preflight: rotation baked into content, boxes anchored at
+    # (0,0), CropBox == MediaBox. Everything downstream — geometry, renders,
+    # fill, crops — reads the twin, so the extractor and the renderer can
+    # never disagree about the page box again.
+    norm_path = os.path.join(base, "normalized.pdf")
+    norm = normalize.normalize(pdf_path, norm_path)
+    pdf_path = norm_path
+
     kind = extract.classify(pdf_path)
-    result: dict = {"kind": kind}
+    result: dict = {"kind": kind, "normalized": norm["changed"]}
     if kind == "scanned":
         # no geometry to extract — the caller refuses these upstream too
         with open(os.path.join(base, "analyze.json"), "w") as fh:
@@ -233,7 +261,7 @@ def _native_values(fieldmap: list[dict]) -> dict[str, str]:
 @app.post("/sessions/{session_id}/run/fill", dependencies=[Depends(require_token)])
 def run_fill(session_id: str, body: FillRequest) -> dict:
     base = session_dir(session_id)
-    pdf_path = safe_read_path(session_id, body.pdf)
+    pdf_path = _pdf_for_read(session_id, body.pdf)
     fieldmap = _fieldmap_from(_read_json(session_id, body.fieldmapFile))
     analyze = _read_json(session_id, "analyze.json")
     out_path = safe_upload_path(session_id, body.out)
@@ -292,7 +320,7 @@ class CropsRequest(BaseModel):
 def run_crops(session_id: str, body: CropsRequest) -> dict:
     base = session_dir(session_id)
     pairs = crops.inspection_pairs(
-        safe_read_path(session_id, body.sourcePdf),
+        _pdf_for_read(session_id, body.sourcePdf),
         safe_read_path(session_id, body.outputPdf),
         _fieldmap_from(_read_json(session_id, body.fieldmapFile)),
         body.issues,

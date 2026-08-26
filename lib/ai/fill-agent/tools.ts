@@ -42,6 +42,9 @@ import { applyUserFieldValues } from "./values.ts";
 const EXEC_OUTPUT_CAP = 16_000;
 const MAX_LISTED_NATIVE_FIELDS = 150;
 const MAX_LISTED_OPEN_QUESTIONS = 40;
+/** Repair rounds allowed between validates — the prompt's "at most 2 repair
+ * rounds", now server-enforced like every other budget. */
+const MAX_REPAIRS_PER_VALIDATE = 2;
 
 function sessionObjectId(ctx: FillAgentRunContext) {
   return ctx.session._id!;
@@ -128,7 +131,20 @@ export function buildFillAgentTools(
   const proposeFieldmap = tool(
     async ({ instructions }: { instructions?: string }) =>
       withSandbox(async () => {
-        await ctx.reloadSession();
+        const session = await ctx.reloadSession();
+        // Server gate, not prompt trust: once a validate has scored a real
+        // fieldmap, re-planning wholesale replaces correct work and the score
+        // random-walks — repair is the only forward path. The empty-fieldmap
+        // exception matters: a repair patch's `remove` can empty the map
+        // while the stale score persists, and without it the session would
+        // deadlock (propose refused here, fill refuses "no_fieldmap").
+        if (session.score != null && session.fieldmap.length > 0) {
+          return JSON.stringify({
+            refused: true,
+            reason: "replan_after_validate",
+            hint: "A validated fieldmap exists. Use repair_fieldmap to fix issues — re-planning discards correct work.",
+          });
+        }
         const fields = await proposeFieldmapWithModel(ctx, instructions);
         const { heldBack } = await persistFieldmap(ctx, fields);
         const byPage: Record<string, number> = {};
@@ -272,6 +288,8 @@ export function buildFillAgentTools(
 
         const updated = await updateFillSession(ctx.tenantId, sessionObjectId(ctx), {
           fillIterations: iteration,
+          // A fresh validate re-arms the repair budget (2 rounds per validate).
+          repairsSinceValidate: 0,
           issues: result.issues,
           score: result.score,
           status: reachedTarget ? "filled" : "in_progress",
@@ -335,7 +353,12 @@ export function buildFillAgentTools(
           });
         }
 
-        const added = await critiqueFillWithModel(ctx);
+        // On the final allowed fill iteration the critique is promoted to the
+        // plan tier — the last chance to catch a defect before a human is
+        // involved. (`>=` rather than `===` survives an off-by-one; states
+        // beyond the budget are unreachable — the fill gate escalates first.)
+        const escalate = session.fillIterations >= session.maxFillIterations - 1;
+        const added = await critiqueFillWithModel(ctx, { escalate });
         // Add-only merge: the critic can raise issues, never clear them —
         // it cannot be talked into approving a hard failure.
         const issues = [...session.issues, ...added];
@@ -350,6 +373,7 @@ export function buildFillAgentTools(
         return JSON.stringify({
           addedIssues: added,
           score,
+          ...(escalate ? { escalated: true } : {}),
           hint:
             added.length === 0
               ? "Visually clean. You can tell the user the fill is finished."
@@ -375,6 +399,16 @@ export function buildFillAgentTools(
             hint: "There are no recorded issues. Run fill_and_validate first.",
           });
         }
+        // The prompt's "at most 2 repair rounds" used to be trust; now it is
+        // a server-held counter, re-armed by each fill_and_validate.
+        const repairs = session.repairsSinceValidate ?? 0;
+        if (repairs >= MAX_REPAIRS_PER_VALIDATE) {
+          return JSON.stringify({
+            refused: true,
+            reason: "repair_budget_exhausted",
+            hint: "Two repair rounds since the last validate. Run fill_and_validate to re-score, or summarize the remaining issues for the user.",
+          });
+        }
         const patch = await repairFieldmapWithModel(ctx);
         const merged = applyFieldmapPatch(session.fieldmap, patch);
         const parsed = z.array(fillFieldSchema).safeParse(merged);
@@ -386,10 +420,15 @@ export function buildFillAgentTools(
           });
         }
         await persistFieldmap(ctx, parsed.data);
+        const updated = await updateFillSession(ctx.tenantId, sessionObjectId(ctx), {
+          repairsSinceValidate: repairs + 1,
+        });
+        if (updated) ctx.session = updated;
         return JSON.stringify({
           updated: patch.update.length,
           added: patch.add.length,
           removed: patch.remove.length,
+          repairsRemaining: MAX_REPAIRS_PER_VALIDATE - repairs - 1,
           issuesAddressed: summariseIssues(session.issues, 10),
           hint: "Now call fill_and_validate to re-score.",
         });
@@ -507,6 +546,8 @@ export function buildFillAgentTools(
         openQuestions: session.openQuestions.slice(0, MAX_LISTED_OPEN_QUESTIONS),
         fillIterations: session.fillIterations,
         maxFillIterations: session.maxFillIterations,
+        repairsSinceValidate: session.repairsSinceValidate ?? 0,
+        maxRepairsPerValidate: MAX_REPAIRS_PER_VALIDATE,
         score: session.score,
         targetScore: session.targetScore,
         critiqued: session.critiqued,

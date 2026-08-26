@@ -40,7 +40,19 @@ export type ModelRole =
   /** Chat-based PDF form-filling agent (POC). Pinned like the other fill
    * roles — a chat model change must not silently alter a filled form — and
    * vision-capable: it reads rendered pages and 400dpi inspection crops. */
-  | "fill_agent";
+  | "fill_agent"
+  /** Fill-agent planning (node_plan): maps a whole template into a fieldmap.
+   * The hardest reasoning in the loop and it runs once per template — the
+   * sol tier. Falls back to `fill_agent` until a sol deployment exists. */
+  | "fill_agent_plan"
+  /** Fill-agent visual critique (node_critique): a narrow checklist over
+   * rendered pages and 400dpi crops — needs vision, not depth. The terra
+   * tier; falls back to `fill_agent`. On the final iteration before
+   * escalation the critique is promoted to the plan tier instead. */
+  | "fill_agent_critique"
+  /** Fill-agent repair (node_repair): structured issues in, small JSON patch
+   * out. The luna tier; falls back to `fill_agent`. */
+  | "fill_agent_repair";
 
 /** Mirrors the retrieval asymmetry of embedding models: documents and
  * queries are embedded with different task hints. */

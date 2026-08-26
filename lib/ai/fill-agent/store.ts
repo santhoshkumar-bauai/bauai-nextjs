@@ -56,6 +56,11 @@ export interface FillAgentSessionDocument {
   nativeFields: SandboxNativeField[];
   fillIterations: number;
   maxFillIterations: number;
+  /** Repair rounds since the last fill_and_validate — server-enforced cap of
+   * 2, mirroring the prompt rule the model used to be trusted with. Optional:
+   * pre-existing sessions lack it, so every read is `?? 0` (the first $set
+   * materialises it; no migration with the plain driver). */
+  repairsSinceValidate?: number;
   targetScore: number;
   score: number | null;
   issues: FillIssue[];
@@ -119,6 +124,7 @@ export async function createFillSession(input: {
     nativeFields: [],
     fillIterations: 0,
     maxFillIterations: input.maxFillIterations,
+    repairsSinceValidate: 0,
     targetScore: input.targetScore,
     score: null,
     issues: [],
@@ -189,6 +195,7 @@ export function serializeFillSession(doc: FillAgentSessionDocument) {
     openQuestions: doc.openQuestions,
     fillIterations: doc.fillIterations,
     maxFillIterations: doc.maxFillIterations,
+    repairsSinceValidate: doc.repairsSinceValidate ?? 0,
     targetScore: doc.targetScore,
     score: doc.score,
     issueCounts: {

@@ -255,6 +255,7 @@ function defaultModelRoles(): Record<string, string> {
   // moves that one role back with no code change, which is the rollback path.
   const generation = process.env.GEMINI_MODEL ? `gemini:${process.env.GEMINI_MODEL}` : luna;
   const agent = luna;
+  const fillAgent = process.env.AI_FILL_AGENT_MODEL || luna;
   return {
     // NOT luna — see the note above.
     embedding: `gemini:${process.env.EMBEDDING_MODEL || "gemini-embedding-001"}`,
@@ -322,8 +323,65 @@ function defaultModelRoles(): Record<string, string> {
     // sandbox Python and reads rendered pages plus 400dpi crops, so it needs
     // vision and the strongest reasoning in the product — which it gets from
     // its effort setting rather than a separate model.
-    fill_agent: process.env.AI_FILL_AGENT_MODEL || luna,
+    fill_agent: fillAgent,
+    // Tiered routing for the fill loop. Cost concentrates in the LOOP, not the
+    // one-shot: planning runs once per template, repair three to five times —
+    // and a weak planner does not just cost its own tokens, its hallucinated
+    // coordinates fail validation and buy extra repair rounds. So plan gets
+    // the strongest tier (sol), critique the middle one (terra: a narrow
+    // visual checklist needs vision, not depth), repair the cheapest (luna:
+    // structured input, small JSON patch out). Every tier falls back to the
+    // fill_agent resolution, so with no new env vars all three run exactly
+    // where fill_agent runs today.
+    fill_agent_plan: process.env.AI_FILL_AGENT_PLAN_MODEL || fillAgent,
+    fill_agent_critique: process.env.AI_FILL_AGENT_CRITIQUE_MODEL || fillAgent,
+    fill_agent_repair: process.env.AI_FILL_AGENT_REPAIR_MODEL || fillAgent,
   };
+}
+
+/**
+ * `AI_FILL_AGENT_FORCE_TIER` pins ALL fill-agent roles (orchestrator included —
+ * this is a rollback/A-B hammer, and a rollback that leaves the orchestrator
+ * behind is not one) to a single tier's model. The anchor is the already-merged
+ * value of that tier's role, so a pinned `AI_FILL_AGENT_PLAN_MODEL` is exactly
+ * what "force sol" forces. Effort and output budgets stay per-role: the switch
+ * forces the MODEL, the operating points still differ.
+ */
+export const FILL_AGENT_ROLES = [
+  "fill_agent",
+  "fill_agent_plan",
+  "fill_agent_critique",
+  "fill_agent_repair",
+] as const;
+
+const FILL_TIER_ANCHORS = {
+  sol: "fill_agent_plan",
+  terra: "fill_agent_critique",
+  luna: "fill_agent",
+} as const;
+
+export type FillAgentTier = keyof typeof FILL_TIER_ANCHORS;
+
+/** The active force-tier, or null. Throws loudly on an invalid value. */
+export function fillAgentForceTier(): FillAgentTier | null {
+  const raw = process.env.AI_FILL_AGENT_FORCE_TIER;
+  if (!raw) return null;
+  const tier = raw.trim().toLowerCase();
+  if (!(tier in FILL_TIER_ANCHORS)) {
+    throw new Error(
+      `AI_FILL_AGENT_FORCE_TIER=${JSON.stringify(raw)} is invalid — expected "sol", "terra" or "luna".`,
+    );
+  }
+  return tier as FillAgentTier;
+}
+
+function applyFillForceTier(roles: Record<string, string>): Record<string, string> {
+  const tier = fillAgentForceTier();
+  if (!tier) return roles;
+  const anchor = roles[FILL_TIER_ANCHORS[tier]];
+  const forced = { ...roles };
+  for (const role of FILL_AGENT_ROLES) forced[role] = anchor;
+  return forced;
 }
 
 /**
@@ -381,6 +439,13 @@ function defaultRoleReasoning(): Record<string, string> {
     // Orchestrates a Python sandbox, vision and multi-tool repair — the
     // hardest reasoning surface in the product, behind a feature flag.
     fill_agent: "high",
+    // The tiered fill roles: effort follows the job, not the model. Planning
+    // is the hardest reasoning in the loop and runs once per template;
+    // critique is a narrow visual checklist; repair consumes structured
+    // issues and emits a small patch.
+    fill_agent_plan: "high",
+    fill_agent_critique: "medium",
+    fill_agent_repair: "low",
   };
 }
 
@@ -411,6 +476,11 @@ function defaultRoleMaxOutputTokens(): Record<string, number> {
     dora_gaeb_web: 8_192,
     otto: 12_288,
     fill_agent: 16_384,
+    // Same numbers the planner used to hard-code per call — now here so they
+    // are env-overridable via AI_ROLE_MAX_OUTPUT_TOKENS like every other role.
+    fill_agent_plan: 16_384,
+    fill_agent_critique: 8_192,
+    fill_agent_repair: 8_192,
   } as Record<string, number>;
 }
 
@@ -424,10 +494,13 @@ export function aiEnv(): AiEnv {
     embeddingDimensions: process.env.EMBEDDING_DIMENSIONS,
     embeddingBatchSize: process.env.EMBEDDING_BATCH_SIZE,
     embeddingRpm: process.env.EMBEDDING_RPM,
-    modelRoles: {
+    // Force-tier is applied AFTER the AI_MODEL_ROLES spread on purpose: it is
+    // the big hammer for rollbacks and A/B runs, so it wins over per-role
+    // pins. Unset it to return to per-role routing.
+    modelRoles: applyFillForceTier({
       ...defaultModelRoles(),
       ...parseModelRoles(process.env.AI_MODEL_ROLES),
-    },
+    }),
     roleReasoning: {
       ...defaultRoleReasoning(),
       ...parseJsonRecord(process.env.AI_ROLE_REASONING, "AI_ROLE_REASONING"),

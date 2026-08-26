@@ -1,6 +1,7 @@
 import { SystemMessage } from "@langchain/core/messages";
 
 import { aiEnv } from "../config/env.ts";
+import { assertFillAgentRolesResolvable } from "../config/validate-roles.ts";
 import { getClaraCheckpointer } from "../agent/checkpointer.ts";
 import { getChatModel } from "../agent/model.ts";
 import type { CompiledAgentGraph } from "../agent/service.ts";
@@ -29,10 +30,15 @@ export function fillAgentRecursionLimit(maxIterations: number): number {
 export async function buildFillAgentGraph(
   ctx: FillAgentRunContext,
 ): Promise<CompiledAgentGraph> {
+  // Safety net for workers/scripts that never ran instrumentation.ts —
+  // cached after the first success, so per-turn cost is one boolean check.
+  assertFillAgentRolesResolvable();
   const env = aiEnv();
   const fillEnv = fillAgentEnv();
   const graph = buildToolLoopGraph({
-    model: await getChatModel({ role: "fill_agent" }),
+    // temperature is ignored on the Azure branch by design; it pins sampling
+    // if the role ever moves to a provider that accepts it.
+    model: await getChatModel({ role: "fill_agent", temperature: 0 }),
     tools: buildFillAgentTools(ctx),
     systemPrompt: new SystemMessage(buildFillAgentSystemPrompt(ctx)),
     maxIterations: fillEnv.maxIterations,

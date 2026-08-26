@@ -56,6 +56,7 @@ function baseSession(): FillAgentSessionDocument {
     nativeFields: [],
     fillIterations: 0,
     maxFillIterations: 5,
+    repairsSinceValidate: 0,
     targetScore: 0.95,
     score: null,
     issues: [],
@@ -250,6 +251,121 @@ describe("critique_fill gating (server-enforced, not prompt-enforced)", () => {
     );
     expect(again.reason).toBe("critique_already_done");
     expect(planner.critiqueFillWithModel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("critique_fill tier escalation", () => {
+  it("promotes the critique to the plan tier on the final allowed iteration", async () => {
+    currentSession = { ...baseSession(), score: 1, issues: [], fillIterations: 4 };
+    vi.mocked(planner.critiqueFillWithModel).mockResolvedValue([]);
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "critique_fill").invoke({})) as string,
+    );
+    expect(planner.critiqueFillWithModel).toHaveBeenCalledWith(expect.anything(), {
+      escalate: true,
+    });
+    expect(result.escalated).toBe(true);
+  });
+
+  it("stays on the critique tier before the final iteration", async () => {
+    currentSession = { ...baseSession(), score: 1, issues: [], fillIterations: 1 };
+    vi.mocked(planner.critiqueFillWithModel).mockResolvedValue([]);
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "critique_fill").invoke({})) as string,
+    );
+    expect(planner.critiqueFillWithModel).toHaveBeenCalledWith(expect.anything(), {
+      escalate: false,
+    });
+    expect(result.escalated).toBeUndefined();
+  });
+});
+
+describe("propose_fieldmap re-plan gate (server-enforced)", () => {
+  it("refuses re-planning once a validate has scored a real fieldmap", async () => {
+    currentSession = { ...baseSession(), score: 0.5 };
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "propose_fieldmap").invoke({})) as string,
+    );
+    expect(result.refused).toBe(true);
+    expect(result.reason).toBe("replan_after_validate");
+    expect(planner.proposeFieldmapWithModel).not.toHaveBeenCalled();
+  });
+
+  it("still allows planning when a repair emptied the fieldmap (deadlock guard)", async () => {
+    currentSession = { ...baseSession(), score: 0.5, fieldmap: [] };
+    vi.mocked(planner.proposeFieldmapWithModel).mockResolvedValue([
+      { id: "f1", page: 1, kind: "text", box: [1, 2, 30, 12], label: "Feld" },
+    ]);
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "propose_fieldmap").invoke({})) as string,
+    );
+    expect(result.refused).toBeUndefined();
+    expect(planner.proposeFieldmapWithModel).toHaveBeenCalledTimes(1);
+    expect(result.fieldCount).toBe(1);
+  });
+});
+
+describe("repair budget (server-enforced, re-armed by validate)", () => {
+  it("refuses the third repair round since the last validate", async () => {
+    currentSession = {
+      ...baseSession(),
+      repairsSinceValidate: 2,
+      issues: [{ severity: "warning", code: "W", field_id: "a", page: 1, detail: "d" }],
+    };
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "repair_fieldmap").invoke({})) as string,
+    );
+    expect(result.reason).toBe("repair_budget_exhausted");
+    expect(planner.repairFieldmapWithModel).not.toHaveBeenCalled();
+  });
+
+  it("counts each repair and reports the remaining budget", async () => {
+    currentSession = {
+      ...baseSession(),
+      issues: [{ severity: "warning", code: "W", field_id: "company_name", page: 1, detail: "d" }],
+    };
+    vi.mocked(planner.repairFieldmapWithModel).mockResolvedValue({
+      update: [{ id: "company_name", font_size: 8 }],
+      add: [],
+      remove: [],
+    });
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "repair_fieldmap").invoke({})) as string,
+    );
+    expect(result.repairsRemaining).toBe(1);
+    expect(currentSession.repairsSinceValidate).toBe(1);
+  });
+
+  it("legacy sessions without the counter start at zero", async () => {
+    const session = baseSession();
+    delete session.repairsSinceValidate; // documents created before the field existed
+    currentSession = {
+      ...session,
+      issues: [{ severity: "warning", code: "W", field_id: "company_name", page: 1, detail: "d" }],
+    };
+    vi.mocked(planner.repairFieldmapWithModel).mockResolvedValue({
+      update: [],
+      add: [],
+      remove: [],
+    });
+    const ctx = buildCtx(currentSession, fakeSandbox({ issues: [], score: 1, summary: "" }));
+    const result = JSON.parse(
+      (await toolByName(ctx, "repair_fieldmap").invoke({})) as string,
+    );
+    expect(result.repairsRemaining).toBe(1);
+  });
+
+  it("fill_and_validate re-arms the repair budget", async () => {
+    currentSession = { ...baseSession(), repairsSinceValidate: 2 };
+    const sandbox = fakeSandbox({ issues: [], score: 0.5, summary: "meh" });
+    await toolByName(buildCtx(currentSession, sandbox), "fill_and_validate").invoke({});
+    expect(currentSession.repairsSinceValidate).toBe(0);
   });
 });
 

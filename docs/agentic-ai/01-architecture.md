@@ -144,9 +144,18 @@ The one thing both lanes share. `AI_MODEL_ROLES` is a JSON env var mapping a
   "dora_gaeb_fill":"azure:gpt-5.6-luna",
   "dora_gaeb_web": "azure:gpt-5.6-luna",
   "otto":          "azure:gpt-5.6-luna",
-  "fill_agent":    "azure:gpt-5.6-luna"
+  "fill_agent":    "azure:gpt-5.6-luna",
+  "fill_agent_plan":     "azure:gpt-5.6-luna",
+  "fill_agent_critique": "azure:gpt-5.6-luna",
+  "fill_agent_repair":   "azure:gpt-5.6-luna"
 }
 ```
+
+The three `fill_agent_*` roles are the fill loop's cost tiers (plan → sol,
+critique → terra, repair → luna once those deployments exist); each falls back
+to `fill_agent` until then. `AI_FILL_AGENT_FORCE_TIER` pins all four to one
+tier; `npm run ai:fill:roles` prints the resolved routing without spending
+tokens.
 
 Defaults and per-role env shortcuts live in
 [`lib/ai/config/env.ts`](../../lib/ai/config/env.ts) (`defaultModelRoles()`).

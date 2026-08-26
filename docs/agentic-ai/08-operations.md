@@ -69,6 +69,9 @@ Ladder: `none | low | medium | high | xhigh | max`, clamped per provider
 | `dora_gaeb_web` | low | 8 192 | The search results carry the work, not the thinking |
 | `otto` | **low** | 12 288 | First thing a new user experiences; `sanitizePlan()` enforces correctness in code |
 | `fill_agent` | high | 16 384 | Sandbox Python, vision and multi-tool repair — the hardest surface here |
+| `fill_agent_plan` | high | 16 384 | Fill planning (sol tier): whole-template fieldmap, once per template |
+| `fill_agent_critique` | medium | 8 192 | Fill visual critique (terra tier): narrow checklist, vision not depth |
+| `fill_agent_repair` | low | 8 192 | Fill repair (luna tier): structured issues in, small JSON patch out |
 
 | Var | Default | Effect |
 |---|---|---|

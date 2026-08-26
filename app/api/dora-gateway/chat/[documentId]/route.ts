@@ -7,8 +7,8 @@ import { buildDoraGraph } from "@/lib/ai/dora/graph";
 import { buildPdfTurnMedia } from "@/lib/ai/dora/pdf/turn-media";
 import { buildFillAgentRunContext } from "@/lib/ai/fill-agent/context";
 import { ensureDocumentFillSession } from "@/lib/ai/fill-agent/document-session";
-import { fillAgentEditorEnabled } from "@/lib/ai/fill-agent/env";
-import { buildFillAgentGraph } from "@/lib/ai/fill-agent/graph";
+import { fillAgentEditorEnabled, fillAgentEnv } from "@/lib/ai/fill-agent/env";
+import { buildFillAgentGraph, fillAgentRecursionLimit } from "@/lib/ai/fill-agent/graph";
 import { buildDoraSpreadsheetGraph } from "@/lib/ai/dora/spreadsheet/graph";
 import { streamDoraSpreadsheetEditTurnResponse } from "@/lib/ai/dora/spreadsheet/edit-turn";
 import { streamDoraEditTurnResponse } from "@/lib/ai/dora/edit-turn";
@@ -226,6 +226,13 @@ export async function POST(request: Request, { params }: RouteParams) {
       // file only rides along on the read-only fallback path (a scanned PDF
       // has no text layer and the model must see the pages).
       ...(fillCtx ? {} : { extraContent: await buildPdfTurnMedia(ctx) }),
+      // The fill agent's superstep budget follows ITS iteration cap. Without
+      // this the shared default applies, which equals fillAgentRecursionLimit
+      // only at default envs — raising AI_FILL_AGENT_MAX_ITERATIONS would
+      // break this route with GraphRecursionError while the POC route works.
+      ...(fillCtx
+        ? { recursionLimit: fillAgentRecursionLimit(fillAgentEnv().maxIterations) }
+        : {}),
       buildGraph: () =>
         fillCtx ? buildFillAgentGraph(fillCtx) : buildDoraGraph(ctx),
     });
